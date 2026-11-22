@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "smf",
-  "title": "illumos/Solaris Service Management Facility (SMF)",
-  "description": "illumos and Solaris Service Management Facility (SMF) manifest and service control adapter (svcadm, svccfg, svcs).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "init-systems",
-  "provides": ["smf", "svcadm", "svccfg"],
+  "description": "illumos and Solaris Service Management Facility (SMF) manifest and service control adapter (svcadm, svccfg, svcs).",
+  "name": "smf",
   "os_whitelist": ["sunos", "illumos", "solaris"],
+  "provides": ["smf", "svcadm", "svccfg"],
   "repository": "https://github.com/illumos/illumos-gate",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T2",
+  "title": "illumos/Solaris Service Management Facility (SMF)"
 }

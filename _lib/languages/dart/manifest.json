@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "dart",
-  "title": "Dart SDK",
-  "description": "Client-optimized language and SDK for fast multi-platform applications.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["dart"],
+  "description": "Client-optimized language and SDK for fast multi-platform applications.",
+  "name": "dart",
   "os_whitelist": ["all"],
+  "provides": ["dart"],
   "repository": "https://github.com/dart-lang/sdk",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Dart SDK"
 }

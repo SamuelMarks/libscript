@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 printf '==> Testing DBaaS Connection URL Parser...\n'
-PARSE_SH="${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_dbaas_url.sh"
+PARSE_SH="${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/parse_dbaas_url.sh"
 
 DBAAS_TEST_URL="mysql://wp_cloud_user:SecretP%40ss2026%21@db-cluster.us-east-1.rds.amazonaws.com:3307/wordpress_prod?ssl-ca=/etc/ssl/rds-ca.pem&ssl-mode=REQUIRED"
 
@@ -90,7 +90,7 @@ printf '[OK] DBaaS URL parser validated successfully!\n'
 TMP_WWW=$(mktemp -d)
 printf '[INFO] Testing wp-config synthesis with DBaaS URL in %s...\n' "$TMP_WWW"
 
-"${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --mysql-url "$DBAAS_TEST_URL" --skip-deps --server-name "wordpress.local"
+"${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --mysql-url "$DBAAS_TEST_URL" --skip-deps --server-name "wordpress.local"
 
 if ! grep -q "define( *'DB_HOST', *'db-cluster.us-east-1.rds.amazonaws.com:3307'" "${TMP_WWW}/wp-config.php"; then
   printf '[ERROR] DB_HOST with custom port not present in wp-config.php!\n' >&2

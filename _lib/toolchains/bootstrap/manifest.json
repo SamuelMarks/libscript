@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "bootstrap",
-  "title": "Bootstrap Toolchain",
-  "description": "Tier 1 Linux LFS multi-stage cross-toolchain bootstrapping",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["bootstrap"],
-  "os_whitelist": ["linux"],
+  "description": "Tier 1 Linux LFS multi-stage cross-toolchain bootstrapping",
+  "name": "bootstrap",
   "os_blacklist": ["windows"],
-  "capabilities": ["versioned-artifact"]
+  "os_whitelist": ["linux"],
+  "provides": ["bootstrap"],
+  "tier": "T1",
+  "title": "Bootstrap Toolchain"
 }

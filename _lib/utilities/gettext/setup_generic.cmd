@@ -112,14 +112,14 @@ exit /b 0
 if not exist "%DOWNLOAD_DIR%\gettext" mkdir "%DOWNLOAD_DIR%\gettext"
 set "DL_URL=%GETTEXT_DOWNLOAD_URL%"
 if "%DL_URL%"=="" set "DL_URL=https://github.com/mlocati/gettext-iconv-windows/releases/download/v0.22.5-v1.17/gettext0.22.5-iconv1.17-shared-64.zip"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DL_URL%" "%DOWNLOAD_DIR%\gettext\gettext-%GETTEXT_VERSION%.zip"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DL_URL%" "%DOWNLOAD_DIR%\gettext\gettext-%GETTEXT_VERSION%.zip"
 exit /b 0
 
 :: ## action_install
 :: Installs and configures the requested version of gettext on Windows.
 :action_install
 if /i "%GETTEXT_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "gettext" "%GETTEXT_VERSION%" "msgfmt" "c"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "gettext" "%GETTEXT_VERSION%" "msgfmt" "c"
     exit /b !errorlevel!
 )
 set "EXACT_VERSION=%GETTEXT_VERSION%"
@@ -137,7 +137,7 @@ if exist "%TARGET_DIR%\bin\msgfmt.cmd" (
 )
 
 if "%GETTEXT_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends gettext
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends gettext
     where msgfmt >nul 2>&1
     if not errorlevel 1 exit /b 0
 )
@@ -148,7 +148,7 @@ if exist "%DOWNLOAD_DIR%\gettext\gettext-%GETTEXT_VERSION%.zip" (
     goto :gettext_done_extract
 )
 if not "%GETTEXT_DOWNLOAD_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GETTEXT_DOWNLOAD_URL%" "%TEMP%\gettext.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%GETTEXT_DOWNLOAD_URL%" "%TEMP%\gettext.zip"
     tar -xf "%TEMP%\gettext.zip" -C "%TARGET_DIR%"
     goto :gettext_done_extract
 )
@@ -184,5 +184,5 @@ goto :action_uninstall_service
 :: Removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "gettext" "%ACTION%" "%GETTEXT_VERSION%" "%GETTEXT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\gettext\%GETTEXT_VERSION%\bin\msgfmt.exe\"" "%LIBSCRIPT_HOME%\gettext\%GETTEXT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "gettext" "%ACTION%" "%GETTEXT_VERSION%" "%GETTEXT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\gettext\%GETTEXT_VERSION%\bin\msgfmt.exe\"" "%LIBSCRIPT_HOME%\gettext\%GETTEXT_VERSION%"
 exit /b !errorlevel!

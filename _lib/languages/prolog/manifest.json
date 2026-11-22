@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "prolog",
-  "title": "SWI-Prolog",
-  "description": "Comprehensive SWI-Prolog (swipl) logic programming environment and compiler.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["prolog", "swipl"],
+  "description": "Comprehensive SWI-Prolog (swipl) logic programming environment and compiler.",
+  "name": "prolog",
   "os_whitelist": ["all"],
+  "provides": ["prolog", "swipl"],
   "repository": "https://github.com/SWI-Prolog/swipl-devel",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "SWI-Prolog"
 }

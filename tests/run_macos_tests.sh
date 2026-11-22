@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
-SCRIPT_NAME="${REPO_ROOT}/_lib/_common/test_matrix_driver.sh"
+SCRIPT_NAME="${REPO_ROOT}/engine/common/test_matrix_driver.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -230,8 +230,8 @@ for arg in $TARGETS; do
         for dir in "$REPO_ROOT"/topologies/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS topologies/$(basename "$dir")"
         done
-        for sfile in "$REPO_ROOT"/payloads/schedulers/*.sh; do
-            [ -f "$sfile" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS payloads/schedulers/$(basename "$sfile" .sh)"
+        for sfile in "$REPO_ROOT"/workloads/schedulers/*.sh; do
+            [ -f "$sfile" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS workloads/schedulers/$(basename "$sfile" .sh)"
         done
         for dir in "$REPO_ROOT"/traits/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$(basename "$dir")"
@@ -240,7 +240,7 @@ for arg in $TARGETS; do
         EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
     elif [ "$arg" = "orchestration/cloud" ] || [ "$arg" = "cloud" ]; then
         EXPANDED_TARGETS="$EXPANDED_TARGETS cloud"
-    elif [ "${arg#bootloaders/}" != "$arg" ] || [ "${arg#topologies/}" != "$arg" ] || [ "${arg#payloads/schedulers/}" != "$arg" ] || [ "${arg#traits/}" != "$arg" ]; then
+    elif [ "${arg#bootloaders/}" != "$arg" ] || [ "${arg#topologies/}" != "$arg" ] || [ "${arg#workloads/schedulers/}" != "$arg" ] || [ "${arg#traits/}" != "$arg" ]; then
         EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
     elif [ -f "$REPO_ROOT/_lib/$arg/manifest.json" ] || [ -f "$REPO_ROOT/_lib/$arg/cli.sh" ]; then
         EXPANDED_TARGETS="$EXPANDED_TARGETS $_base_arg"
@@ -340,7 +340,7 @@ while true; do
             freebsd/distro) _marker_base='freebsd-distro' ;;
             illumos/distro) _marker_base='illumos-distro' ;;
             bootloaders/*) _marker_base="bootloaders-${_short_target}" ;;
-            payloads/schedulers/*) _marker_base="scheduler-${_short_target}" ;;
+            workloads/schedulers/*) _marker_base="scheduler-${_short_target}" ;;
             traits/*) _marker_base="trait-${_short_target}" ;;
         esac
 
@@ -364,14 +364,14 @@ while true; do
 
         # Check manifest for macOS support
         MANIFEST_PATH=""
-        if [ "$target" = "freebsd/distro" ] && [ -f "$REPO_ROOT/_lib/freebsd/distro/manifest.json" ]; then
-            MANIFEST_PATH="$REPO_ROOT/_lib/freebsd/distro/manifest.json"
-        elif [ "$target" = "illumos/distro" ] && [ -f "$REPO_ROOT/_lib/illumos/distro/manifest.json" ]; then
-            MANIFEST_PATH="$REPO_ROOT/_lib/illumos/distro/manifest.json"
-        elif [ "$target" = "distro" ] && [ -f "$REPO_ROOT/_lib/orchestration/distro/manifest.json" ]; then
-            MANIFEST_PATH="$REPO_ROOT/_lib/orchestration/distro/manifest.json"
-        elif [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/tpu-trainer/manifest.json" ]; then
-            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/tpu-trainer/manifest.json"
+        if [ "$target" = "freebsd/distro" ] && [ -f "$REPO_ROOT/synthesis/distro/freebsd/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/synthesis/distro/freebsd/manifest.json"
+        elif [ "$target" = "illumos/distro" ] && [ -f "$REPO_ROOT/synthesis/distro/illumos/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/synthesis/distro/illumos/manifest.json"
+        elif [ "$target" = "distro" ] && [ -f "$REPO_ROOT/synthesis/distro/linux/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/synthesis/distro/linux/manifest.json"
+        elif [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/workloads/ai/tpu-trainer/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/workloads/ai/tpu-trainer/manifest.json"
         else
             for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$_short_target/topology.json" "$REPO_ROOT/payloads"/*/"$_short_target/payload.json"; do
                 if [ -f "$_m" ]; then
@@ -476,33 +476,33 @@ while true; do
         _rtmp="${REMOTE_TMPDIR:-${TMPDIR:-/tmp}}"
         case "$target" in
             storage/provision_disk)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; rm -f ${_rtmp}/test-disk.img && sh $_exec_root/_lib/storage/provision_disk.sh ${_rtmp}/test-disk.img 1 gpt uefi && sh $_exec_root/_lib/storage/provision_disk.sh ${_rtmp}/test-disk.img 1 gpt uefi && rm -f ${_rtmp}/test-disk.img"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; rm -f ${_rtmp}/test-disk.img && sh $_exec_root/synthesis/disk/provision_disk.sh ${_rtmp}/test-disk.img 1 gpt uefi && sh $_exec_root/synthesis/disk/provision_disk.sh ${_rtmp}/test-disk.img 1 gpt uefi && rm -f ${_rtmp}/test-disk.img"
                 ;;
             runtimes/provision_isolated_runtime)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt && sh $_exec_root/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/synthesis/vfs/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt && sh $_exec_root/synthesis/vfs/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt"
                 ;;
             ml-training)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/ml-training/tpu-trainer/cli.sh install latest && sh $_exec_root/_lib/ml-training/tpu-trainer/cli.sh test && sh $_exec_root/_lib/ml-training/tpu-trainer/cli.sh install latest && sh $_exec_root/_lib/ml-training/tpu-trainer/cli.sh test"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/workloads/ai/tpu-trainer/cli.sh install latest && sh $_exec_root/workloads/ai/tpu-trainer/cli.sh test && sh $_exec_root/workloads/ai/tpu-trainer/cli.sh install latest && sh $_exec_root/workloads/ai/tpu-trainer/cli.sh test"
                 ;;
             freebsd/distro)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/freebsd/distro/cli.sh install latest && sh $_exec_root/_lib/freebsd/distro/cli.sh test && sh $_exec_root/_lib/freebsd/distro/cli.sh install latest && sh $_exec_root/_lib/freebsd/distro/cli.sh test"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/synthesis/distro/freebsd/cli.sh install latest && sh $_exec_root/synthesis/distro/freebsd/cli.sh test && sh $_exec_root/synthesis/distro/freebsd/cli.sh install latest && sh $_exec_root/synthesis/distro/freebsd/cli.sh test"
                 ;;
             illumos/distro)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/illumos/distro/cli.sh install latest && sh $_exec_root/_lib/illumos/distro/cli.sh test && sh $_exec_root/_lib/illumos/distro/cli.sh install latest && sh $_exec_root/_lib/illumos/distro/cli.sh test"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/synthesis/distro/illumos/cli.sh install latest && sh $_exec_root/synthesis/distro/illumos/cli.sh test && sh $_exec_root/synthesis/distro/illumos/cli.sh install latest && sh $_exec_root/synthesis/distro/illumos/cli.sh test"
                 ;;
             distro)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/orchestration/distro/cli.sh install latest && sh $_exec_root/_lib/orchestration/distro/cli.sh test && sh $_exec_root/_lib/orchestration/distro/cli.sh install latest && sh $_exec_root/_lib/orchestration/distro/cli.sh test"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/synthesis/distro/linux/cli.sh install latest && sh $_exec_root/synthesis/distro/linux/cli.sh test && sh $_exec_root/synthesis/distro/linux/cli.sh install latest && sh $_exec_root/synthesis/distro/linux/cli.sh test"
                 ;;
-            topologies/gke-tpu-cluster)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/topologies/gke-tpu-cluster/cli.sh --help && sh $_exec_root/topologies/gke-tpu-cluster/cli.sh --help"
+            infrastructure/clusters/gke-tpu-cluster)
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/infrastructure/clusters/gke-tpu-cluster/cli.sh --help && sh $_exec_root/infrastructure/clusters/gke-tpu-cluster/cli.sh --help"
                 ;;
             topologies/*)
                 _topo_name="${target#topologies/}"
                 test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root LIBSCRIPT_TOPOLOGY_STATE_FILE=${_rtmp}/topo-$_topo_name.json; rm -f ${_rtmp}/topo-$_topo_name.json*; sh $_exec_root/topologies/$_topo_name/cli.sh up && sh $_exec_root/topologies/$_topo_name/cli.sh status && sh $_exec_root/topologies/$_topo_name/cli.sh up && sh $_exec_root/topologies/$_topo_name/cli.sh destroy && rm -f ${_rtmp}/topo-$_topo_name.json*"
                 ;;
-            payloads/schedulers/*)
-                _sched_name="${target#payloads/schedulers/}"
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/payloads/engine.sh compile $_exec_root/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh $_exec_root/payloads/engine.sh submit $_exec_root/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh $_exec_root/payloads/engine.sh status $_exec_root/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh $_exec_root/payloads/engine.sh submit $_exec_root/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh $_exec_root/payloads/engine.sh destroy $_exec_root/payloads/ai/vllm/payload.json --scheduler $_sched_name"
+            workloads/schedulers/*)
+                _sched_name="${target#workloads/schedulers/}"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/workloads/engine.sh compile $_exec_root/workloads/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh $_exec_root/workloads/engine.sh submit $_exec_root/workloads/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh $_exec_root/workloads/engine.sh status $_exec_root/workloads/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh $_exec_root/workloads/engine.sh submit $_exec_root/workloads/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh $_exec_root/workloads/engine.sh destroy $_exec_root/workloads/payloads/ai/vllm/payload.json --scheduler $_sched_name"
                 ;;
             traits/*)
                 _trait_name="${target#traits/}"

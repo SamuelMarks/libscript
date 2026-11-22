@@ -1,17 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "sqlite",
-  "title": "SQLite",
-  "description": "A C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "sysroot-library"],
   "category": "databases",
-  "provides": ["database", "sqlite"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "ports": [],
-  "stateful": true,
-  "multitenant": false,
+  "description": "A C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -24,11 +19,17 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "rtos_support": ["zephyr", "freertos"],
   "memory_footprint_class": "mcu-sram-64k",
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "multitenant": false,
+  "name": "sqlite",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "provides": ["database", "sqlite"],
+  "rtos_support": ["zephyr", "freertos"],
+  "stateful": true,
+  "tier": "T1",
+  "title": "SQLite"
 }

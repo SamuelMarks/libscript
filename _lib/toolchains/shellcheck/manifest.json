@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "shellcheck",
-  "title": "ShellCheck",
-  "description": "A static analysis tool and linter for POSIX sh and shell scripts.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["shellcheck", "shell-linter"],
-  "os_whitelist": ["all"],
-  "repository": "https://github.com/koalaman/shellcheck",
+  "description": "A static analysis tool and linter for POSIX sh and shell scripts.",
   "license": "GPL-3.0-or-later",
   "license_name": "GNU General Public License v3.0 or later",
   "license_url": "https://github.com/koalaman/shellcheck/blob/master/LICENSE",
-  "capabilities": ["versioned-artifact"]
+  "name": "shellcheck",
+  "os_whitelist": ["all"],
+  "provides": ["shellcheck", "shell-linter"],
+  "repository": "https://github.com/koalaman/shellcheck",
+  "tier": "T1",
+  "title": "ShellCheck"
 }

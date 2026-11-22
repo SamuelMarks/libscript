@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%PSMUX_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%PSMUX_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%PSMUX_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%PSMUX_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -134,7 +134,7 @@ if "%PSMUX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading psmux %PSMUX_VERSION% to %DOWNLOAD_DIR%\psmux...
     if not exist "%DOWNLOAD_DIR%\psmux" mkdir "%DOWNLOAD_DIR%\psmux"
     if not "%PSMUX_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PSMUX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\psmux\psmux-%PSMUX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PSMUX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\psmux\psmux-%PSMUX_VERSION%.zip"
     ) else (
         echo PSMUX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PSMUX_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends psmux
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends psmux
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\psmux\psmux-%PSMUX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PSMUX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PSMUX_DOWNLOAD_URL%" "%TEMP%\psmux.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PSMUX_DOWNLOAD_URL%" "%TEMP%\psmux.zip"
         tar -xf "%TEMP%\psmux.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for psmux.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "psmux" "%ACTION%" "%PSMUX_VERSION%" "%PSMUX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\psmux\%PSMUX_VERSION%\\bin\\psmux.exe\"" "%LIBSCRIPT_HOME%\psmux\%PSMUX_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "psmux" "%ACTION%" "%PSMUX_VERSION%" "%PSMUX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\psmux\%PSMUX_VERSION%\\bin\\psmux.exe\"" "%LIBSCRIPT_HOME%\psmux\%PSMUX_VERSION%"
 exit /b !errorlevel!

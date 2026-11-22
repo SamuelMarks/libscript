@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nodejs-server",
-  "title": "Node.js App Server",
-  "description": "Generic Node.js application server component.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["app-server", "nodejs"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Generic Node.js application server component.",
+  "name": "nodejs-server",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["app-server", "nodejs"],
+  "tier": "T1",
+  "title": "Node.js App Server"
 }

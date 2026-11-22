@@ -1,18 +1,19 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "elasticsearch",
-  "title": "Elasticsearch",
-  "license": "Elastic-2.0 OR SSPL-1.0",
-  "license_name": "Elastic License 2.0 / Server Side Public License v1",
-  "description": "Distributed, RESTful search and analytics engine for Open edX legacy search backends.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "search",
-  "provides": ["search", "elasticsearch"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "ports": [9200, 9300],
   "dependencies": {
     "runtime_deps": ["java"]
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "description": "Distributed, RESTful search and analytics engine for Open edX legacy search backends.",
+  "license": "Elastic-2.0 OR SSPL-1.0",
+  "license_name": "Elastic License 2.0 / Server Side Public License v1",
+  "name": "elasticsearch",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "ports": [9200, 9300],
+  "provides": ["search", "elasticsearch"],
+  "tier": "T1",
+  "title": "Elasticsearch"
 }

@@ -78,7 +78,7 @@ for %%D in (
     )
 )
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "zephyr-sdk" "%ZEPHYR_SDK_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "zephyr-sdk" "%ZEPHYR_SDK_VERSION%"
 
 endlocal & (
     set "ZEPHYR_SDK_VERSION=%ZEPHYR_SDK_VERSION%"

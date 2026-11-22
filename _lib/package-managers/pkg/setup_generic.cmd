@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%PKG_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%PKG_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%PKG_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%PKG_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/freebsd/pkg" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%PKG_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pkg %PKG_VERSION% to %DOWNLOAD_DIR%\pkg...
     if not exist "%DOWNLOAD_DIR%\pkg" mkdir "%DOWNLOAD_DIR%\pkg"
     if not "%PKG_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PKG_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pkg\pkg-%PKG_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PKG_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pkg\pkg-%PKG_VERSION%.zip"
     ) else (
         echo PKG_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PKG_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pkg
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends pkg
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pkg\pkg-%PKG_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PKG_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PKG_DOWNLOAD_URL%" "%TEMP%\pkg.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PKG_DOWNLOAD_URL%" "%TEMP%\pkg.zip"
         tar -xf "%TEMP%\pkg.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pkg.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "pkg" "%ACTION%" "%PKG_VERSION%" "%PKG_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\pkg\%PKG_VERSION%\\bin\\pkg.exe\"" "%LIBSCRIPT_HOME%\pkg\%PKG_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "pkg" "%ACTION%" "%PKG_VERSION%" "%PKG_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\pkg\%PKG_VERSION%\\bin\\pkg.exe\"" "%LIBSCRIPT_HOME%\pkg\%PKG_VERSION%"
 exit /b !errorlevel!

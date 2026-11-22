@@ -90,6 +90,16 @@ set "CAT_NAME=%~2"
 if not exist "!_CD!\" exit /b 0
 set /a AUDITED+=1
 
+for %%N in ("!_CD!") do set "_COMP_LEAF=%%~nxN"
+if /i "!_COMP_LEAF:~-6!"=="-suite" (
+    echo [VM CONTRACT VIOLATION] [EXP_IN_LIB] !_CD!: Empirical campaign suites belong in experiments\^<suite-id^>\, not inside _lib\. >&2
+    set /a ERRORS+=1
+)
+if exist "!_CD!\suites\" (
+    echo [VM CONTRACT VIOLATION] [EXP_IN_LIB] !_CD!\suites: Empirical subsuites belong in experiments\^<suite-id^>\, not inside _lib\. >&2
+    set /a ERRORS+=1
+)
+
 for %%F in (cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md) do (
     if not exist "!_CD!\%%F" (
         echo [VM CONTRACT VIOLATION] [MISSING_CONTRACT_FILE] !_CD!: Missing required file %%F >&2
@@ -100,7 +110,7 @@ for %%F in (cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json READM
 set "_HAS_VER_ART=0"
 set "_HAS_SVC_DAEMON=0"
 if exist "!_CD!\manifest.json" (
-    findstr /I /C:"versioned-artifact" "!_CD!\manifest.json" >nul 2>&1 && set "_HAS_VER_ART=1"
+    findstr /I /C:"userland-package" /C:"sysroot-package" "!_CD!\manifest.json" >nul 2>&1 && set "_HAS_VER_ART=1"
     findstr /I /C:"service-daemon" "!_CD!\manifest.json" >nul 2>&1 && set "_HAS_SVC_DAEMON=1"
 ) else (
     set "_HAS_VER_ART=1"
@@ -109,7 +119,7 @@ if exist "!_CD!\manifest.json" (
 if "!_HAS_VER_ART!"=="1" (
     for %%F in (setup.sh setup.cmd env.sh env.cmd uninstall.sh uninstall.cmd) do (
         if not exist "!_CD!\%%F" (
-            echo [VM CONTRACT VIOLATION] [MISSING_CONTRACT_FILE] !_CD!: Missing required versioned-artifact file %%F >&2
+            echo [VM CONTRACT VIOLATION] [MISSING_CONTRACT_FILE] !_CD!: Missing required package lifecycle file %%F >&2
             set /a ERRORS+=1
         )
     )
@@ -154,7 +164,7 @@ if /i not "!CAT_NAME!"=="package-managers" (
         )
         findstr /I /R /C:"python[0-9.]*[ ]*-m[ ]*venv" /C:"python\.exe.*-m[ ]*venv" /C:"uv[ ]*venv" "%%S" >nul 2>&1
         if not errorlevel 1 (
-            echo [VM CONTRACT VIOLATION] [RAW_PYTHON_VENV] %%S: Explicit Python venv creation in recipe .cmd; delegate to _lib\_common\python_env.cmd >&2
+            echo [VM CONTRACT VIOLATION] [RAW_PYTHON_VENV] %%S: Explicit Python venv creation in recipe .cmd; delegate to engine\common\python_env.cmd >&2
             set /a ERRORS+=1
         )
     )
@@ -163,7 +173,7 @@ if /i not "!CAT_NAME!"=="init-systems" (
     for %%S in ("!_CD!\setup*.cmd" "!_CD!\service*.cmd" "!_CD!\uninstall*.cmd" "!_CD!\test*.cmd") do (
         findstr /I /R /C:"sc\.exe[ ]*start" /C:"sc\.exe[ ]*stop" /C:"sc\.exe[ ]*query" /C:"sc[ ]*start" /C:"sc[ ]*stop" /C:"sc[ ]*query" /C:"net[ ]*start" /C:"net[ ]*stop" "%%S" >nul 2>&1
         if not errorlevel 1 (
-            echo [VM CONTRACT VIOLATION] [RAW_DAEMON_MANAGER] %%S: Direct sc/net daemon call in component .cmd; delegate to _lib\_common\service.cmd >&2
+            echo [VM CONTRACT VIOLATION] [RAW_DAEMON_MANAGER] %%S: Direct sc/net daemon call in component .cmd; delegate to engine\common\service.cmd >&2
             set /a ERRORS+=1
         )
     )

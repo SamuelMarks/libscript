@@ -1,16 +1,17 @@
 {
-  "name": "musl",
-  "title": "Musl C Library",
-  "description": "Lightweight, standards-conformant C standard library",
-  "provides": ["musl"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Lightweight, standards-conformant C standard library",
+  "name": "musl",
   "os_blacklist": ["windows"],
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "provides": ["musl"],
+  "tier": "T2",
+  "title": "Musl C Library",
+  "versions": ["1.0.0"]
 }

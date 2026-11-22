@@ -1,7 +1,7 @@
 @echo off
 :: # test_resolve_stack.cmd
 :: ## Overview
-:: Verifies that _lib\orchestration\resolve_stack.cmd resolves multi-component stacks across all 300+ component manifests without exceeding cmd.exe's 8,191-character limit.
+:: Verifies that engine\solver\resolve_stack.cmd resolves multi-component stacks across all 300+ component manifests without exceeding cmd.exe's 8,191-character limit.
 :: ## Usage
 :: tests\test_resolve_stack.cmd
 
@@ -54,7 +54,7 @@ if not exist "!_TMP_DIR!" mkdir "!_TMP_DIR!"
 echo {"deps":{"nodejs":"20","postgres":"17","python":"3.12"}} > "!_TMP_DIR!\libscript.json"
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!_TMP_DIR!\libscript.json" "!_TMP_DIR!\plan.json"
+call "!LIBSCRIPT_ROOT_DIR!\engine\solver\resolve_stack.cmd" "!_TMP_DIR!\libscript.json" "!_TMP_DIR!\plan.json"
 if errorlevel 1 (
     echo [FAIL] resolve_stack.cmd failed 1>&2
     rmdir /s /q "!_TMP_DIR!" 2>nul

@@ -93,7 +93,7 @@ printf '%s\n' "$DOTENV_OUT" | grep '^PATH=' | grep -q "python/3.12/bin"
 printf '%s\n' "$DOTENV_OUT" | grep '^SERVICE_PATH=' | grep -q "nodejs/22/bin"
 
 printf '==> Testing run_hooks.sh multi-component PATH inheritance...\n'
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "$MANIFEST" "post_install"
+"${LIBSCRIPT_ROOT_DIR}/engine/hooks/run_hooks.sh" "$MANIFEST" "post_install"
 
 grep -q "v22.0.0" "${TEST_TMP}/hook_out.txt"
 grep -q "PostgreSQL" "${TEST_TMP}/hook_out.txt"

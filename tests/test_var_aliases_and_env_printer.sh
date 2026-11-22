@@ -51,11 +51,11 @@ OUT_PATHS=$(
   LIBSCRIPT_LOGS_DIR="${TEST_TMP}/custom_logs"
   PACKAGE_NAME='lynx'
   export STACK LIBSCRIPT_DOWNLOAD_DIR LIBSCRIPT_LOG_DIR LOGS_DIR DOWNLOAD_DIR LIBSCRIPT_LOGS_DIR PACKAGE_NAME
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/log.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/paths.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/paths.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
@@ -71,7 +71,7 @@ OUT_CTX=$(
   STACK=''
   LIBSCRIPT_TARGET_ROOTFS="${TEST_TMP}/legacy_rootfs"
   export STACK LIBSCRIPT_TARGET_ROOTFS
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/context.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/context.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
@@ -85,7 +85,7 @@ M1=$(
   STACK=''
   LIBSCRIPT_DEFAULT_INSTALL_METHOD='from-source'
   export STACK LIBSCRIPT_DEFAULT_INSTALL_METHOD
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mgr.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
@@ -95,7 +95,7 @@ M2=$(
   STACK=''
   LIBSCRIPT_GLOBAL_INSTALL_METHOD='from-source'
   export STACK LIBSCRIPT_GLOBAL_INSTALL_METHOD
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mgr.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
@@ -111,7 +111,7 @@ OLLAMA_ENV=$(
   PACKAGE_NAME='ollama'
   COMP_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/ollama"
   export STACK OLLAMA_HOST PACKAGE_NAME COMP_DIR
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
@@ -125,7 +125,7 @@ LYNX_ENV=$(
   PACKAGE_NAME='lynx'
   COMP_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/lynx"
   export STACK OLLAMA_HOST PACKAGE_NAME COMP_DIR
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"

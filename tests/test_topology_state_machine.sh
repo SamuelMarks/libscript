@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Verifies .topology_state.json checkpoint resume, lease locking, and split-brain fencing in topologies/engine.sh
+# Verifies .topology_state.json checkpoint resume, lease locking, and split-brain fencing in workloads/constellations/engine.sh
 # across `valkey-cluster`, `postgres-ha`, `redis-cluster`, `k0s-ha`, `minio-distributed`, `gke-tpu-cluster`,
 # `mesos-marathon-ha`, and `k8s-marathon-paas`.
 # ## Usage
@@ -54,30 +54,30 @@ for TOPO_NAME in valkey-cluster postgres-ha redis-cluster k0s-ha minio-distribut
 done
 
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/gke-tpu-cluster/cli.sh" --help >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/gke-tpu-cluster/cli.sh" --help >/dev/null
 
 export LIBSCRIPT_TOPOLOGY_STATE_FILE="${TSM_TMP}/mesos-ha.state.json"
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/mesos-marathon-ha/cli.sh" up >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/mesos-marathon-ha/cli.sh" up >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/mesos-marathon-ha/cli.sh" scale mesos-agents 5 >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/mesos-marathon-ha/cli.sh" scale mesos-agents 5 >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/mesos-marathon-ha/cli.sh" failover mesos-masters-1 >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/mesos-marathon-ha/cli.sh" failover mesos-masters-1 >/dev/null
 jq -e '.active_leader_id == "mesos-masters-1"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/mesos-marathon-ha/cli.sh" down >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/mesos-marathon-ha/cli.sh" down >/dev/null
 jq -e '.status == "DESTROYED"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
 
 export LIBSCRIPT_TOPOLOGY_STATE_FILE="${TSM_TMP}/k8s-paas.state.json"
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" up >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" up >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" scale k8s-workers 4 >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" scale k8s-workers 4 >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" failover k8s-control-plane-1 >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" failover k8s-control-plane-1 >/dev/null
 jq -e '.active_leader_id == "k8s-control-plane-1"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" down >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" down >/dev/null
 jq -e '.status == "DESTROYED"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
 
 printf '[PASS] Topology state machine checkpointing, locking, and fencing verified across all 8 topologies.

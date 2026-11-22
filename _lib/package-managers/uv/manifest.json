@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "uv",
-  "provides": ["package-manager", "uv"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos", "freebsd", "bsd"],
-  "title": "uv",
-  "description": "Bootstrap module for the `uv` package manager (astral.sh).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap module for the `uv` package manager (astral.sh).",
+  "name": "uv",
+  "os_blacklist": ["sunos", "freebsd", "bsd"],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "uv"],
+  "tier": "T1",
+  "title": "uv"
 }

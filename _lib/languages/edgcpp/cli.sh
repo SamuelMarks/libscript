@@ -36,14 +36,7 @@ case "${1:-}" in
     STACK="${STACK%"${THIS_FILE}":}"
     export STACK
     exec "${SCRIPT_DIR}/benchmark_experiments.sh" "$@"
-    ;;
-  cloud-experiments|rapid-experiment)
-    shift
-    STACK="${STACK%"${THIS_FILE}":}"
-    export STACK
-    exec "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/experiment_cloud.sh" "$@"
-    ;;
-  torture)
+    ;;torture)
     shift
     STACK="${STACK%"${THIS_FILE}":}"
     export STACK
@@ -52,7 +45,7 @@ case "${1:-}" in
 esac
 
 export PACKAGE_NAME='edgcpp'
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

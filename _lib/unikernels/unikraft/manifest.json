@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
+  "category": "unikernels",
+  "description": "Modular POSIX-compatible unikernel SDK and KraftKit image builder targeting KVM, Firecracker, and Xen.",
+  "name": "unikraft",
+  "os_whitelist": ["all"],
+  "provides": ["unikraft", "kraft", "unikernel-builder"],
+  "repository": "https://github.com/unikraft/kraftkit",
+  "tier": "T2",
+  "title": "Unikraft (KraftKit)"
+}

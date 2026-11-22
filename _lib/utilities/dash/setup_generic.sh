@@ -27,17 +27,17 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mgr.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/versioning.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/source_builder.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/source_builder.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -174,8 +174,8 @@ case "$ACTION" in
       if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${IS_MSDOS:-0}" = '1' ]; then
         TARGET_DIR=$(libscript_get_version_dir 'dash' "${EXACT_VERSION}")
         mkdir -p "${TARGET_DIR}/bin"
-        if ! "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-dash-dos --target=dos32 --out="${TARGET_DIR}/bin/dash.exe" >/dev/null 2>&1; then
-          "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-dash-dos --target=host --out="${TARGET_DIR}/bin/dash.exe" >/dev/null
+        if ! "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/build_dos32.sh" ls-dash-dos --target=dos32 --out="${TARGET_DIR}/bin/dash.exe" >/dev/null 2>&1; then
+          "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/build_dos32.sh" ls-dash-dos --target=host --out="${TARGET_DIR}/bin/dash.exe" >/dev/null
         fi
         cp -f "${TARGET_DIR}/bin/dash.exe" "${TARGET_DIR}/bin/sh.exe"
         libscript_symlink_alias 'dash' "${VERSION}" "${EXACT_VERSION}"

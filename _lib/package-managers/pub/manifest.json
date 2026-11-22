@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pub",
-  "provides": ["pub"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "pub",
-  "description": "Bootstrap module for `pub` (Dart / Flutter package manager).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for `pub` (Dart / Flutter package manager).",
+  "name": "pub",
   "os_blacklist": ["freebsd", "alpine", "sunos"],
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["pub"],
   "repository": "https://github.com/dart-lang/pub",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pub"
 }

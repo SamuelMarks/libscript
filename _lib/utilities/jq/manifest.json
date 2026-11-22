@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "jq",
-  "title": "jq",
-  "description": "Lightweight command-line JSON processor with native Windows (MSVC) and MS-DOS (dos32) builds via SamuelMarks/jq-windows.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["jq", "jq-windows"],
+  "description": "Lightweight command-line JSON processor with native Windows (MSVC) and MS-DOS (dos32) builds via SamuelMarks/jq-windows.",
+  "name": "jq",
   "os_whitelist": ["all"],
+  "provides": ["jq", "jq-windows"],
   "repository": "https://github.com/SamuelMarks/jq-windows",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "jq"
 }

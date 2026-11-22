@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "guix",
-  "provides": ["package-manager", "guix"],
-  "os_whitelist": ["linux"],
-  "os_blacklist": ["darwin", "windows", "freebsd", "alpine"],
-  "title": "guix",
-  "description": "Bootstrap module for the `guix` (GNU Guix) package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `guix` (GNU Guix) package manager.",
+  "name": "guix",
+  "os_blacklist": ["darwin", "windows", "freebsd", "alpine"],
+  "os_whitelist": ["linux"],
+  "provides": ["package-manager", "guix"],
   "repository": "https://git.savannah.gnu.org/git/guix.git",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "guix"
 }

@@ -51,15 +51,15 @@ set "LIBSCRIPT_DATA_DIR=%TEST_TMP%\state"
 
 echo === 1. GKE+TPU Topology Convergence, Dynamic Scale, ^& Choreography Checkpoints ===
 set "LIBSCRIPT_TOPOLOGY_STATE_DIR=%TEST_TMP%\gke_topo"
-call "%LIBSCRIPT_ROOT_DIR%\topologies\engine.cmd" up "%LIBSCRIPT_ROOT_DIR%\topologies\gke-tpu-cluster\topology.json" >nul
+call "%LIBSCRIPT_ROOT_DIR%\workloads\constellations\engine.cmd" up "%LIBSCRIPT_ROOT_DIR%\infrastructure\clusters\gke-tpu-cluster\topology.json" >nul
 if errorlevel 1 ( call :fail_ml "Initial topology up failed" & exit /b 1 )
-call "%LIBSCRIPT_ROOT_DIR%\topologies\engine.cmd" up "%LIBSCRIPT_ROOT_DIR%\topologies\gke-tpu-cluster\topology.json" >nul
+call "%LIBSCRIPT_ROOT_DIR%\workloads\constellations\engine.cmd" up "%LIBSCRIPT_ROOT_DIR%\infrastructure\clusters\gke-tpu-cluster\topology.json" >nul
 if errorlevel 1 ( call :fail_ml "Idempotent 2x topology up failed" & exit /b 1 )
 
 jq -e ".status == \"HEALTHY\" and (.completed_hooks | length == 5)" "%LIBSCRIPT_TOPOLOGY_STATE_DIR%\.topology_state.json" >nul
 if errorlevel 1 ( call :fail_ml "Topology choreography hooks not recorded" & exit /b 1 )
 
-call "%LIBSCRIPT_ROOT_DIR%\topologies\engine.cmd" scale "%LIBSCRIPT_ROOT_DIR%\topologies\gke-tpu-cluster\topology.json" "tpu-slice-pool=4" >nul
+call "%LIBSCRIPT_ROOT_DIR%\workloads\constellations\engine.cmd" scale "%LIBSCRIPT_ROOT_DIR%\infrastructure\clusters\gke-tpu-cluster\topology.json" "tpu-slice-pool=4" >nul
 if errorlevel 1 ( call :fail_ml "Topology scale failed" & exit /b 1 )
 
 jq -e "[.nodes[] | select(.group == \"tpu-slice-pool\")] | length == 4" "%LIBSCRIPT_TOPOLOGY_STATE_DIR%\.topology_state.json" >nul
@@ -106,17 +106,17 @@ if not errorlevel 1 ( set "PATH=%ORIG_PATH%" & call :fail_ml "Expected TFRC cros
 set "PATH=%ORIG_PATH%"
 
 echo === 3. Unified tpu_vm ^& xpk Payload Scheduler Lifecycle ===
-call "%LIBSCRIPT_ROOT_DIR%\payloads\engine.cmd" compile "%LIBSCRIPT_ROOT_DIR%\payloads\ai\gcp-tpu-vm\payload.json" --scheduler=tpu_vm > "%TEST_TMP%\compile.json"
+call "%LIBSCRIPT_ROOT_DIR%\workloads\engine.cmd" compile "%LIBSCRIPT_ROOT_DIR%\workloads\payloads\ai\gcp-tpu-vm\payload.json" --scheduler=tpu_vm > "%TEST_TMP%\compile.json"
 if errorlevel 1 ( call :fail_ml "tpu_vm compile failed" & exit /b 1 )
 jq -e ".scheduler == \"tpu_vm\" and .sync_mode == \"tree-hash-all-workers\"" "%TEST_TMP%\compile.json" >nul
 if errorlevel 1 ( call :fail_ml "tpu_vm compile output assertion failed" & exit /b 1 )
 
-call "%LIBSCRIPT_ROOT_DIR%\payloads\engine.cmd" submit "%LIBSCRIPT_ROOT_DIR%\payloads\ai\gcp-tpu-vm\payload.json" --scheduler=tpu_vm --dry-run > "%TEST_TMP%\submit.json"
+call "%LIBSCRIPT_ROOT_DIR%\workloads\engine.cmd" submit "%LIBSCRIPT_ROOT_DIR%\workloads\payloads\ai\gcp-tpu-vm\payload.json" --scheduler=tpu_vm --dry-run > "%TEST_TMP%\submit.json"
 if errorlevel 1 ( call :fail_ml "tpu_vm submit failed" & exit /b 1 )
 jq -e ".status == \"ok\"" "%TEST_TMP%\submit.json" >nul
 if errorlevel 1 ( call :fail_ml "tpu_vm submit status assertion failed" & exit /b 1 )
 
-call "%LIBSCRIPT_ROOT_DIR%\payloads\engine.cmd" destroy "%LIBSCRIPT_ROOT_DIR%\payloads\ai\gcp-tpu-vm\payload.json" --scheduler=tpu_vm --dry-run > "%TEST_TMP%\destroy.json"
+call "%LIBSCRIPT_ROOT_DIR%\workloads\engine.cmd" destroy "%LIBSCRIPT_ROOT_DIR%\workloads\payloads\ai\gcp-tpu-vm\payload.json" --scheduler=tpu_vm --dry-run > "%TEST_TMP%\destroy.json"
 if errorlevel 1 ( call :fail_ml "tpu_vm destroy failed" & exit /b 1 )
 jq -e ".status == \"ok\"" "%TEST_TMP%\destroy.json" >nul
 if errorlevel 1 ( call :fail_ml "tpu_vm destroy status assertion failed" & exit /b 1 )

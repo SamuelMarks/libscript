@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Idempotently formats unformatted block devices via _lib/storage/format_fs.sh, discovers
+# Idempotently formats unformatted block devices via engine/common/format_fs.sh, discovers
 # cloud data disks (--auto-data-disk), reconciles /etc/fstab or /etc/vfstab, mounts volumes,
 # and normalizes directory ownership.
 # ## Usage
@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-for _tr_lib in "_lib/_common/priv.sh" "_lib/_common/os_info.sh"; do
+for _tr_lib in "engine/common/priv.sh" "engine/common/os_info.sh"; do
   if [ -f "${LIBSCRIPT_ROOT_DIR}/${_tr_lib}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_tr_lib}"
     export SCRIPT_NAME
@@ -204,8 +204,8 @@ if [ "$AUTO_DISCOVER" -eq 1 ]; then
     printf '[INFO] %s is already mounted; ownership normalized.\n' "$MOUNT_POINT"
     exit 0
   fi
-  if [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/storage/disk_discovery.sh" ]; then
-    DEVICE=$("${LIBSCRIPT_ROOT_DIR}/_lib/storage/disk_discovery.sh" --auto-data-disk 2>/dev/null || true)
+  if [ -x "${LIBSCRIPT_ROOT_DIR}/engine/common/disk_discovery.sh" ]; then
+    DEVICE=$("${LIBSCRIPT_ROOT_DIR}/engine/common/disk_discovery.sh" --auto-data-disk 2>/dev/null || true)
   fi
   if [ -z "$DEVICE" ]; then
     normalize_mount_ownership
@@ -253,7 +253,7 @@ reconcile_fstab_entry() {
 if check_existing_signature "$DEVICE"; then
   printf '[INFO] Existing filesystem signature detected on %s; skipping format_fs.\n' "$DEVICE"
 elif [ "$SYSROOT" = "/" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && [ -b "$DEVICE" ]; then
-  "${LIBSCRIPT_ROOT_DIR}/_lib/storage/format_fs.sh" "$DEVICE" "$FSTYPE"
+  "${LIBSCRIPT_ROOT_DIR}/engine/common/format_fs.sh" "$DEVICE" "$FSTYPE"
 elif [ -f "$DEVICE" ]; then
   printf 'LIBSCRIPT_FS_SIGNATURE=%s\n' "$FSTYPE" > "$DEVICE"
 fi

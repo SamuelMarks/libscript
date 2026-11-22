@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%NPM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%NPM_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%NPM_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%NPM_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/npm/cli" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%NPM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading npm %NPM_VERSION% to %DOWNLOAD_DIR%\npm...
     if not exist "%DOWNLOAD_DIR%\npm" mkdir "%DOWNLOAD_DIR%\npm"
     if not "%NPM_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NPM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\npm\npm-%NPM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NPM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\npm\npm-%NPM_VERSION%.zip"
     ) else (
         echo NPM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NPM_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends npm
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends npm
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\npm\npm-%NPM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NPM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NPM_DOWNLOAD_URL%" "%TEMP%\npm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NPM_DOWNLOAD_URL%" "%TEMP%\npm.zip"
         tar -xf "%TEMP%\npm.zip" -C "%TARGET_DIR%"
     ) else (
         if exist "%USERPROFILE%\.libscript\nodejs\latest\npm.cmd" (
@@ -199,5 +199,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "npm" "%ACTION%" "%NPM_VERSION%" "%NPM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\npm\%NPM_VERSION%\\bin\\npm.exe\"" "%LIBSCRIPT_HOME%\npm\%NPM_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "npm" "%ACTION%" "%NPM_VERSION%" "%NPM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\npm\%NPM_VERSION%\\bin\\npm.exe\"" "%LIBSCRIPT_HOME%\npm\%NPM_VERSION%"
 exit /b !errorlevel!

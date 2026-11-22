@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "tree",
-  "title": "tree",
-  "description": "Recursive depth-indented directory listing utility supporting colorized text, JSON, and XML output.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["tree", "directory-lister"],
+  "description": "Recursive depth-indented directory listing utility supporting colorized text, JSON, and XML output.",
+  "name": "tree",
   "os_whitelist": ["all"],
+  "provides": ["tree", "directory-lister"],
   "repository": "https://github.com/Old-Man-Programmer/tree",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "tree"
 }

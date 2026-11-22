@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "macports",
-  "provides": ["macports"],
-  "os_whitelist": ["darwin"],
-  "title": "macports",
-  "description": "Bootstrap module for the `macports` package manager/tool.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `macports` package manager/tool.",
+  "name": "macports",
+  "os_whitelist": ["darwin"],
+  "provides": ["macports"],
   "repository": "https://github.com/macports/macports-base",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "macports"
 }

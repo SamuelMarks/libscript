@@ -63,10 +63,10 @@ if not exist "%TEST_DIR%" mkdir "%TEST_DIR%"
 set "RAW_DISK=%TEST_DIR%\raw.img"
 echo LibScript Test Disk > "%RAW_DISK%"
 
-call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\azure_vhd.cmd" "%RAW_DISK%" "%TEST_DIR%\azure.vhd" 1
-call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\gcp_image.cmd" "%RAW_DISK%" "%TEST_DIR%\gcp.tar.gz" 1
-call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\aws_ami.cmd" "%RAW_DISK%" "%TEST_DIR%\aws.raw" 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\cloud\gen_nocloud_iso.cmd" "test-node" "" "%TEST_DIR%\cidata.iso"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\azure_vhd.cmd" "%RAW_DISK%" "%TEST_DIR%\azure.vhd" 1
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\gcp_image.cmd" "%RAW_DISK%" "%TEST_DIR%\gcp.tar.gz" 1
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\aws_ami.cmd" "%RAW_DISK%" "%TEST_DIR%\aws.raw" 1
+call "%LIBSCRIPT_ROOT_DIR%\infrastructure\resources\cloudinit\gen_nocloud_iso.cmd" "test-node" "" "%TEST_DIR%\cidata.iso"
 
 set "ALL_CLOUD_OK=1"
 if not exist "%TEST_DIR%\azure.vhd" set "ALL_CLOUD_OK=0"

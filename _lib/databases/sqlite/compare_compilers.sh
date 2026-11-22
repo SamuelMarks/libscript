@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 COMPARE_DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/source_builder.sh"; do
+for LIB in "engine/common/log.sh" "engine/common/source_builder.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091

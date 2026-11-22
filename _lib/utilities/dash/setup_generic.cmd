@@ -48,7 +48,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\os_info.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\os_info.cmd"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%DASH_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
@@ -85,14 +85,14 @@ exit /b 0
 set "RELEASES_URL=%DASH_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/SamuelMarks/dash-windows/releases/latest"
 echo [ls-remote] Fetching available dash versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
 :: Activates a specific installed version of dash and updates alias junctions.
 :action_use
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
@@ -100,8 +100,8 @@ if not exist "!TARGET_DIR!" (
     set "STACK="
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -115,7 +115,7 @@ set "DL_DIR=!DL_DIR!\dash"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading dash !EXACT_VERSION! ^(!TARGET_OS!^) from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -124,47 +124,47 @@ exit /b !errorlevel!
 if /i "%DASH_INSTALL_METHOD%"=="from-source" (
     call :resolve_version
     if "%IS_MSDOS%"=="1" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
         set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
         if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos32\build_dos32.cmd" ls-dash-dos --target dos32 --out "!TARGET_DIR!\bin\dash.exe" >nul 2>&1
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\dos32\build_dos32.cmd" ls-dash-dos --target dos32 --out "!TARGET_DIR!\bin\dash.exe" >nul 2>&1
         if not exist "!TARGET_DIR!\bin\dash.exe" (
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos32\build_dos32.cmd" ls-dash-dos --target host --out "!TARGET_DIR!\bin\dash.exe" >nul 2>&1
+            call "%LIBSCRIPT_ROOT_DIR%\engine\common\dos32\build_dos32.cmd" ls-dash-dos --target host --out "!TARGET_DIR!\bin\dash.exe" >nul 2>&1
         )
         if exist "!TARGET_DIR!\bin\dash.exe" copy /y "!TARGET_DIR!\bin\dash.exe" "!TARGET_DIR!\bin\sh.exe" >nul
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
         exit /b 0
     )
     set "SRC_URL=%DASH_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=http://gondor.apana.org.au/~herbert/dash/files/dash-!EXACT_VERSION!.tar.gz"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "dash" "!EXACT_VERSION!" "dash" "c" "autotools" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "dash" "!EXACT_VERSION!" "dash" "c" "autotools" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if /i "%DASH_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget dash
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget dash
     exit /b !errorlevel!
 )
 if /i "%DASH_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget dash
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget dash
     exit /b !errorlevel!
 )
 if /i "%DASH_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco dash
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco dash
     exit /b !errorlevel!
 )
 if /i "%DASH_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop dash
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop dash
     exit /b !errorlevel!
 )
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if exist "!TARGET_DIR!\bin\dash.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] dash !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -179,12 +179,12 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\dash-!RANDOM!-!ARCHIVE_NAME!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 (
         if "%DASH_DOWNLOAD_URL%"=="" (
             call :resolve_dash_fallback_url
             set "TMP_FILE=%TEMP%\dash-!RANDOM!-alt"
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+            call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
             if errorlevel 1 exit /b 1
         ) else (
             exit /b 1
@@ -194,8 +194,8 @@ if exist "!CACHED_DL!" (
 call :stage_dash_artifact "!TMP_FILE!" "!URL!" "!TARGET_DIR!"
 if errorlevel 1 exit /b 1
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_win_arch
@@ -307,7 +307,7 @@ exit /b 0
 set "EXACT_VERSION="
 set "_REL_API=%DASH_RELEASES_URL%"
 if "!_REL_API!"=="" set "_REL_API=https://api.github.com/repos/SamuelMarks/dash-windows/releases/latest"
-for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
+for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
     set "EXACT_VERSION=%%T"
 )
 if not "!EXACT_VERSION!"=="" (
@@ -319,5 +319,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "dash" "%ACTION%" "%DASH_VERSION%" "%DASH_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\dash\%DASH_VERSION%\\bin\\dash.exe\"" "%LIBSCRIPT_HOME%\dash\%DASH_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "dash" "%ACTION%" "%DASH_VERSION%" "%DASH_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\dash\%DASH_VERSION%\\bin\\dash.exe\"" "%LIBSCRIPT_HOME%\dash\%DASH_VERSION%"
 exit /b !errorlevel!

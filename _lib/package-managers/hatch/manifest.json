@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "hatch",
-  "provides": ["hatch"],
-  "os_whitelist": ["all"],
-  "title": "hatch",
-  "description": "Bootstrap module for `hatch` (Modern Python project manager).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for `hatch` (Modern Python project manager).",
+  "name": "hatch",
+  "os_whitelist": ["all"],
+  "provides": ["hatch"],
   "repository": "https://github.com/pypa/hatch",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "hatch"
 }

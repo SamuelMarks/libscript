@@ -49,4 +49,4 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=ollama"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" %*

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "wireguard",
-  "title": "WireGuard Tools",
-  "description": "Fast, modern, cryptographically opinionated VPN tunnel configuration utilities (wg and wg-quick).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "security",
-  "provides": ["wireguard", "wg", "vpn"],
+  "description": "Fast, modern, cryptographically opinionated VPN tunnel configuration utilities (wg and wg-quick).",
+  "name": "wireguard",
   "os_whitelist": ["all"],
   "ports": [51820],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["wireguard", "wg", "vpn"],
+  "tier": "T1",
+  "title": "WireGuard Tools"
 }

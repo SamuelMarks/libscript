@@ -36,7 +36,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/hw_tune.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/os_info.sh" "engine/common/versioning.sh" "engine/common/hw_tune.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -171,7 +171,7 @@ setup_python_venv_if_requested() {
     if [ ! -f "${PYTHON_VENV}/bin/python" ]; then
       if ! type libscript_python_venv >/dev/null 2>&1; then
         _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/python_env.sh"
         export SCRIPT_NAME
         # shellcheck disable=SC1090,SC1091
         . "${SCRIPT_NAME}"

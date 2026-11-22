@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "virtualization",
+  "conflicts": [],
+  "description": "A generic and open source machine emulator and virtualizer with KVM hardware acceleration support.",
+  "name": "qemu",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "provides": ["qemu", "kvm", "virtualization"],
+  "tier": "T1",
+  "title": "QEMU"
+}

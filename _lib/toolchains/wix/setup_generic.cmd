@@ -69,8 +69,8 @@ if /I "%ACTION%"=="use" (
         set "ACTION=install"
         call "%~f0"
     )
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "wix" "%WIX_VERSION%" "!EXACT_VERSION!"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "wix" "default" "!EXACT_VERSION!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "wix" "%WIX_VERSION%" "!EXACT_VERSION!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "wix" "default" "!EXACT_VERSION!"
     exit /b 0
 )
 if /I not "%ACTION%"=="install" exit /b 0
@@ -83,11 +83,11 @@ if "!EXACT_VERSION!"=="3.14" (
     if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
     set "DL_URL=%WIX_DOWNLOAD_URL%"
     if "!DL_URL!"=="" set "DL_URL=https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "%TEMP%\wix314.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "%TEMP%\wix314.zip"
     tar -xf "%TEMP%\wix314.zip" -C "!TARGET_DIR!\bin"
     del /f /q "%TEMP%\wix314.zip" >nul 2>&1
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "wix" "%WIX_VERSION%" "!EXACT_VERSION!"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "wix" "default" "!EXACT_VERSION!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "wix" "%WIX_VERSION%" "!EXACT_VERSION!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "wix" "default" "!EXACT_VERSION!"
     exit /b 0
 )
 
@@ -102,6 +102,6 @@ if errorlevel 1 (
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 dotnet tool install --tool-path "!TARGET_DIR!\bin" wix --version "!EXACT_VERSION!" || dotnet tool update --tool-path "!TARGET_DIR!\bin" wix --version "!EXACT_VERSION!"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "wix" "%WIX_VERSION%" "!EXACT_VERSION!"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "wix" "default" "!EXACT_VERSION!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "wix" "%WIX_VERSION%" "!EXACT_VERSION!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "wix" "default" "!EXACT_VERSION!"
 exit /b 0

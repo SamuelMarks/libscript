@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nvm",
-  "provides": ["nvm"],
-  "os_whitelist": ["all"],
-  "title": "nvm",
-  "description": "Bootstrap module for `nvm` (Node Version Manager).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for `nvm` (Node Version Manager).",
+  "name": "nvm",
+  "os_whitelist": ["all"],
+  "provides": ["nvm"],
   "repository": "https://github.com/nvm-sh/nvm",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "nvm"
 }

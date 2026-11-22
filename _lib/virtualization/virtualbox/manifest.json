@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "arch_blacklist": ["arm64", "aarch64"],
+  "capabilities": ["userland-package"],
+  "category": "virtualization",
+  "conflicts": [],
+  "description": "Oracle VM VirtualBox hypervisor with Extension Pack support for x86/amd64 virtualization.",
+  "name": "virtualbox",
+  "os_blacklist": ["alpine", "sunos", "freebsd", "bsd", "darwin"],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "provides": ["virtualbox", "vbox", "virtualization"],
+  "tier": "T1",
+  "title": "VirtualBox"
+}

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "google-cloud-sdk",
-  "provides": ["google-cloud-sdk"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "title": "Google Cloud Sdk",
   "description": "Bootstrap module for the `google-cloud-sdk` package manager.",
+  "name": "google-cloud-sdk",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["google-cloud-sdk"],
   "repository": "https://github.com/GoogleCloudPlatform/cloud-sdk-docker",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Google Cloud Sdk"
 }

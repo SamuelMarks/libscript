@@ -66,7 +66,7 @@ set "TARGET_LIBC=%~2"
 set "TARGET_OS=%~3"
 set "REPO_ROOT=!SCRIPT_DIR!\..\..\.."
 
-call "%REPO_ROOT%\_lib\toolchains\triplets.cmd" "%TARGET_ARCH%" "%TARGET_LIBC%" "%TARGET_OS%"
+call "%REPO_ROOT%\engine\target\triplets.cmd" "%TARGET_ARCH%" "%TARGET_LIBC%" "%TARGET_OS%"
 
 if "%LIBSCRIPT_HOST_ROOT%"=="" (
     set "HOST_ROOT=%REPO_ROOT%\build\tools"

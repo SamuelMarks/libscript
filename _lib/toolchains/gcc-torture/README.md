@@ -57,7 +57,7 @@ running the setup script.
 | `GCC_TORTURE_SKIP_NESTED_FUNCTIONS` | Whether tests relying on non-standard GNU nested functions or DejaGnu target-skip .x directives are filtered out.                                    | `true`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

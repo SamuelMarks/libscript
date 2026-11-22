@@ -24,7 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
-SCRIPT_NAME="${REPO_ROOT}/_lib/_common/test_matrix_driver.sh"
+SCRIPT_NAME="${REPO_ROOT}/engine/common/test_matrix_driver.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -108,7 +108,7 @@ sync_repo_to_guest() {
         --exclude="./cache" \
         --exclude="./build" \
         --exclude="./dist" \
-        --exclude="./_lib/orchestration/kubernetes-thw/kubernetes-the-hard-way" \
+        --exclude="./infrastructure/clusters/kubernetes-thw/kubernetes-the-hard-way" \
         --exclude="*.msi" \
         -cf - . | ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 'if (!(Test-Path C:\libscript)) { New-Item -ItemType Directory -Force -Path C:\libscript | Out-Null }; tar.exe -xf - -C C:\libscript'
 }
@@ -228,8 +228,8 @@ for arg in $TARGETS; do
         for dir in "$REPO_ROOT"/topologies/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS topologies/$(basename "$dir")"
         done
-        for sfile in "$REPO_ROOT"/payloads/schedulers/*.sh; do
-            [ -f "$sfile" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS payloads/schedulers/$(basename "$sfile" .sh)"
+        for sfile in "$REPO_ROOT"/workloads/schedulers/*.sh; do
+            [ -f "$sfile" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS workloads/schedulers/$(basename "$sfile" .sh)"
         done
         for dir in "$REPO_ROOT"/traits/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$(basename "$dir")"
@@ -240,7 +240,7 @@ for arg in $TARGETS; do
         EXPANDED_TARGETS="$EXPANDED_TARGETS cloud"
     elif [ "$arg" = "cloud/storage" ] || [ "$arg" = "storage" ]; then
         EXPANDED_TARGETS="$EXPANDED_TARGETS storage"
-    elif [ "${arg#bootloaders/}" != "$arg" ] || [ "${arg#topologies/}" != "$arg" ] || [ "${arg#payloads/schedulers/}" != "$arg" ] || [ "${arg#traits/}" != "$arg" ]; then
+    elif [ "${arg#bootloaders/}" != "$arg" ] || [ "${arg#topologies/}" != "$arg" ] || [ "${arg#workloads/schedulers/}" != "$arg" ] || [ "${arg#traits/}" != "$arg" ]; then
         EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
     elif [ -d "$REPO_ROOT/_lib/$arg" ]; then
         for dir in "$REPO_ROOT/_lib/$arg"/*; do
@@ -332,7 +332,7 @@ while true; do
             freebsd/distro) _marker_base="freebsd-distro" ;;
             illumos/distro) _marker_base="illumos-distro" ;;
             bootloaders/*) _marker_base="bootloaders-${_short_target}" ;;
-            payloads/schedulers/*) _marker_base="scheduler-${_short_target}" ;;
+            workloads/schedulers/*) _marker_base="scheduler-${_short_target}" ;;
             traits/*) _marker_base="trait-${_short_target}" ;;
         esac
         if [ "$SKIP_PASSED" = "1" ]; then
@@ -343,7 +343,7 @@ while true; do
 
         # Check explicit non-Windows subsystems (bootloaders, storage/provision_disk, microvm scheduler, Linux/BSD/Illumos distros)
         case "$target" in
-            bootloaders/*|freebsd/distro|illumos/distro|distro|storage/provision_disk|payloads/schedulers/microvm)
+            bootloaders/*|freebsd/distro|illumos/distro|distro|storage/provision_disk|workloads/schedulers/microvm)
                 echo "Skipping $target (not supported on windows)"
                 skipped_count=$((skipped_count + 1))
                 update_component_in_readme "$target" "-"
@@ -355,8 +355,8 @@ while true; do
 
         # Check manifest for OS and architecture support
         MANIFEST_PATH=""
-        if [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/tpu-trainer/manifest.json" ]; then
-            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/tpu-trainer/manifest.json"
+        if [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/workloads/ai/tpu-trainer/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/workloads/ai/tpu-trainer/manifest.json"
         else
             for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$_short_target/topology.json" "$REPO_ROOT/payloads"/*/"$_short_target/payload.json"; do
                 if [ -f "$_m" ]; then
@@ -437,21 +437,21 @@ while true; do
         # Build remote command depending on component type (invoked via PowerShell default SSH shell)
         case "$target" in
             runtimes/provision_isolated_runtime)
-                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\_lib\runtimes\provision_isolated_runtime.cmd' --runtime python --path 'C:\Windows\Temp\test-rt'; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\_lib\runtimes\provision_isolated_runtime.cmd' --runtime python --path 'C:\Windows\Temp\test-rt'; exit \$LASTEXITCODE"
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\synthesis\vfs\provision_isolated_runtime.cmd' --runtime python --path 'C:\Windows\Temp\test-rt'; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\synthesis\vfs\provision_isolated_runtime.cmd' --runtime python --path 'C:\Windows\Temp\test-rt'; exit \$LASTEXITCODE"
                 ;;
             ml-training)
-                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\_lib\ml-training\cli.cmd' install latest; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\_lib\ml-training\cli.cmd' test; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\_lib\ml-training\cli.cmd' install latest; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\_lib\ml-training\cli.cmd' test; exit \$LASTEXITCODE"
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\workloads\ai\cli.cmd' install latest; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\workloads\ai\cli.cmd' test; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\workloads\ai\cli.cmd' install latest; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\workloads\ai\cli.cmd' test; exit \$LASTEXITCODE"
                 ;;
-            topologies/gke-tpu-cluster)
-                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\topologies\gke-tpu-cluster\cli.cmd' --help; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\topologies\gke-tpu-cluster\cli.cmd' --help; exit \$LASTEXITCODE"
+            infrastructure/clusters/gke-tpu-cluster)
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\infrastructure\clusters\gke-tpu-cluster\cli.cmd' --help; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\infrastructure\clusters\gke-tpu-cluster\cli.cmd' --help; exit \$LASTEXITCODE"
                 ;;
             topologies/*)
                 _topo_name="${target#topologies/}"
                 test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; \$env:LIBSCRIPT_TOPOLOGY_STATE_FILE='C:\Windows\Temp\topo-$_topo_name.json'; & 'C:\libscript\topologies\\$_topo_name\cli.cmd' up; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\topologies\\$_topo_name\cli.cmd' status; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\topologies\\$_topo_name\cli.cmd' up; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\topologies\\$_topo_name\cli.cmd' destroy; exit \$LASTEXITCODE"
                 ;;
-            payloads/schedulers/*)
-                _sched_name="${target#payloads/schedulers/}"
-                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\payloads\engine.cmd' compile 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\payloads\engine.cmd' submit 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\payloads\engine.cmd' status 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\payloads\engine.cmd' submit 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\payloads\engine.cmd' destroy 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; exit \$LASTEXITCODE"
+            workloads/schedulers/*)
+                _sched_name="${target#workloads/schedulers/}"
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\workloads\engine.cmd' compile 'C:\libscript\workloads\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\workloads\engine.cmd' submit 'C:\libscript\workloads\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\workloads\engine.cmd' status 'C:\libscript\workloads\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\workloads\engine.cmd' submit 'C:\libscript\workloads\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\workloads\engine.cmd' destroy 'C:\libscript\workloads\payloads\ai\vllm\payload.json' --scheduler $_sched_name; exit \$LASTEXITCODE"
                 ;;
             traits/*)
                 _trait_name="${target#traits/}"

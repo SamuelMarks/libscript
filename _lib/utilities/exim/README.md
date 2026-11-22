@@ -26,7 +26,7 @@ running the setup script.
 | `EXIM_RELAY_FROM_HOSTS` | Colon-separated list of hosts/networks permitted to relay mail. | `127.0.0.1 : ::::1` |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Platform Support

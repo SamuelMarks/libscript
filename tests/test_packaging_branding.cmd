@@ -70,17 +70,17 @@ set "BANNER_TOP_PATH=%TEST_TMP_DIR%\banner_top.bmp"
 set "BANNER_SIDE_PATH=%TEST_TMP_DIR%\banner_side.bmp"
 set "LICENSE_PATH=%TEST_TMP_DIR%\CUSTOM_LICENSE.txt"
 
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_inno.cmd" > "%TEST_TMP_DIR%\BrandApp.iss"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\template_inno.cmd" > "%TEST_TMP_DIR%\BrandApp.iss"
 findstr /i "WizardImageFile" "%TEST_TMP_DIR%\BrandApp.iss" >nul || (echo [FAIL] Inno missing WizardImageFile & exit /b 1)
 findstr /i "LicenseFile" "%TEST_TMP_DIR%\BrandApp.iss" >nul || (echo [FAIL] Inno missing LicenseFile & exit /b 1)
 echo [PASS] Windows Inno branding assertions passed
 
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_nsis.cmd" > "%TEST_TMP_DIR%\BrandApp.nsi"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\template_nsis.cmd" > "%TEST_TMP_DIR%\BrandApp.nsi"
 findstr /i "MUI_HEADERIMAGE_BITMAP" "%TEST_TMP_DIR%\BrandApp.nsi" >nul || (echo [FAIL] NSIS missing MUI_HEADERIMAGE_BITMAP & exit /b 1)
 findstr /i "MUI_WELCOMEFINISHPAGE_BITMAP" "%TEST_TMP_DIR%\BrandApp.nsi" >nul || (echo [FAIL] NSIS missing MUI_WELCOMEFINISHPAGE_BITMAP & exit /b 1)
 echo [PASS] Windows NSIS branding assertions passed
 
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress" --out "%TEST_TMP_DIR%\BrandApp.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\workloads\apps\wordpress" --out "%TEST_TMP_DIR%\BrandApp.wxs"
 findstr /i "PROP_APP_IDENTIFIER" "%TEST_TMP_DIR%\BrandApp.wxs" >nul || (echo [FAIL] MSI missing PROP_APP_IDENTIFIER & exit /b 1)
 echo [PASS] Windows MSI branding assertions passed
 

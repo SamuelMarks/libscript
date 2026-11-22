@@ -59,7 +59,7 @@ export LICENSE_PATH="$TEST_TMP_DIR/CUSTOM_LICENSE.txt"
 
 # 2. Test Inno Setup generation
 INNO_FILE="${TEST_TMP_DIR}/BrandApp.iss"
-"${LIBSCRIPT_ROOT_DIR}/packaging/template_inno.sh" > "$INNO_FILE"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/template_inno.sh" > "$INNO_FILE"
 grep -q "WizardSmallImageFile=$BANNER_TOP_PATH" "$INNO_FILE" || { echo "[FAIL] Inno missing WizardSmallImageFile"; exit 1; }
 grep -q "WizardImageFile=$BANNER_SIDE_PATH" "$INNO_FILE" || { echo "[FAIL] Inno missing WizardImageFile"; exit 1; }
 grep -q "LicenseFile=$LICENSE_PATH" "$INNO_FILE" || { echo "[FAIL] Inno missing LicenseFile"; exit 1; }
@@ -67,7 +67,7 @@ printf '[PASS] Inno Setup branding assertions passed\n'
 
 # 3. Test NSIS generation
 NSIS_FILE="${TEST_TMP_DIR}/BrandApp.nsi"
-"${LIBSCRIPT_ROOT_DIR}/packaging/template_nsis.sh" > "$NSIS_FILE"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/template_nsis.sh" > "$NSIS_FILE"
 grep -q "!define MUI_HEADERIMAGE_BITMAP" "$NSIS_FILE" || { echo "[FAIL] NSIS missing MUI_HEADERIMAGE_BITMAP"; exit 1; }
 grep -q "!define MUI_WELCOMEFINISHPAGE_BITMAP" "$NSIS_FILE" || { echo "[FAIL] NSIS missing MUI_WELCOMEFINISHPAGE_BITMAP"; exit 1; }
 grep -q "Page license" "$NSIS_FILE" || { echo "[FAIL] NSIS missing Page license"; exit 1; }
@@ -75,7 +75,7 @@ printf '[PASS] NSIS branding assertions passed\n'
 
 # 4. Test WiX MSI generation
 WXS_FILE="${TEST_TMP_DIR}/BrandApp.wxs"
-"${LIBSCRIPT_ROOT_DIR}/packaging/template_msi.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress" --out "$WXS_FILE"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/template_msi.sh" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress" --out "$WXS_FILE"
 grep -q 'Dialog Id="Dlg_DatabaseConfig"' "$WXS_FILE" || { echo "[FAIL] MSI missing Dlg_DatabaseConfig"; exit 1; }
 grep -q 'PROP_APP_IDENTIFIER' "$WXS_FILE" || { echo "[FAIL] MSI missing PROP_APP_IDENTIFIER"; exit 1; }
 printf '[PASS] WiX MSI branding assertions passed\n'

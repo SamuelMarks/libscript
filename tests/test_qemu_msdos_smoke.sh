@@ -206,10 +206,10 @@ verify_fat16_83_tree "${DOS_HOME}"
 
 # 2. Verify C89 wincmd, dash-dos spawnvp pipelines, and watt-curl + WATTCP.CFG against fixtures
 HELPER_HOME="${TEST_WORK}/HELPERS"
-WINCMD_BIN=$(LIBSCRIPT_HOME="${HELPER_HOME}" "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-wincmd)
-DASH_BIN=$(LIBSCRIPT_HOME="${HELPER_HOME}" "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-dash-dos)
-CURL_BIN=$(LIBSCRIPT_HOME="${HELPER_HOME}" "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-watt-curl)
-MKIMG_BIN=$(LIBSCRIPT_HOME="${HELPER_HOME}" "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-mkdos-smoke)
+WINCMD_BIN=$(LIBSCRIPT_HOME="${HELPER_HOME}" "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/build_dos32.sh" ls-wincmd)
+DASH_BIN=$(LIBSCRIPT_HOME="${HELPER_HOME}" "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/build_dos32.sh" ls-dash-dos)
+CURL_BIN=$(LIBSCRIPT_HOME="${HELPER_HOME}" "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/build_dos32.sh" ls-watt-curl)
+MKIMG_BIN=$(LIBSCRIPT_HOME="${HELPER_HOME}" "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/build_dos32.sh" ls-mkdos-smoke)
 
 cat << 'EOF_BAT_FIX' > "${TEST_WORK}/FIXTURE.CMD"
 @echo off
@@ -239,10 +239,10 @@ else
   JQ_OUT='dos32a:4'
 fi
 
-LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="${TEST_WORK}/OFFNET" "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh" >/dev/null
+LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="${TEST_WORK}/OFFNET" "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/wattcp_cfg.sh" >/dev/null
 [ ! -f "${TEST_WORK}/OFFNET/ETC/WATTCP.CFG" ] || fail_smoke 'WATTCP.CFG must not be generated in LIBSCRIPT_OFFLINE=1 mode'
 
-WCFG_PATH=$(LIBSCRIPT_OFFLINE='0' LIBSCRIPT_HOME="${TEST_WORK}/ONNET" "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh")
+WCFG_PATH=$(LIBSCRIPT_OFFLINE='0' LIBSCRIPT_HOME="${TEST_WORK}/ONNET" "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/wattcp_cfg.sh")
 grep -q 'my_ip = dhcp' "${WCFG_PATH}" || fail_smoke 'Expected my_ip = dhcp in WATTCP.CFG'
 grep -q 'pkt.vector = 0x60' "${WCFG_PATH}" || fail_smoke 'Expected pkt.vector = 0x60 in WATTCP.CFG'
 

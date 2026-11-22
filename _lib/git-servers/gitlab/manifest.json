@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gitlab",
-  "provides": ["git-server", "gitlab", "gitlab-ce"],
-  "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos", "darwin"],
-  "ports": ["80", "443", "22"],
-  "title": "Gitlab",
-  "description": "LibScript component for GITLAB",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "git-servers",
+  "conflicts": [],
+  "description": "LibScript component for GITLAB",
+  "name": "gitlab",
+  "os_blacklist": ["sunos", "darwin"],
+  "os_whitelist": ["all"],
+  "ports": ["80", "443", "22"],
+  "provides": ["git-server", "gitlab", "gitlab-ce"],
   "repository": "https://gitlab.com/gitlab-org/gitlab",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "Gitlab"
 }

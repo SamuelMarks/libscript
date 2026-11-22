@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "fd",
-  "title": "fd",
-  "description": "Simple, fast, and user-friendly alternative to find written in Rust with gitignore awareness.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["fd", "file-finder"],
+  "description": "Simple, fast, and user-friendly alternative to find written in Rust with gitignore awareness.",
+  "name": "fd",
   "os_whitelist": ["all"],
+  "provides": ["fd", "file-finder"],
   "repository": "https://github.com/sharkdp/fd",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "fd"
 }

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ffmpeg",
-  "title": "FFmpeg",
-  "description": "Complete cross-platform solution to record, convert, transcode, and stream audio and video.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["ffmpeg", "ffprobe", "media-converter"],
+  "description": "Complete cross-platform solution to record, convert, transcode, and stream audio and video.",
+  "name": "ffmpeg",
   "os_whitelist": ["all"],
+  "provides": ["ffmpeg", "ffprobe", "media-converter"],
   "repository": "https://github.com/FFmpeg/FFmpeg",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "FFmpeg"
 }

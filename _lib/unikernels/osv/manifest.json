@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
+  "category": "unikernels",
+  "description": "OSv cloud unikernel runtime and Capstan image builder with ZFS, ROFS, and unmodified Linux PIE shared-object support.",
+  "name": "osv",
+  "os_whitelist": ["all"],
+  "provides": ["osv", "capstan", "unikernel-builder"],
+  "repository": "https://github.com/cloudius-systems/osv",
+  "tier": "T2",
+  "title": "OSv Unikernel (Capstan)"
+}

@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "edgcpp",
-  "title": "EDG C/C++ Compiler Frontend (edgcpp)",
-  "description": "Standalone version manager, multi-flavor binary installer (edgcpp+llvm+gcc, edgcpp+llvm, edgcpp+gcc), source builder, and CC/CXX driver wrapper for the Edison Design Group C/C++ Front End (v7.0.1).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["compiler", "c", "cc", "cpp", "cxx", "edgcpp"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Standalone version manager, multi-flavor binary installer (edgcpp+llvm+gcc, edgcpp+llvm, edgcpp+gcc), source builder, and CC/CXX driver wrapper for the Edison Design Group C/C++ Front End (v7.0.1).",
+  "name": "edgcpp",
   "os_blacklist": ["sunos", "freebsd"],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["compiler", "c", "cc", "cpp", "cxx", "edgcpp"],
+  "tier": "T1",
+  "title": "EDG C/C++ Compiler Frontend (edgcpp)"
 }

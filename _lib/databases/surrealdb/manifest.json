@@ -1,16 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "surrealdb",
-  "title": "SurrealDB",
-  "description": "Scalable distributed multi-model cloud database supporting relational, document, graph, and vector queries.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["surrealdb", "multi-model-database", "database"],
-  "os_whitelist": ["all"],
-  "ports": [8000],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/surrealdb/surrealdb",
+  "description": "Scalable distributed multi-model cloud database supporting relational, document, graph, and vector queries.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +18,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "surrealdb",
+  "os_whitelist": ["all"],
+  "ports": [8000],
+  "provides": ["surrealdb", "multi-model-database", "database"],
+  "repository": "https://github.com/surrealdb/surrealdb",
+  "stateful": true,
+  "tier": "T1",
+  "title": "SurrealDB"
 }

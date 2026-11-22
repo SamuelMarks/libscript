@@ -102,7 +102,7 @@ exit /b 0
 if not exist "%DOWNLOAD_DIR%\nssm" mkdir "%DOWNLOAD_DIR%\nssm"
 set "DL_URL=%NSSM_DOWNLOAD_URL%"
 if "%DL_URL%"=="" set "DL_URL=https://nssm.cc/release/nssm-2.24.zip"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DL_URL%" "%DOWNLOAD_DIR%\nssm\nssm-%NSSM_VERSION%.zip"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DL_URL%" "%DOWNLOAD_DIR%\nssm\nssm-%NSSM_VERSION%.zip"
 exit /b 0
 
 :: ## action_install
@@ -123,7 +123,7 @@ if exist "C:\ProgramData\chocolatey\bin\nssm.exe" (
 )
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nssm
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends nssm
 if exist "C:\ProgramData\chocolatey\bin\nssm.exe" (
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     copy /y "C:\ProgramData\chocolatey\bin\nssm.exe" "%TARGET_DIR%\bin\nssm.exe" >nul 2>&1
@@ -144,7 +144,7 @@ if exist "%DOWNLOAD_DIR%\nssm\nssm-%NSSM_VERSION%.zip" (
     tar -xf "%DOWNLOAD_DIR%\nssm\nssm-%NSSM_VERSION%.zip" -C "%TARGET_DIR%" 2>nul
 ) else (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DL_URL%" "%TEMP%\nssm.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DL_URL%" "%TEMP%\nssm.zip"
     if exist "%TEMP%\nssm.zip" tar -xf "%TEMP%\nssm.zip" -C "%TARGET_DIR%" 2>nul
 )
 
@@ -173,5 +173,5 @@ goto :action_uninstall_service
 :: Removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "nssm" "%ACTION%" "%NSSM_VERSION%" "libscript_native" "" "" "" "\"%LIBSCRIPT_HOME%\nssm\%NSSM_VERSION%\bin\nssm.exe\"" "%LIBSCRIPT_HOME%\nssm\%NSSM_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "nssm" "%ACTION%" "%NSSM_VERSION%" "libscript_native" "" "" "" "\"%LIBSCRIPT_HOME%\nssm\%NSSM_VERSION%\bin\nssm.exe\"" "%LIBSCRIPT_HOME%\nssm\%NSSM_VERSION%"
 exit /b !errorlevel!

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "luarocks",
-  "provides": ["package-manager", "luarocks"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "title": "luarocks",
-  "description": "Bootstrap script for [LuaRocks](https://luarocks.org/), the package manager for Lua modules.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap script for [LuaRocks](https://luarocks.org/), the package manager for Lua modules.",
+  "name": "luarocks",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "luarocks"],
   "repository": "https://github.com/luarocks/luarocks",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "luarocks"
 }

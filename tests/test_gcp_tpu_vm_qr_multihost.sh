@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Hermetic test suite for _lib/cloud-providers/gcp-tpu-vm/cli.sh testing scp/ssh --all-workers, runtime auto-selection, idempotent create/delete (2x), wait-ready polling, 1-worker/4-worker topology-info, sync-repo digest skip, arm-ttl, and release-locks.
+# Hermetic test suite for infrastructure/providers/gcp-tpu-vm/cli.sh testing scp/ssh --all-workers, runtime auto-selection, idempotent create/delete (2x), wait-ready polling, 1-worker/4-worker topology-info, sync-repo digest skip, arm-ttl, and release-locks.
 #
 # ## Usage
 # ./tests/test_gcp_tpu_vm_qr_multihost.sh
@@ -116,7 +116,7 @@ chmod +x "${WORK_DIR}/bin/gcloud"
 PATH="${WORK_DIR}/bin:${PATH}"
 export PATH
 
-TPU_CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh"
+TPU_CLI="${LIBSCRIPT_ROOT_DIR}/infrastructure/providers/gcp-tpu-vm/cli.sh"
 GCP_PROJECT_ID='trc-test-proj'
 TPU_ZONE='us-central1-a'
 TPU_ACCELERATOR_TYPE='v6e-8'

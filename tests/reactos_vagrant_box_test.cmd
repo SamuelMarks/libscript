@@ -55,7 +55,7 @@ if not exist "!_TMP!" mkdir "!_TMP!"
 set "LIBSCRIPT_OFFLINE=1"
 set "LIBSCRIPT_ALLOW_STUB=1"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\reactos_distro.cmd" --format box --profile "!LIBSCRIPT_ROOT_DIR!\profiles\reactos\minimal-headless-i686.json" --sysroot "!_TMP!\sys" --output "!_TMP!\reactos.box"
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\reactos_distro.cmd" --format box --profile "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\reactos\minimal-headless-i686.json" --sysroot "!_TMP!\sys" --output "!_TMP!\reactos.box"
 if errorlevel 1 exit /b 1
 tar -tzf "!_TMP!\reactos.box" >nul 2>&1
 if errorlevel 1 exit /b 1

@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -124,7 +124,7 @@ case "$ACTION" in
         libscript_depends 'python3' 'pip' 'python3-venv' || true
         if ! type libscript_python_venv >/dev/null 2>&1; then
           _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/python_env.sh"
           export SCRIPT_NAME
           # shellcheck disable=SC1090,SC1091
           . "${SCRIPT_NAME}"

@@ -1,983 +1,139 @@
-# Architecture: Decentralized, Native & Tiered
+# Architecture: Decentralized, Native & Six-Tier (`T0`–`T5`)
 
 LibScript is a unified software delivery substrate and operating system synthesis framework built on
-zero-dependency shell scripts. It scales from an everyday developer toolchain version manager
-(natively replacing `nvm`, `pyenv`, `rustup`, and `rvm`) to a full-system operating system
-synthesizer (`package-as`) and multicloud AI cluster orchestrator.
+zero-dependency POSIX `/bin/sh` and Windows Batch (`.cmd`) scripts. It scales from an unprivileged
+developer toolchain version manager (`T1`, natively replacing `nvm`, `pyenv`, `rustup`, and `rvm`)
+to an operating system, unikernel, RTOS, and native installer synthesizer (`T3`), multicloud &
+cluster substrate provisioner (`T4`), and declarative workload & stateful HA constellation engine
+(`T5`).
 
-The architecture follows two foundational design patterns:
+The architecture enforces two core invariants:
 
-1. **Decentralized Routing**: The global CLI (`libscript.sh` / `libscript.cmd`) acts as a
-   high-speed, zero-dependency router that delegates to autonomous, component-specific package
-   managers in `_lib/`.
-2. **Six-Domain Architectural Division of Concerns**: A strict separation of responsibilities
-   between capability-typed leaf recipes (`"versioned-artifact"`, `"service-daemon"`,
-   `"sysroot-library"`) & `O(1)` `${LIBSCRIPT_HOME}/bin` version switching (Tier 1 & Tier 1.5),
-   single-address-space OS & UEFI/GPT unikernel image synthesizers (`--cloud-boot=uefi-gpt`, Tier
-   2), multicloud IaaS & `publish-marketplace` AWS/Azure/GCP Marketplace publishers (Tier 3),
-   consensus & multi-unikernel constellation topologies (`topologies/`, Tier 3.5), declarative
-   payloads & cluster schedulers including `tpu_vm` and `xpk` (`payloads/`, Tier 4), the
-   cross-cutting Unified Traits Subsystem including 4-role GCS ML storage
-   (`traits/storage/gcs_ml.{sh,cmd}`), and the Open/Closed `experiments/<suite-id>/` empirical
-   research plugin domain.
+1. **Strict Downward-Only Compositional Tiers (`T5 -> T4 -> T3 -> T2 -> T1 -> T0`)**: Every vertical
+   tier depends exclusively on lower tiers—eliminating fractional `.5` tiers, circular dependencies,
+   and physical-vs-logical directory leaks (statically enforced by
+   `devtools/audit/audit_tiers.{sh,cmd}`).
+2. **Explicit Orthogonal Cross-Cutting Planes (`Plane A: traits/`, `Plane B: experiments/` &
+   `libscript-rest-api/`)**: Capabilities that intentionally bind across multiple tiers—such as node
+   traits operating in both `T3` offline sysroot staging and `T4`/`T5` live host convergence, or
+   empirical verification harnesses driving all tiers—live in explicit orthogonal planes rather than
+   polluting the vertical compositional stack.
 
 ---
 
-## 🗺️ System Capabilities: From Toolchains to Multicloud, Multi-Node Schedulers & HA Topologies
-
-LibScript provides an end-to-end operational substrate spanning from individual language runtimes
-and full-stack applications to native installers, custom OS kernels/unikernels, multicloud
-orchestrators, multi-node cluster schedulers, and high-availability topologies.
+## 🏛️ Compositional Stack (`T0`–`T5`) & Orthogonal Planes (`Plane A`, `Plane B`)
 
 ```mermaid
 flowchart TD
-    VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>360+ Recipes / 547+ Components / 580+ Subsystems"]
+    subgraph PlaneB["Plane B: Verification, Benchmarks & Control Plane (experiments/, tests/, libscript-rest-api/)"]
+        REST["Native C11 HTTP Server (OpenAPI 3.2.0): /v1/{recipes,synthesis,infrastructure,workloads,traits,experiments}"]
+        Bench["Open/Closed Empirical Campaign Plugins: edgcpp-backends, gemma-tpu, libtpu-pjrt, openedx, os-component-matrix, win-port"]
+    end
 
-    PKG["<b>1 & 2. PACKAGE & DISK EXPORTERS</b><hr/>.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk<hr/>Dockerfile & Docker Compose<hr/>qcow2, raw-img, vmdk, vdi, iso, uf2, hex"]
+    subgraph T5["T5: Workloads, Application Stacks & Stateful Constellations (workloads/)"]
+        Payloads["Declarative Workloads (workloads/payloads/): Services, Batch, Unikernels, RTOS Jobs, vLLM, JetStream, JAX TPU"]
+        Schedulers["Scheduler Drivers (workloads/schedulers/): Kubernetes, Nomad, Mesos/Marathon, Native Inits, MicroVM, XPK, Slurm/Ray, TPU VM"]
+        Apps["Multi-Service Application Stacks (workloads/apps/): Open edX, WordPress, Magento, Nextcloud, Odoo, JupyterHub"]
+        Constellations["Stateful HA Constellations (workloads/constellations/): postgres-ha, redis-cluster, valkey-cluster, minio-distributed, openedx-ha"]
+    end
 
-    OS["<b>3. KERNEL, UNIKERNEL & RTOS BAKERY</b><hr/>Unikernels (OSv, MirageOS, Unikraft)<hr/>RTOS (Zephyr RTOS, FreeRTOS + MCUboot)<hr/>Linux (Kernel + UKI), FreeBSD, illumos & ReactOS"]
+    subgraph T4["T4: Infrastructure Providers & Cluster Substrates (infrastructure/)"]
+        Providers["Cloud & Hypervisor IaaS (infrastructure/providers/): AWS, Azure, GCP, TPU/GPU VMs, Proxmox, Hetzner, OCI, Vultr"]
+        Resources["Cloud Resources & Marketplace (infrastructure/{resources,marketplace}/): Buckets, Volumes, Cloud-Init, Image Import, Offers"]
+        Clusters["Cluster Substrates (infrastructure/clusters/): k0s-ha, gke-tpu-cluster, k8s-marathon-paas, mesos-marathon-ha, kubernetes-thw"]
+    end
 
-    CLOUD["<b>4. MULTICLOUD & AI FLEETS</b><hr/>Google Cloud (GCP), AWS & Azure<hr/>Hetzner, Proxmox VE & Vagrant<hr/>TPU Pods & GPU Clusters"]
+    subgraph PlaneA["Plane A: Unified Cross-Cutting Node Traits (traits/)"]
+        Traits["11 Composable Traits: storage, secrets, firewall, ingress, tls, mesh, discovery, logging, metrics, backup, maintenance"]
+    end
 
-    SCHED["<b>5, 6, 7 & 8. MULTI-NODE SCHEDULERS & LIFECYCLE</b><hr/>Kubernetes, Apache Mesos & HashiCorp Nomad<hr/>ML Training & Search Reindexing Jobs<hr/>CoW/Object Backup & Zero-Downtime Upgrade/Rollback"]
+    subgraph T3["T3: Image, OS & Artifact Synthesis (synthesis/)"]
+        Profiles["Declarative OS & Appliance Profiles (synthesis/profiles/): Linux, LFS, FreeBSD, illumos, ReactOS, Unikernel, RTOS, Cloud"]
+        VFS["Sysroot VFS & Disk Formatting (synthesis/{vfs,disk}/): FHS Layout, Chroot/VFS Runner, Partitioning, LUKS2, Ext4/Btrfs/XFS/ZFS"]
+        Distro["Distro & Repo Builders (synthesis/{distro,repogen}/): Linux, FreeBSD, illumos, ReactOS, Bento, APT/RPM/APK/IPS Repos"]
+        Formats["Unified Exporters (synthesis/{formats,msi}/): .msi, .deb, .rpm, .apk, .dmg, .pkg, qcow2, iso, oci_image, unikernel_img, firmware_bin"]
+    end
 
-    HA["<b>9. HIGH-AVAILABILITY TOPOLOGIES</b><hr/>PostgreSQL HA (Patroni + etcd)<hr/>Redis & Valkey HA (Sentinel / Cluster)<hr/>RabbitMQ HA & Split-Brain Fencing"]
+    subgraph T2["T2: OS, Kernel & System Plumbing Recipes (_lib/ — tier: T2)"]
+        SysPlumbing["Sysroot & Rootfs Packages: glibc, musl, Linux/FreeRTOS/Zephyr Kernels, GRUB/Limine/MCUboot, systemd/OpenRC/runit/s6, Wayland, Desktops"]
+    end
 
-    VMS ==>|"Package & Export"| PKG
-    PKG ==>|"Embed Into"| OS
-    OS ==>|"Deploy Onto"| CLOUD
-    CLOUD ==>|"Orchestrate Multi-Node"| SCHED
-    SCHED ==>|"Converge Quorum"| HA
+    subgraph T1["T1: Atomic Userland & Daemon Recipes (_lib/ — tier: T1)"]
+        Userland["Unprivileged Version Managers & Single-Engine Daemons: Node.js, Python, Rust, GCC/Clang, PostgreSQL, Redis, Nginx, QEMU, kubectl"]
+    end
+
+    subgraph T0["T0: Core Engine, Solver & Consensus Substrate (libscript.{sh,cmd}, cli/, engine/)"]
+        Core["Zero-Dependency Runtime: POSIX/Batch Common Stdlib, pkg_mgr, Tarjan SCC Solver (resolve_stack.jq), Hook Runner, Consensus Lock/Fence"]
+    end
+
+    PlaneB -.->|"Drives & Benchmarks"| T5
+    T5 -->|"Schedules & Deploys Onto"| T4
+    T5 -->|"References Logical Artifacts (profile_ref)"| T3
+    T4 -->|"Boots & Imports Images From"| T3
+    PlaneA -.->|"Live Host Convergence (SYSROOT=/)"| T4
+    PlaneA -.->|"Offline Sysroot Bake (SYSROOT!=/)"| T3
+    T3 -->|"Stages Rootfs & Kernel Packages"| T2
+    T3 -->|"Stages Userland & Daemon Binaries"| T1
+    T2 -->|"Host Cross-Toolchains"| T1
+    PlaneA -->|"Consumes Atomic Tools"| T2
+    T1 -->|"Delegates Core Lifecycle"| T0
+    T2 -->|"Delegates Core Lifecycle"| T0
+    T3 -->|"Uses Solver & Hooks"| T0
+    T4 -->|"Uses Consensus Locks/Fencing"| T0
+    T5 -->|"Uses Consensus Locks/Fencing & Hooks"| T0
 ```
 
 ---
 
-## 🏛️ The Extended Multi-Tier Architectural Division of Concerns
+## Layer Directory & Schema Reference
 
-To prevent scope creep and ensure deterministic reproducibility, LibScript codifies strict boundary
-contracts between its functional layers—spanning from Tier 1 leaf recipes to Tier 2 OS synthesizers,
-Tier 3 multicloud IaaS provisioners, Tier 3.5 consensus topologies, Tier 4 universal workload
-schedulers, and the cross-cutting Unified Traits Subsystem.
-
-```mermaid
-flowchart TD
-    subgraph Tier4[Tier 4: Payloads & Universal Schedulers]
-        Payloads[Declarative Workloads: Services, Stateful, Batch, Search Reindexing, AI/ML XPK, vLLM, JetStream, Unikernels]
-        Schedulers[Scheduler Drivers: Kubernetes, Nomad, Mesos/Marathon, 8+ Native Inits, Firecracker/Cloud-Hypervisor/Solo5, XPK/Slurm/Ray]
-    end
-
-    subgraph Tier35[Tier 3.5: Topologies & Consensus Choreography]
-        StateMachine[DAG State Machine: .topology_state.json + Distributed Lease Locking]
-        Fencing[Split-Brain Fencing + Leader/Follower Quorum Choreography]
-        Blueprints[HA Blueprints: postgres-ha, valkey-cluster, redis-cluster, mesos-marathon-ha, k8s-marathon-paas, k0s-ha, minio-distributed, gke-tpu-cluster]
-    end
-
-    subgraph Traits[Unified Traits Subsystem]
-        NodeTraits[Storage, Zero-Env-Leak Secrets, Host Firewall, Encrypted Mesh, Discovery/Cloud DNS, netctl Ingress, TLS, Logging, Metrics, CoW/Object Backup]
-    end
-
-    subgraph Tier3[Tier 3: Operators & Multicloud IaaS Deployers]
-        CloudOps[Cloud Provisioning: AWS, Azure, GCP, Proxmox, Hetzner, Vagrant]
-        AccelIaaS[Accelerator Hardware IaaS: GCP TPU VMs, GPU VMs, Cloud Block/Filestore]
-        PaaSOps[Built-in PaaS & Control Plane: libscript-rest-api OpenAPI 3.2.0]
-    end
-
-    subgraph Tier2[Tier 2: Synthesizers, Assemblers & Image Builders]
-        ConfigEngine[Declarative Configurator: libscript config os, os-config / execution-plan schemas]
-        Solver[Constraint Solver: resolve_stack.jq + Tarjan SCC Cycle Breaking]
-        RootfsEngine[Rootfs Staging & VFS Isolation: mount_target_vfs, chroot runner]
-        StorageEngine[Storage & Partitioning: GPT/MBR, LUKS2, Ext4, Btrfs, XFS, ZFS]
-        KernelEngine[Kernel Baking: Linux vmlinuz + Initramfs UKI, FreeBSD & illumos World/Kernel]
-        Packager[package-as: raw-img, qcow2, iso, vmdk, bsd-img, docker, unikernel]
-    end
-
-    subgraph Tier1[Tier 1: Leaf Recipes, Toolchains & Native Version Managers]
-        VersionManagers[Universal Version Managers: nodejs, python, rust, ruby, go, java]
-        ToolchainBootstrap[Cross-Toolchain Bootstrap: Stage 0 /tools, Stage 1 Userland]
-        BaseCatalogs[Catalog Recipes: Glibc, Musl, Wayland, X11, Desktops, PipeWire, Net]
-        LifecycleHooks[Dual-Layer Hooks: Physical Instance Hooks + Logical Multi-Tenant Hooks]
-    end
-
-    Payloads -->|Compiles via| Schedulers
-    Schedulers -->|Schedules onto| Tier35
-    Tier35 -->|Provisions & Fencing via| Tier3
-    Tier35 -->|Binds & Orchestrates| Traits
-    Traits -->|Offline Bake Mode: LIBSCRIPT_TARGET_SYSROOT| Tier2
-    Traits -->|Live Runtime Mode & Hooks| Tier1
-    Tier3 -->|Deploys Images & Orchestrates Nodes| Tier2
-    Tier2 -->|Directs Compilation & Stages Artifacts| Tier1
-    Tier1 -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| Tier2
-```
+| Layer                                        | Canonical Root(s)                                                                                                                                                                                                       | Governing JSON Schema(s)                                                                                                                                        | CLI Entrypoint(s)                                                                              |
+| :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------- |
+| **`T0` Core Engine & Solver**                | `libscript.{sh,cmd}`, `cli/`, `engine/` (`common/`, `solver/`, `hooks/`, `target/`, `consensus/`)                                                                                                                       | `engine/schemas/{manifest,base_vars,consensus-common,consensus-state,tfrc-policy,gcs-ml-storage}.schema.json`                                                   | `./libscript.{sh,cmd}`                                                                         |
+| **`T1` Atomic Userland & Daemons**           | `_lib/{languages,toolchains,package-managers,utilities,runtimes,containers,virtualization,schedulers,iac,databases,caches,search,security,message-brokers,web-servers,app-servers,logging,git-servers,storage-layers}/` | `engine/schemas/manifest.schema.json` (`"tier": "T1"`)                                                                                                          | `./libscript.{sh,cmd} <install\|use\|env\|ls\|...> <pkg>`                                      |
+| **`T2` OS & System Plumbing**                | `_lib/{base-system,kernel,bootloaders,init-systems,unikernels,networking,graphics,audio,display-servers,display-managers,desktops}/`                                                                                    | `engine/schemas/manifest.schema.json` (`"tier": "T2"`)                                                                                                          | `./libscript.{sh,cmd} install <pkg>` (`LIBSCRIPT_TARGET_SYSROOT`)                              |
+| **`T3` Image, OS & Artifact Synthesis**      | `synthesis/{profiles,schemas,vfs,disk,distro,repogen,formats,msi}/`                                                                                                                                                     | `synthesis/schemas/{os-config,execution-plan*}.schema.json`, `synthesis/msi/{packaging,installer}.schema.json`                                                  | `./libscript.{sh,cmd} <synthesize\|package-as\|build-image\|build-installer\|distro\|repogen>` |
+| **`T4` Infrastructure & Cluster Substrates** | `infrastructure/{providers,resources,clusters,marketplace,cli_actions}/`                                                                                                                                                | `infrastructure/clusters/cluster-substrate.schema.json`, `infrastructure/marketplace/marketplace-offer.schema.json`                                             | `./libscript.{sh,cmd} <provision\|deprovision\|cluster\|import-image\|publish-marketplace>`    |
+| **`T5` Workloads, Stacks & Constellations**  | `workloads/{apps,ai,constellations,payloads,schedulers,services,schemas}/`                                                                                                                                              | `libscript.schema.json`, `workloads/schemas/{payload,workload-common,ml-workload,tpu-matrix}.schema.json`, `workloads/constellations/constellation.schema.json` | `./libscript.{sh,cmd} <workload\|constellation\|stack\|app\|up\|down\|deploy\|train\|infer>`   |
+| **`Plane A` Unified Node Traits**            | `traits/{storage,secrets,firewall,ingress,tls,mesh,discovery,logging,metrics,backup,maintenance}/`                                                                                                                      | `traits/trait.schema.json`                                                                                                                                      | `./libscript.{sh,cmd} trait <list\|enable\|disable\|apply\|verify\|teardown>`                  |
+| **`Plane B` Verification & Control Plane**   | `experiments/`, `tests/`, `libscript-rest-api/`, `devtools/audit/`                                                                                                                                                      | `experiments/schemas/{experiment-suite,installer-experiment,os-matrix-results}.schema.json`, `libscript-rest-api/openapi.yaml`                                  | `./libscript.{sh,cmd} experiment <list\|scaffold\|validate\|run\|render-latex>`                |
 
 ---
 
-## 📦 Tier 1: Leaf Recipes, Cross-Toolchains & Native Version Management
-
-Tier 1 represents the foundational substrate located in `_lib/`. Every component directory is an
-autonomous package manager that knows how to acquire, compile, stage, and daemonize its own
-software.
-
-### 1. The "Every-Thing-is-a-Package-Manager" Model
-
-Unlike monolithic configuration management tools that require massive language runtimes (Python,
-Ruby, or Go) and centralized state engines, LibScript treats every component (Postgres, Nginx,
-Python, Mesa, Wayland) as a first-class, standalone package manager:
-
-- **Capability-Typed Autonomy**: Each directory in `_lib/` declares its `capabilities` in
-  `manifest.json` (`"versioned-artifact"`, `"service-daemon"`, `"sysroot-library"`,
-  `"cloud-operator"`, `"os-synthesizer"`) and exposes its own CLI (`cli.sh`, `cli.cmd`),
-  installation logic (`setup.sh`, `setup.cmd`), environment printer (`env.sh`, `env.cmd`),
-  and—strictly when `"service-daemon"` is declared—service supervision (`service.sh`,
-  `service.cmd`).
-- **Decoupled Execution**: Components never query other components directly. All dependency
-  relationships are declared in `manifest.json` and resolved upstream by the Tier 2 solver.
-- **Dual Invocation**: Any component can be executed via the global router
-  (`./libscript.sh install python 3.12`) or directly via its local CLI
-  (`./_lib/languages/python/cli.sh install 3.12`).
-
-```mermaid
-flowchart LR
-    User([User / Orchestrator]) -->|./libscript.sh install postgres| Router[Global CLI Router]
-    Router -->|Routes Action| CompCLI[_lib/databases/postgres/cli.sh]
-    CompCLI --> Setup[setup.sh / setup.cmd]
-    CompCLI --> Env[env.sh / env.cmd]
-    CompCLI -.->|"service-daemon"| Service[service.sh / service.cmd]
-    CompCLI --> Test[test.sh / test.cmd]
-```
-
-### 2. Universal Toolchain Version Management
-
-LibScript serves as a native, zero-dependency replacement for toolchain-specific managers such as
-`nvm`, `fnm`, `volta`, `pyenv`, `uv`, `rustup`, `rvm`, and `sdkman`.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Dev as Developer / Subshell
-    participant Router as Global Router (libscript.sh)
-    participant Component as Component CLI (_lib/languages/<tool>/cli.sh)
-    participant Upstream as Official Upstream Release API
-    participant Disk as Sandbox (${LIBSCRIPT_HOME}/<tool>/)
-    participant BinFarm as ${LIBSCRIPT_HOME}/bin (O(1) Symlinks)
-
-    Dev->>Router: ./libscript.sh ls-remote <tool>
-    Router->>Component: ls-remote
-    Component->>Upstream: Query release tags / indexes
-    Upstream-->>Dev: List of available semantic versions
-
-    Dev->>Router: ./libscript.sh install <tool> <version>
-    Router->>Component: install <version>
-    Component->>Disk: Fetch payload, verify checksum, extract into <version>/
-    Component->>Disk: Create / update alias symlink (e.g., lts -> <version>)
-
-    Dev->>Router: ./libscript.sh use <tool> <version>
-    Router->>Component: use <version>
-    Component->>BinFarm: Sync default alias & ${LIBSCRIPT_HOME}/bin/* symlinks
-    Note over BinFarm: O(1) lookup + per-shell env / resolve-env; zero global profile mutation
-
-    Dev->>Router: ./libscript.sh uninstall <tool> <version>
-    Router->>Component: uninstall <version>
-    Component->>Disk: Remove <version>/ & prune ${LIBSCRIPT_HOME}/bin/* via .bin_owners/<tool>.list
-```
-
-#### Architectural Contract for Version Managers
-
-1. **Isolated Sandboxing & `O(1)` Active Bin Farm**: Every installed version is isolated in a
-   non-destructive directory structure governed by `LIBSCRIPT_HOME` (default: `~/.libscript/`), with
-   active executables symlinked into `${LIBSCRIPT_HOME}/bin` and tracked in
-   `${LIBSCRIPT_HOME}/.bin_owners/<component>.list`:
-   ```text
-   ${LIBSCRIPT_HOME}/
-   ├── bin/                           # Single PATH entry (${LIBSCRIPT_HOME}/bin) — zero wrapper shims
-   ├── .bin_owners/<component>.list   # Tracks owned symlinks for clean pruning
-   └── <component>/<exact_version>/
-       ├── bin/
-       ├── lib/
-       └── share/
-   ```
-2. **Universal Lifecycle Verbs**: Every `"versioned-artifact"` component strictly implements five
-   canonical operations (plus cross-compiler sub-artifact verbs `target-add`, `target-rm`,
-   `target-ls`, `component-add`, `component-ls` where applicable):
-   - `ls-remote`: Queries official upstream APIs or release indexes without requiring third-party
-     tools.
-   - `install <version>`: Downloads, verifies checksums, compiles or unpacks the binary, and
-     symlinks aliases (e.g., `lts`, `stable`, `latest`).
-   - `ls`: Inspects locally installed versions in `${LIBSCRIPT_HOME}/<component>/`.
-   - `use <version>`: Updates `default` and synchronizes `${LIBSCRIPT_HOME}/bin` symlinks (`O(1)`
-     lookup), complemented by `libscript resolve-env` / `env` walking upward for
-     `.libscript-version`, `.nvmrc`, `.node-version`, `.python-version`, `pyproject.toml`, and
-     `rust-toolchain.toml` without mutating global system profiles (`/etc/profile`, `~/.bashrc`).
-   - `uninstall <version>`: Idempotently removes the version directory and prunes orphaned links in
-     `${LIBSCRIPT_HOME}/bin`.
-3. **No Sudo, No Global Pollution**: Standard version operations run unprivileged, guaranteeing that
-   multiple shell sessions or CI workers can run different versions concurrently on the same host.
-
-### 3. The Standard Context Contract
-
-When Tier 1 leaf recipes are invoked during full operating system synthesis (Tier 2), they
-communicate with the orchestration layer exclusively via standard environment variables:
-
-| Environment Variable       | Description                                                                                | Default Fallback                                                                   |
-| :------------------------- | :----------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| `LIBSCRIPT_TARGET_SYSROOT` | Target installation prefix (equivalent to `DESTDIR`). Recipes must install artifacts here. | `${LIBSCRIPT_BUILD_DIR}/sysroot` (`build/target-sysroot` under `synthesize-image`) |
-| `LIBSCRIPT_HOST_ROOT`      | Host-side cross-toolchain prefix.                                                          | `/tools` (`${LIBSCRIPT_ROOT_DIR}/build/tools` during cross-bootstrap)              |
-| `LIBSCRIPT_OFFLINE`        | Boolean (`0` or `1`). If `1`, recipes are strictly forbidden from making network calls.    | `0`                                                                                |
-| `LIBSCRIPT_CACHE_DIR`      | Directory containing pre-hydrated tarballs, packages, and sources.                         | `${LIBSCRIPT_ROOT_DIR}/cache`                                                      |
-| `LIBSCRIPT_TARGET_ARCH`    | Target processor architecture (`x86_64`, `aarch64`, `riscv64`, `i686`).                    | Auto-detected host arch                                                            |
-| `LIBSCRIPT_TARGET_LIBC`    | Target standard C library runtime (`glibc`, `musl`, `bsd-libc`, `nolibc`).                 | `glibc`                                                                            |
-| `LIBSCRIPT_TARGET_OS`      | Target operating system family (`linux`, `freebsd`, `unikraft`).                           | `linux`                                                                            |
-| `LIBSCRIPT_TARGET_TRIPLET` | Standardized GNU/LLVM triplet (e.g., `x86_64-libscript-linux-gnu`).                        | Resolved via `triplets.sh`                                                         |
-
-```mermaid
-flowchart TD
-    subgraph Tier2Orch[Tier 2 Orchestrator / Assembler]
-        Plan[Execution Plan Stage]
-        EnvInject[Context Contract Injection]
-    end
-
-    subgraph Context[Standard Context Contract Environment]
-        SYSROOT["LIBSCRIPT_TARGET_SYSROOT<br/>(build/target-sysroot)"]
-        HOSTROOT["LIBSCRIPT_HOST_ROOT<br/>(build/tools)"]
-        OFFLINE["LIBSCRIPT_OFFLINE<br/>(0=Online, 1=Air-Gapped)"]
-        TRIPLET["LIBSCRIPT_TARGET_TRIPLET<br/>(x86_64-libscript-linux-gnu)"]
-    end
-
-    subgraph Tier1Recipe[Tier 1 Autonomous Recipe (_lib/*/setup.sh)]
-        Detect[Verify .stamp.<component>]
-        Build[Compile / Extract Artifacts]
-        Stage[Install Directly to LIBSCRIPT_TARGET_SYSROOT]
-        Stamp[Write Atomic .stamp.<component>]
-    end
-
-    Plan --> EnvInject
-    EnvInject --> Context
-    Context --> Tier1Recipe
-    Detect -->|Stamp Missing| Build
-    Build --> Stage
-    Stage --> Stamp
-```
-
-### 4. Multi-Stage Toolchain Bootstrapping
-
-LibScript implements an automated, reproducible bootstrap sequence:
-
-- **Stage 0 (`_lib/toolchains/bootstrap/stage0.sh`)**: Host-driven cross-toolchain compilation.
-  Builds isolated cross-Binutils (Pass 1), standalone cross-GCC (Pass 1), installs target kernel API
-  headers, compiles target LibC (`glibc` or `musl`), and constructs cross-GCC (Pass 2) inside
-  `LIBSCRIPT_HOST_ROOT` (`/tools`).
-- **Stage 1 (`_lib/toolchains/bootstrap/stage1.sh`)**: Cross-compiles a minimal standalone POSIX
-  userland (`dash`, `coreutils`, `diffutils`, `gawk`, `grep`, `gzip`, `make`, `patch`, `sed`, `tar`,
-  `xz`) linked exclusively against `/tools/lib/libc.so`.
-- **Sanitization Invariant**: Binaries produced in Stage 1 are verified with `readelf -l` to ensure
-  zero references to host linkers (e.g., `/lib64/ld-linux-x86-64.so.2`).
-
-### 5. Generic 3-Mode Build Substrate & Multi-Compiler Verification (`_lib/_common/source_builder.{sh,cmd}`)
-
-Every component in `_lib/` can be provisioned or compiled through three orthogonal mechanisms
-handled by `_lib/_common/pkg_mgr.{sh,cmd}`, `_lib/_common/source_builder.{sh,cmd}`, and
-`_lib/_common/component_core.{sh,cmd}`:
-
-1. **Mode 1 — Install via `<specific package manager>` (`--pkg-mgr=<pm>`)**: Explicitly targets any
-   OS or ecosystem package manager (`apt-get`, `apk`, `dnf`, `yum`, `zypper`, `pacman`, `brew`,
-   `port`, `pkg`, `xbps`, `emerge`, `winget`, `choco`, `scoop`, `nix`, `guix`, `spack`, `vcpkg`,
-   `conan`, `pkgx`) and auto-bootstraps `_lib/package-managers/<pm>` if missing.
-2. **Mode 2 — Build from `<source>` with Default Toolchain (`--from-source --toolchain=default`)**:
-   Automatically resolves the host platform's default C toolchain (`_lib/languages/c`) and compiles
-   the component from its cached source archive into `${LIBSCRIPT_HOME}/<pkg>/<version>/`, emitting
-   `build-metrics.json`.
-3. **Mode 3 — Build from `<source>` with Custom Toolchain
-   (`--from-source --toolchain=gcc|clang|tcc|edgcpp|custom-cc` or `--custom-cc=<path>`)**: Activates
-   the specified compiler recipe (`_lib/languages/{gcc,clang,tcc,edgcpp,custom-cc}/`), injects the
-   flag-normalizing telemetry shim (`cc_wrapper.{sh,cmd}` / `edgcpp_wrapper.{sh,cmd}`), compiles
-   into a compiler-namespaced prefix (`${LIBSCRIPT_HOME}/<pkg>/<version>-<cc>/`), and supports
-   multi-compiler differential verification across the SQLite C amalgamation
-   (`_lib/databases/sqlite/compare_compilers.{sh,cmd}`), the Linux kernel
-   (`_lib/kernel/linux/compare_compilers.{sh,cmd}`), and the 13-target C11/C++17 corpus
-   (`tests/test_edgcpp_corpus_matrix.{sh,cmd}`).
-
----
-
-## ⚙️ Tier 2: Synthesizers, Assemblers & Kernel Image Baking
-
-Tier 2 orchestrates Tier 1 recipes into complete, functional, bootable operating systems and virtual
-appliances.
-
-```mermaid
-sequenceDiagram
-    participant User as Developer / CLI
-    participant Config as libscript config os
-    participant Solver as resolve_stack.jq (Tarjan SCC)
-    participant Storage as _lib/storage/ (Partition & LUKS)
-    participant VFS as _lib/orchestration/vfs/ (Chroot & Mounts)
-    participant Kernel as _lib/{kernel,freebsd,illumos}/ (Multi-OS Baking)
-    participant PackageAs as cli/commands/package_as/ (Artifact Factory)
-
-    User->>Config: libscript config os --profile=linux-desktop-sway-wayland
-    Config->>Solver: Evaluate os-config.json against manifest.schema.json
-    Solver-->>Config: Deterministic, topologically sorted execution plan
-    Config->>Storage: provision_disk.sh & format_fs.sh (GPT, LUKS2, Btrfs, ZFS)
-    Storage-->>VFS: Mounted rootfs block device
-    Config->>VFS: create_fhs_layout.sh & mount_target_vfs.sh
-    VFS->>Kernel: Compile vmlinuz / world, assemble CPIO initramfs, generate UKI / loader
-    Kernel-->>VFS: Kernel, world, & modules staged in target sysroot
-    Config->>PackageAs: package-as qcow2 / raw-img / iso / bsd-img
-    PackageAs-->>User: Production-ready bootable OS artifact
-```
-
-### 1. Declarative OS Configuration & TUI Engine
-
-OS definitions are declared in JSON adhering to `os-config.schema.json` and the
-`execution-plan.*.schema.json` suite. Users can configure instances via:
-
-- **Interactive TUI Configurator (`cli/commands/config/config.sh`, `tui_engine.sh`)**: A portable
-  ANSI VT100 / whiptail / dialog menu engine matching kernel `menuconfig`.
-- **Curated Profiles (`profiles/`)**: Ready-to-build configurations covering:
-  - **Minimal & Enterprise Servers**: Headless Musl/BusyBox, production Glibc, FreeBSD ZFS root
-    pool, and illumos minimal servers.
-  - **Modern Desktops & Compositors**: Wayland (Sway, Hyprland, KDE Plasma 6), X11 (XFCE4), MATE,
-    and Common Desktop Environment (CDE).
-  - **Linux From Scratch (LFS) Systems**: Pure source-built userlands under Systemd, OpenRC, Runit,
-    S6, Dinit, and SysVinit.
-  - **Distribution-Style Stacks**: Alpine, Debian, and Red Hat style configurations.
-  - **Cloud & MicroVM Appliances**: Firecracker MicroVM, OSv, Unikraft, AWS AMI, Azure VHD, GCP GCE,
-    and VMware/Proxmox hypervisor templates.
-
-### 2. Isolated Rootfs & Virtual Kernel Filesystems (VFS)
-
-Tier 2 provisions an independent filesystem root to guarantee zero host pollution:
-
-- **FHS Layout (`create_fhs_layout.sh`)**: Establishes standard `/bin`, `/usr`, `/lib`, `/etc`,
-  `/var`, `/boot`, `/dev`, `/proc`, `/sys` trees, supporting both modern merged `/usr` and legacy
-  split `/usr`.
-- **Idempotent VFS Lifecycle (`mount_target_vfs.sh` / `umount_target_vfs.sh`)**:
-  - Checks mount points (`mountpoint -q` or `findmnt`) before mounting.
-  - Mounts `devtmpfs` on `<rootfs>/dev`, `devpts` on `<rootfs>/dev/pts`, `tmpfs` on
-    `<rootfs>/dev/shm`, `proc` on `<rootfs>/proc`, and `sysfs` on `<rootfs>/sys`.
-  - Registers cleanup traps (`trap 'umount_target_vfs' EXIT INT TERM ERR`) to prevent mount leaks.
-- **Isolated Execution Runner (`runner.sh`)**: Executes commands within Linux namespaces using
-  `unshare --mount --uts --ipc --pid --fork chroot <rootfs>` with sanitized environments.
-
-### 3. Storage, Partitioning & Disk Provisioning (`_lib/storage/`)
-
-- **Partitioning (`provision_disk.sh`)**: Automates scripted disk formatting using `sfdisk` /
-  `parted`:
-  - Modern UEFI (GPT partition table with FAT32 EFI System Partition type
-    `C12A7328-F81F-11D2-BA4B-00A0C93EC93B`).
-  - Legacy BIOS (MBR or GPT with BIOS Boot Partition `21686148-6449-6E6F-744E-656564454649`).
-  - Hybrid UEFI/BIOS.
-- **LUKS2 Encryption**: Optional full-disk encryption formatted with
-  `cryptsetup luksFormat --type luks2 --pbkdf argon2id` and automated `/etc/crypttab` creation.
-- **Filesystem Formatting (`format_fs.sh`)**: Idempotently formats Ext4, Btrfs (including nested
-  subvolume layouts: `@`, `@home`, `@snapshots`), XFS, VFAT, and ZFS zpools.
-
-### 4. Linux, FreeBSD & illumos Kernel Baking
-
-LibScript compiles and configures operating system kernels and worlds natively:
-
-#### Linux Kernel Engine (`_lib/kernel/linux/`)
-
-- Downloads and cryptographically verifies official `kernel.org` sources or tracks specific git
-  branches.
-- Integrates modular configuration snippets via `merge_config.sh`:
-  - `virtio.cfg`: Virtualized guest acceleration (`CONFIG_VIRTIO`, `CONFIG_VIRTIO_BLK`,
-    `CONFIG_VIRTIO_NET`).
-  - `wayland_drm.cfg`: Direct Rendering Manager (`CONFIG_DRM`, AMDGPU, Intel i915/Xe).
-  - `sound.cfg`: Kernel ALSA audio subsystems.
-  - `zfs.cfg` & `containers.cfg`: OverlayFS, cgroups, namespaces.
-- Idempotently builds `bzImage`, modules, and device tree blobs (`dtbs`), installing them alongside
-  `System.map` into `<target-rootfs>/boot/` and executing `depmod`.
-
-#### Initramfs Generation Subsystem (`_lib/kernel/initramfs/gen_initramfs.sh`)
-
-- Synthesizes a minimal CPIO archive containing static BusyBox/Toybox binaries, necessary device
-  nodes (`/dev/console`, `/dev/null`), and essential storage/crypto kernel modules (`nvme`,
-  `virtio_blk`, `dm-crypt`, `ext4`, `btrfs`).
-- Injects a resilient POSIX `/init` script that parses `/proc/cmdline` for `root=UUID=...` or
-  `root=PARTUUID=...`, handles LUKS password prompts or keyfiles via `cryptsetup open`, mounts the
-  real root at `/newroot`, and executes `switch_root`.
-
-#### FreeBSD Kernel & World Subsystem (`_lib/freebsd/`)
-
-- Manages native FreeBSD source trees, generating optimized `/etc/make.conf` and `/etc/src.conf`
-  knobs.
-- Orchestrates `make buildworld` and `make buildkernel KERNCONF=...` with isolated
-  `MAKEOBJDIRPREFIX` boundaries.
-- Executes `installworld` and `distribution` to populate target sysroots, generating
-  `/boot/loader.conf` and `/etc/rc.conf` for ZFS-on-root booting.
-
-#### illumos Kernel & Distribution Subsystem (`_lib/illumos/`)
-
-- Automates illumos kernel and userland staging across OmniOS and OpenIndiana base targets.
-- Provisions ZFS root pools (`rpool`), boot environment datasets (BEs via `beadm`), SMF service
-  manifests (`svc.startd`), and IPS (`pkg5`) or pkgsrc catalogs.
-- Configures Solaris Boomer in-kernel audio (`/dev/audio`), OSS, and `/etc/vfstab`.
-
-#### Bootloaders & Unified Kernel Images (UKI)
-
-- Installs GRUB2 (EFI and BIOS), `systemd-boot`, FreeBSD loader, illumos loader, or Limine.
-- Generates UEFI Unified Kernel Images (UKI): single signed `.efi` binaries combining the Linux
-  kernel stub, initramfs, OS release, and kernel command line.
-
-### 5. Universal Live-CD / Live-USB Multiboot Installer Engine
-
-LibScript features a dedicated architecture for baking turnkey live bootable installation media
-powered by `msi-rs` (`devtools/build_live_installer.sh` and `execution-plan.live.schema.json`):
-
-- **Tri-Modal Operational Design**:
-  - **Headless Mode (`msiexec`)**: Unattended, scriptable deployments driven by Windows Installer
-    (`.msi`) properties, JSON response files, and concurrent multi-OS target pipelines.
-  - **TUI Mode**: High-contrast, keyboard-driven terminal wizard with interactive disk mapping,
-    partition layout reviews, and scrollable catalog selection.
-  - **GUI Mode (`msi-gui`)**: Fullscreen kiosk graphical wizard on Wayland (`cage`) or X11
-    (`openbox`), featuring interactive visual manipulation of disks, filesystems, MBR/GPT table
-    schemes, and active flag toggles.
-- **Multiboot Co-Installation**: Partitions target storage devices and provisions single, dual, or
-  triple-boot co-installations across Linux, FreeBSD, and illumos with unified bootloader chaining.
-- **Air-Gapped Modality**: Embeds dynamically selected LibScript application stacks (Nginx,
-  WordPress, Open edX) with zero network dependency. For implementation specifications, see
-  [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
-
-### 6. Universal Artifact Packaging (`package-as`)
-
-The `package-as` engine (`cli/commands/package_as/`) transforms synthesized environments into
-distributable deployment formats:
-
-- **`raw-img` / `disk-builder`**: Partitioned raw disk images (`.raw` / `.img`) ready for physical
-  drive flashing (`dd`) or hypervisors.
-- **`qcow2` / `vmdk` / `vdi` / `hyperv-vhd`**: Compressed virtual machine disk images for QEMU/KVM,
-  VMware ESXi, VirtualBox, and Microsoft Hyper-V.
-- **`proxmox-template`**: Ready-to-import template images for Proxmox VE.
-- **`aws-ami` / `azure-vhd` / `gcp-image`**: Direct cloud images synthesized for Amazon AWS,
-  Microsoft Azure, and Google Cloud Platform.
-- **`vagrant-box`**: Redistributable Vagrant `.box` archives bundling metadata, Vagrantfile, and
-  qcow2 disk for QEMU/libvirt.
-- **`iso`**: Bootable hybrid live ISO media with SquashFS compression and copy-on-write OverlayFS
-  RAM persistence.
-- **`rootfs-tar` / `docker` / `docker-image`**: Clean archive tarballs ready for OCI image ingestion
-  (`docker import`) or container/jail roots.
-- **`bsd-img` / `illumos-distro`**: Bootable FreeBSD images (UFS/ZFS) and illumos / SunOS images
-  with ZFS root pools (`rpool`) and SMF init.
-- **`unikernel`**: Direct-kernel boot images (`vmlinux` / `unikraft.bin`) for Firecracker and
-  Cloud-Hypervisor microVMs, plus `--cloud-boot=uefi-gpt|efi-stub|azure-vhd` wrapping ELF unikernels
-  into hybrid GPT + FAT32 ESP raw disk images and 1 MiB-aligned Hyper-V Gen2 `.vhd` appliances.
-- **`firmware` / `uf2` / `hex`**: Signed MCUboot (`_lib/bootloaders/mcuboot/`) Zephyr RTOS and
-  FreeRTOS microcontroller firmware images (`execution-plan.rtos.schema.json`).
-- **Native Installers & Packages**:
-  - Windows: `.msi` (WiX / `msi-rs`), Inno Setup (`.exe`), NSIS (`.exe`).
-  - macOS: Flat installer packages (`.pkg`) and disk images (`.dmg`).
-  - Linux: Debian (`.deb`), Red Hat (`.rpm`), Alpine (`.apk`).
-  - BSD: FreeBSD package tarballs (`.txz`).
-
-### 7. Modular Operating System Distribution Substrates
-
-LibScript implements modular, declarative OS distribution synthesis engines for non-Linux Unix
-operating systems:
-
-#### FreeBSD Distribution Substrate (`_lib/freebsd/distro/`)
-
-- Declarative profile schema: `execution-plan.freebsd.schema.json`.
-- Pluggable init supervisors: `bsd-rc`, `openrc`, `runit`, `s6`, `dinit`.
-- Storage architectures: UFS2 and ZFS root pools with boot environment support.
-- Multi-format packaging: Raw GPT, QCOW2, Vagrant `.box`, VHD, VMDK, ISO.
-
-#### Illumos Distribution Substrate (`_lib/illumos/distro/`)
-
-- Declarative profile schema: `execution-plan.illumos.schema.json`.
-- Pluggable init systems: Native SMF (`svc.startd`), `runit`, `s6`, `dinit`, `inittab-sysv`.
-- Pluggable desktop environments: Headless none, MATE, XFCE4, Common Desktop Environment (CDE),
-  minimal window managers.
-- Storage & ZFS hierarchy: Canonical root pool (`rpool`), boot environment datasets (`beadm`), and
-  `/etc/vfstab` integration.
-- Hardware audio subsystems: Solaris Boomer in-kernel audio (`/dev/audio`), OSS, PulseAudio.
-- Multi-format packaging: Raw GPT/VTOC, QCOW2, Vagrant `.box`, VHD, VMDK, ISO
-  (`cli/commands/package_as/illumos_distro.sh` / `.cmd`).
-- Multi-platform verification: 5-platform Vagrant matrix spanning
-  `{macOS, Windows, FreeBSD, SunOS, Linux}`.
-
-#### ReactOS Distribution Substrate (`_lib/reactos/distro/`, `rapps`, `rosbe`)
-
-- Declarative profile schema: `execution-plan.reactos.schema.json` across 5 curated `i686` and
-  `x86_64` profiles (`profiles/reactos/*.json`).
-- Hybrid synthesis modes: Upstream BootCD/LiveCD ISO repacking (`unattend.inf` + `GuiRunOnce`
-  `firstboot.cmd`) and RosBE CMake/Ninja source builds (`_lib/toolchains/rosbe/`).
-- Storage, shell & bootloaders: FreeLoader (`freeldr.sys` / `freeldr.ini`), `fat32`, `btrfs`
-  (WinBtrfs), and `ntfs` filesystems, classic Win32 Explorer (`classic`, `lautus`, `lunar`, `mizu`)
-  or minimal `cmd.exe` shell, and NT Service Control Manager (`nt-scm`).
-- Strict PE bitness verification (`0x014c` `i686` vs. `0x8664` `x86_64`) and multi-format packaging
-  (`cli/commands/package_as/reactos_{distro,iso,vhd,vmdk}.{sh,cmd}`).
-
----
-
-## 🌐 Tier 3: Operators, Multicloud & AI Cluster Deployment
-
-Tier 3 acts as the operational control plane, deploying images and stacks across public clouds,
-on-prem hypervisors, and distributed AI accelerators.
-
-```mermaid
-flowchart LR
-    Manifest[Declarative Stack / OS Image] --> Tier3Router[libscript cloud / provision]
-
-    Tier3Router -->|AWS EC2 / VPC| AWSMod[_lib/cloud-providers/aws/]
-    Tier3Router -->|GCP Compute Engine| GCPMod[_lib/cloud-providers/gcp/]
-    Tier3Router -->|Azure VMs & VNets| AzureMod[_lib/cloud-providers/azure/]
-    Tier3Router -->|Proxmox VE / KVM| PVEMod[_lib/cloud-providers/proxmox/]
-    Tier3Router -->|Hetzner Cloud| HetznerMod[_lib/cloud-providers/hetzner/]
-    Tier3Router -->|MicroVM / Edge| MicroMod[_lib/orchestration/firecracker/]
-
-    GCPMod -->|Hardware Acceleration| TPUCluster[Cloud TPU Pods via XPK & GKE]
-    AWSMod -->|GPU Compute| GPUCluster[NVIDIA GPU Clusters]
-
-    TPUCluster --> Serving[vLLM & JetStream Inference]
-    GPUCluster --> Serving
-```
-
-### 1. Multicloud Lifecycle Operators & Marketplace Publishing (`_lib/cloud-providers/`, `_lib/cloud/image-import/`, `cli/commands/marketplace/`)
-
-LibScript avoids vendor lock-in by providing a unified, idempotent operational grammar (`provision`,
-`deprovision`, `cloud <provider> <resource>`, `publish-marketplace`):
-
-- Wraps native cloud CLIs (`aws`, `az`, `gcloud`, `hcloud`, `pvesh`), securely leveraging the
-  operator's local credentials (`~/.aws/credentials`, `gcloud auth`).
-- Manages complete lifecycle for virtual machines, VPCs, subnets, firewalls, and block storage
-  across AWS, Azure, GCP, Proxmox VE, Hetzner, and Vagrant.
-- **Unikernel & OS Image Import (`_lib/cloud/image-import/`)**: Digest-guarded registration of
-  UEFI/ENA AMIs on AWS EC2, 1 MiB-aligned Hyper-V Gen2 Compute Gallery images on Azure, and Shielded
-  GCE (`UEFI_COMPATIBLE`, `GVNIC`) images on Google Cloud.
-- **Multicloud Marketplace Publisher (`cli/commands/marketplace/publish.{sh,cmd}`)**: Audits staged
-  appliances (`verify_compliance.{sh,cmd}` for EULA presence, zero leaked SSH/API secrets, no public
-  admin/datastore ports, and SPDX 2.3 `sbom.spdx.json` generation) before emitting AWS
-  CloudFormation + Marketplace Catalog `StartChangeSet` payloads, Azure Managed Application ARM
-  archives, and GCP Producer Portal Terraform Blueprints (`schemas/marketplace-offer.schema.json`).
-
-### 2. Distributed AI & Hardware Acceleration (`_lib/ml-training/tpu-trainer/`, `_lib/ai-serving/inference-router/`)
-
-LibScript integrates directly with AI accelerators under optional zero-cost TFRC guardrails
-(`schemas/tfrc-policy.schema.json`):
-
-- **TPU VM & Multi-Worker Lockstep Training (`_lib/ml-training/tpu-trainer/`,
-  `_lib/cloud-providers/gcp-tpu-vm/`)**: Coordinates JAX SPMD (`JAX_COORDINATOR_ADDRESS`,
-  `PJRT_DEVICE=TPU`) and PyTorch/XLA lockstep SSH execution, Orbax async checkpointing, `SIGUSR1`
-  preemption hooks, and 4-role regional GCS ML buckets (`traits/storage/gcs_ml.{sh,cmd}`).
-- **Large-Scale Training via XPK & GKE**: Seamless integration with Google's Accelerated Processing
-  Kit ([`xpk`](https://github.com/google/xpk)) and Kubernetes `JobSet` + Kueue manifests to schedule
-  distributed training workloads across TPU Pod slices (`v4-128`, `v5p-2048`).
-- **Accelerated Inference Routing (`_lib/ai-serving/inference-router/`)**: Unified `serve`,
-  `health`, and `route` dispatcher across [`vLLM`](https://github.com/vllm-project/vllm)
-  (`vllm-tpu`), [`JetStream`](https://github.com/google/JetStream), MaxEngine, Triton, and
-  [`Ollama`](https://ollama.com/).
-
-### 3. Built-in PaaS & Universal Routing (`netctl`)
-
-`netctl` provides an ingress, routing, and reverse proxy abstraction layer that turns raw
-infrastructure into a managed PaaS:
-
-- **Configuration Emission**: Translates high-level declarative route maps into native
-  configurations for Nginx, Caddy, Apache, or Windows IIS.
-- **Automated TLS**: Direct integration with Let's Encrypt / Certbot for automatic certificate
-  acquisition and renewal.
-- **Service Daemonization**: Automatically templates and registers application service supervisors
-  for `systemd` (Linux), `launchd` (macOS), or Windows Service Control Manager.
-
-### 4. LibScript REST API & OpenAPI Engine (`libscript-rest-api`)
-
-For programmatic cluster orchestration and remote build execution, LibScript includes a native C11
-REST API daemon (`c-rest-framework`) located in `libscript-rest-api/`:
-
-- **OpenAPI 3.2.0 Conformance**: Fully typed API contract defined in `openapi.yaml`.
-- **Remote Lifecycle Control**: Endpoints for health/status (`GET /api/v1/status`), component
-  installations (`POST /api/v1/installations`), capability introspection
-  (`GET /api/v1/components/{name}/capabilities`), stack provisioning, cloud-boot artifact synthesis
-  (`POST /api/v1/artifacts/generate`), marketplace publishing (`POST /api/v1/marketplace/publish`),
-  experiment plugin execution (`POST /api/v1/experiments`), topologies (`/api/v1/topologies`),
-  payloads (`/api/v1/payloads`), traits (`/api/v1/traits`), and component lifecycle hooks
-  (`/api/v1/components/{name}/hooks/{hook}`), plus real-time log streaming over HTTP.
-- **Embedded Lightweight Server**: Zero heavy dependencies, compilable via CMake
-  (`build/bin/libscript-rest-api`), with system service integration scripts.
-
----
-
-## 🔌 Dual-Layer Component Lifecycle Hooks (`_lib/<category>/<component>/hooks/`)
-
-To enable higher-order cluster topologies, traits, and multi-tenant installer chainers (`msi-rs`) to
-inspect and drive Tier 1 components without hardcoding software-specific internals, LibScript
-codifies a **Dual-Layer Component Lifecycle Hook Contract** dispatched via `_lib/_common/hooks.sh`
-and `_lib/_common/hooks.cmd`:
-
-### 1. Physical Instance Hooks
-
-Manage the lifecycle of the underlying daemon process and physical data directory:
-
-- **`configure`**: Renders configuration templates (`postgresql.conf`, `redis.conf`, `nginx.conf`)
-  via `_lib/_common/envsubst_safe.{sh,cmd}`, supporting
-  `--role <standalone|leader|follower|arbiter>` and `--sysroot <path>`.
-- **`probe`**: Executes deep health verification across three subcommands (`startup`, `liveness`,
-  `readiness`) with deterministic exit codes (`0` = Healthy/Ready, `1` = Starting/Degraded, `2` =
-  Unhealthy/Dead) and `--remote-host` support when `[USER_DB_STRATEGY] = remote`.
-- **`announce`**: Emits structured JSON describing bound interfaces, ports, protocols (`tcp`, `udp`,
-  `http`, `https`, `grpc`), internal vs. external visibility, and health probe URIs.
-- **`log_stream`**: Emits structured JSON listing active log file paths, journald/SMF/Windows Event
-  Log identifiers, and log format (`json`, `clf`, `syslog`, `postgres`).
-- **`metrics`**: Emits structured JSON specifying Prometheus/OpenTelemetry scrape port, path
-  (`/metrics`, `/stub_status`), and exporter status.
-- **`backup` & `restore`**: Executes full-instance consistent snapshots (`pg_basebackup`,
-  `redis-cli BGSAVE`, `etcdctl snapshot save`) with SHA-256 manifest verification.
-- **`upgrade` & `rollback`**: Performs stateful major/minor data directory migrations (`pg_upgrade`)
-  and atomic rollback on failure.
-- **`maintenance`**: Runs idempotent periodic housekeeping (`VACUUM (ANALYZE)`, WAL pruning, cache
-  compaction, log rotation).
-
-### 2. Logical Multi-Tenant Hooks
-
-Manage isolated logical resources hosted inside a shared physical engine (`"multitenant": true` in
-`manifest.json`), aligning with `packaging/ARCHITECTURE_LOGICAL_PROVISIONING.md`:
-
-- **`provision_tenant`**: Idempotently checks whether a tenant schema, role, keyspace, or virtual
-  host block (`# BEGIN libscript-managed: <tenant>`) exists and creates it only if missing.
-- **`deprovision_tenant`**: Removes a tenant virtual host or drops a tenant schema upon explicit
-  tenant uninstallation while preserving the shared physical engine for peer stacks (e.g.,
-  uninstalling WordPress while Open edX remains active).
-- **`backup_tenant` & `restore_tenant`**: Exports and restores tenant-scoped logical dumps
-  (`pg_dump --schema`, `mysqldump`) without disrupting co-tenant workloads.
-
----
-
-## 🧩 The Unified Traits Subsystem (`traits/`)
-
-Traits (`traits/engine.sh` and `traits/engine.cmd`) provide composable, cross-cutting node
-capabilities by orchestrating existing `_lib/` components in a deterministic priority order
-(`storage` -> `secrets` -> `mesh` -> `firewall` -> `discovery` -> `tls` -> `ingress` -> `logging` ->
-`metrics` -> `backup` -> `maintenance`):
-
-1. **Dual-Mode Execution Contract**:
-   - **Tier 2 Offline Sysroot Bake Mode (`LIBSCRIPT_TARGET_SYSROOT != /`)**: Pre-bakes `/etc/fstab`,
-     `/etc/vfstab`, `/etc/nftables.conf`, `/etc/pf.conf`, cron/systemd timers, and proxy configs
-     directly into an offline OS rootfs during `package-as` image synthesis without invoking live
-     kernel syscalls.
-   - **Tier 3 Live Runtime Mode (`LIBSCRIPT_TARGET_SYSROOT == /`)**: Formats unformatted disks,
-     mounts filesystems, reloads firewalls, brings up WireGuard interfaces, and reloads reverse
-     proxies zero-downtime on active nodes.
-2. **Core Traits Composition**:
-   - **Storage (`traits/storage/`)**: Delegates to `_lib/storage/disk_discovery` and `format_fs`,
-     plus NFS (`nfs.{sh,cmd}`), SMB (`smb.{sh,cmd}`), `gcsfuse` (`gcsfuse.{sh,cmd}`), and 4-role
-     regional GCS ML bucket coordination (`gcs_ml.{sh,cmd}`: `datasets`, `checkpoints`, `models`,
-     `logs` with `hierarchicalNamespace` and `gke-gcsfuse-csi-patch.json`).
-   - **Secrets (`traits/secrets/`)**: Delegates template rendering to `_lib/_common/envsubst_safe`
-     and secret retrieval to `_lib/security/openbao/`, SOPS, and `.env` files. Enforces a
-     **Zero-Env-Leak Guarantee** (`exec_with_secrets.{sh,cmd}`) using RAM-backed FIFOs (`0600`) or
-     ACL-locked temporary files so plaintext credentials never appear in `/proc/<pid>/environ`.
-   - **Firewall (`traits/firewall/`)**: Queries `hooks/announce` and compiles rules for `nftables`,
-     `iptables`, `pf` (FreeBSD/macOS/illumos), and Windows `netsh advfirewall`, enforcing an
-     **Anti-Lockout Safeguard** for active SSH, WinRM, RDP, and REST API management ports.
-   - **Mesh & Discovery (`traits/mesh/`, `traits/discovery/`)**: Establishes encrypted cross-cloud
-     WireGuard (`wg0`) or Tailscale overlays, maintains atomic `/etc/hosts` blocks, and pairs
-     `dns map-node` with `dns unmap-node` across Route53, Google Cloud DNS, and Azure DNS to prevent
-     subdomain takeovers.
-   - **Ingress & TLS (`traits/ingress/`, `traits/tls/`)**: Bridges `hooks/announce` and tenant
-     `virtual_hosts` into `_lib/networking/netctl/` (`nginx`, `caddy`, `apache`, `iis`, `traefik`)
-     with syntax validation rollback and `_lib/cloud/cert/` PKI/ACME automation.
-   - **Observability, Backup & Maintenance (`traits/logging/`, `traits/metrics/`, `traits/backup/`,
-     `traits/maintenance/`)**: Wires FluentBit inputs, Prometheus `file_sd_configs`, ZFS/Btrfs CoW
-     snapshots + PaaS object storage shipping (`s3://`, `gs://`, `azure://`, `rclone://`,
-     `restic://`, `borg://`), and scheduled maintenance timers.
-
----
-
-## 🏗️ Tier 3.5: Topologies & Consensus Choreography (`topologies/`)
-
-Tier 3.5 bridges the gap between single-node Tier 3 cloud provisioning and distributed multi-node
-stateful clusters (`topologies/engine.sh` and `topologies/engine.cmd`):
-
-- **Deterministic State Machine (`.topology_state.json`)**: Tracks cluster epoch/term counters,
-  active leader IDs, per-node lifecycle transitions (`PENDING` -> `PROVISIONED` -> `SUBSTRATE_READY`
-  -> `CONFIGURED` -> `JOINED` -> `DRAINING` -> `FENCED` -> `DESTROYED`), and cloud resource IDs
-  using atomic write-then-rename (`mv -f`) checkpointing.
-- **Distributed Lease Locking (`topologies/lock.{sh,cmd}`)**: Acquires exclusive locks in shared
-  state storage (`s3://`, `gs://`, `azure://`, `etcd`, or local lockfiles) prior to mutating cluster
-  topology.
-- **Split-Brain Fencing (`topologies/fence.{sh,cmd}`)**: Guarantees zero split-brain writes during
-  leader failover or rolling upgrades by demoting and firewall-isolating the former leader, or
-  invoking Tier 3 Cloud IaaS APIs (NIC/volume detach or instance power-off) if the node is
-  unreachable over both private VPC and WireGuard mesh networks.
-- **Production HA & Constellation Blueprints**: Turnkey topologies for `postgres-ha` (Patroni + etcd
-  - PgBouncer + `netctl`), `valkey-cluster`, `redis-cluster`, `mesos-marathon-ha`,
-    `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, `openedx-ha`, `openedx-unikernel-pod`
-    (8-appliance NanoVMs/OSv/Unikraft constellation), `iot-mqtt-edge-pod`, `gke-tpu-cluster`, and
-    RabbitMQ HA quorum clustering.
-
----
-
-## 🚀 Tier 4: Payloads & Universal Schedulers (`payloads/`)
-
-Tier 4 decouples declarative workload definitions (`payloads/payload.schema.json`) from the
-underlying execution runtime via pluggable translation drivers in `payloads/schedulers/`:
-
-- **Container & Cluster Orchestrators**:
-  - `kubernetes.{sh,cmd}`: Compiles `payload.json` into Kubernetes `Deployment`, `StatefulSet`,
-    `Job`, `JobSet`, Kueue `ResourceFlavor`/`ClusterQueue`, `Service`, `PVC`, and `Ingress`
-    manifests applied via `kubectl`.
-  - `nomad.{sh,cmd}`: Translates payloads into HashiCorp Nomad job specifications.
-  - `mesos.{sh,cmd}`: Translates payloads into Apache Mesos / Marathon application definitions.
-- **Universal Native Init Scheduler (`native.{sh,cmd}`)**: Delegates to
-  `_lib/_common/service_install.{sh,cmd}` and `_lib/init-systems/` to synthesize native service
-  units across all 8+ supported init supervisors (`systemd`, `openrc`, `runit`, `s6`, `dinit`,
-  `sysvinit`, FreeBSD `bsd-rc`, illumos `smf`, macOS `launchd`, and Windows `sc.exe`), supporting
-  both live runtime execution and Tier 2 offline sysroot image baking.
-- **MicroVM, Unikernel & RTOS Schedulers (`microvm.{sh,cmd}`, `rtos_firmware.{sh,cmd}`)**: Compiles
-  workloads into Firecracker, Cloud-Hypervisor, or Solo5 microVM/unikernel execution specs, or
-  dispatches Zephyr/FreeRTOS firmware images onto QEMU/Renode/OpenOCD targets.
-- **AI/HPC Gang & TPU VM Schedulers (`xpk.{sh,cmd}`, `tpu_vm.{sh,cmd}`, `slurm_ray.{sh,cmd}`)**:
-  Translates distributed AI training and inference workloads (`payloads/ai/gke-xpk-training`,
-  `gke-xpk-inference`, `gcp-tpu-vm`, `vllm`, `jetstream`, `ollama`) into Google Cloud `xpk` TPU
-  slice jobs, direct multi-worker Cloud TPU VM lockstep runs, Ray jobs, or Slurm `sbatch`
-  allocations.
-
----
-
-## 🧮 Declarative Constraint Solver & Tarjan SCC Algorithm
-
-LibScript incorporates a pure POSIX + `jq` dependency and constraint solver
-(`_lib/orchestration/resolve_stack.jq`, `resolve_stack.sh`):
-
-### 1. Extended Manifest & Schema Hierarchy
-
-LibScript defines a strongly typed contract hierarchy:
-
-- **Manifest Schemas (`_lib/_common/manifest.schema.json`, `vars.schema.json`)**: Declare component
-  `capabilities` (`versioned-artifact`, `service-daemon`, `sysroot-library`, `cloud-operator`,
-  `os-synthesizer`), `replaces_version_managers`, versions, platform blacklists/whitelists, build
-  scripts, service configurations, and fine-grained USE variants:
-  - **USE Variants (`variants`)**: Feature flags (e.g., `wayland`, `x11`, `pipewire`, `lto`,
-    `static`) that conditionally inject compilation flags (`configure_args`, `meson_args`,
-    `cmake_args`, `cflags`, `ldflags`).
-  - **Dependency Classification**:
-    - `host_tools`: Tools required on the build host (e.g., `bison`, `meson`, `ninja`).
-    - `build_deps`: Headers and libraries required in `LIBSCRIPT_TARGET_SYSROOT`.
-    - `runtime_deps`: Daemons and programs required in the target rootfs at runtime.
-    - `tier`: Criticality tier (`required`, `recommended`, `optional`).
-- **OS Configuration, Domain & Execution Plan Schemas**:
-  - `os-config.schema.json`: Declarative profile specifications for synthesized operating systems.
-  - `execution-plan.schema.json`: Solved, topologically sorted execution graph for system synthesis.
-  - `execution-plan.freebsd.schema.json`: Modular FreeBSD kernel, world, and userland execution
-    spec.
-  - `execution-plan.illumos.schema.json`: Modular illumos/SunOS kernel, SMF, and desktop execution
-    spec.
-  - `execution-plan.reactos.schema.json`: Modular ReactOS (`i686` / `x86_64`) NT SCM, FreeLoader,
-    and RAPPS/MSI execution spec.
-  - `execution-plan.live.schema.json`: Specification for multiboot live installation media.
-  - `execution-plan.rtos.schema.json`: Zephyr RTOS, FreeRTOS, and MCUboot firmware execution spec.
-  - `experiment-suite.schema.json` & `component-scaffold.schema.json`: Empirical `experiments/`
-    plugin contracts (powering the 6 built-in suites: `edgcpp-backends`, `gemma-tpu`, `libtpu-pjrt`,
-    `openedx`, `os-component-matrix`, and `win-port`) and automated `_lib/` scaffolder specs.
-  - `schemas/{marketplace-offer,ml-workload,gcs-ml-storage,tfrc-policy,tpu-matrix,os-matrix-results,installer-experiment}.schema.json`:
-    Multicloud Marketplace offers, TPU/GKE ML workloads, 4-role GCS storage, TFRC guardrails, and
-    declarative `installer-e2e` Vagrant/UI experiment verification.
-
-### 2. Tarjan's Strongly Connected Components (SCC) Cycle Breaking
-
-Complex software distributions frequently contain bootstrap dependency cycles (e.g., `freetype`
-$\leftrightarrow$ `harfbuzz`, `glib` $\leftrightarrow$ `gobject-introspection`, `curl`
-$\leftrightarrow$ `openssl` $\leftrightarrow$ `libssh2`).
-
-The solver executes Tarjan's SCC algorithm within `jq`:
-
-1. Identifies cycles by locating strongly connected components with greater than one node.
-2. Emits a multi-pass staged execution plan:
-   - **Pass 1**: Compiles Package A with bootstrap flags (disabling optional cyclic dependencies).
-   - **Pass 2**: Compiles Package B linked against bootstrap Package A.
-   - **Pass 3**: Recompiles Package A fully linked against Package B.
-
-```mermaid
-flowchart LR
-    subgraph Cycle[Detected Bootstrap Cycle]
-        Freetype[freetype] <--> Harfbuzz[harfbuzz]
-    end
-
-    subgraph Solved[Tarjan SCC Multi-Pass Plan]
-        Pass1[Pass 1: harfbuzz --without-freetype]
-        Pass2[Pass 2: freetype --with-harfbuzz]
-        Pass3[Pass 3: harfbuzz --with-freetype]
-
-        Pass1 --> Pass2 --> Pass3
-    end
-
-    Cycle -->|resolve_stack.jq| Solved
-```
-
----
-
-## 🔒 Cross-Platform Standards & Quality Invariants
-
-LibScript enforces strict engineering invariants across all scripts and automation harnesses:
-
-### 1. POSIX Compliance & The Canonical `THIS_FILE=` Dance
-
-All `.sh` scripts enforce pure `#!/bin/sh` without bashisms. To ensure robust relative path
-resolution regardless of how a script is invoked (sourced, subshell, symlinked), every shell script
-contains the canonical preamble within its first 35 lines:
-
-```sh
-#!/bin/sh
-# ## Overview
-# Concise description of what this script accomplishes.
-#
-# ## Usage
-# ./path/to/script.sh [args]
-
-set -feu
-
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
-elif [ "${ZSH_VERSION-}" ]; then
-  # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
-else
-  THIS_FILE="${0}"
-fi
-
-case "${STACK+x}" in
-  *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
-esac
-export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export LIBSCRIPT_ROOT_DIR
-```
-
-### 2. Windows Batch (`.cmd`) Parity & Recursion Guards
-
-Every shell script has an exact `.cmd` companion implementing delayed expansion and the canonical
-`:!THIS_FILE!:` recursion guard within its first 25 lines:
-
-```cmd
-@echo off
-:: # script_name.cmd
-::
-:: ## Overview
-:: Concise description of what this batch script accomplishes.
-::
-:: ## Usage
-:: script_name.cmd [args]
-
-setlocal EnableDelayedExpansion
-set "THIS_FILE=%~f0"
-
-if defined STACK (
-    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
-    if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
-        exit /b 0
-    )
-)
-set "STACK=%STACK%:!THIS_FILE!:"
-
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
-if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=!SCRIPT_DIR!"
-    call :find_root
-)
-goto :root_found
-
-:: ## find_root
-:: Ascends the directory tree looking for ROOT or libscript.cmd.
-:find_root
-if exist "!d!\libscript.cmd" (
-    set "LIBSCRIPT_ROOT_DIR=!d!"
-    exit /b 0
-)
-if exist "!d!\ROOT" (
-    set "LIBSCRIPT_ROOT_DIR=!d!"
-    exit /b 0
-)
-for %%P in ("!d!") do set "parent=%%~dpP"
-set "d=!parent:~0,-1!"
-if "!d!"=="" (
-    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
-    exit /b 1
-)
-goto :find_root
-
-:: ## root_found
-:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
-:root_found
-```
-
-### 3. Option A Win32 Hard-Fail Boundary Proforma
-
-Operating system image assembly inherently relies on Linux kernel primitives (`unshare`, `mount`,
-`losetup`, `mknod`). Windows CMD and PowerShell scripts must **never** attempt fake emulation of
-these primitives.
-
-Instead, they adhere to the **Option A Proforma**:
-
-- Standardize on **exit code `86`** (`EX_UNAVAILABLE` / `ENOSYS`), terminating native execution
-  immediately.
-- Explicitly output instructions redirecting the developer to the containerized/VM builder
-  (`vm_builder.cmd` or `package-as docker`).
-
-### 4. Idempotency & The 2x Execution Test
-
-All scripts must be strictly idempotent:
-
-- Directories are created exclusively via `mkdir -p` (POSIX) or `if not exist "<dir>" mkdir "<dir>"`
-  (Windows).
-- Symlinks use `ln -sf`.
-- Synthesis steps write atomic `.stamp.<name>` files.
-- The repository enforces a 2x consecutive execution verification test
-  (`tests/test_idempotency_matrix.sh`): running any synthesis pipeline twice consecutively on an
-  identical workspace must result in zero state mutation and exit code 0.
-
-### 5. Documentation & Git Safety Invariants
-
-- **100% Documentation Coverage**: Every script contains structured `## Overview` and `## Usage`
-  headers in its first 30 lines.
-- **Git Safety Invariant**: Automated test suites, CI runners, and build harnesses are strictly
-  forbidden from executing `git push`.
-
-### 6. Automated Verification Matrix & Headless CI Harness
-
-LibScript enforces multi-OS automated testing and regression tracking across all supported
-platforms:
-
-- **Headless QEMU / Hypervisor Boot Tests (`tests/*_boot_test.sh`)**:
-  - `os_boot_test.sh`: Boots synthesized Linux QCOW2 images headless under QEMU, checking kernel
-    initialization and shell login prompts within a specified timeout.
-  - `freebsd_boot_test.sh`: Boot verification of synthesized FreeBSD UFS/ZFS images.
-  - `illumos_boot_test.sh`: Automated QEMU boot test for synthesized illumos/SunOS appliances.
-  - `reactos_boot_test.sh`: Automated QEMU `COM1` serial boot test verifying FreeLoader,
-    `ntoskrnl.exe` root volume mount (`FASTFAT` / WinBtrfs / NTFS), NT SCM (`smss.exe` /
-    `services.exe`), and unattended `GuiRunOnce` `firstboot.cmd` completion for synthesized ReactOS
-    images.
-- **GUI & Network Smoke Harnesses**:
-  - Headless framebuffer and display server smoke tests (`os_gui_smoke_test.sh`,
-    `freebsd_gui_smoke_test.sh`, `illumos_gui_smoke_test.sh`, `reactos_gui_smoke_test.sh`).
-  - Network stack integration tests validating DHCP, DNS, and service connectivity
-    (`reactos_network_smoke_test.sh`).
-
-### 7. ReactOS Hybrid Distribution Synthesis (`_lib/reactos/` & `_lib/reactos/distro/`)
-
-ReactOS (`os_family: "reactos"`, `execution-plan.reactos.schema.json`) extends LibScript's Tier 2
-substrate to the open-source Win32 NT kernel (`ntoskrnl.exe` + `freeldr.sys`):
-
-- **Hybrid Synthesis Modes**:
-  - **Upstream ISO Repacking (`build_mode: "repack"`, default)**: Fetches and SHA-256 verifies
-    official ReactOS release (`0.4.16` `i686`) or nightly (`i686` / `x86_64`) archives, injects
-    `reactos/unattend.inf` (`[Unattend]` + `[GuiRunOnce]`), stages offline payloads into
-    `/libscript/`, and repacks El Torito BIOS (`loader/isoboot.bin`) + UEFI (`loader/efisys.bin`)
-    ISOs or virtual disks (`raw`, `qcow2`, `vhd`, `vmdk`, `box`).
-  - **RosBE Source Build (`build_mode: "from-source"`)**: Uses `_lib/toolchains/rosbe/`
-    (`i686-w64-mingw32` / `x86_64-w64-mingw32` + CMake + Ninja) and slipstreams files via
-    `modules/optional/libscript/CMakeLists.txt` (`add_cd_file()`).
-- **Strict PE Architecture Guard**: Because 64-bit ReactOS does not implement WoW64,
-  `_lib/reactos/distro/pkg.{sh,cmd}` and `resolve_stack.jq` inspect PE `Machine` headers (`0x014c`
-  `i686` vs. `0x8664` `x86_64`) and reject cross-bitness binaries before image finalization.
-- **Continuous Results Aggregation (`tests/update_results.sh` / `.cmd` / `.ps1`)**:
-  - Aggregates atomic test markers (`.success`, `.failure`) across multi-platform CI runs.
-  - Idempotently synchronizes the Supported Components compatibility matrix in `README.md` and
-    exports machine-readable test results (`matrix_results.json`).
+## Core Architectural Contracts
+
+### 1. Atomic Recipe Rule & Capability Facets (`T1` vs. `T2` in `_lib/`)
+
+Every directory in `_lib/<category>/<component>/` manages **exactly one** atomic software unit and
+declares an explicit `"tier"` (`"T1"` or `"T2"`) plus fine-grained `"capabilities"` in
+`manifest.json`:
+
+- **`T1` Capabilities**: `"userland-package"`, `"cross-toolchain"`, `"service-daemon"`,
+  `"sysroot-library"`. Supports unprivileged side-by-side installation and `O(1)` `use` switching in
+  `${LIBSCRIPT_HOME}/bin` as well as sysroot staging.
+- **`T2` Capabilities**: `"sysroot-package"`, `"sysroot-library"`, `"kernel-image"`, `"bootloader"`,
+  `"service-daemon"`. Scoped to `LIBSCRIPT_TARGET_SYSROOT` or privileged host OS plumbing;
+  `libscript use <t2-pkg>` is rejected with exit code `2`.
+- Multi-service web platforms (`workloads/apps/*`), cloud IaaS operators
+  (`infrastructure/providers/*`), and synthesis scripts (`synthesis/*`) never reside in `_lib/`.
+
+### 2. The `LIBSCRIPT_TARGET_SYSROOT` & Dual-Mode Trait Context Contract
+
+- **Offline Synthesis Mode (`LIBSCRIPT_TARGET_SYSROOT != /`)**: `T1`/`T2` recipes and `Plane A`
+  traits stage binaries, `/etc/fstab` entries, firewall rulesets, and init units purely inside the
+  target sysroot directory without mutating the build host.
+- **Live Convergence Mode (`LIBSCRIPT_TARGET_SYSROOT == /`)**: `Plane A` traits and `T4`/`T5`
+  engines format unformatted volumes via `T0` `engine/common/format_fs.{sh,cmd}`, bring up WireGuard
+  meshes, issue TLS certificates, acquire consensus leases (`engine/consensus/lock.{sh,cmd}`), fence
+  unreachable leaders (`engine/consensus/fence.{sh,cmd}`), and reload reverse proxies with zero
+  downtime.
+
+### 3. Cluster Substrates (`T4`) vs. Stateful Workload Constellations (`T5`)
+
+Separating **cluster-forming substrates**
+(`infrastructure/clusters/{k0s-ha,gke-tpu-cluster,k8s-marathon-paas,mesos-marathon-ha,kubernetes-thw}`
+in `T4`) from **stateful database & application constellations**
+(`workloads/constellations/{postgres-ha,redis-cluster,valkey-cluster,minio-distributed,openedx-ha,openedx-unikernel-pod}`
+in `T5`)—while sharing the `T0` quorum lease and fencing state machine (`engine/consensus/`)—ensures
+`T5` schedulers and workloads always sit strictly above `T4` cluster substrates without vertical
+inversion.

@@ -58,7 +58,7 @@ for %%P in ("%LIBSCRIPT_HOME%\android-sdk\latest\platform-tools" "%LIBSCRIPT_HOM
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 )
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "android-sdk" "%ANDROID_SDK_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "android-sdk" "%ANDROID_SDK_VERSION%"
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "ANDROID_SDK_VERSION=%ANDROID_SDK_VERSION%"

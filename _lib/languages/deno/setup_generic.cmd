@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%DENO_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%DENO_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%DENO_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%DENO_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/denoland/deno" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%DENO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading deno %DENO_VERSION% to %DOWNLOAD_DIR%\deno...
     if not exist "%DOWNLOAD_DIR%\deno" mkdir "%DOWNLOAD_DIR%\deno"
     if not "%DENO_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DENO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\deno\deno-%DENO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DENO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\deno\deno-%DENO_VERSION%.zip"
     ) else (
         echo DENO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%DENO_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends deno
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends deno
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\deno\deno-%DENO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%DENO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DENO_DOWNLOAD_URL%" "%TEMP%\deno.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DENO_DOWNLOAD_URL%" "%TEMP%\deno.zip"
         tar -xf "%TEMP%\deno.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for deno.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "deno" "%ACTION%" "%DENO_VERSION%" "%DENO_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\deno\%DENO_VERSION%\\bin\\deno.exe\"" "%LIBSCRIPT_HOME%\deno\%DENO_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "deno" "%ACTION%" "%DENO_VERSION%" "%DENO_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\deno\%DENO_VERSION%\\bin\\deno.exe\"" "%LIBSCRIPT_HOME%\deno\%DENO_VERSION%"
 exit /b !errorlevel!

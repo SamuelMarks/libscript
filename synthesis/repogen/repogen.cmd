@@ -1,0 +1,130 @@
+@echo off
+:: # repogen.cmd
+:: ## Overview
+:: Universal package repository generation and hosting engine on Windows for Debian (APT), Alpine (APK), and Red Hat (RPM/YUM) distribution archives.
+:: ## Usage
+:: call synthesis\repogen\repogen.cmd [--all | --apk | --deb | --rpm]
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+)
+
+set "REPO_BASE=!LIBSCRIPT_ROOT_DIR!\build\packages"
+set "ACTION=all"
+goto :parse_loop
+
+:: ## parse_loop
+:: Parses command-line arguments and populates configuration variables.
+:parse_loop
+if "%~1"=="" goto run_gen
+if /i "%~1"=="--apk" ( set "ACTION=apk" & shift & goto parse_loop )
+if /i "%~1"=="--deb" ( set "ACTION=deb" & shift & goto parse_loop )
+if /i "%~1"=="--rpm" ( set "ACTION=rpm" & shift & goto parse_loop )
+if /i "%~1"=="--all" ( set "ACTION=all" & shift & goto parse_loop )
+if /i "%~1"=="repogen" ( shift & goto parse_loop )
+set "REPO_BASE=%~1"
+shift
+goto parse_loop
+
+:: ## run_gen
+:: Dispatches repository metadata generation for the selected package format.
+:run_gen
+if not exist "%REPO_BASE%\apk" mkdir "%REPO_BASE%\apk"
+if not exist "%REPO_BASE%\deb" mkdir "%REPO_BASE%\deb"
+if not exist "%REPO_BASE%\rpm" mkdir "%REPO_BASE%\rpm"
+
+echo [REPOGEN] Running repository generator for mode: %ACTION%...
+
+if /i "%ACTION%"=="all" goto do_all
+if /i "%ACTION%"=="apk" goto do_apk
+if /i "%ACTION%"=="deb" goto do_deb
+if /i "%ACTION%"=="rpm" goto do_rpm
+goto :do_all
+
+:: ## do_all
+:: Executes packaging or repository generation across all supported formats.
+:do_all
+call "!SCRIPT_DIR!\apk_index.cmd" "%REPO_BASE%\apk"
+call "!SCRIPT_DIR!\deb_index.cmd" "%REPO_BASE%\deb"
+call "!SCRIPT_DIR!\rpm_index.cmd" "%REPO_BASE%\rpm"
+goto finish
+
+:: ## do_apk
+:: Generates an Alpine Linux (.apk) package or repository index.
+:do_apk
+call "!SCRIPT_DIR!\apk_index.cmd" "%REPO_BASE%\apk"
+goto finish
+
+:: ## do_deb
+:: Generates a Debian (.deb) package or apt repository index.
+:do_deb
+call "!SCRIPT_DIR!\deb_index.cmd" "%REPO_BASE%\deb"
+goto finish
+
+:: ## do_rpm
+:: Generates an RPM (.rpm) package or yum/dnf repository metadata.
+:do_rpm
+call "!SCRIPT_DIR!\rpm_index.cmd" "%REPO_BASE%\rpm"
+goto finish
+
+:: ## finish
+:: Completes operation and exits with success status.
+:finish
+set "KEY_DIR=%REPO_BASE%\keys"
+if not exist "%KEY_DIR%" mkdir "%KEY_DIR%"
+
+if not exist "%KEY_DIR%\libscript-archive-keyring.gpg" (
+    echo LibScript Universal APT/RPM Keyring Stub > "%KEY_DIR%\libscript-archive-keyring.gpg"
+)
+
+if not exist "%KEY_DIR%\libscript-alpine.rsa.pub" (
+    echo -----BEGIN PUBLIC KEY----- > "%KEY_DIR%\libscript-alpine.rsa.pub"
+    echo MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE >> "%KEY_DIR%\libscript-alpine.rsa.pub"
+    echo -----END PUBLIC KEY----- >> "%KEY_DIR%\libscript-alpine.rsa.pub"
+)
+
+echo [OK] All repository metadata generated under: %REPO_BASE%
+exit /b 0

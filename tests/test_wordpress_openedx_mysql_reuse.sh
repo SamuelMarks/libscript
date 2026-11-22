@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 printf '==> Testing Universal Database Discovery Engine...\n'
-DETECT_SH="${LIBSCRIPT_ROOT_DIR}/_lib/databases/discover_databases.sh"
+DETECT_SH="${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/discover_databases.sh"
 
 # 1. Test evaluation output
 _eval_out=$("$DETECT_SH" --eval || true)
@@ -56,7 +56,7 @@ printf '[INFO] JSON Output: %s\n' "$JSON_OUT"
 TMP_WWW=$(mktemp -d)
 printf '[INFO] Testing wp-config generation with Open edX MySQL reuse in %s...\n' "$TMP_WWW"
 
-"${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --reuse-openedx-db --skip-deps --server-name "wordpress.local" --site-title "Open edX Shared WP"
+"${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --reuse-openedx-db --skip-deps --server-name "wordpress.local" --site-title "Open edX Shared WP"
 
 if [ ! -f "${TMP_WWW}/wp-config.php" ]; then
   printf '[ERROR] wp-config.php was not created during Open edX reuse setup!\n' >&2

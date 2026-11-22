@@ -1,0 +1,640 @@
+#!/bin/sh
+# ## Overview
+# Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
+#
+# ## Usage
+# ./synthesis/msi/build_component_msi.sh --component <name> [--version <ver>] [--variant <online|offline|all>] [--out <path>] [--hydrate]
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+COMPONENT=""
+VERSION=""
+VARIANT='all'
+OUT_FILE=""
+TARGET_ARCH="${LIBSCRIPT_TARGET_ARCH:-x64}"
+BRANCH=""
+OUT_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
+OFFLINE_SOURCE="${LIBSCRIPT_ROOT_DIR}/cache"
+HYDRATE=0
+
+# ## Overview
+# Removes transient MSI compilation artifacts.
+# ## cleanup_artifacts
+# Removes transient WiX object files and generated XML manifests upon exit.
+cleanup_artifacts() {
+  rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_main.wixobj" \
+        "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_payload.wixobj" \
+        "${MAIN_WXS:-}" "${PAYLOAD_WXS:-}"
+}
+trap cleanup_artifacts EXIT INT TERM
+
+
+# ## show_help
+# Displays command-line usage instructions and available options.
+# ## Overview
+# Displays usage and supported parameters.
+# ## Usage
+#   Internal function.
+# ## show_help
+# Displays command-line usage instructions and available options.
+show_help() {
+  cat << EOF_HELP
+LibScript Standalone Component MSI Builder
+
+Usage:
+  ./synthesis/msi/build_component_msi.sh [OPTIONS]
+
+Options:
+  --component <name>       Component identifier (mysql, redis, mongodb, python, nodejs, meilisearch)
+  --version <ver>          Release version (defaults to version from offline_bundle.json)
+  --variant <var>          Installer variant (online, offline, or all; default: all)
+  --online                 Build lightweight online installer
+  --offline                Build air-gapped offline installer with embedded payload
+  --out <name>             Output file base name or path
+  --out-dir <dir>          Output directory (default: dist/msi)
+  --offline-source <dir>   Offline cache directory containing binary archives (default: cache)
+  --hydrate                Force hydration of offline cache before building
+  --branch <name>          Branch or tag ref (optional)
+  --help, -h               Show this help text
+EOF_HELP
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --component)
+      COMPONENT="$2"
+      shift 2
+      ;;
+    --version)
+      VERSION="$2"
+      shift 2
+      ;;
+    --variant)
+      VARIANT="$2"
+      shift 2
+      ;;
+    --online)
+      VARIANT='online'
+      shift
+      ;;
+    --offline)
+      VARIANT='offline'
+      shift
+      ;;
+    --out)
+      OUT_FILE="$2"
+      shift 2
+      ;;
+    --out-dir)
+      OUT_DIR="$2"
+      shift 2
+      ;;
+    --offline-source)
+      OFFLINE_SOURCE="$2"
+      shift 2
+      ;;
+    --hydrate)
+      HYDRATE=1
+      shift
+      ;;
+
+    --branch)
+      BRANCH="$2"
+      shift 2
+      ;;
+    --arch)
+      TARGET_ARCH="$2"
+      shift 2
+      ;;
+    --arch=*)
+      TARGET_ARCH="${1#*=}"
+      shift
+      ;;
+    --help|-h)
+      show_help
+      exit 0
+      ;;
+    *)
+      printf '[ERROR] Unknown parameter: %s\n' "$1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+: "${BRANCH:=}"
+
+if [ -z "$COMPONENT" ]; then
+  printf '[ERROR] --component is mandatory.\n' >&2
+  show_help
+  exit 1
+fi
+
+BUNDLE_JSON="${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx/offline_bundle.json"
+# Auto-detect version if not supplied
+if [ -z "$VERSION" ] && [ -f "$BUNDLE_JSON" ] && command -v jq >/dev/null 2>&1; then
+  case "$COMPONENT" in
+    mysql)       VERSION=$(jq -r '.databases.mysql.version // "8.0.39"' "$BUNDLE_JSON") ;;
+    redis)       VERSION=$(jq -r '.databases.redis.version // "8.10.2"' "$BUNDLE_JSON") ;;
+    mongodb)     VERSION=$(jq -r '.databases.mongodb.version // "7.0.12"' "$BUNDLE_JSON") ;;
+    python)      VERSION=$(jq -r '.runtimes.python.version // "3.11.9"' "$BUNDLE_JSON") ;;
+    nodejs)      VERSION=$(jq -r '.runtimes.nodejs.version // "20.17.0"' "$BUNDLE_JSON") ;;
+    meilisearch) VERSION=$(jq -r '.databases.meilisearch.version // "1.9.0"' "$BUNDLE_JSON") ;;
+    caddy)       VERSION=$(jq -r '.webservers.caddy.version // "2.8.4"' "$BUNDLE_JSON") ;;
+    *)           VERSION="1.0.0" ;;
+  esac
+fi
+: "${VERSION:=1.0.0}"
+
+# ## Overview
+# Returns the path of the first existing file matching any of the passed glob arguments.
+# Temporarily enables filename expansion since the script operates under set -f.
+#
+# ## Parameters
+#   $@ - Glob patterns or file paths
+# ## Usage
+#   Internal function.
+# ## find_first_file
+# Returns the first existing file matching any of the provided glob patterns.
+find_first_file() {
+  set +f
+  for _pat in "$@"; do
+    # shellcheck disable=SC2086
+    for _target in $_pat; do
+      if [ -f "$_target" ]; then
+        set -f
+        printf '%s\n' "$_target"
+        return 0
+      fi
+    done
+  done
+  set -f
+  return 0
+}
+
+# ## Overview
+# Builds a specific component installer variant (online or offline).
+#
+# ## Parameters
+#   $1 - Variant ("online" or "offline")
+# ## Usage
+#   Internal function.
+# ## build_single_variant
+# Compiles a single MSI installer variant (online or offline) for the target component.
+build_single_variant() {
+  _v="$1"
+  STAGE_ROOT="${LIBSCRIPT_ROOT_DIR}/tmp/stage_component_${COMPONENT}_${_v}"
+  rm -rf "$STAGE_ROOT"
+  mkdir -p "$STAGE_ROOT/bin" "$OUT_DIR"
+
+  if [ "$_v" = "offline" ]; then
+    set +f
+    _need_hydrate=0
+    case "$COMPONENT" in
+      mysql)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/databases/mysql-"*".zip")
+        [ -n "$_arc" ] && [ -f "$_arc" ] || _need_hydrate=1
+        ;;
+      redis)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/databases/redis-"*".zip" "${OFFLINE_SOURCE}/databases/Redis-"*".zip")
+        [ -n "$_arc" ] && [ -f "$_arc" ] || _need_hydrate=1
+        ;;
+      mongodb)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/databases/mongodb-"*".zip")
+        [ -n "$_arc" ] && [ -f "$_arc" ] || _need_hydrate=1
+        ;;
+      python)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/python-"*".zip")
+        [ -n "$_arc" ] && [ -f "$_arc" ] || _need_hydrate=1
+        ;;
+      nodejs)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/node-"*".zip")
+        [ -n "$_arc" ] && [ -f "$_arc" ] || _need_hydrate=1
+        ;;
+      meilisearch)
+        _bin=$(find_first_file "${OFFLINE_SOURCE}/databases/meilisearch-"*".exe")
+        [ -n "$_bin" ] && [ -f "$_bin" ] || _need_hydrate=1
+        ;;
+      caddy)
+        _bin=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy/caddy"*".exe" "${OFFLINE_SOURCE}/webservers/caddy"*".zip")
+        [ -n "$_bin" ] && [ -f "$_bin" ] || _need_hydrate=1
+        ;;
+      gunicorn)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/python-"*".zip")
+        _whl=$(find_first_file "${OFFLINE_SOURCE}/wheels/gunicorn-"*".whl")
+        { [ -n "$_arc" ] && [ -f "$_arc" ] && [ -n "$_whl" ] && [ -f "$_whl" ]; } || _need_hydrate=1
+        ;;
+      nodeenv)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/python-"*".zip")
+        _whl=$(find_first_file "${OFFLINE_SOURCE}/wheels/nodeenv-"*".whl")
+        { [ -n "$_arc" ] && [ -f "$_arc" ] && [ -n "$_whl" ] && [ -f "$_whl" ]; } || _need_hydrate=1
+        ;;
+      exim)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/python-"*".zip")
+        _whl=$(find_first_file "${OFFLINE_SOURCE}/wheels/aiosmtpd-"*".whl")
+        { [ -n "$_arc" ] && [ -f "$_arc" ] && [ -n "$_whl" ] && [ -f "$_whl" ]; } || _need_hydrate=1
+        ;;
+    esac
+
+    if [ "$HYDRATE" -eq 1 ] || [ "$_need_hydrate" -eq 1 ]; then
+        printf '[INFO] Hydrating %s offline cache before build...\n' "$COMPONENT"
+        "${SCRIPT_DIR}/hydrate_offline_cache.sh" --manifest "$BUNDLE_JSON" --cache-dir "$OFFLINE_SOURCE" --component "$COMPONENT"
+    fi
+
+
+    case "$COMPONENT" in
+      mysql)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/databases/mysql-"*".zip")
+        if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+          unzip -q -o "$_arc" -d "$STAGE_ROOT" || true
+          _sub=$(find "$STAGE_ROOT" -mindepth 1 -maxdepth 1 -type d ! -name bin | head -n 1 || true)
+          if [ -n "$_sub" ] && [ -d "$_sub/bin" ]; then
+            mv "$_sub"/* "$STAGE_ROOT/"
+            rmdir "$_sub" 2>/dev/null || true
+          fi
+        else
+          printf '[ERROR] Offline MySQL archive missing from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        ;;
+      redis)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/databases/redis-"*".zip" "${OFFLINE_SOURCE}/databases/Redis-"*".zip")
+        if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+          unzip -q -o "$_arc" -d "$STAGE_ROOT" || true
+          _sub=$(find "$STAGE_ROOT" -mindepth 1 -maxdepth 1 -type d ! -name bin | head -n 1 || true)
+          if [ -n "$_sub" ]; then
+            if [ -d "$_sub/bin" ]; then
+              mv "$_sub"/* "$STAGE_ROOT/" 2>/dev/null || true
+            else
+              mkdir -p "$STAGE_ROOT/bin"
+              mv "$_sub"/* "$STAGE_ROOT/bin/" 2>/dev/null || true
+            fi
+            rmdir "$_sub" 2>/dev/null || true
+          fi
+          mkdir -p "$STAGE_ROOT/bin"
+          if [ -f "$STAGE_ROOT/redis-server.exe" ] && [ ! -f "$STAGE_ROOT/bin/redis-server.exe" ]; then
+            cp -f "$STAGE_ROOT/redis-server.exe" "$STAGE_ROOT/bin/"
+            cp -f "$STAGE_ROOT/redis-cli.exe" "$STAGE_ROOT/bin/" 2>/dev/null || true
+          fi
+          mkdir -p "$STAGE_ROOT/bin"
+        else
+          printf '[ERROR] Offline Redis archive missing from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        ;;
+      mongodb)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/databases/mongodb-"*".zip")
+        if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+          unzip -q -o "$_arc" -d "$STAGE_ROOT" || true
+          _sub=$(find "$STAGE_ROOT" -mindepth 1 -maxdepth 1 -type d ! -name bin | head -n 1 || true)
+          if [ -n "$_sub" ] && [ -d "$_sub/bin" ]; then
+            mv "$_sub"/* "$STAGE_ROOT/"
+            rmdir "$_sub" 2>/dev/null || true
+          fi
+        else
+          printf '[ERROR] Offline MongoDB archive missing from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        ;;
+      python)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/python-"*".zip")
+        if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+          unzip -q -o "$_arc" -d "$STAGE_ROOT" || true
+          if [ -f "$STAGE_ROOT/python.exe" ] && [ ! -f "$STAGE_ROOT/bin/python.exe" ]; then
+            cp -f "$STAGE_ROOT/python.exe" "$STAGE_ROOT/bin/"
+          fi
+        else
+          printf '[ERROR] Offline Python archive missing from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        ;;
+      nodejs)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/node-"*".zip")
+        if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+          unzip -q -o "$_arc" -d "$STAGE_ROOT" || true
+          _sub=$(find "$STAGE_ROOT" -mindepth 1 -maxdepth 1 -type d ! -name bin | head -n 1 || true)
+          if [ -n "$_sub" ]; then
+            mv "$_sub"/* "$STAGE_ROOT/"
+            rmdir "$_sub" 2>/dev/null || true
+          fi
+          if [ -f "$STAGE_ROOT/node.exe" ] && [ ! -f "$STAGE_ROOT/bin/node.exe" ]; then
+            cp -f "$STAGE_ROOT/node.exe" "$STAGE_ROOT/bin/"
+          fi
+        else
+          printf '[ERROR] Offline Node.js archive missing from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        ;;
+      meilisearch)
+        _bin=$(find_first_file "${OFFLINE_SOURCE}/databases/meilisearch-"*".exe")
+        if [ -n "$_bin" ] && [ -f "$_bin" ]; then
+          cp -f "$_bin" "$STAGE_ROOT/bin/meilisearch.exe"
+          cp -f "$_bin" "$STAGE_ROOT/meilisearch.exe" 2>/dev/null || true
+        else
+          printf '[ERROR] Offline Meilisearch binary missing from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        ;;
+      caddy)
+        _bin=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy/caddy"*".exe")
+        if [ -z "$_bin" ] || [ ! -f "$_bin" ]; then
+          _arc=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy"*".zip")
+          if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+            unzip -q -o "$_arc" -d "$STAGE_ROOT" 2>/dev/null || tar -xf "$_arc" -C "$STAGE_ROOT" 2>/dev/null || true
+            [ -f "$STAGE_ROOT/caddy.exe" ] && _bin="$STAGE_ROOT/caddy.exe"
+          fi
+        fi
+        if [ -n "$_bin" ] && [ -f "$_bin" ]; then
+          cp -f "$_bin" "$STAGE_ROOT/bin/caddy.exe"
+          cp -f "$_bin" "$STAGE_ROOT/caddy.exe" 2>/dev/null || true
+        else
+          printf '[ERROR] Offline Caddy binary missing from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        ;;
+      gunicorn)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/python-"*".zip")
+        if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+          unzip -q -o "$_arc" -d "$STAGE_ROOT" || true
+          if [ -f "$STAGE_ROOT/python.exe" ] && [ ! -f "$STAGE_ROOT/bin/python.exe" ]; then
+            cp -f "$STAGE_ROOT/python.exe" "$STAGE_ROOT/bin/"
+          fi
+        else
+          printf '[ERROR] Offline Python runtime archive missing for gunicorn from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/gunicorn" ]; then
+          cp -R "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/gunicorn"/* "$STAGE_ROOT/" 2>/dev/null || true
+        fi
+        if [ -d "${OFFLINE_SOURCE}/wheels" ]; then
+          mkdir -p "$STAGE_ROOT/wheels"
+          for _whl in "${OFFLINE_SOURCE}/wheels/gunicorn"*".whl" "${OFFLINE_SOURCE}/wheels/waitress"*".whl" "${OFFLINE_SOURCE}/wheels/uvicorn"*".whl" "${OFFLINE_SOURCE}/wheels/packaging"*".whl" "${OFFLINE_SOURCE}/wheels/click"*".whl" "${OFFLINE_SOURCE}/wheels/h11"*".whl"; do
+            if [ -f "$_whl" ]; then
+              cp -f "$_whl" "$STAGE_ROOT/wheels/"
+              unzip -q -o "$_whl" -d "$STAGE_ROOT" 2>/dev/null || true
+            fi
+          done
+        fi
+        printf '@echo off\r\n"%%~dp0..\\python.exe" -m waitress %%*\r\n' > "$STAGE_ROOT/bin/gunicorn.cmd"
+        printf '{"component":"%s","version":"%s","variant":"offline"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+        printf 'LibScript %s Offline Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+        ;;
+      nodeenv)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/python-"*".zip")
+        if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+          unzip -q -o "$_arc" -d "$STAGE_ROOT" || true
+          if [ -f "$STAGE_ROOT/python.exe" ] && [ ! -f "$STAGE_ROOT/bin/python.exe" ]; then
+            cp -f "$STAGE_ROOT/python.exe" "$STAGE_ROOT/bin/"
+          fi
+        else
+          printf '[ERROR] Offline Python runtime archive missing for nodeenv from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/nodeenv" ]; then
+          cp -R "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/nodeenv"/* "$STAGE_ROOT/" 2>/dev/null || true
+        fi
+        if [ -d "${OFFLINE_SOURCE}/wheels" ]; then
+          mkdir -p "$STAGE_ROOT/wheels"
+          for _whl in "${OFFLINE_SOURCE}/wheels/nodeenv"*".whl" "${OFFLINE_SOURCE}/wheels/packaging"*".whl"; do
+            if [ -f "$_whl" ]; then
+              cp -f "$_whl" "$STAGE_ROOT/wheels/"
+              unzip -q -o "$_whl" -d "$STAGE_ROOT" 2>/dev/null || true
+            fi
+          done
+        fi
+        printf '@echo off\r\n"%%~dp0..\\python.exe" -m nodeenv %%*\r\n' > "$STAGE_ROOT/bin/nodeenv.cmd"
+        printf '{"component":"%s","version":"%s","variant":"offline"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+        printf 'LibScript %s Offline Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+        ;;
+      exim)
+        _arc=$(find_first_file "${OFFLINE_SOURCE}/runtimes/python-"*".zip")
+        if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+          unzip -q -o "$_arc" -d "$STAGE_ROOT" || true
+          if [ -f "$STAGE_ROOT/python.exe" ] && [ ! -f "$STAGE_ROOT/bin/python.exe" ]; then
+            cp -f "$STAGE_ROOT/python.exe" "$STAGE_ROOT/bin/"
+          fi
+        else
+          printf '[ERROR] Offline Python runtime archive missing for exim from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/exim" ]; then
+          cp -R "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/exim"/* "$STAGE_ROOT/" 2>/dev/null || true
+        fi
+        if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/hmailserver" ]; then
+          mkdir -p "$STAGE_ROOT/hmailserver"
+          cp -R "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/hmailserver"/* "$STAGE_ROOT/hmailserver/" 2>/dev/null || true
+        fi
+        if [ -d "${OFFLINE_SOURCE}/wheels" ]; then
+          mkdir -p "$STAGE_ROOT/wheels"
+          for _whl in "${OFFLINE_SOURCE}/wheels/aiosmtpd"*".whl" "${OFFLINE_SOURCE}/wheels/atpublic"*".whl" "${OFFLINE_SOURCE}/wheels/attrs"*".whl"; do
+            if [ -f "$_whl" ]; then
+              cp -f "$_whl" "$STAGE_ROOT/wheels/"
+              unzip -q -o "$_whl" -d "$STAGE_ROOT" 2>/dev/null || true
+            fi
+          done
+        fi
+        printf '@echo off\r\n"%%~dp0..\\python.exe" -m aiosmtpd -n -l 127.0.0.1:2525 %%*\r\n' > "$STAGE_ROOT/bin/exim.cmd"
+        printf '{"component":"%s","version":"%s","variant":"offline"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+        printf 'LibScript %s Offline Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+        ;;
+      *)
+        printf '{"component":"%s","version":"%s","variant":"offline"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+        printf 'LibScript %s Offline Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+        printf 'LibScript %s Offline Stub\n' "$COMPONENT" > "$STAGE_ROOT/bin/README.txt"
+        ;;
+    esac
+    set -f
+
+    case "$COMPONENT" in
+      mysql)       [ -f "$STAGE_ROOT/bin/mysqld.exe" ] || { printf '[ERROR] Missing staged bin/mysqld.exe\n' >&2; exit 1; } ;;
+      redis)       [ -f "$STAGE_ROOT/bin/redis-server.exe" ] || { printf '[ERROR] Missing staged bin/redis-server.exe\n' >&2; exit 1; } ;;
+      mongodb)     [ -f "$STAGE_ROOT/bin/mongod.exe" ] || { printf '[ERROR] Missing staged bin/mongod.exe\n' >&2; exit 1; } ;;
+      python)      [ -f "$STAGE_ROOT/bin/python.exe" ] || { printf '[ERROR] Missing staged bin/python.exe\n' >&2; exit 1; } ;;
+      nodejs)      [ -f "$STAGE_ROOT/bin/node.exe" ] || { printf '[ERROR] Missing staged bin/node.exe\n' >&2; exit 1; } ;;
+      meilisearch) [ -f "$STAGE_ROOT/bin/meilisearch.exe" ] || { printf '[ERROR] Missing staged bin/meilisearch.exe\n' >&2; exit 1; } ;;
+      caddy)       [ -f "$STAGE_ROOT/bin/caddy.exe" ] || { printf '[ERROR] Missing staged bin/caddy.exe\n' >&2; exit 1; } ;;
+      gunicorn|nodeenv|exim) [ -f "$STAGE_ROOT/bin/python.exe" ] || { printf '[ERROR] Missing staged bin/python.exe for %s\n' "$COMPONENT" >&2; exit 1; } ;;
+    esac
+  else
+    # Online variant: lightweight manifest and stub
+    printf '{"component":"%s","version":"%s","variant":"online"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+    printf 'LibScript %s Online Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+    mkdir -p "$STAGE_ROOT/bin"
+    printf 'LibScript %s Online Stub\n' "$COMPONENT" > "$STAGE_ROOT/bin/README.txt"
+  fi
+
+  MAIN_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wxs"
+  PAYLOAD_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wxs"
+
+  # Generate main WiX definition
+  "${SCRIPT_DIR}/template_component_msi.sh" \
+    --component "$COMPONENT" \
+    --version "$VERSION" \
+    --variant "$_v" \
+    --out "$MAIN_WXS"
+  cp -f "$MAIN_WXS" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_main.wxs" 2>/dev/null || true
+
+  # Generate payload WiX fragment harvesting staged files
+  "${SCRIPT_DIR}/harvest_payload.sh" \
+    --source-dir "$STAGE_ROOT" \
+    --wix-fragment "$PAYLOAD_WXS" \
+    --component-group "PayloadComponents" \
+    --directory-id "INSTALLFOLDER"
+
+  if [ -n "$OUT_FILE" ]; then
+    case "$OUT_FILE" in
+      *.msi|*.MSI) _base="${OUT_FILE%.*}" ;;
+      *) _base="$OUT_FILE" ;;
+    esac
+    if [ "$VARIANT" = "all" ]; then
+      TARGET_MSI="${_base}-${TARGET_ARCH}-${VERSION}-${_v}.msi"
+    else
+      TARGET_MSI="${_base}.msi"
+    fi
+  else
+    TARGET_MSI="${OUT_DIR}/${COMPONENT}-${TARGET_ARCH}-${VERSION}-${_v}.msi"
+  fi
+
+  _target_dir=$(dirname "$TARGET_MSI")
+  mkdir -p "$_target_dir" "$OUT_DIR"
+
+  # Ensure msi-rs is available via libscript mechanisms
+  if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+    export PATH
+  elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
+    export PATH
+  fi
+  if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+      # shellcheck disable=SC1091
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+    fi
+  fi
+  if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
+    if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+        # shellcheck disable=SC1091
+        _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh"
+        export SCRIPT_NAME
+        # shellcheck disable=SC1090,SC1091
+        . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+        unset SCRIPT_NAME || true
+        [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+        [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+      fi
+    fi
+  fi
+
+  _candle='candle'
+  _light='light'
+  if [ "${OS:-}" = "Windows_NT" ]; then
+    command -v candle.exe >/dev/null 2>&1 && _candle="candle.exe"
+    command -v light.exe >/dev/null 2>&1 && _light="light.exe"
+  fi
+
+  if ! command -v "$_candle" >/dev/null 2>&1; then
+    printf '[ERROR] msi-rs not found. Please install msi-rs.\n' >&2
+    exit 1
+  fi
+
+  # Verify all harvested Source paths resolve on disk before linking
+  _missing_src=$(awk -v stage="$STAGE_ROOT" -v root="$LIBSCRIPT_ROOT_DIR" '
+    match($0, /Source="[^"]+"/) {
+      s = substr($0, RSTART + 8, RLENGTH - 9)
+      cmd1 = "test -f \"" stage "/" s "\" -o -f \"" root "/" s "\" -o -f \"" s "\""
+      if (system(cmd1) != 0) {
+        print s
+        exit 1
+      }
+    }
+  ' "$PAYLOAD_WXS")
+  if [ -n "$_missing_src" ]; then
+    printf '[ERROR] Harvested payload file missing on disk: %s\n' "$_missing_src" >&2
+    exit 1
+  fi
+
+  printf '[INFO] Compiling standalone %s MSI via msi-rs: %s\n' "$_v" "$TARGET_MSI"
+  "$_candle" -nologo -arch "${TARGET_ARCH}" -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "$MAIN_WXS" || exit 1
+  "$_candle" -nologo -arch "${TARGET_ARCH}" -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "$PAYLOAD_WXS" || exit 1
+  "$_light" -nologo -sval -ext WixUIExtension -b "$STAGE_ROOT" -b "${LIBSCRIPT_ROOT_DIR}" -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" || exit 1
+
+
+  if [ ! -f "$TARGET_MSI" ]; then
+    printf '[ERROR] Target MSI was not generated: %s\n' "$TARGET_MSI" >&2
+    exit 1
+  fi
+
+  _fsize=$(wc -c < "$TARGET_MSI" | tr -d ' ')
+  if [ "$_v" = "offline" ]; then
+    if [ "$_fsize" -lt 1048576 ]; then
+      printf '[ERROR] Offline MSI validation failed: %s is abnormally small (%s bytes < 1048576 bytes).\n' "$TARGET_MSI" "$_fsize" >&2
+      exit 1
+    fi
+  else
+    if [ "$_fsize" -lt 16384 ]; then
+      printf '[ERROR] Online MSI validation failed: %s is abnormally small (%s bytes < 16384 bytes).\n' "$TARGET_MSI" "$_fsize" >&2
+      exit 1
+    fi
+  fi
+
+  _target_abs=$(cd -- "$(dirname "$TARGET_MSI")" && pwd)/$(basename "$TARGET_MSI")
+  _out_dir_abs=$(if cd -- "$OUT_DIR" 2>/dev/null; then pwd; fi)
+  if [ -n "$_out_dir_abs" ] && [ "$(dirname "$_target_abs")" != "$_out_dir_abs" ]; then
+    mkdir -p "$OUT_DIR"
+    cp -f "$TARGET_MSI" "$OUT_DIR/" 2>/dev/null || true
+  fi
+  if [ -z "$OUT_FILE" ]; then
+    cp -f "$TARGET_MSI" "${OUT_DIR}/libscript-${COMPONENT}-${VERSION}-${_v}.msi" 2>/dev/null || true
+  fi
+
+  rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "${MAIN_WXS}" "${PAYLOAD_WXS}"
+  printf '[PASS] Successfully processed standalone component MSI (%s): %s (%s bytes)\n' "$_v" "$TARGET_MSI" "$_fsize"
+}
+
+case "$VARIANT" in
+  online)
+    build_single_variant "online"
+    ;;
+  offline)
+    build_single_variant "offline"
+    ;;
+  all)
+    build_single_variant "online"
+    build_single_variant "offline"
+    ;;
+  *)
+    printf '[ERROR] Unknown variant: %s. Use online, offline, or all.\n' "$VARIANT" >&2
+    exit 1
+    ;;
+esac

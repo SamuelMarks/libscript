@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pdm",
-  "provides": ["pdm"],
-  "os_whitelist": ["all"],
-  "title": "pdm",
-  "description": "Bootstrap module for `pdm` (Modern Python package and dependency manager).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for `pdm` (Modern Python package and dependency manager).",
+  "name": "pdm",
+  "os_whitelist": ["all"],
+  "provides": ["pdm"],
   "repository": "https://github.com/pdm-project/pdm",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pdm"
 }

@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# End-to-end integration and 2x idempotency test suite for `_lib/toolchains/libtpu-rs/benchmark_experiments.sh` covering Suites `E0`–`E8`, C11 `dlopen`/`ru_maxrss` compilation, safe-core `unsafe == 0` enforcement, `\tbd` placeholder rejection, and `FORCE_REBUILD=1` re-execution.
+# End-to-end integration and 2x idempotency test suite for `experiments/libtpu-pjrt/benchmark_experiments.sh` covering Suites `E0`–`E8`, C11 `dlopen`/`ru_maxrss` compilation, safe-core `unsafe == 0` enforcement, `\tbd` placeholder rejection, and `FORCE_REBUILD=1` re-execution.
 # ## Usage
 # ./tests/test_libtpu_experiments.sh
 set -feu
@@ -49,7 +49,7 @@ EOF
 test_full_e0_to_e8_and_2x_idempotency() {
   _res="${WORK_DIR}/results"
   # Pass 1
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" libtpu-rs experiments \
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run libtpu-pjrt \
     --synthetic-fixtures \
     --subsuites='E0,E1,E2,E3,E4,E5,E6,E7,E8' \
     --warmup=2 \
@@ -80,7 +80,7 @@ test_full_e0_to_e8_and_2x_idempotency() {
   grep -q '"safe_core_zero_unsafe_verified": true' "${_res}/e0_tcb.json"
 
   # Pass 2 (Idempotency check)
-  _out2=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" libtpu-rs experiments \
+  _out2=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run libtpu-pjrt \
     --synthetic-fixtures \
     --subsuites='E0,E1,E2,E3,E4,E5,E6,E7,E8' \
     --warmup=2 \
@@ -96,7 +96,7 @@ test_full_e0_to_e8_and_2x_idempotency() {
     _pdf_arg='--build-pdf'
   fi
   # shellcheck disable=SC2086
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" libtpu-rs experiments \
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run libtpu-pjrt \
     --synthetic-fixtures \
     --force \
     --subsuites='E0,E8' \
@@ -111,7 +111,7 @@ test_full_e0_to_e8_and_2x_idempotency() {
 # ## test_tbd_placeholder_and_unsafe_gates
 # Verifies E8 rejects manuscripts with `\tbd`/`???` and E0.3 rejects safe-core `unsafe` blocks.
 test_tbd_placeholder_and_unsafe_gates() {
-  if "${LIBSCRIPT_ROOT_DIR}/libscript.sh" libtpu-rs experiments \
+  if "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run libtpu-pjrt \
     --synthetic-fixtures \
     --subsuites='E8' \
     --results-dir="${WORK_DIR}/results" \
@@ -131,7 +131,7 @@ test_tbd_placeholder_and_unsafe_gates() {
     git add .
     git commit -q -m 'unsafe violation'
   )
-  if "${LIBSCRIPT_ROOT_DIR}/libscript.sh" libtpu-rs experiments \
+  if "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run libtpu-pjrt \
     --synthetic-fixtures \
     --force \
     --subsuites='E0' \

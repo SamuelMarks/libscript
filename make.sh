@@ -59,6 +59,7 @@ case "$target" in
   audit)
     "$SCRIPT_DIR/devtools/audit/audit_standards.sh" --all
     "$SCRIPT_DIR/devtools/audit/audit_posix.sh"
+    "$SCRIPT_DIR/devtools/audit/audit_tiers.sh" --all
     "$SCRIPT_DIR/devtools/audit/audit_cmd.sh" --all
     "$SCRIPT_DIR/devtools/audit/audit_version_manager.sh"
     "$SCRIPT_DIR/devtools/audit/audit_schema_vars.sh" --all

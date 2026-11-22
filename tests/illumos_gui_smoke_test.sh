@@ -43,7 +43,7 @@ printf '[TEST]     Executing illumos GUI smoketest (desktop: %s, dm: %s)...\n' "
 # If target doesn't exist, synthesize using desktop-mate-x11 profile
 if [ ! -d "${TARGET}" ] && [ ! -f "${TARGET}" ]; then
   printf '[TEST]     Target not found, synthesizing workstation profile...\n'
-  "${REPO_ROOT}/_lib/illumos/distro/assemble.sh" "${REPO_ROOT}/profiles/illumos/desktop-mate-x11.json" "${TARGET}"
+  "${REPO_ROOT}/synthesis/distro/illumos/assemble.sh" "${REPO_ROOT}/synthesis/profiles/illumos/desktop-mate-x11.json" "${TARGET}"
 fi
 
 # 1. Verify X11 configuration

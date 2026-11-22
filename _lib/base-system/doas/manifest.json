@@ -1,16 +1,17 @@
 {
-  "name": "doas",
-  "title": "Doas",
-  "description": "Lightweight OpenBSD privilege escalation utility",
-  "provides": ["doas"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Lightweight OpenBSD privilege escalation utility",
+  "name": "doas",
   "os_blacklist": ["windows", "sunos", "rhel", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["doas"],
+  "tier": "T2",
+  "title": "Doas",
+  "versions": ["1.0.0"]
 }

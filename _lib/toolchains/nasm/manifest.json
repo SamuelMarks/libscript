@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nasm",
-  "title": "NASM",
-  "description": "The Netwide Assembler portable x86 and x86-64 assembler.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["nasm", "assembler"],
+  "description": "The Netwide Assembler portable x86 and x86-64 assembler.",
+  "name": "nasm",
   "os_whitelist": ["all"],
+  "provides": ["nasm", "assembler"],
   "repository": "https://github.com/netwide-assembler/nasm",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "NASM"
 }

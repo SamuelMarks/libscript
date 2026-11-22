@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ripgrep",
-  "title": "ripgrep",
-  "description": "Line-oriented recursive regex search tool (rg) written in Rust respecting gitignore rules.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["ripgrep", "rg", "code-search"],
+  "description": "Line-oriented recursive regex search tool (rg) written in Rust respecting gitignore rules.",
+  "name": "ripgrep",
   "os_whitelist": ["all"],
+  "provides": ["ripgrep", "rg", "code-search"],
   "repository": "https://github.com/BurntSushi/ripgrep",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "ripgrep"
 }

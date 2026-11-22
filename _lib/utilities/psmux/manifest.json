@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "psmux",
-  "title": "psmux",
-  "description": "A native Windows terminal multiplexer, designed as a tmux alternative.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["psmux"],
+  "description": "A native Windows terminal multiplexer, designed as a tmux alternative.",
+  "name": "psmux",
   "os_whitelist": ["windows"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["psmux"],
+  "tier": "T1",
+  "title": "psmux"
 }

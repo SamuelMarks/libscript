@@ -1,15 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "supervisord",
-  "title": "Supervisor Process Control System",
-  "description": "Supervisor client/server process control daemon (supervisord and supervisorctl) for UNIX-like operating systems.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "init-systems",
-  "provides": ["supervisord", "supervisor", "supervisorctl"],
-  "os_whitelist": ["linux", "macos", "freebsd", "openbsd", "netbsd", "sunos"],
-  "os_blacklist": ["windows"],
-  "ports": [9001],
-  "repository": "https://github.com/Supervisor/supervisor",
+  "description": "Supervisor client/server process control daemon (supervisord and supervisorctl) for UNIX-like operating systems.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -22,9 +18,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "supervisord",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "macos", "freebsd", "openbsd", "netbsd", "sunos"],
+  "ports": [9001],
+  "provides": ["supervisord", "supervisor", "supervisorctl"],
+  "repository": "https://github.com/Supervisor/supervisor",
+  "tier": "T2",
+  "title": "Supervisor Process Control System"
 }

@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 unset SCRIPT_NAME || true
 
-chmod +x "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/experiment_cloud.sh" "${LIBSCRIPT_ROOT_DIR}/cli/commands/cloud/experiment.sh"
+chmod +x "${LIBSCRIPT_ROOT_DIR}/experiments/cli/experiment_cloud.sh" "${LIBSCRIPT_ROOT_DIR}/experiments/cli/rapid_experiment.sh"
 
 # ## verify_step_by_step_execution
 # Verifies that provision_instance, run_experiments, collect_logs (move_to_log_dir), pull_logs (move_log_dir_to_host), and deprovision_instance can each be executed one at a time with idempotency on rerun.

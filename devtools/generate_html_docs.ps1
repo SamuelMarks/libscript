@@ -50,7 +50,7 @@ if (-not $GIT_REPO) {
     $GIT_REPO = "https://github.com/SamuelMarks/libscript"
 }
 $env:GIT_REPO = $GIT_REPO
-$env:LIBSCRIPT_EXTENDED_SCHEMAS = "topologies/topology.schema.json topologies/topology-state.schema.json payloads/payload.schema.json traits/trait.schema.json _lib/_common/manifest.schema.json"
+$env:LIBSCRIPT_EXTENDED_SCHEMAS = "workloads/constellations/constellation.schema.json engine/schemas/consensus-state.schema.json workloads/schemas/payload.schema.json traits/trait.schema.json engine/schemas/manifest.schema.json"
 
 # ## Invoke-EnvSubst
 # Replaces environment variables in the provided template string.

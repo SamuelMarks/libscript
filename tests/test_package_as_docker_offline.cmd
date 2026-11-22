@@ -57,7 +57,7 @@ if not exist "%TEST_TMP_DIR%" mkdir "%TEST_TMP_DIR%"
 
 echo === Testing Online Dockerfile Generation with ADD Layer Caching ===
 set "DOCKERFILE_ONLINE=%TEST_TMP_DIR%\Dockerfile.online"
-call "%LIBSCRIPT_ROOT_DIR%\cli\commands\packaging\formats\pkg_docker.cmd" --online python 3.11 https://example.com/python-3.11.tar.gz > "%DOCKERFILE_ONLINE%"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\dockerfile.cmd" --online python 3.11 https://example.com/python-3.11.tar.gz > "%DOCKERFILE_ONLINE%"
 
 call :assert_contains "%DOCKERFILE_ONLINE%" "LIBSCRIPT_CACHE_DIR=" "Cache directory env variable declared"
 call :assert_contains "%DOCKERFILE_ONLINE%" "ADD ${PYTHON_URL} /opt/libscript_cache/python/python-3.11.tar.gz" "ADD instruction for layer caching synthesized"
@@ -67,7 +67,7 @@ call :assert_not_contains "%DOCKERFILE_ONLINE%" "LIBSCRIPT_OFFLINE" "LIBSCRIPT_O
 
 echo === Testing Air-Gapped Offline Dockerfile Generation ===
 set "DOCKERFILE_OFFLINE=%TEST_TMP_DIR%\Dockerfile.offline"
-call "%LIBSCRIPT_ROOT_DIR%\cli\commands\packaging\formats\pkg_docker.cmd" --offline python 3.11 > "%DOCKERFILE_OFFLINE%"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\dockerfile.cmd" --offline python 3.11 > "%DOCKERFILE_OFFLINE%"
 
 call :assert_contains "%DOCKERFILE_OFFLINE%" "LIBSCRIPT_OFFLINE="1"" "LIBSCRIPT_OFFLINE=1 set in offline mode"
 call :assert_contains "%DOCKERFILE_OFFLINE%" "PIP_NO_INDEX="1"" "PIP_NO_INDEX=1 configured"
@@ -78,7 +78,7 @@ call :assert_not_contains "%DOCKERFILE_OFFLINE%" "ADD http" "No remote ADD instr
 
 echo === Testing Open edX Air-Gapped Offline Docker Compose Generation ===
 set "COMPOSE_OFFLINE=%TEST_TMP_DIR%\docker-compose.yml"
-call "%LIBSCRIPT_ROOT_DIR%\cli\commands\packaging\formats\pkg_docker_compose.cmd" --offline mysql latest redis latest mongodb latest meilisearch latest openedx latest > "%COMPOSE_OFFLINE%"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\docker_compose.cmd" --offline mysql latest redis latest mongodb latest meilisearch latest openedx latest > "%COMPOSE_OFFLINE%"
 
 call :assert_contains "%COMPOSE_OFFLINE%" "version: '3.8'" "Compose file version declared"
 call :assert_contains "%COMPOSE_OFFLINE%" "libscript_offline_cache:/opt/libscript_cache:ro" "Read-only offline cache volume mount"

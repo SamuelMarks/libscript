@@ -105,7 +105,7 @@ if "%MISE_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list comman
 if "%MISE_INSTALL_METHOD%"=="vfox" ( vfox ls all mise & exit /b 0 )
 if "%MISE_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MISE_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MISE_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MISE_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/jdx/mise" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -146,7 +146,7 @@ if "%MISE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mise %MISE_VERSION% to %DOWNLOAD_DIR%\mise...
     if not exist "%DOWNLOAD_DIR%\mise" mkdir "%DOWNLOAD_DIR%\mise"
     if not "%MISE_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MISE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mise\mise-%MISE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MISE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mise\mise-%MISE_VERSION%.zip"
     ) else (
         echo MISE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -157,7 +157,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MISE_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mise
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends mise
     exit /b !errorlevel!
 )
 if "%MISE_INSTALL_METHOD%"=="mise" ( mise install "mise@%MISE_VERSION%" & exit /b 0 )
@@ -177,7 +177,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mise\mise-%MISE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MISE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MISE_DOWNLOAD_URL%" "%TEMP%\mise.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MISE_DOWNLOAD_URL%" "%TEMP%\mise.zip"
         tar -xf "%TEMP%\mise.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mise.
@@ -208,5 +208,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "mise" "%ACTION%" "%MISE_VERSION%" "%MISE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mise\%MISE_VERSION%\\bin\\mise.exe\"" "%LIBSCRIPT_HOME%\mise\%MISE_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "mise" "%ACTION%" "%MISE_VERSION%" "%MISE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mise\%MISE_VERSION%\\bin\\mise.exe\"" "%LIBSCRIPT_HOME%\mise\%MISE_VERSION%"
 exit /b !errorlevel!

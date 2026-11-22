@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gcc-torture",
-  "title": "Upstream GCC C Torture Execute Conformance Suite",
-  "description": "Standalone version manager for the upstream GCC gcc.c-torture/execute C execution test corpus with DejaGnu .x and nested-function filter manifests.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["gcc-torture"],
+  "description": "Standalone version manager for the upstream GCC gcc.c-torture/execute C execution test corpus with DejaGnu .x and nested-function filter manifests.",
+  "name": "gcc-torture",
   "os_whitelist": ["all"],
+  "provides": ["gcc-torture"],
   "repository": "https://gcc.gnu.org/git/gcc.git",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Upstream GCC C Torture Execute Conformance Suite"
 }

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "systemd",
-  "provides": ["systemd"],
-  "os_whitelist": ["linux"],
-  "title": "Systemd",
-  "description": "systemd",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "init-systems",
+  "description": "systemd",
+  "name": "systemd",
   "os_blacklist": ["freebsd", "windows", "alpine", "darwin", "sunos"],
+  "os_whitelist": ["linux"],
+  "provides": ["systemd"],
   "repository": "https://github.com/systemd/systemd",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T2",
+  "title": "Systemd"
 }

@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "schedulers",
+  "conflicts": [],
+  "dependencies": {
+    "runtime_deps": ["java", "mesos"],
+    "tier": "recommended"
+  },
+  "description": "Production-grade container and application orchestration framework for Apache Mesos.",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "multitenant": true,
+  "name": "marathon",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [8080],
+  "provides": ["marathon"],
+  "stateful": true,
+  "tier": "T1",
+  "title": "Marathon Framework",
+  "versions": ["1.11.28", "1.10.0", "latest"]
+}

@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%APK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%APK_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%APK_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%APK_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://gitlab.alpinelinux.org/alpine/apk-tools" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%APK_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading apk %APK_VERSION% to %DOWNLOAD_DIR%\apk...
     if not exist "%DOWNLOAD_DIR%\apk" mkdir "%DOWNLOAD_DIR%\apk"
     if not "%APK_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%APK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\apk\apk-%APK_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%APK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\apk\apk-%APK_VERSION%.zip"
     ) else (
         echo APK_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%APK_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends apk
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends apk
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\apk\apk-%APK_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%APK_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%APK_DOWNLOAD_URL%" "%TEMP%\apk.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%APK_DOWNLOAD_URL%" "%TEMP%\apk.zip"
         tar -xf "%TEMP%\apk.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for apk.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "apk" "%ACTION%" "%APK_VERSION%" "%APK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\apk\%APK_VERSION%\\bin\\apk.exe\"" "%LIBSCRIPT_HOME%\apk\%APK_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "apk" "%ACTION%" "%APK_VERSION%" "%APK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\apk\%APK_VERSION%\\bin\\apk.exe\"" "%LIBSCRIPT_HOME%\apk\%APK_VERSION%"
 exit /b !errorlevel!

@@ -1,0 +1,72 @@
+@echo off
+:: # ch8_jumpbox_to_server.cmd
+:: ## Overview
+:: Automates Ch8 of Kubernetes the Hard Way.
+:: ## Usage
+:: Executes the steps for Ch8.
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+set "DIR=!SCRIPT_DIR!"
+set MACHINES_TXT=%DIR%\kubernetes-the-hard-way\machines.txt
+for /f "tokens=1,3" %%i in ('type "%MACHINES_TXT%" ^| findstr "server"' ) do if "%%j"=="server" set SERVER_IP=%%i
+if "!SERVER_IP!"=="" set SERVER_IP=192.168.56.10
+
+
+for %%f in (
+  "%DIR%\kubernetes-the-hard-way\downloads\controller\kube-apiserver"
+  "%DIR%\kubernetes-the-hard-way\downloads\controller\kube-controller-manager"
+  "%DIR%\kubernetes-the-hard-way\downloads\controller\kube-scheduler"
+  "%DIR%\kubernetes-the-hard-way\downloads\client\kubectl"
+  "%DIR%\kubernetes-the-hard-way\units\kube-apiserver.service"
+  "%DIR%\kubernetes-the-hard-way\units\kube-controller-manager.service"
+  "%DIR%\kubernetes-the-hard-way\units\kube-scheduler.service"
+  "%DIR%\kubernetes-the-hard-way\configs\kube-scheduler.yaml"
+  "%DIR%\kubernetes-the-hard-way\configs\kube-apiserver-to-kubelet.yaml"
+) do (
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" :libscript_scp_to_remote "%%~f" "root@server" "~/"
+)
+ssh root@server "mkdir -p /etc/kubernetes/config /var/lib/kubernetes/; mv -f kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/ || true; cp -f ca.crt ca.key kube-api-server.key kube-api-server.crt service-accounts.key service-accounts.crt encryption-config.yaml /var/lib/kubernetes/; mv -f kube-apiserver.service /etc/systemd/system/kube-apiserver.service || true; cp -f kube-controller-manager.kubeconfig /var/lib/kubernetes/ || true; mv -f kube-controller-manager.service /etc/systemd/system/ || true; cp -f kube-scheduler.kubeconfig /var/lib/kubernetes/ || true; mv -f kube-scheduler.yaml /etc/kubernetes/config/ || true; mv -f kube-scheduler.service /etc/systemd/system/ || true; if [ -f $HOME/libscript/engine/common/service.sh ]; then SCRIPT_NAME=$HOME/libscript/engine/common/service.sh . $HOME/libscript/engine/common/service.sh; libscript_service daemon-reload kube-apiserver || true; for _ksvc in kube-apiserver kube-controller-manager kube-scheduler; do libscript_service enable \$_ksvc || true; libscript_service start \$_ksvc || true; done; fi; sleep 10; kubectl cluster-info --kubeconfig admin.kubeconfig || true; kubectl apply -f kube-apiserver-to-kubelet.yaml --kubeconfig admin.kubeconfig || true"
+curl --cacert "%LIBSCRIPT_DATA_DIR%\ca.crt" https://!SERVER_IP!:6443/version || true

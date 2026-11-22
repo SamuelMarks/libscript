@@ -86,14 +86,14 @@ exit /b 0
 :: ## action_use
 :: Updates the active GCC version alias junction.
 :action_use
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "gcc" "default" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "gcc" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_download
 :: Downloads GCC archive into the local offline cache.
 :action_download
 if not "%GCC_DOWNLOAD_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GCC_DOWNLOAD_URL%" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\gcc\gcc-%EXACT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%GCC_DOWNLOAD_URL%" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\gcc\gcc-%EXACT_VERSION%.zip"
 )
 exit /b 0
 
@@ -103,7 +103,7 @@ exit /b 0
 if /i "%GCC_INSTALL_METHOD%"=="from-source" (
     set "_build_ver=%EXACT_VERSION%"
     if not "%GCC_BUILD_TARGET%"=="" set "_build_ver=%EXACT_VERSION%-%GCC_BUILD_TARGET%"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "gcc" "!_build_ver!" "gcc"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "gcc" "!_build_ver!" "gcc"
     exit /b !errorlevel!
 )
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gcc\%EXACT_VERSION%"
@@ -113,10 +113,10 @@ if exist "%TARGET_DIR%\bin\gcc.exe" (
 )
 where gcc >nul 2>&1
 if errorlevel 1 (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "gcc"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends "gcc"
 )
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "gcc" "default" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "gcc" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_uninstall

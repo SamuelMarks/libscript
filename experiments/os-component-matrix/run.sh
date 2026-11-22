@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Aggregates multi-OS test markers into a provenance-stamped `matrix_results.json` conforming to
-# `schemas/os-matrix-results.schema.json` and deterministically updates `README.md` without plan side-effects.
+# `experiments/schemas/os-matrix-results.schema.json` and deterministically updates `README.md` without plan side-effects.
 #
 # ## Usage
 # ./experiments/os-component-matrix/run.sh [--results-dir=<dir>] [--readme-out=<README.md>]

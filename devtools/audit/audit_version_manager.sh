@@ -55,6 +55,15 @@ audit_component_dir() {
   _rel_dir="${_comp_dir#"${LIBSCRIPT_ROOT_DIR}"/}"
   AUDITED=$((AUDITED + 1))
 
+  case "$_rel_dir" in
+    _lib/*/*-suite)
+      log_vm_violation "$_rel_dir" "EXP_IN_LIB" "Empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
+      ;;
+  esac
+  if [ -d "${_comp_dir}/suites" ]; then
+    log_vm_violation "$_rel_dir" "EXP_IN_LIB" "Empirical subsuites belong in experiments/<suite-id>/, not inside ${_rel_dir}/suites/."
+  fi
+
   # 1. Mandatory contract files gated by manifest capabilities
   for _req in cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
     if [ ! -f "${_comp_dir}/${_req}" ]; then
@@ -66,14 +75,14 @@ audit_component_dir() {
   if [ -f "${_comp_dir}/manifest.json" ] && command -v jq >/dev/null 2>&1; then
     _caps_space=" $(jq -r '.capabilities[]? // empty' "${_comp_dir}/manifest.json" 2>/dev/null | tr '\n' ' ') "
   else
-    _caps_space=' versioned-artifact '
+    _caps_space=' userland-package '
   fi
 
   case "$_caps_space" in
-    *' versioned-artifact '*)
+    *' userland-package '*|*' sysroot-package '*)
       for _req in setup.sh setup.cmd env.sh env.cmd uninstall.sh uninstall.cmd; do
         if [ ! -f "${_comp_dir}/${_req}" ]; then
-          log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required versioned-artifact file '${_req}'."
+          log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required package lifecycle file '${_req}'."
         fi
       done
       ;;
@@ -98,19 +107,19 @@ audit_component_dir() {
 
   # 2. Verify cli.sh and cli.cmd route via component_core or implement mandatory verbs
   case "$_caps_space" in
-    *' versioned-artifact '*)
+    *' userland-package '*|*' sysroot-package '*)
       case "$_rel_dir" in
-        _lib/cloud/*|_lib/cloud-providers/*|_lib/orchestration/*|_lib/ai-serving/*|_lib/ml-training/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*|_lib/virtualization/*)
+        _lib/unikernels/*|_lib/containers/*|_lib/schedulers/*|_lib/iac/*|_lib/virtualization/*)
           ;;
         *)
           if [ -f "${_comp_dir}/cli.sh" ]; then
             if ! grep -q "component_core.sh" "${_comp_dir}/cli.sh" && ! grep -q "ls-remote" "${_comp_dir}/cli.sh"; then
-              log_vm_violation "${_rel_dir}/cli.sh" "CLI_ROUTER" "Must delegate to _lib/_common/component_core.sh or expose mandatory version manager verbs."
+              log_vm_violation "${_rel_dir}/cli.sh" "CLI_ROUTER" "Must delegate to engine/common/component_core.sh or expose mandatory version manager verbs."
             fi
           fi
           if [ -f "${_comp_dir}/cli.cmd" ]; then
             if ! grep -qi "component_core.cmd" "${_comp_dir}/cli.cmd" && ! grep -qi "ls-remote" "${_comp_dir}/cli.cmd"; then
-              log_vm_violation "${_rel_dir}/cli.cmd" "CLI_ROUTER_WIN" "Must delegate to _lib/_common/component_core.cmd or expose mandatory version manager verbs."
+              log_vm_violation "${_rel_dir}/cli.cmd" "CLI_ROUTER_WIN" "Must delegate to engine/common/component_core.cmd or expose mandatory version manager verbs."
             fi
           fi
           ;;
@@ -121,12 +130,12 @@ audit_component_dir() {
   # 3. Verify setup.sh and setup.cmd delegate to setup_base or setup_generic
   if [ -f "${_comp_dir}/setup.sh" ]; then
     if ! grep -Eq "setup_base\.sh|setup_generic\.sh" "${_comp_dir}/setup.sh"; then
-      log_vm_violation "${_rel_dir}/setup.sh" "SETUP_DELEGATION" "Must source or delegate to _lib/_common/setup_base.sh (or setup_generic.sh)."
+      log_vm_violation "${_rel_dir}/setup.sh" "SETUP_DELEGATION" "Must source or delegate to engine/common/setup_base.sh (or setup_generic.sh)."
     fi
   fi
   if [ -f "${_comp_dir}/setup.cmd" ]; then
     if ! grep -Eiq "setup_base\.cmd|setup_generic\.cmd" "${_comp_dir}/setup.cmd"; then
-      log_vm_violation "${_rel_dir}/setup.cmd" "SETUP_DELEGATION_WIN" "Must call or delegate to _lib\\_common\\setup_base.cmd (or setup_generic.cmd)."
+      log_vm_violation "${_rel_dir}/setup.cmd" "SETUP_DELEGATION_WIN" "Must call or delegate to engine\\common\\setup_base.cmd (or setup_generic.cmd)."
     fi
   fi
 
@@ -135,7 +144,7 @@ audit_component_dir() {
     if grep -qi "setlocal" "${_comp_dir}/env.cmd" && ! grep -qi "endlocal" "${_comp_dir}/env.cmd"; then
       log_vm_violation "${_rel_dir}/env.cmd" "ENV_CMD_ENDLOCAL" "env.cmd uses setlocal without endlocal; environment mutations will be lost on return."
     fi
-    if grep -Eq '^[[:space:]]*call "%LIBSCRIPT_ROOT_DIR%\\_lib\\_common\\env_base\.cmd"[[:space:]]*$' "${_comp_dir}/env.cmd"; then
+    if grep -Eq '^[[:space:]]*call "%LIBSCRIPT_ROOT_DIR%\\engine\\common\\env_base\.cmd"[[:space:]]*$' "${_comp_dir}/env.cmd"; then
       if ! grep -q 'CALLER_SCRIPT_DIR' "${_comp_dir}/env.cmd"; then
         log_vm_violation "${_rel_dir}/env.cmd" "ENV_BASE_CALLER_CONTEXT" "env.cmd calls env_base.cmd without CALLER_SCRIPT_DIR or explicit component name argument."
       fi
@@ -152,7 +161,7 @@ audit_component_dir() {
 
   # 4. Verify Tier 1 leaf recipes do not invoke kernel/partitioning primitives
   case "$_rel_dir" in
-    _lib/orchestration/*|_lib/storage/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*|_lib/base-system/*|_lib/virtualization/*|_lib/cloud/*|_lib/cloud-providers/*)
+    _lib/orchestration/*|_lib/unikernels/*|synthesis/disk/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*|_lib/base-system/*|_lib/virtualization/*|infrastructure/resources/*|infrastructure/providers/*)
       ;;
     *)
       if [ -f "${_comp_dir}/setup_generic.sh" ]; then
@@ -163,7 +172,7 @@ audit_component_dir() {
       ;;
   esac
 
-  # 5. Ban raw winget/choco/scoop and raw network calls in Tier 1 leaf recipes (must delegate to _lib/_common/pkg_mgr.*)
+  # 5. Ban raw winget/choco/scoop and raw network calls in Tier 1 leaf recipes (must delegate to engine/common/pkg_mgr.*)
   case "$_rel_dir" in
     _lib/package-managers/*)
       ;;
@@ -177,7 +186,7 @@ audit_component_dir() {
           log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_NETWORK_FETCH" "Raw network fetch in $(basename "$_cmd_file"); delegate to pkg_mgr.cmd."
         fi
         if grep -Eiq '^[ 	]*[^:]*([A-Za-z0-9_$"%!\\/.:-]*python[0-9.]*(\.exe)?["!]?[ 	]+-m[ 	]+venv|uv(\.exe)?[ 	]+venv|virtualenv[ 	]+)' "$_cmd_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_PYTHON_VENV" "Explicit Python venv setup in $(basename "$_cmd_file"); delegate to _lib\\_common\\python_env.cmd."
+          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_PYTHON_VENV" "Explicit Python venv setup in $(basename "$_cmd_file"); delegate to engine\\common\\python_env.cmd."
         fi
       done
       for _ps1_file in "$_comp_dir"/setup*.ps1 "$_comp_dir"/uninstall*.ps1; do
@@ -206,7 +215,7 @@ audit_component_dir() {
       for _sh_file in "$_comp_dir"/setup*.sh "$_comp_dir"/uninstall*.sh; do
         [ -f "$_sh_file" ] || continue
         if grep -Eq '^[ 	]*[^#]*(priv[ 	]+|sudo[ 	]+)?(apt-get[ 	]+(install|remove|purge)|apt[ 	]+(install|remove|purge)|brew[ 	]+(install|uninstall|services)|dnf[ 	]+(install|remove)|yum[ 	]+(install|remove)|apk[ 	]+(add|del)|pacman[ 	]+(-S|-R)|zypper[ 	]+(install|remove)|pkg[ 	]+(install|delete))[ 	]' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_PACKAGE_MANAGER" "Direct OS package manager call in $(basename "$_sh_file"); delegate to _lib/_common/pkg_mgr.sh or _lib/_common/service.sh."
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_PACKAGE_MANAGER" "Direct OS package manager call in $(basename "$_sh_file"); delegate to engine/common/pkg_mgr.sh or engine/common/service.sh."
         fi
         if grep -Eq '^[ 	]*[^#]*(curl[ 	]+-[a-zA-Z0-9#-]*[sSfLOo]|wget[ 	]+-[a-zA-Z0-9-]*[qO]|aria2c[ 	]+-[dox])' "$_sh_file" && ! grep -Eq '(--unix-socket|libscript-allow-raw-)' "$_sh_file"; then
           log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_NETWORK_FETCH" "Raw curl/wget/aria2c in $(basename "$_sh_file"); delegate to libscript_fetch_stdout or libscript_download."
@@ -215,7 +224,7 @@ audit_component_dir() {
       ;;
   esac
 
-  # 7. Ban raw daemon/init manager calls in component recipes (must delegate to _lib/_common/service.* or service_install.*)
+  # 7. Ban raw daemon/init manager calls in component recipes (must delegate to engine/common/service.* or service_install.*)
   case "$_rel_dir" in
     _lib/init-systems/*)
       ;;
@@ -223,19 +232,19 @@ audit_component_dir() {
       for _sh_file in "$_comp_dir"/setup*.sh "$_comp_dir"/service*.sh "$_comp_dir"/uninstall*.sh "$_comp_dir"/test*.sh; do
         [ -f "$_sh_file" ] || continue
         if grep -Eq '^[ 	]*[^#]*(priv[ 	]+|sudo[ 	]+)?(systemctl[ 	]+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl[ 	]+(load|unload|start|stop)|rc-service[ 	]+|rc-update[ 	]+(add|del)|svcadm[ 	]+(enable|disable|restart|refresh)|svccfg[ 	]+(import|delete)|sc\.exe[ 	]+(start|stop|create|delete|config|query)|net[ 	]+(start|stop)[ 	]+|service[ 	]+[A-Za-z0-9_$"'\''-]+[ 	]+(start|stop|restart|reload|status)|update-rc\.d[ 	]+|chkconfig[ 	]+|s6-svc[ 	]+|dinitctl[ 	]+|sysrc[ 	]+[A-Za-z0-9_$"'\''-]*_enable)' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_DAEMON_MANAGER" "Direct init/daemon manager call in $(basename "$_sh_file"); delegate to _lib/_common/service.sh or service_install.sh."
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_DAEMON_MANAGER" "Direct init/daemon manager call in $(basename "$_sh_file"); delegate to engine/common/service.sh or service_install.sh."
         fi
         if grep -Eq '^[ 	]*[^#]*(priv([_a-z]*)[ 	]+([A-Za-z0-9_$"'\''-]+[ 	]+)?)?([A-Za-z0-9_$"'\''/.-]*python[0-9.]*[ 	]+-m[ 	]+venv|uv[ 	]+venv|virtualenv[ 	]+)' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_PYTHON_VENV" "Explicit Python venv setup in $(basename "$_sh_file"); delegate to _lib/_common/python_env.sh."
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_PYTHON_VENV" "Explicit Python venv setup in $(basename "$_sh_file"); delegate to engine/common/python_env.sh."
         fi
         if grep -Eq '^[ 	]*[^#]*(\$\(uname([ 	\)]|$)|(^|[ 	;|&(])uname([ 	]+-[a-zA-Z]+)?([ 	;|&)]|$))' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_UNAME" "Raw uname call in $(basename "$_sh_file"); use UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh."
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_UNAME" "Raw uname call in $(basename "$_sh_file"); use UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from engine/common/os_info.sh."
         fi
       done
       for _cmd_file in "$_comp_dir"/setup*.cmd "$_comp_dir"/service*.cmd "$_comp_dir"/uninstall*.cmd "$_comp_dir"/test*.cmd; do
         [ -f "$_cmd_file" ] || continue
         if grep -Eiq '^[ 	]*[^:]*(\bsc\.exe[ 	]+(start|stop|create|delete|config|query)|\bsc[ 	]+(start|stop|create|delete|config|query)|\bnet[ 	]+(start|stop)[ 	]+)' "$_cmd_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_DAEMON_MANAGER" "Direct sc.exe/sc/net service call in $(basename "$_cmd_file"); delegate to _lib\\_common\\service.cmd or service_install.cmd."
+          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_DAEMON_MANAGER" "Direct sc.exe/sc/net service call in $(basename "$_cmd_file"); delegate to engine\\common\\service.cmd or service_install.cmd."
         fi
       done
       ;;

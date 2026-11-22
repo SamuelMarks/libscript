@@ -49,4 +49,4 @@ goto :find_root
 :root_found
 
 if not defined PACKAGE_NAME for %%I in ("%~dp0.") do set "PACKAGE_NAME=%%~nxI"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*

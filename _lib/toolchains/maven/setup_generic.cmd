@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%MAVEN_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MAVEN_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MAVEN_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MAVEN_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -108,8 +108,8 @@ exit /b 0
 :action_use
 if "%MAVEN_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%MAVEN_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/apache/maven/releases/latest"`) do set "EXACT_VERSION=%%a"
-) else if "%MAVEN_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/apache/maven/releases/latest"`) do set "EXACT_VERSION=%%a"
+if "%MAVEN_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/apache/maven/releases/latest"`) do set "EXACT_VERSION=%%a"
+) else if "%MAVEN_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/apache/maven/releases/latest"`) do set "EXACT_VERSION=%%a"
 ) else (
     set "EXACT_VERSION=%MAVEN_VERSION%"
 )
@@ -134,7 +134,7 @@ if "%MAVEN_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading maven %MAVEN_VERSION% to %DOWNLOAD_DIR%\maven...
     if not exist "%DOWNLOAD_DIR%\maven" mkdir "%DOWNLOAD_DIR%\maven"
     if not "%MAVEN_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAVEN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\maven\maven-%MAVEN_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MAVEN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\maven\maven-%MAVEN_VERSION%.zip"
     ) else (
         echo MAVEN_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MAVEN_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends maven
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends maven
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\maven\maven-%MAVEN_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MAVEN_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAVEN_DOWNLOAD_URL%" "%TEMP%\maven.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MAVEN_DOWNLOAD_URL%" "%TEMP%\maven.zip"
         tar -xf "%TEMP%\maven.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for maven.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "maven" "%ACTION%" "%MAVEN_VERSION%" "%MAVEN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\maven\%MAVEN_VERSION%\\bin\\maven.exe\"" "%LIBSCRIPT_HOME%\maven\%MAVEN_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "maven" "%ACTION%" "%MAVEN_VERSION%" "%MAVEN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\maven\%MAVEN_VERSION%\\bin\\maven.exe\"" "%LIBSCRIPT_HOME%\maven\%MAVEN_VERSION%"
 exit /b !errorlevel!

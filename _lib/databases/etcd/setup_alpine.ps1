@@ -36,7 +36,7 @@ switch ($Action) {
     }
     
     "start" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_etcd" }
         if (Get-Command Libscript-Service -ErrorAction SilentlyContinue) {
@@ -45,7 +45,7 @@ switch ($Action) {
         break
     }
     "install-service" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_etcd" }
         if (Get-Command Libscript-InstallService -ErrorAction SilentlyContinue) {
@@ -54,7 +54,7 @@ switch ($Action) {
         break
     }
     "uninstall-service" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_etcd" }
         if (Get-Command Libscript-UninstallService -ErrorAction SilentlyContinue) {

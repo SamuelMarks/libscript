@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pyenv",
-  "provides": ["pyenv"],
-  "os_whitelist": ["all"],
-  "title": "pyenv",
-  "description": "Bootstrap module for `pyenv` (Python Version Manager).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for `pyenv` (Python Version Manager).",
+  "name": "pyenv",
+  "os_whitelist": ["all"],
+  "provides": ["pyenv"],
   "repository": "https://github.com/pyenv/pyenv",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pyenv"
 }

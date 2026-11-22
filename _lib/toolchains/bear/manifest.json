@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "bear",
-  "title": "Bear Compilation Database Generator (compile_commands.json)",
-  "description": "Standalone version manager and installer for Build EAR (bear), generating Clang JSON compilation databases (compile_commands.json) for Make and Kbuild projects.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["bear", "compilation-database"],
+  "description": "Standalone version manager and installer for Build EAR (bear), generating Clang JSON compilation databases (compile_commands.json) for Make and Kbuild projects.",
+  "name": "bear",
   "os_whitelist": ["all"],
+  "provides": ["bear", "compilation-database"],
   "repository": "https://github.com/rizsotto/Bear",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Bear Compilation Database Generator (compile_commands.json)"
 }

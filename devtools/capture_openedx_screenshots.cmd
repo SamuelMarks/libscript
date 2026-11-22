@@ -66,5 +66,5 @@ exit /b 0
 :: ## main
 :: Delegates Open edX screenshot capture to capture_running_system.cmd.
 :main
-call "!SCRIPT_DIR!\capture_running_system.cmd" --target _lib/web-apps/openedx %*
+call "!SCRIPT_DIR!\capture_running_system.cmd" --target workloads/apps/openedx %*
 exit /b !ERRORLEVEL!

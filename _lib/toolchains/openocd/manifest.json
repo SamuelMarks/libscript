@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "openocd",
-  "title": "OpenOCD On-Chip Debugger",
-  "description": "Open On-Chip Debugger providing SWD/JTAG hardware flashing and GDB remote server support for ARM, RISC-V, and Xtensa targets.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["openocd"],
+  "description": "Open On-Chip Debugger providing SWD/JTAG hardware flashing and GDB remote server support for ARM, RISC-V, and Xtensa targets.",
+  "name": "openocd",
   "os_whitelist": ["all"],
+  "provides": ["openocd"],
   "repository": "https://github.com/openocd-org/openocd",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "OpenOCD On-Chip Debugger"
 }

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/infrastructure/clusters/kubernetes-thw/vars.schema.json",
+  "title": "kubernetes-thw vars",
+  "description": "Variables for Kubernetes The Hard Way",
+  "type": "object",
+  "properties": {
+    "KUBERNETES_THW_VERSION": {
+      "description": "Specific version of kubernetes components to install",
+      "type": "string",
+      "default": "latest"
+    },
+    "KUBERNETES_THW_DEST": {
+      "description": "Destination (working directory)",
+      "type": "string"
+    },
+    "KUBERNETES_THW_VARS": {
+      "description": "Key/value in JSON format (as an escaped string)",
+      "type": "string"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": ["string", "integer"],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "KUBERNETES_THW_LISTEN_PORT": {
+      "type": ["string", "integer"],
+      "description": "Port for KUBERNETES_THW to listen on"
+    },
+    "KUBERNETES_THW_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for KUBERNETES_THW to listen on"
+    },
+    "KUBERNETES_THW_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for KUBERNETES_THW to listen on"
+    },
+    "KUBERNETES_THW_INSTALL_METHOD": {
+      "description": "How to install KUBERNETES THW. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "enum": ["libscript_native", "system"],
+      "default": "libscript_native"
+    },
+    "KUBERNETES_THW_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading kubernetes-thw binary or archive artifacts."
+    },
+    "KUBERNETES_THW_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying kubernetes-thw available remote releases."
+    }
+  },
+  "x-libscript-var-packs": ["image_synth"]
+}

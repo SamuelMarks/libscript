@@ -82,7 +82,7 @@ exit /b 0
 set "RELEASES_URL=%EMSCRIPTEN_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/emscripten-core/emsdk/releases"
 echo [ls-remote] Fetching available emscripten versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -113,7 +113,7 @@ set "DL_DIR=!DL_DIR!\emscripten"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading emscripten %EMSCRIPTEN_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -124,11 +124,11 @@ if /i "%EMSCRIPTEN_INSTALL_METHOD%"=="from-source" (
     set "TARGET_DIR=%LIBSCRIPT_HOME%\emscripten\!EXACT_VERSION!"
     set "SRC_URL=%EMSCRIPTEN_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://github.com/emscripten-core/emsdk/archive/refs/tags/{VERSION}.tar.gz"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "emscripten" "!EXACT_VERSION!" "emcc" "c"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "emscripten" "!EXACT_VERSION!" "emcc" "c"
     exit /b !errorlevel!
 )
 if "%EMSCRIPTEN_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends emscripten
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends emscripten
     exit /b !errorlevel!
 )
 call :resolve_version
@@ -136,8 +136,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\emscripten\!EXACT_VERSION!"
 if exist "!TARGET_DIR!\bin\emcc.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] emscripten !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "emscripten" "%EMSCRIPTEN_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "emscripten" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "emscripten" "%EMSCRIPTEN_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "emscripten" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -145,7 +145,7 @@ set "URL=%EMSCRIPTEN_DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=https://github.com/emscripten-core/emsdk/releases/download/v{VERSION}/emscripten-{VERSION}-windows.zip"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends emscripten
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends emscripten
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -158,7 +158,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\emscripten-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 if /i "!URL:~-4!"==".zip" (
@@ -172,8 +172,8 @@ if /i "!URL:~-4!"==".zip" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\emcc.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "emscripten" "%EMSCRIPTEN_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "emscripten" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "emscripten" "%EMSCRIPTEN_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "emscripten" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -190,7 +190,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "emscripten-core/emsdk" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/emscripten-core/emsdk/releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/emscripten-core/emsdk/releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -200,5 +200,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "emscripten" "%ACTION%" "%EMSCRIPTEN_VERSION%" "%EMSCRIPTEN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\emscripten\%EMSCRIPTEN_VERSION%\\bin\\emcc.exe\"" "%LIBSCRIPT_HOME%\emscripten\%EMSCRIPTEN_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "emscripten" "%ACTION%" "%EMSCRIPTEN_VERSION%" "%EMSCRIPTEN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\emscripten\%EMSCRIPTEN_VERSION%\\bin\\emcc.exe\"" "%LIBSCRIPT_HOME%\emscripten\%EMSCRIPTEN_VERSION%"
 exit /b !errorlevel!

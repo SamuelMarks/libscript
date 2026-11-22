@@ -1,15 +1,16 @@
 {
-  "name": "argp-standalone",
-  "title": "Argp Standalone",
-  "description": "Hierarchical argument parsing library for musl",
-  "provides": ["argp-standalone"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "description": "Hierarchical argument parsing library for musl",
+  "name": "argp-standalone",
+  "provides": ["argp-standalone"],
+  "tier": "T2",
+  "title": "Argp Standalone",
+  "versions": ["1.0.0"]
 }

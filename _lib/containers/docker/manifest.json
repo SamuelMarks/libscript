@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "containers",
+  "conflicts": [],
+  "description": "A platform for developing, shipping, and running containerized applications.",
+  "name": "docker",
+  "os_blacklist": ["freebsd"],
+  "os_whitelist": ["linux", "darwin"],
+  "ports": [],
+  "provides": ["docker", "orchestration", "containers", "runtime", "server"],
+  "tier": "T1",
+  "title": "Docker"
+}

@@ -65,16 +65,16 @@ if not exist "%OUT_BASE%\deb" mkdir "%OUT_BASE%\deb"
 if not exist "%OUT_BASE%\rpm" mkdir "%OUT_BASE%\rpm"
 
 echo [TEST-ROUNDTRIP] Testing Debian packaging...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\packagers\build_deb.cmd" "test-deb" "1.0.0" "%TEST_DIR%\stage" "%OUT_BASE%\deb"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\repogen\deb_index.cmd" "%OUT_BASE%\deb" "stable" "amd64" "main"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\build_deb.cmd" "test-deb" "1.0.0" "%TEST_DIR%\stage" "%OUT_BASE%\deb"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\repogen\deb_index.cmd" "%OUT_BASE%\deb" "stable" "amd64" "main"
 
 echo [TEST-ROUNDTRIP] Testing Alpine packaging...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\packagers\build_apk.cmd" "test-apk" "1.0.0" "%TEST_DIR%\stage" "%OUT_BASE%\apk"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\repogen\apk_index.cmd" "%OUT_BASE%\apk" "x86_64" "main"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\build_apk.cmd" "test-apk" "1.0.0" "%TEST_DIR%\stage" "%OUT_BASE%\apk"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\repogen\apk_index.cmd" "%OUT_BASE%\apk" "x86_64" "main"
 
 echo [TEST-ROUNDTRIP] Testing Red Hat packaging...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\packagers\build_rpm.cmd" "test-rpm" "1.0.0" "%TEST_DIR%\stage" "%OUT_BASE%\rpm"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\repogen\rpm_index.cmd" "%OUT_BASE%\rpm"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\build_rpm.cmd" "test-rpm" "1.0.0" "%TEST_DIR%\stage" "%OUT_BASE%\rpm"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\repogen\rpm_index.cmd" "%OUT_BASE%\rpm"
 
 if exist "%TEST_DIR%" rmdir /s /q "%TEST_DIR%"
 echo [OK] Package manager round-trip test completed successfully on Windows.

@@ -53,7 +53,7 @@ running the setup script.
 | `LIBSCRIPT_TARGET_LIBC`         | Target C standard library implementation (glibc, musl, uclibc, picolibc, nolibc, msvcrt).                                                                      | `none`                               |                         |
 | `LIBSCRIPT_TARGET_OS`           | Target operating system identifier when provisioning or cross-compiling.                                                                                       | `none`                               |                         |
 | `LIBSCRIPT_HOST_ROOT`           | Isolated cross-toolchain host directory prefix when bootstrapping or executing inside a container/chroot.                                                      | `none`                               |                         |
-| `LIBSCRIPT_STAGE`               | Active multi-stage Tier 2 execution plan stage identifier (e.g., stage0, stage1, stage2, stage3).                                                              | `none`                               |                         |
+| `LIBSCRIPT_STAGE`               | Active multi-stage T3 execution plan stage identifier (e.g., stage0, stage1, stage2, stage3).                                                                  | `none`                               |                         |
 | `LIBSCRIPT_IMAGE_BUILD`         | Flag (0 or 1) indicating offline sysroot/image synthesis mode so service installers stage unit files without starting host daemons.                            | `0`                                  |                         |
 | `LIBSCRIPT_STRICT_IMAGE_BUILD`  | Flag (0 or 1) enforcing strict native image synthesis and rejecting missing-tool stub fallbacks without writing completion stamps.                             | `0`                                  |                         |
 | `LIBSCRIPT_ALLOW_STUB`          | Flag (0 or 1) explicitly permitting structural stub artifacts during unit and dry-run testing when hypervisor or mkfs tools are absent.                        | `0`                                  |                         |
@@ -73,7 +73,7 @@ running the setup script.
 | `LIBSCRIPT_RTOS_BOARD`          | Target Zephyr board or FreeRTOS BSP/simulator port identifier (e.g., qemu_x86_64, qemu_cortex_m3, qemu_riscv64, mps2_an385, riscv_virt, posix_gcc, win32_sim). | `none`                               |                         |
 | `LIBSCRIPT_RTOS_HYBRID_POD`     | Flag (0 or 1) enabling hybrid multi-node cloud/unikernel + RTOS edge pod decomposition when multi-process services accompany RTOS targets.                     | `0`                                  |                         |
 | `LIBSCRIPT_RTOS_MCUBOOT`        | Flag (0 or 1) enabling MCUboot slot offset compilation and cryptographic imgtool firmware signing.                                                             | `0`                                  |                         |
-| `LIBSCRIPT_RTOS_RUNNER`         | Target runner selected by payloads/schedulers/rtos_firmware.{sh,cmd} (qemu, renode, or openocd).                                                               | `qemu`                               |                         |
+| `LIBSCRIPT_RTOS_RUNNER`         | Target runner selected by workloads/schedulers/rtos_firmware.{sh,cmd} (qemu, renode, or openocd).                                                              | `qemu`                               |                         |
 | `FREERTOS_INSTALL_METHOD`       | How to install freertos. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.              | `libscript_native`                   |                         |
 | `FREERTOS_VERSION`              | Specific version of freertos to install.                                                                                                                       | `11.1.0`                             | latest, lts             |
 | `FREERTOS_DOWNLOAD_URL`         | Override URL for downloading freertos binary or archive artifacts.                                                                                             | `none`                               |                         |
@@ -94,7 +94,7 @@ running the setup script.
 | `FREERTOS_FETCH_FULL_SOURCE`    | When set to 1, downloads and extracts the upstream FreeRTOS-Kernel release archive.                                                                            | `0`                                  |                         |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

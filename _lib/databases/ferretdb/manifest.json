@@ -1,16 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ferretdb",
-  "title": "FerretDB",
-  "description": "Truly open-source MongoDB alternative proxy backed by PostgreSQL or SQLite storage engines.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["database", "ferretdb", "mongodb-compatible", "mongodb-wire"],
-  "os_whitelist": ["all"],
-  "ports": [27017],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/FerretDB/FerretDB",
+  "dependencies": {
+    "runtime_deps": ["postgres"]
+  },
+  "description": "Truly open-source MongoDB alternative proxy backed by PostgreSQL or SQLite storage engines.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,15 +21,18 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
+  "multitenant": true,
+  "name": "ferretdb",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [27017],
   "process_model": "single-process",
-  "unikernel_support": ["unikraft", "nanos", "osv"],
-  "dependencies": {
-    "runtime_deps": ["postgres"]
-  },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["database", "ferretdb", "mongodb-compatible", "mongodb-wire"],
+  "repository": "https://github.com/FerretDB/FerretDB",
+  "stateful": true,
+  "tier": "T1",
+  "title": "FerretDB",
+  "unikernel_support": ["unikraft", "nanos", "osv"]
 }

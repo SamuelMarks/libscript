@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "wget",
-  "title": "Wget",
-  "description": "A free software package for retrieving files using HTTP, HTTPS, FTP and FTPS.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["wget"],
+  "description": "A free software package for retrieving files using HTTP, HTTPS, FTP and FTPS.",
+  "name": "wget",
   "os_whitelist": ["all"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["wget"],
+  "tier": "T1",
+  "title": "Wget"
 }

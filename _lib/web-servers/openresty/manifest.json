@@ -1,15 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "openresty",
-  "title": "OpenResty",
-  "description": "Dynamic web platform based on Nginx and LuaJIT for high-concurrency API gateways and web apps.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "web-servers",
-  "provides": ["openresty", "web-server", "reverse-proxy"],
-  "os_whitelist": ["all"],
-  "ports": [80, 443],
-  "multitenant": true,
-  "repository": "https://github.com/openresty/openresty",
+  "description": "Dynamic web platform based on Nginx and LuaJIT for high-concurrency API gateways and web apps.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -22,9 +18,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "openresty",
+  "os_whitelist": ["all"],
+  "ports": [80, 443],
+  "provides": ["openresty", "web-server", "reverse-proxy"],
+  "repository": "https://github.com/openresty/openresty",
+  "tier": "T1",
+  "title": "OpenResty"
 }

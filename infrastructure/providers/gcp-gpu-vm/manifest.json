@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "gpu-vm",
+  "title": "GCP GPU VM",
+  "description": "Component for provisioning, managing, and connecting to Google Cloud GPU VMs.",
+  "category": "cloud-providers",
+  "provides": ["gpu-vm", "gcp-gpu-vm"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [],
+  "capabilities": ["cloud-operator"]
+}

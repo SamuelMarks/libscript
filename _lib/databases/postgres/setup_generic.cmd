@@ -96,7 +96,7 @@ if not errorlevel 1 (
 where psql >nul 2>&1
 if not errorlevel 1 (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active postgresql >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active postgresql >nul 2>&1
     if not errorlevel 1 exit /b 0
     where postgres >nul 2>&1
     if not errorlevel 1 exit /b 0
@@ -115,7 +115,7 @@ exit /b 0
 :action_ls_remote
 if "%POSTGRES_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%POSTGRES_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%POSTGRES_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%POSTGRES_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/postgres/postgres" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -152,7 +152,7 @@ if "%POSTGRES_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading postgres %POSTGRES_VERSION% to %DOWNLOAD_DIR%\postgres...
     if not exist "%DOWNLOAD_DIR%\postgres" mkdir "%DOWNLOAD_DIR%\postgres"
     if not "%POSTGRES_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%POSTGRES_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\postgres\postgres-%POSTGRES_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%POSTGRES_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\postgres\postgres-%POSTGRES_VERSION%.zip"
     ) else (
         echo POSTGRES_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -163,7 +163,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if /i "%POSTGRES_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "postgres" "%POSTGRES_VERSION%" "postgres" "c"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "postgres" "%POSTGRES_VERSION%" "postgres" "c"
     exit /b !errorlevel!
 )
 if not "%FORCE_REINSTALL%"=="1" (
@@ -174,7 +174,7 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if "%POSTGRES_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends postgres
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends postgres
     exit /b !errorlevel!
 )
 
@@ -190,7 +190,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\postgres\postgres-%POSTGRES_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%POSTGRES_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%POSTGRES_DOWNLOAD_URL%" "%TEMP%\postgres.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%POSTGRES_DOWNLOAD_URL%" "%TEMP%\postgres.zip"
         tar -xf "%TEMP%\postgres.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for postgres.
@@ -221,5 +221,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "postgres" "%ACTION%" "%POSTGRES_VERSION%" "%POSTGRES_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%\\bin\\postgres.exe\"" "%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "postgres" "%ACTION%" "%POSTGRES_VERSION%" "%POSTGRES_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%\\bin\\postgres.exe\"" "%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%"
 exit /b !errorlevel!

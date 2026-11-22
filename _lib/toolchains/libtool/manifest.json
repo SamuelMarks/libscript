@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "libtool",
-  "title": "GNU Libtool",
-  "description": "Generic shared library support script abstracting platform library conventions.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["libtool"],
+  "description": "Generic shared library support script abstracting platform library conventions.",
+  "name": "libtool",
   "os_whitelist": ["all"],
+  "provides": ["libtool"],
   "repository": "https://savannah.gnu.org/projects/libtool",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "GNU Libtool"
 }

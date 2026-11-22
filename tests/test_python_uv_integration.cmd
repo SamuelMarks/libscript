@@ -67,7 +67,7 @@ echo [INFO] Testing uv integration...
 
 :: Test 1: Resolve python executable via uv
 echo [INFO] Testing Python resolution via uv...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\python_env.cmd" libscript_python_resolve > "%TEMP%\resolved_py.txt"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\python_env.cmd" libscript_python_resolve > "%TEMP%\resolved_py.txt"
 if errorlevel 1 (
     echo [ERROR] Failed to resolve python via uv.
     exit /b 1

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mix",
-  "provides": ["mix"],
-  "os_whitelist": ["all"],
-  "title": "mix",
-  "description": "Bootstrap module for `mix` (Elixir package manager and build tool).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for `mix` (Elixir package manager and build tool).",
+  "name": "mix",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["mix"],
   "repository": "https://github.com/elixir-lang/elixir",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "mix"
 }

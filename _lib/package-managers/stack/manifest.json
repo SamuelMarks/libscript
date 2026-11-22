@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "stack",
-  "provides": ["stack"],
-  "os_whitelist": ["all"],
-  "title": "stack",
-  "description": "Bootstrap module for the `stack` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `stack` package manager.",
+  "name": "stack",
   "os_blacklist": ["sunos"],
-  "capabilities": ["versioned-artifact"]
+  "os_whitelist": ["all"],
+  "provides": ["stack"],
+  "tier": "T1",
+  "title": "stack"
 }

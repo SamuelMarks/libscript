@@ -1,7 +1,7 @@
 @echo off
 :: # gcs_ml.cmd
 :: ## Overview
-:: Applies `schemas/gcs-ml-storage.schema.json` on Windows: enforces TFRC same-region bucket checks,
+:: Applies `engine/schemas/gcs-ml-storage.schema.json` on Windows: enforces TFRC same-region bucket checks,
 :: emits checkpoint lifecycle rules, worker env exports, and GKE GCS FUSE CSI annotations.
 :: ## Usage
 :: traits\storage\gcs_ml.cmd <config.json> --out-dir=<dir> [--zone=<tpu_zone>] [--dry-run]
@@ -66,10 +66,10 @@ if "!ZONE_VAL!"=="" (
     for /f "usebackq delims=" %%Z in (`jq -r "(if has(\"ml\") then .ml.gcs_storage else . end) | .zone // \"us-central2-b\"" "!CFG_FILE!"`) do set "ZONE_VAL=%%Z"
 )
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_is_enabled
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_is_enabled
 if not errorlevel 1 (
     for /f "usebackq delims=" %%B in (`jq -r "(if has(\"ml\") then .ml.gcs_storage else . end) | [(.datasets[]?.uri // empty),(.checkpoints.uri // empty),(.xla_compilation_cache.uri // empty)] | .[] | select(length>0)" "!CFG_FILE!"`) do (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "%%B" "!ZONE_VAL!"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "%%B" "!ZONE_VAL!"
         if errorlevel 1 exit /b !errorlevel!
     )
 )

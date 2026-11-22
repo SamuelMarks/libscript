@@ -1,16 +1,17 @@
 {
-  "name": "alsa-lib",
-  "title": "ALSA Library",
-  "description": "Advanced Linux Sound Architecture userland library",
-  "provides": ["alsa-lib"],
+  "capabilities": ["sysroot-package"],
   "category": "audio",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Advanced Linux Sound Architecture userland library",
+  "name": "alsa-lib",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["alsa-lib"],
+  "tier": "T2",
+  "title": "ALSA Library",
+  "versions": ["1.0.0"]
 }

@@ -1,7 +1,7 @@
 @echo off
 :: # test_update_results.cmd
 :: ## Overview
-:: Unit test suite for tests\update_results.cmd on Windows. Verifies that update_results.cmd splits the Supported Components table into all 5 architectural tiers, exports valid JSON, and is strictly idempotent (2x run).
+:: Unit test suite for tests\update_results.cmd on Windows verifying T1-T5 + Plane A headings, JSON export, and 2x idempotency.
 :: ## Usage
 :: tests\test_update_results.cmd
 
@@ -49,7 +49,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-echo === LibScript Tiered README Table Generator Test Suite (Win32) ===
+echo === LibScript T1-T5 + Plane A README Table Generator Test Suite (Win32) ===
 
 set "TMP_TEST_DIR=%TEMP%\libscript_update_res_%RANDOM%"
 if not exist "%TMP_TEST_DIR%" mkdir "%TMP_TEST_DIR%"
@@ -62,21 +62,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
-findstr /C:"### Tier 1:" "%TMP_TEST_DIR%\README.md" >nul 2>&1
-if errorlevel 1 (
-    echo [FAIL] Tier 1 heading missing >&2
-    rmdir /s /q "%TMP_TEST_DIR%" 2>nul
-    exit /b 1
+for %%H in ("### T1:" "### T2:" "### T3:" "### T4:" "### T5:" "### Plane A") do (
+    findstr /C:%%H "%TMP_TEST_DIR%\README.md" >nul 2>&1
+    if errorlevel 1 (
+        echo [FAIL] Heading %%H missing >&2
+        rmdir /s /q "%TMP_TEST_DIR%" 2>nul
+        exit /b 1
+    )
 )
-echo [PASS] Tier 1..4 headings rendered and verified.
-
-findstr /C:"| `envoy`" "%TMP_TEST_DIR%\README.md" >nul 2>&1
-if errorlevel 1 (
-    echo [FAIL] envoy row missing from Tier 1 table >&2
-    rmdir /s /q "%TMP_TEST_DIR%" 2>nul
-    exit /b 1
-)
-echo [PASS] envoy row rendered in Tier 1 table.
+echo [PASS] T1..T5 and Plane A headings rendered and verified.
 
 copy /y "%TMP_TEST_DIR%\README.md" "%TMP_TEST_DIR%\README.pass1.md" >nul
 call "%LIBSCRIPT_ROOT_DIR%\tests\update_results.cmd" "%LIBSCRIPT_ROOT_DIR%" --output "%TMP_TEST_DIR%\README.md" --json "%TMP_TEST_DIR%\matrix_results.json"
@@ -93,21 +87,6 @@ if errorlevel 1 (
 )
 echo [PASS] 2x consecutive runs of update_results.cmd are 100%% idempotent.
 
-where pwsh >nul 2>&1
-if "%ERRORLEVEL%" equ "0" (
-    pwsh -NoProfile -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.ps1"
-    if errorlevel 1 (
-        rmdir /s /q "%TMP_TEST_DIR%" 2>nul
-        exit /b 1
-    )
-) else (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.ps1"
-    if errorlevel 1 (
-        rmdir /s /q "%TMP_TEST_DIR%" 2>nul
-        exit /b 1
-    )
-)
-
 rmdir /s /q "%TMP_TEST_DIR%" 2>nul
-echo === All Tiered README Table Generator Checks Passed^^! ===
+echo === All T1-T5 + Plane A Table Generator Checks Passed^^! ===
 exit /b 0

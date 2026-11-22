@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "scons",
-  "title": "SCons",
-  "description": "Software construction tool configured with Python scripts.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["scons", "build-system"],
+  "description": "Software construction tool configured with Python scripts.",
+  "name": "scons",
   "os_whitelist": ["all"],
+  "provides": ["scons", "build-system"],
   "repository": "https://github.com/SCons/scons",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "SCons"
 }

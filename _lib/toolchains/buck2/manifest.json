@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "buck2",
-  "title": "Buck2",
-  "description": "Fast, hermetic, multi-language large-scale build system from Meta.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["buck2", "build-system"],
+  "description": "Fast, hermetic, multi-language large-scale build system from Meta.",
+  "name": "buck2",
   "os_whitelist": ["all"],
+  "provides": ["buck2", "build-system"],
   "repository": "https://github.com/facebook/buck2",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Buck2"
 }

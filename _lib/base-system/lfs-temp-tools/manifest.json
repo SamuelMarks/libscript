@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "lfs-temp-tools",
-  "title": "LFS Temporary Tools",
-  "description": "Linux From Scratch (LFS) Chapter 6/7 cross-compiled temporary userland utilities.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "provides": ["lfs-temp-tools"],
   "conflicts": [],
-  "versions": ["latest", "12.2"],
-  "os_whitelist": ["linux"],
+  "description": "Linux From Scratch (LFS) Chapter 6/7 cross-compiled temporary userland utilities.",
+  "name": "lfs-temp-tools",
   "os_blacklist": ["windows", "darwin", "sunos"],
+  "os_whitelist": ["linux"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["lfs-temp-tools"],
+  "tier": "T2",
+  "title": "LFS Temporary Tools",
+  "versions": ["latest", "12.2"]
 }

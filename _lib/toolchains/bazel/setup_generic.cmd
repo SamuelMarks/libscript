@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%BAZEL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%BAZEL_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%BAZEL_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%BAZEL_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -108,8 +108,8 @@ exit /b 0
 :action_use
 if "%BAZEL_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%BAZEL_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/bazelbuild/bazel/releases/latest"`) do set "EXACT_VERSION=%%a"
-) else if "%BAZEL_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/bazelbuild/bazel/releases/latest"`) do set "EXACT_VERSION=%%a"
+if "%BAZEL_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/bazelbuild/bazel/releases/latest"`) do set "EXACT_VERSION=%%a"
+) else if "%BAZEL_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/bazelbuild/bazel/releases/latest"`) do set "EXACT_VERSION=%%a"
 ) else (
     set "EXACT_VERSION=%BAZEL_VERSION%"
 )
@@ -134,7 +134,7 @@ if "%BAZEL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading bazel %BAZEL_VERSION% to %DOWNLOAD_DIR%\bazel...
     if not exist "%DOWNLOAD_DIR%\bazel" mkdir "%DOWNLOAD_DIR%\bazel"
     if not "%BAZEL_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BAZEL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\bazel\bazel-%BAZEL_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%BAZEL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\bazel\bazel-%BAZEL_VERSION%.zip"
     ) else (
         echo BAZEL_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%BAZEL_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends bazel
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends bazel
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\bazel\bazel-%BAZEL_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%BAZEL_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BAZEL_DOWNLOAD_URL%" "%TEMP%\bazel.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%BAZEL_DOWNLOAD_URL%" "%TEMP%\bazel.zip"
         tar -xf "%TEMP%\bazel.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for bazel.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "bazel" "%ACTION%" "%BAZEL_VERSION%" "%BAZEL_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\bazel\%BAZEL_VERSION%\\bin\\bazel.exe\"" "%LIBSCRIPT_HOME%\bazel\%BAZEL_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "bazel" "%ACTION%" "%BAZEL_VERSION%" "%BAZEL_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\bazel\%BAZEL_VERSION%\\bin\\bazel.exe\"" "%LIBSCRIPT_HOME%\bazel\%BAZEL_VERSION%"
 exit /b !errorlevel!

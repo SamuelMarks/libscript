@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "apt",
-  "provides": ["apt"],
-  "os_whitelist": ["debian", "ubuntu"],
-  "title": "apt",
-  "description": "Bootstrap module for the `apt` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `apt` package manager.",
+  "name": "apt",
+  "os_whitelist": ["debian", "ubuntu"],
+  "provides": ["apt"],
   "repository": "https://salsa.debian.org/apt-team/apt",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "apt"
 }

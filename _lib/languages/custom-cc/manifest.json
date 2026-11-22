@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "custom-cc",
-  "title": "Custom C Compiler (custom-cc)",
-  "description": "Standalone version manager, source builder, and flag-normalizing telemetry wrapper for a custom C compiler.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["compiler", "c", "cc", "custom-cc"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Standalone version manager, source builder, and flag-normalizing telemetry wrapper for a custom C compiler.",
+  "name": "custom-cc",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["compiler", "c", "cc", "custom-cc"],
+  "tier": "T1",
+  "title": "Custom C Compiler (custom-cc)"
 }

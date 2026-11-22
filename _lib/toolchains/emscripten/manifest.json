@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "emscripten",
-  "title": "Emscripten",
-  "description": "LLVM-based C and C++ compiler toolchain targeting WebAssembly.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["emscripten", "emcc"],
+  "description": "LLVM-based C and C++ compiler toolchain targeting WebAssembly.",
+  "name": "emscripten",
   "os_whitelist": ["all"],
+  "provides": ["emscripten", "emcc"],
   "repository": "https://github.com/emscripten-core/emsdk",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Emscripten"
 }

@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "kafka",
-  "title": "Kafka",
-  "description": "A distributed event store and stream-processing platform.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "message-brokers",
-  "provides": ["message-broker", "kafka"],
   "conflicts": [],
-  "os_whitelist": ["linux", "darwin"],
+  "description": "A distributed event store and stream-processing platform.",
+  "name": "kafka",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["linux", "darwin"],
   "ports": ["9092"],
+  "provides": ["message-broker", "kafka"],
   "repository": "https://github.com/apache/kafka",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "Kafka"
 }

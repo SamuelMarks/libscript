@@ -125,7 +125,7 @@ exit /b 0
 :action_ls_remote
 if "%VALKEY_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%VALKEY_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%VALKEY_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%VALKEY_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/SamuelMarks/valkey-windows" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -169,7 +169,7 @@ if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading valkey %VALKEY_VERSION% to %DOWNLOAD_DIR%\valkey...
     if not exist "%DOWNLOAD_DIR%\valkey" mkdir "%DOWNLOAD_DIR%\valkey"
     if not "%VALKEY_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VALKEY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\valkey\valkey-%VALKEY_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%VALKEY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\valkey\valkey-%VALKEY_VERSION%.zip"
     ) else (
         echo VALKEY_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -187,11 +187,11 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if /i "%VALKEY_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "valkey" "%VALKEY_VERSION%" "valkey-server" "c"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "valkey" "%VALKEY_VERSION%" "valkey-server" "c"
     exit /b !errorlevel!
 )
 if "%VALKEY_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends valkey
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends valkey
     exit /b !errorlevel!
 )
 
@@ -207,7 +207,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\valkey\valkey-%VALKEY_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%VALKEY_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VALKEY_DOWNLOAD_URL%" "%TEMP%\valkey.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%VALKEY_DOWNLOAD_URL%" "%TEMP%\valkey.zip"
         tar -xf "%TEMP%\valkey.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for valkey.
@@ -238,5 +238,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "valkey" "%ACTION%" "%VALKEY_VERSION%" "%VALKEY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\valkey\%VALKEY_VERSION%\\bin\\valkey-server.exe\"" "%LIBSCRIPT_HOME%\valkey\%VALKEY_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "valkey" "%ACTION%" "%VALKEY_VERSION%" "%VALKEY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\valkey\%VALKEY_VERSION%\\bin\\valkey-server.exe\"" "%LIBSCRIPT_HOME%\valkey\%VALKEY_VERSION%"
 exit /b !errorlevel!

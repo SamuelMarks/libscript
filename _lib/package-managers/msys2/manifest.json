@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "msys2",
-  "provides": ["msys2"],
-  "os_whitelist": ["windows"],
-  "title": "MSYS2",
-  "description": "MSYS2 is a collection of tools and libraries providing an easy-to-use environment for building, installing, and running native Windows software. It consists of a command-line terminal called mintty, bash, version control systems like git, and various build systems like autotools and GCC.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "MSYS2 is a collection of tools and libraries providing an easy-to-use environment for building, installing, and running native Windows software. It consists of a command-line terminal called mintty, bash, version control systems like git, and various build systems like autotools and GCC.",
+  "name": "msys2",
+  "os_whitelist": ["windows"],
+  "provides": ["msys2"],
   "repository": "https://github.com/msys2/msys2-installer",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "MSYS2"
 }

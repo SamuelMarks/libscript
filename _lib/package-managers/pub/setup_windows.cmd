@@ -67,7 +67,7 @@ set "TEMP_ZIP=%TEMP%\dart.zip"
 
 echo Downloading Dart SDK (%ARCH%) from %URL%...
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download Dart SDK.
     exit /b 1

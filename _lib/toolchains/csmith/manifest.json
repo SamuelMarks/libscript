@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "csmith",
-  "title": "Csmith Random C11 Differential Testing Generator",
-  "description": "Standalone version manager and source builder for Csmith, generating UB-free random C programs and providing runtime checksum headers under CSMITH_HOME/include.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["csmith"],
+  "description": "Standalone version manager and source builder for Csmith, generating UB-free random C programs and providing runtime checksum headers under CSMITH_HOME/include.",
+  "name": "csmith",
   "os_whitelist": ["all"],
+  "provides": ["csmith"],
   "repository": "https://github.com/csmith-project/csmith",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Csmith Random C11 Differential Testing Generator"
 }

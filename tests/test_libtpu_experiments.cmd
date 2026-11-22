@@ -1,7 +1,7 @@
 @echo off
 :: # test_libtpu_experiments.cmd
 :: ## Overview
-:: End-to-end Windows integration, 2x idempotency, safe-core `unsafe == 0` gate, and `\tbd` placeholder rejection test suite for `_lib\toolchains\libtpu-rs\benchmark_experiments.cmd` across Suites `E0`-`E8`.
+:: End-to-end Windows integration, 2x idempotency, safe-core `unsafe == 0` gate, and `\tbd` placeholder rejection test suite for `experiments\libtpu-pjrt\benchmark_experiments.cmd` across Suites `E0`-`E8`.
 :: ## Usage
 :: call tests\test_libtpu_experiments.cmd
 
@@ -78,7 +78,7 @@ exit /b 1
 set "_RES=!WORK_DIR!\results"
 set "LIBTPU_RS_ALLOW_DIRTY=1"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" libtpu-rs experiments --synthetic-fixtures --subsuites=E0,E1,E2,E3,E4,E5,E6,E7,E8 --warmup=2 --trials=5 "--results-dir=!_RES!" "--paper-dir=!WORK_DIR!\paper_clean"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run libtpu-pjrt --synthetic-fixtures --subsuites=E0,E1,E2,E3,E4,E5,E6,E7,E8 --warmup=2 --trials=5 "--results-dir=!_RES!" "--paper-dir=!WORK_DIR!\paper_clean"
 if errorlevel 1 exit /b 1
 
 for %%R in (e0_wheel_provenance.json e0_tcb.json e1_abi_parity.json e1_disasm.json e1_carver.json e3_jax_single.json e3_jax_spmd.json e4_vs_google_linux_x64.json e5_vmem_pack.json e5_reg_spill.json e6_modulo_speedup.json e6_pass_ablations.json e7_numerics.json e7_sparsecore.json generated_metrics.tex campaign_summary.json) do (
@@ -100,11 +100,11 @@ if errorlevel 1 (
 )
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" libtpu-rs experiments --synthetic-fixtures --subsuites=E0,E1,E2,E3,E4,E5,E6,E7,E8 --warmup=2 --trials=5 "--results-dir=!_RES!" "--paper-dir=!WORK_DIR!\paper_clean" > "!WORK_DIR!\pass2.log" 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run libtpu-pjrt --synthetic-fixtures --subsuites=E0,E1,E2,E3,E4,E5,E6,E7,E8 --warmup=2 --trials=5 "--results-dir=!_RES!" "--paper-dir=!WORK_DIR!\paper_clean" > "!WORK_DIR!\pass2.log" 2>&1
 if errorlevel 1 exit /b 1
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" libtpu-rs experiments --synthetic-fixtures --force --subsuites=E0,E8 "--results-dir=!_RES!" "--paper-dir=!WORK_DIR!\paper_clean"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run libtpu-pjrt --synthetic-fixtures --force --subsuites=E0,E8 "--results-dir=!_RES!" "--paper-dir=!WORK_DIR!\paper_clean"
 if errorlevel 1 exit /b 1
 exit /b 0
 
@@ -112,7 +112,7 @@ exit /b 0
 :: Verifies E8 rejects manuscripts with unresolved placeholders and E0 rejects unsafe blocks in libtpu-core.
 :test_tbd_placeholder_and_unsafe_gates
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" libtpu-rs experiments --synthetic-fixtures --subsuites=E8 "--results-dir=!WORK_DIR!\results" "--paper-dir=!WORK_DIR!\paper_tbd" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run libtpu-pjrt --synthetic-fixtures --subsuites=E8 "--results-dir=!WORK_DIR!\results" "--paper-dir=!WORK_DIR!\paper_tbd" >nul 2>&1
 if not errorlevel 1 (
     echo [FAIL] E8 accepted manuscript containing unresolved placeholder^^! >&2
     exit /b 1
@@ -130,7 +130,7 @@ git commit -q -m "unsafe violation"
 popd
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" libtpu-rs experiments --synthetic-fixtures --force --subsuites=E0 "--repo-dir=!_BAD_CORE!" "--results-dir=!WORK_DIR!\bad_results" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run libtpu-pjrt --synthetic-fixtures --force --subsuites=E0 "--repo-dir=!_BAD_CORE!" "--results-dir=!WORK_DIR!\bad_results" >nul 2>&1
 if not errorlevel 1 (
     echo [FAIL] E0 accepted unsafe block inside safe core^^! >&2
     exit /b 1

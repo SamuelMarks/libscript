@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pkgx",
-  "provides": ["version-manager", "pkgx"],
-  "os_whitelist": ["linux", "darwin"],
-  "title": "pkgx",
-  "description": "pkgx",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "pkgx",
+  "name": "pkgx",
   "os_blacklist": ["freebsd"],
+  "os_whitelist": ["linux", "darwin"],
+  "provides": ["version-manager", "pkgx"],
   "repository": "https://github.com/pkgxdev/pkgx",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pkgx"
 }

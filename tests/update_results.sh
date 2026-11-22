@@ -118,51 +118,24 @@ check_manifest_support() {
   ' "${_m_file}"
 }
 
-# ## classify_tier
-# Maps a component category and name to its architectural tier key (1, 1.5, 2, 3, or 4).
-classify_tier() {
-  _cat="$1"
-  _comp="$2"
-  case "${_cat}" in
-    languages|toolchains|package-managers|utilities|databases|caches|search|security|message-brokers|web-servers|app-servers|logging|storage-layers|git-servers|web-apps|runtimes)
-      printf '1
-'
-      ;;
-    base-system|init-systems|networking|audio|graphics|display-servers|display-managers|desktops)
-      printf '1.5
-'
-      ;;
-    kernel|bootloaders|storage|freebsd|illumos|reactos|virtualization)
-      printf '2
-'
-      ;;
-    orchestration)
-      case "${_comp}" in
-        distro|vfs|runner|packagers|repogen|solo5)
-          printf '2
-'
-          ;;
-        gke-xpk-training)
-          printf '4
-'
-          ;;
-        *)
-          printf '3
-'
-          ;;
-      esac
-      ;;
-    cloud|cloud-providers)
-      printf '3
-'
-      ;;
-    ai-serving|ml-training|topologies|payloads|traits)
-      printf '4
-'
+# ## read_manifest_tier
+# Reads the explicit "tier" property ("T1" or "T2") from manifest.json, falling back to category family when absent in synthetic fixtures.
+read_manifest_tier() {
+  _rmt_file="$1"
+  _rmt_cat="$2"
+  if [ -n "$_rmt_file" ] && [ -f "$_rmt_file" ]; then
+    _tier_val=$(awk -F'"' '/"tier"[[:space:]]*:/ { print $4; exit }' "$_rmt_file" 2>/dev/null || true)
+    if [ "$_tier_val" = 'T1' ] || [ "$_tier_val" = 'T2' ]; then
+      printf '%s\n' "$_tier_val"
+      return 0
+    fi
+  fi
+  case "$_rmt_cat" in
+    base-system|kernel|bootloaders|init-systems|unikernels|graphics|audio|display-servers|display-managers|desktops)
+      printf 'T2\n'
       ;;
     *)
-      printf '1
-'
+      printf 'T1\n'
       ;;
   esac
 }
@@ -181,66 +154,81 @@ discover_all_entries() {
       _comp="${_dir##*/}"
       case "${_cat}" in _*) continue ;; esac
       case "${_comp}" in _*) continue ;; esac
-      # Disambiguate freebsd/distro, illumos/distro, and reactos/distro from orchestration/distro
-      _display_comp="${_comp}"
-      if [ "${_cat}" = "freebsd" ] && [ "${_comp}" = "distro" ]; then
-        _display_comp='freebsd/distro'
-      elif [ "${_cat}" = "illumos" ] && [ "${_comp}" = "distro" ]; then
-        _display_comp='illumos/distro'
-      elif [ "${_cat}" = "reactos" ] && [ "${_comp}" = "distro" ]; then
-        _display_comp='reactos/distro'
-      fi
-      _tier=$(classify_tier "${_cat}" "${_comp}")
       _mfile=""
       [ -f "${_dir}/manifest.json" ] && _mfile="${_dir}/manifest.json"
-      printf '%s|%s|%s|%s
-' "${_tier}" "${_cat}" "${_display_comp}" "${_mfile}" >>"${_raw_list}"
+      _tier=$(read_manifest_tier "${_mfile}" "${_cat}")
+      printf '%s|%s|%s|%s\n' "${_tier}" "${_cat}" "${_comp}" "${_mfile}" >>"${_raw_list}"
     done
   fi
 
-  # Additional Tier 1/2/4 single-dir or multi-script subsystems
-  if [ -d "${_repo_root}/_lib/bootloaders" ]; then
-    if [ -f "${_repo_root}/_lib/bootloaders/setup.sh" ]; then
-      printf '2|bootloaders|bootloaders/setup|\n' >>"${_raw_list}"
+  if [ -d "${_repo_root}/synthesis/distro" ]; then
+    for _distro_dir in "${_repo_root}/synthesis/distro"/*; do
+      [ -d "${_distro_dir}" ] || continue
+      _dname="${_distro_dir##*/}"
+      case "${_dname}" in _*|*-base) continue ;; esac
+      _mfile=""
+      [ -f "${_distro_dir}/manifest.json" ] && _mfile="${_distro_dir}/manifest.json"
+      printf 'T3|distro|synthesis/distro/%s|%s\n' "${_dname}" "${_mfile}" >>"${_raw_list}"
+    done
+  fi
+  if [ -d "${_repo_root}/synthesis/repogen" ]; then
+    _mfile=""
+    [ -f "${_repo_root}/synthesis/repogen/manifest.json" ] && _mfile="${_repo_root}/synthesis/repogen/manifest.json"
+    printf 'T3|repogen|synthesis/repogen|%s\n' "${_mfile}" >>"${_raw_list}"
+  fi
+  if [ -d "${_repo_root}/synthesis/vfs" ]; then
+    for _vdir in "${_repo_root}/synthesis/vfs"/*; do
+      [ -d "${_vdir}" ] || continue
+      _vname="${_vdir##*/}"
+      _mfile=""
+      [ -f "${_vdir}/manifest.json" ] && _mfile="${_vdir}/manifest.json"
+      printf 'T3|vfs|synthesis/vfs/%s|%s\n' "${_vname}" "${_mfile}" >>"${_raw_list}"
+    done
+  fi
+  if [ -f "${_repo_root}/synthesis/disk/provision_disk.sh" ]; then
+    printf 'T3|disk|synthesis/disk/provision_disk|\n' >>"${_raw_list}"
+  fi
+
+  for _infra_sub in providers resources clusters; do
+    if [ -d "${_repo_root}/infrastructure/${_infra_sub}" ]; then
+      for _infra_dir in "${_repo_root}/infrastructure/${_infra_sub}"/*; do
+        [ -d "${_infra_dir}" ] || continue
+        _iname="${_infra_dir##*/}"
+        case "${_iname}" in _*) continue ;; esac
+        _mfile=""
+        [ -f "${_infra_dir}/manifest.json" ] && _mfile="${_infra_dir}/manifest.json"
+        printf 'T4|%s|infrastructure/%s/%s|%s\n' "${_infra_sub}" "${_infra_sub}" "${_iname}" "${_mfile}" >>"${_raw_list}"
+      done
     fi
-    for _bl in grub limine refind systemd-boot; do
-      if [ ! -d "${_repo_root}/_lib/bootloaders/${_bl}" ]; then
-        printf '2|bootloaders|bootloaders/%s|\n' "${_bl}" >>"${_raw_list}"
-      fi
-    done
-  fi
-  if [ -d "${_repo_root}/_lib/storage" ]; then
-    printf '2|storage|storage/provision_disk|
-' >>"${_raw_list}"
-  fi
-  if [ -d "${_repo_root}/_lib/runtimes" ]; then
-    printf '1|runtimes|runtimes/provision_isolated_runtime|\n' >>"${_raw_list}"
-  fi
-  if [ -d "${_repo_root}/topologies" ]; then
-    for _tdir in "${_repo_root}/topologies"/*; do
-      [ -d "${_tdir}" ] || continue
-      _tname="${_tdir##*/}"
-      case "${_tname}" in _*) continue ;; esac
-      printf '4|topologies|topologies/%s|
-' "${_tname}" >>"${_raw_list}"
-    done
-  fi
-  if [ -d "${_repo_root}/payloads/schedulers" ]; then
-    for _sfile in "${_repo_root}/payloads/schedulers"/*.sh; do
+  done
+
+  for _work_sub in apps ai constellations; do
+    if [ -d "${_repo_root}/workloads/${_work_sub}" ]; then
+      for _wdir in "${_repo_root}/workloads/${_work_sub}"/*; do
+        [ -d "${_wdir}" ] || continue
+        _work_name="${_wdir##*/}"
+        case "${_work_name}" in _*) continue ;; esac
+        _mfile=""
+        [ -f "${_wdir}/manifest.json" ] && _mfile="${_wdir}/manifest.json"
+        printf 'T5|%s|workloads/%s/%s|%s\n' "${_work_sub}" "${_work_sub}" "${_work_name}" "${_mfile}" >>"${_raw_list}"
+      done
+    fi
+  done
+  if [ -d "${_repo_root}/workloads/schedulers" ]; then
+    for _sfile in "${_repo_root}/workloads/schedulers"/*.sh; do
       [ -f "${_sfile}" ] || continue
       _sname="${_sfile##*/}"
       _sname="${_sname%.sh}"
-      printf '4|payloads|payloads/schedulers/%s|
-' "${_sname}" >>"${_raw_list}"
+      printf 'T5|schedulers|workloads/schedulers/%s|\n' "${_sname}" >>"${_raw_list}"
     done
   fi
+
   if [ -d "${_repo_root}/traits" ]; then
     for _trdir in "${_repo_root}/traits"/*; do
       [ -d "${_trdir}" ] || continue
       _trname="${_trdir##*/}"
       case "${_trname}" in _*) continue ;; esac
-      printf '4|traits|traits/%s|
-' "${_trname}" >>"${_raw_list}"
+      printf 'PlaneA|traits|traits/%s|\n' "${_trname}" >>"${_raw_list}"
     done
   fi
 
@@ -261,11 +249,12 @@ update_supported_components() {
   fi
 
   _tmp_table=$(mktemp "${TMPDIR:-/tmp}/components_table.XXXXXX")
-  _tmp_t1=$(mktemp "${TMPDIR:-/tmp}/tier1.XXXXXX")
-  _tmp_t15=$(mktemp "${TMPDIR:-/tmp}/tier15.XXXXXX")
-  _tmp_t2=$(mktemp "${TMPDIR:-/tmp}/tier2.XXXXXX")
-  _tmp_t3=$(mktemp "${TMPDIR:-/tmp}/tier3.XXXXXX")
-  _tmp_t4=$(mktemp "${TMPDIR:-/tmp}/tier4.XXXXXX")
+  _tmp_t1=$(mktemp "${TMPDIR:-/tmp}/tier_t1.XXXXXX")
+  _tmp_t2=$(mktemp "${TMPDIR:-/tmp}/tier_t2.XXXXXX")
+  _tmp_t3=$(mktemp "${TMPDIR:-/tmp}/tier_t3.XXXXXX")
+  _tmp_t4=$(mktemp "${TMPDIR:-/tmp}/tier_t4.XXXXXX")
+  _tmp_t5=$(mktemp "${TMPDIR:-/tmp}/tier_t5.XXXXXX")
+  _tmp_pa=$(mktemp "${TMPDIR:-/tmp}/plane_a.XXXXXX")
 
   _tmp_json=""
   if [ -n "${_json_file}" ]; then
@@ -278,9 +267,11 @@ update_supported_components() {
   discover_all_entries "${_repo_root}" >"${_entries_file}"
 
   _enriched_entries=$(mktemp "${TMPDIR:-/tmp}/entries_enriched.XXXXXX")
+  _markers_list=$(mktemp "${TMPDIR:-/tmp}/markers_list.XXXXXX")
   if [ -d "${_tests_tmp_dir}" ]; then
-    _markers_list=$(mktemp "${TMPDIR:-/tmp}/markers_list.XXXXXX")
     ls -1 "${_tests_tmp_dir}" >"${_markers_list}" 2>/dev/null || true
+  fi
+  if [ -s "${_markers_list}" ]; then
     awk '
       function has_exact(c, target) {
         return ((c "." target) in exact)
@@ -370,6 +361,7 @@ update_supported_components() {
     ' "${_markers_list}" "${_entries_file}" >"${_enriched_entries}"
     rm -f "${_markers_list}"
   else
+    rm -f "${_markers_list}"
     awk '{ printf "%s|false|||||||\n", $0 }' "${_entries_file}" >"${_enriched_entries}"
   fi
   rm -f "${_entries_file}"
@@ -496,26 +488,20 @@ update_supported_components() {
 ' "${_comp}" "${_cat}" "${_apk_status}" "${_deb_status}" "${_rpm_status}" "${_win_status}" "${_sunos_status}" "${_freebsd_status}" "${_macos_status}")
 
     case "${_tier}" in
-      1)   printf '%s
-' "${_row_str}" >>"${_tmp_t1}" ;;
-      1.5) printf '%s
-' "${_row_str}" >>"${_tmp_t15}" ;;
-      2)   printf '%s
-' "${_row_str}" >>"${_tmp_t2}" ;;
-      3)   printf '%s
-' "${_row_str}" >>"${_tmp_t3}" ;;
-      4)   printf '%s
-' "${_row_str}" >>"${_tmp_t4}" ;;
-      *)   printf '%s
-' "${_row_str}" >>"${_tmp_t1}" ;;
+      T1)     printf '%s\n' "${_row_str}" >>"${_tmp_t1}" ;;
+      T2)     printf '%s\n' "${_row_str}" >>"${_tmp_t2}" ;;
+      T3)     printf '%s\n' "${_row_str}" >>"${_tmp_t3}" ;;
+      T4)     printf '%s\n' "${_row_str}" >>"${_tmp_t4}" ;;
+      T5)     printf '%s\n' "${_row_str}" >>"${_tmp_t5}" ;;
+      PlaneA) printf '%s\n' "${_row_str}" >>"${_tmp_pa}" ;;
+      *)      printf '%s\n' "${_row_str}" >>"${_tmp_t1}" ;;
     esac
 
     if [ -n "${_tmp_json}" ]; then
       if [ "${_first_json_entry}" -eq 1 ]; then
         _first_json_entry=0
       else
-        printf ',
-' >>"${_tmp_json}"
+        printf ',\n' >>"${_tmp_json}"
       fi
       cat <<JSON_ROW >>"${_tmp_json}"
   {
@@ -541,27 +527,18 @@ JSON_ROW
     cat <<'HDR_MAIN'
 ## Supported Components
 
-Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
+Components are organized into LibScript's 6 strict compositional tiers (`T0`–`T5`) and orthogonal cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 
-### Tier 1: Leaf Recipes, Toolchains & Native Version Managers
+### T1: Atomic Userland & Daemon Recipes
 
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
 HDR_MAIN
     cat "${_tmp_t1}"
 
-    cat <<'HDR_T15'
-
-### Tier 1.5: Base OS Userland, Init Systems, Networking, Audio, Graphics & Desktops
-
-| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
-|---|---|---|---|---|---|---|---|---|
-HDR_T15
-    cat "${_tmp_t15}"
-
     cat <<'HDR_T2'
 
-### Tier 2: OS Synthesizers, Kernels, Bootloaders, Storage & Image Builders
+### T2: OS, Kernel & System Plumbing Recipes
 
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
@@ -570,7 +547,7 @@ HDR_T2
 
     cat <<'HDR_T3'
 
-### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners
+### T3: Image, OS & Artifact Synthesis
 
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
@@ -579,15 +556,33 @@ HDR_T3
 
     cat <<'HDR_T4'
 
-### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits
+### T4: Infrastructure Providers & Cluster Substrates
 
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
 HDR_T4
     cat "${_tmp_t4}"
+
+    cat <<'HDR_T5'
+
+### T5: Declarative Workloads, Application Stacks & Stateful Constellations
+
+| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+|---|---|---|---|---|---|---|---|---|
+HDR_T5
+    cat "${_tmp_t5}"
+
+    cat <<'HDR_PA'
+
+### Plane A (Traits): Unified Cross-Cutting Node Traits
+
+| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+|---|---|---|---|---|---|---|---|---|
+HDR_PA
+    cat "${_tmp_pa}"
   } >"${_tmp_table}"
 
-  rm -f "${_tmp_t1}" "${_tmp_t15}" "${_tmp_t2}" "${_tmp_t3}" "${_tmp_t4}"
+  rm -f "${_tmp_t1}" "${_tmp_t2}" "${_tmp_t3}" "${_tmp_t4}" "${_tmp_t5}" "${_tmp_pa}"
 
   if [ -n "${_tmp_json}" ]; then
     printf '
@@ -727,10 +722,10 @@ update_testing_todo_plan() {
         _readme_key="${_comp_short}"
         case "${_comp_ref}" in
           _lib/bootloaders/*) _readme_key="bootloaders/${_comp_short}" ;;
-          _lib/freebsd/distro) _readme_key="freebsd/distro" ;;
-          _lib/illumos/distro) _readme_key="illumos/distro" ;;
-          _lib/storage) _readme_key="storage/provision_disk" ;;
-          _lib/runtimes/provision_isolated_runtime) _readme_key="runtimes/provision_isolated_runtime" ;;
+          synthesis/distro/freebsd) _readme_key="freebsd/distro" ;;
+          synthesis/distro/illumos) _readme_key="illumos/distro" ;;
+          synthesis/disk) _readme_key="storage/provision_disk" ;;
+          synthesis/vfs/provision_isolated_runtime) _readme_key="runtimes/provision_isolated_runtime" ;;
           topologies/*|payloads/*|traits/*) _readme_key="${_comp_ref}" ;;
         esac
 
@@ -858,7 +853,7 @@ update_todo_plan() {
           freebsd/distro) _marker_comp='freebsd-distro' ;;
           illumos/distro) _marker_comp='illumos-distro' ;;
           bootloaders/*) _marker_comp="bootloaders-${_comp_short}" ;;
-          payloads/schedulers/*) _marker_comp="scheduler-${_comp_short}" ;;
+          workloads/schedulers/*) _marker_comp="scheduler-${_comp_short}" ;;
           traits/*) _marker_comp="trait-${_comp_short}" ;;
         esac
         _current_comp="${_comp_short}"

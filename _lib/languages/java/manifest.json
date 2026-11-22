@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "java",
-  "title": "Java Toolchain",
-  "description": "Java Development Kit (JDK) and runtime environment.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["runtime", "java", "jre", "jdk"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Java Development Kit (JDK) and runtime environment.",
+  "name": "java",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["runtime", "java", "jre", "jdk"],
   "repository": "https://github.com/adoptium/temurin21-binaries",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Java Toolchain"
 }

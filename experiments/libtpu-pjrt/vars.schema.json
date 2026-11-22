@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/toolchains/libtpu-rs/vars.schema.json",
-  "title": "libtpu-rs variables",
+  "$id": "/experiments/libtpu-pjrt/vars.schema.json",
+  "title": "libtpu-pjrt experiment variables",
   "description": "Configuration variables for libtpu-rs",
   "type": "object",
   "properties": {

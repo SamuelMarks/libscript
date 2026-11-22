@@ -1,0 +1,109 @@
+@echo off
+:: # ch5_jumpbox_to_targets.cmd
+:: ## Overview
+:: Automates Ch5 of Kubernetes the Hard Way.
+:: ## Usage
+:: Executes the steps for Ch5.
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+set "DIR=!SCRIPT_DIR!"
+
+set MACHINES_TXT=%DIR%\\kubernetes-the-hard-way\machines.txt
+set NODES=
+for /f "tokens=3" %%a in ('type "%MACHINES_TXT%" ^| findstr "node-"') do (
+  set NODES=!NODES! %%a
+)
+if "!NODES!"=="" set NODES=node-0 node-1
+for /f "tokens=1,3" %%i in ('type "%MACHINES_TXT%" ^| findstr "server"' ) do if "%%j"=="server" set SERVER_IP=%%i
+if "!SERVER_IP!"=="" set SERVER_IP=192.168.56.10
+for %%H in (%NODES%) do (
+  ssh root@%%H "mkdir -p /var/lib/kubelet/"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\ca.crt" "root@%%H" "/var/lib/kubelet/"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%H.crt" "root@%%H" "/var/lib/kubelet/kubelet.crt"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%H.key" "root@%%H" "/var/lib/kubelet/kubelet.key"
+)
+
+for %%H in (%NODES%) do (
+  kubectl config set-cluster %DIR%\\kubernetes-the-hard-way --certificate-authority="%LIBSCRIPT_DATA_DIR%\ca.crt" --embed-certs=true --server=https://!SERVER_IP!:6443 --kubeconfig="%LIBSCRIPT_DATA_DIR%\%%H.kubeconfig"
+  kubectl config set-credentials system:node:%%H --client-certificate="%LIBSCRIPT_DATA_DIR%\%%H.crt" --client-key="%LIBSCRIPT_DATA_DIR%\%%H.key" --embed-certs=true --kubeconfig="%LIBSCRIPT_DATA_DIR%\%%H.kubeconfig"
+  kubectl config set-context default --cluster=%DIR%\\kubernetes-the-hard-way --user=system:node:%%H --kubeconfig="%LIBSCRIPT_DATA_DIR%\%%H.kubeconfig"
+  kubectl config use-context default --kubeconfig="%LIBSCRIPT_DATA_DIR%\%%H.kubeconfig"
+)
+
+kubectl config set-cluster %DIR%\\kubernetes-the-hard-way --certificate-authority="%LIBSCRIPT_DATA_DIR%\ca.crt" --embed-certs=true --server=https://!SERVER_IP!:6443 --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-proxy.kubeconfig"
+kubectl config set-credentials system:kube-proxy --client-certificate="%LIBSCRIPT_DATA_DIR%\kube-proxy.crt" --client-key="%LIBSCRIPT_DATA_DIR%\kube-proxy.key" --embed-certs=true --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-proxy.kubeconfig"
+kubectl config set-context default --cluster=%DIR%\\kubernetes-the-hard-way --user=system:kube-proxy --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-proxy.kubeconfig"
+kubectl config use-context default --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-proxy.kubeconfig"
+
+kubectl config set-cluster %DIR%\\kubernetes-the-hard-way --certificate-authority="%LIBSCRIPT_DATA_DIR%\ca.crt" --embed-certs=true --server=https://!SERVER_IP!:6443 --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-controller-manager.kubeconfig"
+kubectl config set-credentials system:kube-controller-manager --client-certificate="%LIBSCRIPT_DATA_DIR%\kube-controller-manager.crt" --client-key="%LIBSCRIPT_DATA_DIR%\kube-controller-manager.key" --embed-certs=true --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-controller-manager.kubeconfig"
+kubectl config set-context default --cluster=%DIR%\\kubernetes-the-hard-way --user=system:kube-controller-manager --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-controller-manager.kubeconfig"
+kubectl config use-context default --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-controller-manager.kubeconfig"
+
+kubectl config set-cluster %DIR%\\kubernetes-the-hard-way --certificate-authority="%LIBSCRIPT_DATA_DIR%\ca.crt" --embed-certs=true --server=https://!SERVER_IP!:6443 --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-scheduler.kubeconfig"
+kubectl config set-credentials system:kube-scheduler --client-certificate="%LIBSCRIPT_DATA_DIR%\kube-scheduler.crt" --client-key="%LIBSCRIPT_DATA_DIR%\kube-scheduler.key" --embed-certs=true --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-scheduler.kubeconfig"
+kubectl config set-context default --cluster=%DIR%\\kubernetes-the-hard-way --user=system:kube-scheduler --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-scheduler.kubeconfig"
+kubectl config use-context default --kubeconfig="%LIBSCRIPT_DATA_DIR%\kube-scheduler.kubeconfig"
+
+kubectl config set-cluster %DIR%\\kubernetes-the-hard-way --certificate-authority="%LIBSCRIPT_DATA_DIR%\ca.crt" --embed-certs=true --server=https://127.0.0.1:6443 --kubeconfig="%LIBSCRIPT_DATA_DIR%\admin.kubeconfig"
+kubectl config set-credentials admin --client-certificate="%LIBSCRIPT_DATA_DIR%\admin.crt" --client-key="%LIBSCRIPT_DATA_DIR%\admin.key" --embed-certs=true --kubeconfig="%LIBSCRIPT_DATA_DIR%\admin.kubeconfig"
+kubectl config set-context default --cluster=%DIR%\\kubernetes-the-hard-way --user=admin --kubeconfig="%LIBSCRIPT_DATA_DIR%\admin.kubeconfig"
+kubectl config use-context default --kubeconfig="%LIBSCRIPT_DATA_DIR%\admin.kubeconfig"
+
+for %%H in (%NODES%) do (
+  ssh root@%%H "mkdir -p /var/lib/kube-proxy /var/lib/kubelet"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\kube-proxy.kubeconfig" "root@%%H" "/var/lib/kube-proxy/kubeconfig"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%H.kubeconfig" "root@%%H" "/var/lib/kubelet/kubeconfig"
+)
+
+for %%f in (admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig) do (
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%f" "root@server" "~/"
+)

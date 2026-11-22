@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "freertos",
-  "title": "FreeRTOS Real-Time Kernel",
-  "description": "FreeRTOS C11 real-time kernel source manager, FreeRTOSConfig.h synthesizer, and multi-architecture firmware/simulator builder.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "kernel-image"],
   "category": "kernel",
-  "provides": ["freertos-kernel", "freertos-lts", "freertos-mainline"],
+  "description": "FreeRTOS C11 real-time kernel source manager, FreeRTOSConfig.h synthesizer, and multi-architecture firmware/simulator builder.",
+  "name": "freertos",
   "os_whitelist": ["all"],
+  "provides": ["freertos-kernel", "freertos-lts", "freertos-mainline"],
   "repository": "https://github.com/FreeRTOS/FreeRTOS-Kernel",
-  "capabilities": ["versioned-artifact", "os-synthesizer"]
+  "tier": "T2",
+  "title": "FreeRTOS Real-Time Kernel"
 }

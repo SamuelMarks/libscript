@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ufw",
-  "title": "Uncomplicated Firewall (UFW)",
-  "description": "Uncomplicated Firewall (ufw) command-line host firewall configuration frontend for netfilter/iptables and nftables.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "networking",
-  "provides": ["ufw"],
+  "description": "Uncomplicated Firewall (ufw) command-line host firewall configuration frontend for netfilter/iptables and nftables.",
+  "name": "ufw",
   "os_whitelist": ["linux"],
+  "provides": ["ufw"],
   "repository": "https://git.launchpad.net/ufw",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Uncomplicated Firewall (UFW)"
 }

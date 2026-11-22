@@ -1,7 +1,7 @@
 @echo off
 :: # validate_lfs_profile.cmd
 :: ## Overview
-:: Windows Batch companion validating declarative Linux From Scratch (LFS) profile specifications against os-config.schema.json, checking modular init, display, desktop, and bootloader combinations.
+:: Windows Batch companion validating declarative Linux From Scratch (LFS) profile specifications against synthesis/schemas/os-config.schema.json, checking modular init, display, desktop, and bootloader combinations.
 :: ## Usage
 :: cli\commands\config\validate_lfs_profile.cmd <profile.json>
 
@@ -71,8 +71,8 @@ IF NOT EXIST "%PROFILE_FILE%" (
 echo === LibScript LFS Profile Validator (Win32) ===
 echo [INFO] Validating profile: %PROFILE_FILE%
 
-IF NOT EXIST "!LIBSCRIPT_ROOT_DIR!\os-config.schema.json" (
-    echo [ERROR] Schema file not found: !LIBSCRIPT_ROOT_DIR!\os-config.schema.json >&2
+IF NOT EXIST "!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/os-config.schema.json" (
+    echo [ERROR] Schema file not found: !LIBSCRIPT_ROOT_DIR!\synthesis/schemas/os-config.schema.json >&2
     exit /b 1
 )
 

@@ -1,16 +1,17 @@
 {
-  "name": "porg",
-  "title": "Porg",
-  "description": "Package organizer with LD_PRELOAD logging for LFS",
-  "provides": ["porg"],
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Package organizer with LD_PRELOAD logging for LFS",
+  "name": "porg",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["porg"],
+  "tier": "T1",
+  "title": "Porg",
+  "versions": ["1.0.0"]
 }

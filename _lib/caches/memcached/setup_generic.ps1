@@ -14,7 +14,7 @@ Managed by libscript. Provides download, install, ls, ls-remote, use capabilitie
 
 $ErrorActionPreference = "Stop"
 $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+. (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
 
 
 $Action = $env:ACTION
@@ -161,7 +161,7 @@ if ($Action -eq "install") {
 if ($Action -match "^(start|stop|restart|status|health|logs|up|down)$") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
         $Root = (Join-Path (Join-Path (Join-Path $PSScriptRoot "..") "..") "..")
-        . (Join-Path $Root "_lib\_common\service.ps1")
+        . (Join-Path $Root "engine\common\service.ps1")
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_memcached" }
         libscript_service $Action $ServiceName
     } else {
@@ -173,7 +173,7 @@ if ($Action -match "^(start|stop|restart|status|health|logs|up|down)$") {
 if ($Action -eq "install-service") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
         $Root = (Join-Path (Join-Path (Join-Path $PSScriptRoot "..") "..") "..")
-        . (Join-Path $Root "_lib\_common\service_install.ps1")
+        . (Join-Path $Root "engine\common\service_install.ps1")
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_memcached" }
         libscript_install_service $ServiceName
     } else {
@@ -185,7 +185,7 @@ if ($Action -eq "install-service") {
 if ($Action -eq "uninstall-service") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
         $Root = (Join-Path (Join-Path (Join-Path $PSScriptRoot "..") "..") "..")
-        . (Join-Path $Root "_lib\_common\service_install.ps1")
+        . (Join-Path $Root "engine\common\service_install.ps1")
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_memcached" }
         libscript_uninstall_service $ServiceName
     } else {

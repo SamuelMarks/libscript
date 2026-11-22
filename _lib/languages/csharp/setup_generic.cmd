@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%CSHARP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%CSHARP_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%CSHARP_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%CSHARP_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/dotnet/sdk" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%CSHARP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading csharp %CSHARP_VERSION% to %DOWNLOAD_DIR%\csharp...
     if not exist "%DOWNLOAD_DIR%\csharp" mkdir "%DOWNLOAD_DIR%\csharp"
     if not "%CSHARP_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CSHARP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\csharp\csharp-%CSHARP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CSHARP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\csharp\csharp-%CSHARP_VERSION%.zip"
     ) else (
         echo CSHARP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CSHARP_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends csharp
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends csharp
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\csharp\csharp-%CSHARP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CSHARP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CSHARP_DOWNLOAD_URL%" "%TEMP%\csharp.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CSHARP_DOWNLOAD_URL%" "%TEMP%\csharp.zip"
         tar -xf "%TEMP%\csharp.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for csharp.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "csharp" "%ACTION%" "%CSHARP_VERSION%" "%CSHARP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\csharp\%CSHARP_VERSION%\\bin\\csharp.exe\"" "%LIBSCRIPT_HOME%\csharp\%CSHARP_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "csharp" "%ACTION%" "%CSHARP_VERSION%" "%CSHARP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\csharp\%CSHARP_VERSION%\\bin\\csharp.exe\"" "%LIBSCRIPT_HOME%\csharp\%CSHARP_VERSION%"
 exit /b !errorlevel!

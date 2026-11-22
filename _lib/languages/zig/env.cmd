@@ -50,7 +50,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "zig"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "zig"
 
 if "%ZIG_VERSION%"=="" set "ZIG_VERSION=0.12.0"
 if "%ZIG_VERSION%"=="latest" set "ZIG_VERSION=0.12.0"

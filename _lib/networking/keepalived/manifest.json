@@ -1,13 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "keepalived",
-  "title": "Keepalived VRRP & LVS High-Availability Daemon",
-  "description": "Keepalived VRRPv2/v3 virtual router redundancy and Linux Virtual Server (IPVS) load-balancing healthcheck daemon.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "networking",
-  "provides": ["keepalived"],
-  "os_whitelist": ["linux"],
-  "repository": "https://github.com/acassen/keepalived",
+  "description": "Keepalived VRRPv2/v3 virtual router redundancy and Linux Virtual Server (IPVS) load-balancing healthcheck daemon.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -20,9 +18,12 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact"]
+  "name": "keepalived",
+  "os_whitelist": ["linux"],
+  "provides": ["keepalived"],
+  "repository": "https://github.com/acassen/keepalived",
+  "tier": "T1",
+  "title": "Keepalived VRRP & LVS High-Availability Daemon"
 }

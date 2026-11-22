@@ -69,7 +69,7 @@ name (`provision_instance`):
                                              v
      +---------------------------------------+---------------------------------------+
      | [i_deprovision_instance] (deprovision_instance)                               |
-     |     - Tears down compute node, VNet, and NSG (cli/commands/cloud/deprovision) |
+     |     - Tears down compute node, VNet, and NSG (infrastructure/cli_actions/deprovision) |
      |     - Preserves all transferred host logs and transfer-manifest.json          |
      +-------------------------------------------------------------------------------+
 ```
@@ -78,7 +78,7 @@ name (`provision_instance`):
 | :----------------------------------- | :------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`a_provision_instance`**           | `provision_instance`                                     | Provisions the cloud host (default `160-vCPU Standard_D160ads_v7` on Azure), waits for SSH, and syncs LibScript.                                                                       |
 | **`b_use_bento_fork`**               | `use_bento_fork`                                         | Clones/updates `https://github.com/SamuelMarks/bento.git` and checks out branch `multi-os-qemu-aarch64`.                                                                               |
-| **`c_install_virtualization_stack`** | `install_virtualization_stack`                           | Installs Vagrant, Packer, Ruby, QEMU, VirtualBox, and ISO tools via LibScript's reusable `_lib/virtualization/bento-builder` stack.                                                    |
+| **`c_install_virtualization_stack`** | `install_virtualization_stack`                           | Installs Vagrant, Packer, Ruby, QEMU, VirtualBox, and ISO tools via LibScript's reusable `synthesis/distro/bento` stack.                                                               |
 | **`d_deploy_vagrant_box`**           | `deploy_vagrant_box`                                     | Registers Bento `.box` images (`tests/register_bento_boxes.{sh,cmd}`) and boots `vagrant/<target_os>`.                                                                                 |
 | **`e_snapshot_vagrant_box`**         | `snapshot_vagrant_box`                                   | Captures an idempotent clean baseline snapshot (`vanilla`) of the target OS Vagrant VM.                                                                                                |
 | **`f_test_libscript_components`**    | `test_libscript_components`, `run_experiments`           | Runs every component (or filtered `--component`, `--version`, `--pkg-mgr`), restoring the `vanilla` snapshot before each component and running **twice (`2x`)** to verify idempotency. |
@@ -93,7 +93,7 @@ name (`provision_instance`):
 ## 2. Parameter Reference
 
 All parameters can be passed as CLI flags or environment variables (documented in
-`_lib/cloud/core/vars.schema.json`):
+`infrastructure/resources/core/vars.schema.json`):
 
 | CLI Flag                                        | Environment Variable                         | Default                                    | Description                                                                                                                                                                                                                 |
 | :---------------------------------------------- | :------------------------------------------- | :----------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -194,10 +194,10 @@ Every step can be executed individually by its lexicographical step name or unpr
 ## 4. Multi-Suite SIGPLAN Empirical Evaluation (`--suite=libtpu|edgcpp|manifest`)
 
 Beyond Bento Vagrant OS matrices, LibScript's experiment runner provides a zero-dependency
-statistical, provenance, and LaTeX macro synthesis substrate (`_lib/_common/experiment/harness.sh`
-and `.cmd`, plus `_lib/_common/experiment/c_probes/libscript_bench_probe.c`, governed by
-`experiment-suite.schema.json`) enforcing SIGPLAN empirical evaluation invariants (`RULE-1` through
-`RULE-7`):
+statistical, provenance, and LaTeX macro synthesis substrate (`experiments/_common/harness.sh` and
+`.cmd`, plus `experiments/_common/c_probes/libscript_bench_probe.c`, governed by
+`experiments/schemas/experiment-suite.schema.json`) enforcing SIGPLAN empirical evaluation
+invariants (`RULE-1` through `RULE-7`):
 
 - **`RULE-1` (Single-Source Provenance & LaTeX Emission):** Every `results/*.json` records exact
   40-hex `git_commit_sha`, clean worktree verification, and `host_manifest_ref`; Suite `E8`
@@ -322,11 +322,10 @@ LibScript natively orchestrates the zero-hallucination **EDG C/C++ Multi-Backend
 
 LibScript orchestrates reproducible single-host and multi-host Google Cloud TPU benchmarks under
 strict `$0.00` TPU Research Cloud (TFRC) guardrails (`experiments/gemma-tpu/`,
-`schemas/tfrc-policy.schema.json`, `_lib/ml-training/_common/tfrc_guard.{sh,cmd}`,
-`_lib/ml-training/_common/tpu_matrix.{sh,cmd}`, and legacy wrapper
-`_lib/toolchains/gemma-tpu-suite/`) across all seven Gemma 4 ML framework configurations
-(`hf_transformers`, `pytorch_native`, `keras_jax`, `keras_tensorflow`, `keras_pytorch`, `maxtext`,
-and `jax_native`):
+`engine/schemas/tfrc-policy.schema.json`, `engine/common/tfrc_guard.{sh,cmd}`,
+`workloads/ai/_common/tpu_matrix.{sh,cmd}`, and legacy wrapper `experiments/gemma-tpu/`) across all
+seven Gemma 4 ML framework configurations (`hf_transformers`, `pytorch_native`, `keras_jax`,
+`keras_tensorflow`, `keras_pytorch`, `maxtext`, and `jax_native`):
 
 - **Zero-Cost TFRC Policy Guardrails:** Requires an explicit `tfrc.policy.json`, blocks GKE/XPK,
   strips `DISK_SIZE_GB` / `TPU_DATA_DISK_SIZE`, enforces same-region GCS parity when `--gcs-bucket`
@@ -357,7 +356,7 @@ call ..\libscript\libscript.cmd experiment tpu_matrix "--tfrc-config=tfrc.policy
 
 Any stack with a `_lib/<category>/<app>/packaging.json` manifest (`openedx`, `wordpress`, `odoo`,
 etc.) can run end-to-end Vagrant + native package + guest UI/browser login experiments via
-`_lib/_common/experiment/pkg_ui_runner.{sh,cmd}` without writing custom runner logic:
+`experiments/_common/pkg_ui_runner.{sh,cmd}` without writing custom runner logic:
 
 ```sh
 # Run Open edX MSI from GitHub Releases across headless, quick, and custom modes on clean vanilla snapshots

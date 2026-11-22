@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "vcredist"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "vcredist"
 
 endlocal & (
     set "PATH=%PATH%"

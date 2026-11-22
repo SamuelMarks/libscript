@@ -1,14 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "prometheus",
-  "title": "Prometheus",
-  "description": "Cloud-native dimensional time-series monitoring server, PromQL query engine, and alerting toolkit.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "logging",
-  "provides": ["prometheus", "metrics-server", "observability"],
-  "os_whitelist": ["all"],
-  "ports": [9090],
-  "repository": "https://github.com/prometheus/prometheus",
+  "description": "Cloud-native dimensional time-series monitoring server, PromQL query engine, and alerting toolkit.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -21,9 +18,13 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "prometheus",
+  "os_whitelist": ["all"],
+  "ports": [9090],
+  "provides": ["prometheus", "metrics-server", "observability"],
+  "repository": "https://github.com/prometheus/prometheus",
+  "tier": "T1",
+  "title": "Prometheus"
 }

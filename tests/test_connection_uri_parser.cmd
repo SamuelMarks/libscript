@@ -54,7 +54,7 @@ goto :find_root
 echo ==> Testing Connection URI Parser on Windows...
 
 echo [TEST 1] Testing MySQL URI parsing...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\parse_connection_uri.cmd" "mysql://usr_test:p%%40ss%%23word@db.example.org:3308/sample_db?ssl-ca=/etc/ssl/ca.pem&timeout=15" --eval > "%TEMP%\test_uri_1.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_connection_uri.cmd" "mysql://usr_test:p%%40ss%%23word@db.example.org:3308/sample_db?ssl-ca=/etc/ssl/ca.pem&timeout=15" --eval > "%TEMP%\test_uri_1.cmd"
 call "%TEMP%\test_uri_1.cmd"
 if not "%DB_ENGINE%"=="mysql" ( echo Failed ENGINE & exit /b 1 )
 if not "%DB_HOST%"=="db.example.org" ( echo Failed HOST & exit /b 1 )
@@ -65,25 +65,25 @@ if not "%DB_PASSWORD%"=="p@ss#word" ( echo Failed PASSWORD & exit /b 1 )
 if not "%DB_USE_SSL%"=="1" ( echo Failed SSL & exit /b 1 )
 
 echo [TEST 2] Testing PostgreSQL URI parsing...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\parse_connection_uri.cmd" "postgres://pg_admin:secure%%20token@127.0.0.1:5432/enterprise_db" --eval > "%TEMP%\test_uri_2.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_connection_uri.cmd" "postgres://pg_admin:secure%%20token@127.0.0.1:5432/enterprise_db" --eval > "%TEMP%\test_uri_2.cmd"
 call "%TEMP%\test_uri_2.cmd"
 if not "%DB_ENGINE%"=="postgres" ( echo Failed ENGINE & exit /b 1 )
 if not "%DB_PASSWORD%"=="secure token" ( echo Failed PASSWORD & exit /b 1 )
 
 echo [TEST 3] Testing SQLite URI parsing...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\parse_connection_uri.cmd" "sqlite:///C:/var/lib/app/data.db" --eval > "%TEMP%\test_uri_3.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_connection_uri.cmd" "sqlite:///C:/var/lib/app/data.db" --eval > "%TEMP%\test_uri_3.cmd"
 call "%TEMP%\test_uri_3.cmd"
 if not "%DB_ENGINE%"=="sqlite" ( echo Failed ENGINE & exit /b 1 )
 if not "%DB_NAME%"=="C:/var/lib/app/data.db" ( echo Failed PATH & exit /b 1 )
 
 echo [TEST 4] Testing MongoDB URI parsing...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\parse_connection_uri.cmd" "mongodb://mongo_admin:p%%25ass%%26w%%3Dord@10.0.0.5:27017/admin?authSource=admin&replicaSet=rs0" --eval > "%TEMP%\test_uri_4.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_connection_uri.cmd" "mongodb://mongo_admin:p%%25ass%%26w%%3Dord@10.0.0.5:27017/admin?authSource=admin&replicaSet=rs0" --eval > "%TEMP%\test_uri_4.cmd"
 call "%TEMP%\test_uri_4.cmd"
 if not "%DB_ENGINE%"=="mongodb" ( echo Failed ENGINE & exit /b 1 )
 if not "%DB_PASSWORD%"=="p%%ass&w=ord" ( echo Failed PASSWORD & exit /b 1 )
 
 echo [TEST 5] Testing Redis URI parsing...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\parse_connection_uri.cmd" "redis://:super_s3cr3t@cache.local:6379/1" --eval > "%TEMP%\test_uri_5.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_connection_uri.cmd" "redis://:super_s3cr3t@cache.local:6379/1" --eval > "%TEMP%\test_uri_5.cmd"
 call "%TEMP%\test_uri_5.cmd"
 if not "%DB_ENGINE%"=="redis" ( echo Failed ENGINE & exit /b 1 )
 if not "%DB_PASSWORD%"=="super_s3cr3t" ( echo Failed PASSWORD & exit /b 1 )

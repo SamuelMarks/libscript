@@ -84,7 +84,7 @@ exit /b 0
 set "CACHE_DIR=%LIBSCRIPT_ROOT_DIR%\cache\zephyr"
 if not exist "!CACHE_DIR!" mkdir "!CACHE_DIR!"
 set "URL=https://github.com/zephyrproject-rtos/zephyr/archive/refs/tags/v!EXACT_VERSION!.zip"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!CACHE_DIR!\zephyr-v!EXACT_VERSION!.zip"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!CACHE_DIR!\zephyr-v!EXACT_VERSION!.zip"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -98,15 +98,15 @@ if exist "!TARGET_DIR!\bin\zephyr-env-check.cmd" if not "%FORCE_REINSTALL%"=="1"
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 > "!TARGET_DIR!\bin\zephyr-env-check.cmd" echo @echo Zephyr RTOS Kernel !EXACT_VERSION! ^(ZEPHYR_BASE=!TARGET_DIR!^)
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "zephyr" "%ZEPHYR_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "zephyr" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "zephyr" "%ZEPHYR_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "zephyr" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_use
 :: Switches active Zephyr version alias.
 :action_use
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "zephyr" "%ZEPHYR_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "zephyr" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "zephyr" "%ZEPHYR_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "zephyr" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_assemble
@@ -119,5 +119,5 @@ exit /b !errorlevel!
 :: ## action_other
 :: Delegates generic service/uninstall actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "zephyr" "%ACTION%" "%ZEPHYR_VERSION%" "libscript_native" "" "" "" "%LIBSCRIPT_HOME%\zephyr\!EXACT_VERSION!\bin\zephyr-env-check.cmd" "%LIBSCRIPT_HOME%\zephyr\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "zephyr" "%ACTION%" "%ZEPHYR_VERSION%" "libscript_native" "" "" "" "%LIBSCRIPT_HOME%\zephyr\!EXACT_VERSION!\bin\zephyr-env-check.cmd" "%LIBSCRIPT_HOME%\zephyr\!EXACT_VERSION!"
 exit /b !errorlevel!

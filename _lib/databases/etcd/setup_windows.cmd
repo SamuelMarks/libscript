@@ -61,7 +61,7 @@ set "TEMP_ZIP=%TEMP%\etcd.zip"
 set "TEMP_EXTRACT=%TEMP%\etcd_extract"
 
 echo Downloading etcd from %URL%...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download etcd.
     exit /b 1

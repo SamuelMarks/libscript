@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%SCOOP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%SCOOP_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%SCOOP_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%SCOOP_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/ScoopInstaller/Scoop" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%SCOOP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading scoop %SCOOP_VERSION% to %DOWNLOAD_DIR%\scoop...
     if not exist "%DOWNLOAD_DIR%\scoop" mkdir "%DOWNLOAD_DIR%\scoop"
     if not "%SCOOP_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SCOOP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\scoop\scoop-%SCOOP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SCOOP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\scoop\scoop-%SCOOP_VERSION%.zip"
     ) else (
         echo SCOOP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SCOOP_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends scoop
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends scoop
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\scoop\scoop-%SCOOP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SCOOP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SCOOP_DOWNLOAD_URL%" "%TEMP%\scoop.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SCOOP_DOWNLOAD_URL%" "%TEMP%\scoop.zip"
         tar -xf "%TEMP%\scoop.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for scoop.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "scoop" "%ACTION%" "%SCOOP_VERSION%" "%SCOOP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\scoop\%SCOOP_VERSION%\\bin\\scoop.exe\"" "%LIBSCRIPT_HOME%\scoop\%SCOOP_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "scoop" "%ACTION%" "%SCOOP_VERSION%" "%SCOOP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\scoop\%SCOOP_VERSION%\\bin\\scoop.exe\"" "%LIBSCRIPT_HOME%\scoop\%SCOOP_VERSION%"
 exit /b !errorlevel!

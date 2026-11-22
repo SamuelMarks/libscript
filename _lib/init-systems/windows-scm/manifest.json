@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "windows-scm",
-  "title": "Windows Service Control Manager (sc.exe) Adapter",
-  "description": "Windows Service Control Manager (SCM / sc.exe) native service lifecycle adapter and cross-platform compatibility shim.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "init-systems",
-  "provides": ["windows-scm", "sc", "sc.exe"],
+  "description": "Windows Service Control Manager (SCM / sc.exe) native service lifecycle adapter and cross-platform compatibility shim.",
+  "name": "windows-scm",
   "os_whitelist": ["windows"],
+  "provides": ["windows-scm", "sc", "sc.exe"],
   "repository": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/sc-create",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T2",
+  "title": "Windows Service Control Manager (sc.exe) Adapter"
 }

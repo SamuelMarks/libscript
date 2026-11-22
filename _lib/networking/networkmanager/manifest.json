@@ -1,16 +1,17 @@
 {
-  "name": "networkmanager",
-  "title": "NetworkManager",
-  "description": "Universal network configuration and management daemon",
-  "provides": ["networkmanager"],
+  "capabilities": ["sysroot-package"],
   "category": "networking",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Universal network configuration and management daemon",
+  "name": "networkmanager",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["networkmanager"],
+  "tier": "T2",
+  "title": "NetworkManager",
+  "versions": ["1.0.0"]
 }

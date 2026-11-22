@@ -45,7 +45,7 @@ printf '=== Testing Universal Dependency License Harvester ===\n'
 # Test 1: Single leaf component harvesting (caches/redis)
 printf '[TEST 1] Harvesting single leaf component (_lib/caches/redis)...\n'
 OUT_REDIS="${TEST_TMP_DIR}/redis_licenses"
-"${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis" --out-dir "$OUT_REDIS" --force
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis" --out-dir "$OUT_REDIS" --force
 
 if [ ! -f "$OUT_REDIS/licenses_manifest.json" ]; then
   printf '[FAIL] Expected licenses_manifest.json not found in %s\n' "$OUT_REDIS" >&2
@@ -73,10 +73,10 @@ if ! head -n 1 "$OUT_REDIS/redis_license.rtf" | grep -q 'rtf1'; then
 fi
 printf '[PASS] Verified RTF file structure for redis\n'
 
-# Test 2: Composite stack harvesting (_lib/web-apps/openedx)
-printf '[TEST 2] Harvesting composite stack (_lib/web-apps/openedx)...\n'
+# Test 2: Composite stack harvesting (workloads/apps/openedx)
+printf '[TEST 2] Harvesting composite stack (workloads/apps/openedx)...\n'
 OUT_OPENEDX="${TEST_TMP_DIR}/openedx_licenses"
-"${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx" --out-dir "$OUT_OPENEDX" --force
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx" --out-dir "$OUT_OPENEDX" --force
 
 if [ ! -f "$OUT_OPENEDX/licenses_manifest.json" ]; then
   printf '[FAIL] Missing licenses_manifest.json for Open edX\n' >&2
@@ -104,7 +104,7 @@ done
 printf '[TEST 3] Testing idempotency of license harvester...\n'
 _stamp_before=$(stat -f %m "$OUT_OPENEDX/.stamp.licenses_harvested" 2>/dev/null || stat -c %Y "$OUT_OPENEDX/.stamp.licenses_harvested")
 sleep 1
-"${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx" --out-dir "$OUT_OPENEDX"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx" --out-dir "$OUT_OPENEDX"
 _stamp_after=$(stat -f %m "$OUT_OPENEDX/.stamp.licenses_harvested" 2>/dev/null || stat -c %Y "$OUT_OPENEDX/.stamp.licenses_harvested")
 
 if [ "$_stamp_before" != "$_stamp_after" ]; then

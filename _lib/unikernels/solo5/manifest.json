@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
+  "category": "unikernels",
+  "description": "Sandboxed execution environment for unikernels using KVM/bhyve",
+  "name": "solo5",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux"],
+  "provides": ["solo5"],
+  "tier": "T2",
+  "title": "Solo5"
+}

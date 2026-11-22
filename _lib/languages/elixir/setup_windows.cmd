@@ -67,7 +67,7 @@ if errorlevel 1 (
 
 echo Installing Elixir via pkg_mgr...
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco elixir
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends_via choco elixir
 if not errorlevel 1 exit /b 0
 
 echo Failed to install elixir.

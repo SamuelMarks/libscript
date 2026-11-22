@@ -104,7 +104,7 @@ exit /b 0
 :: ## run_all_experiments
 :: Executes the experiment matrix and writes the JSON report and LaTeX tables on Windows.
 :run_all_experiments
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\hw_tune.cmd" :libscript_prepare_benchmark_host
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\hw_tune.cmd" :libscript_prepare_benchmark_host
 call "!SCRIPT_DIR!\torture_suite.cmd" --compiler=EDG-LLVM
 call :generate_latex_tables
 for %%F in ("!EXPERIMENTS_REPORT_JSON!") do set "_rep_dir=%%~dpF"

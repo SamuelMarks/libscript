@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "python-server",
-  "title": "Python App Server",
-  "description": "Generic Python application server component (WSGI/ASGI).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["app-server", "python", "wsgi", "asgi"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Generic Python application server component (WSGI/ASGI).",
+  "name": "python-server",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["app-server", "python", "wsgi", "asgi"],
+  "tier": "T1",
+  "title": "Python App Server"
 }

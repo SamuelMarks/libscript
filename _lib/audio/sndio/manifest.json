@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "sndio",
-  "title": "OpenBSD sndio Audio & MIDI Framework",
-  "description": "Lightweight OpenBSD audio and MIDI server daemon and library (sndiod, aucat, sndioctl).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "audio",
-  "provides": ["sndio", "sndiod", "aucat"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "description": "Lightweight OpenBSD audio and MIDI server daemon and library (sndiod, aucat, sndioctl).",
+  "name": "sndio",
   "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "provides": ["sndio", "sndiod", "aucat"],
   "repository": "https://sndio.org/",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T2",
+  "title": "OpenBSD sndio Audio & MIDI Framework"
 }

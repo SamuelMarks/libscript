@@ -1,0 +1,11 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "inference-router",
+  "title": "TPU & Accelerator Inference Workload Router",
+  "description": "Cloud TPU and GPU inference workload operator routing serving payloads through workloads/engine.",
+  "category": "ai-serving",
+  "provides": ["inference-router", "ai-serving", "tpu-vm-vllm"],
+  "capabilities": ["cloud-operator"],
+  "adapter_only": true,
+  "os_whitelist": ["all"]
+}

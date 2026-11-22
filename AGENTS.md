@@ -33,7 +33,7 @@ the decentralized, reusable architecture.
 
 **NEVER** create standalone installation scripts (e.g., `install_nginx.sh`, `setup_tools.ps1`,
 `build_deps.sh`) in `devtools/`, `tests/`, or the root directory. If a new tool, language, or
-service is required, you **MUST** create a fully compliant, standalone Tier 1 recipe in
+service is required, you **MUST** create a fully compliant, standalone `T1` or `T2` recipe in
 `_lib/<category>/<component>/`.
 
 **WRONG (Anti-Pattern)**: Writing loose scripts that invoke OS package managers directly:
@@ -46,7 +46,7 @@ winget install Git.Git
 
 **RIGHT (The Only Acceptable Way)**: Depend on the canonical LibScript components (e.g.,
 `_lib/languages/c`, `_lib/toolchains/cmake`). If the component does not exist, author it as a new
-Tier 1 recipe.
+atomic `T1` or `T2` recipe.
 
 ### 🧱 Component Granularity Rule (No "Fat" Recipes)
 
@@ -56,35 +56,37 @@ together).
 
 - Each tool MUST be its own independent, atomic recipe (`_lib/web-servers/apache`,
   `_lib/databases/mysql`).
-- Compositions must happen dynamically via `manifest.json` dependencies or Tier 2 execution plans,
-  never by piling logic into a single Tier 1 setup script.
+- Compositions must happen dynamically via `manifest.json` dependencies, `T3` synthesis execution
+  plans (`synthesis/`), or `T5` declarative application stacks (`workloads/`), never by piling logic
+  into a single `_lib/` setup script.
 
 ### 📜 The Capability-Typed Version Manager Contract
 
-Every software recipe in `_lib/` declares explicit `"capabilities"` in `manifest.json`
-(`"versioned-artifact"`, `"service-daemon"`, `"sysroot-library"`, `"cloud-operator"`,
-`"os-synthesizer"`) and exposes entry points matching its declared capabilities per
-`WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md`:
+Every atomic software recipe in `_lib/` declares an explicit `"tier"` (`"T1"` or `"T2"`) and
+`"capabilities"` in `manifest.json` (`"userland-package"`, `"service-daemon"`, `"sysroot-package"`,
+`"sysroot-library"`, `"cross-toolchain"`, `"kernel-image"`, `"bootloader"`) and exposes entry points
+matching its declared capabilities per `WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md`:
 
 - `cli.sh` / `cli.cmd`: The primary router supporting mandatory verbs (`download`, `install`, `ls`,
-  `ls-remote`, `use`, `uninstall`, plus `target-add`/`component-add` for cross-compilers, and
-  `start`, `stop`, `install-service`, `uninstall-service` strictly when `"service-daemon"` is
-  declared).
-- `setup.sh` / `setup.cmd`: Installation entry point for `"versioned-artifact"` recipes, managing
-  offline caching and delegating to `_lib/_common/setup_base.*`.
+  `ls-remote`, `use` for `T1` userland tools, `uninstall`, plus `target-add`/`component-add` for
+  cross-compilers, and `start`, `stop`, `install-service`, `uninstall-service` strictly when
+  `"service-daemon"` is declared).
+- `setup.sh` / `setup.cmd`: Installation entry point for `"userland-package"` (`T1`) and
+  `"sysroot-package"` (`T2`) recipes, managing offline caching and delegating to
+  `engine/common/setup_base.*`.
 - `env.sh` / `env.cmd`: Exports strictly isolated paths without polluting global shell profiles,
-  while `use` atomically updates `${LIBSCRIPT_HOME}/bin` (`O(1)` `PATH` switching).
+  while `use` atomically updates `${LIBSCRIPT_HOME}/bin` (`O(1)` `PATH` switching on `T1` tools;
+  `use` is rejected with exit code `2` on `T2` sysroot-only recipes).
 - `service.sh` / `service.cmd`: Service daemon management (systemd, launchd, Windows Service),
   required strictly when `"service-daemon"` is declared in `manifest.json` (never add no-op
   `service.*` stubs to pure compilers or CLI tools).
 - `test.sh` / `test.cmd`: Component-specific smoke tests and binary verification.
-- New empirical paper campaigns belong strictly in `experiments/<suite-id>/`
-  (`./libscript.sh experiment scaffold <suite-id>`), never as new `_lib/*/*-suite/` directories
-  (enforced by `EXP_IN_LIB`; only the 3 legacy compatibility wrappers in
-  `_lib/toolchains/{edgcpp-backends-suite,gemma-tpu-suite,win-port-suite}/` are grandfathered).
+- Empirical paper campaigns belong strictly in `experiments/<suite-id>/`
+  (`./libscript.sh experiment scaffold <suite-id>`), never as `_lib/*/*-suite/` directories
+  (unconditionally enforced by `EXP_IN_LIB`).
 
-To rapidly scaffold a new Tier 1 component directory that satisfies all Version Manager Contract,
-`THIS_FILE`, `.cmd` parity, and schema invariants out-of-the-box, use:
+To rapidly scaffold a new `T1` or `T2` component directory that satisfies all Version Manager
+Contract, `THIS_FILE`, `.cmd` parity, and schema invariants out-of-the-box, use:
 
 - **Interactive Prompter**: `./libscript.sh scaffold` (or `.\libscript.cmd scaffold`)
 - **Non-Interactive JSON Spec** (`component-scaffold.schema.json`):
@@ -113,7 +115,7 @@ To consume or require other components from within a recipe:
   call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install c latest
   ```
 - **Artifact Downloads**: Use `libscript_download <url> <dest> [sha256]` provided by
-  `_lib/_common/pkg_mgr.sh` and `_lib/_common/pkg_mgr.cmd`.
+  `engine/common/pkg_mgr.sh` and `engine/common/pkg_mgr.cmd`.
 
 ---
 
@@ -320,9 +322,10 @@ All `*.schema.json` files must provide a non-empty `"description"` for every pro
    triggers an immediate standards violation and hard failure in automated test runners.
 2. **Option A Hard Fail**: Proforma virtualization/chroot scripts (`mount_target_vfs.cmd`,
    `provision_disk.cmd`, etc.) on unsupported architectures must exit with code `86`.
-3. **Recipe Boundaries**: Tier 1 leaf packages (`_lib/*/*`) must not invoke storage/kernel
-   partitioning primitives (`mount`, `umount`, `fdisk`, `mkfs`, `cryptsetup`). Such actions belong
-   strictly to Tier 2 image synthesizers.
+3. **Recipe & Tier Boundaries (`T0`–`T5`)**: `T1` userland packages (`_lib/*/*` with `"tier": "T1"`)
+   must not invoke storage/kernel partitioning primitives (`mount`, `umount`, `fdisk`, `mkfs`,
+   `cryptsetup`), which belong to `T3` image synthesizers (`synthesis/`), and no layer may import a
+   higher tier (`devtools/audit/audit_tiers.{sh,cmd}`).
 4. **Native C11 HTTP Daemon (`libscript-rest-api/`)**: The programmatic REST API server in
    `libscript-rest-api/` is implemented in pure C11 (`.c`/`.h` in `src/`, `c-rest-framework`) and
    governed by the OpenAPI 3.2.0 contract in `libscript-rest-api/openapi.yaml` (not C++ or OpenAPI
@@ -335,8 +338,9 @@ All `*.schema.json` files must provide a non-empty `"description"` for every pro
 Before proposing or finalizing changes, execute the audit suite:
 
 ```sh
-# Audit standards across all staged files
+# Audit engineering standards & T0-T5 tier boundaries
 ./devtools/audit/audit_standards.sh --staged
+./devtools/audit/audit_tiers.sh --all
 
 # Check documentation coverage
 ./devtools/audit/doc_coverage.sh

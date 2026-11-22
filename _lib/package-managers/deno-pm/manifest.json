@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "deno-pm",
-  "provides": ["package-manager", "deno"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "title": "deno",
-  "description": "Bootstrap script for [Deno](https://deno.land), a modern and secure runtime for JavaScript and TypeScript that uses V8 and is built in Rust.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap script for [Deno](https://deno.land), a modern and secure runtime for JavaScript and TypeScript that uses V8 and is built in Rust.",
+  "name": "deno-pm",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "deno"],
+  "tier": "T1",
+  "title": "deno"
 }

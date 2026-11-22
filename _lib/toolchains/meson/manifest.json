@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "meson",
-  "title": "Meson",
-  "description": "The Meson high-productivity build system.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["meson", "build-system"],
+  "description": "The Meson high-productivity build system.",
+  "name": "meson",
   "os_whitelist": ["all"],
+  "provides": ["meson", "build-system"],
   "repository": "https://github.com/mesonbuild/meson",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Meson"
 }

@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%MIX_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MIX_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MIX_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MIX_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/elixir-lang/elixir" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%MIX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mix %MIX_VERSION% to %DOWNLOAD_DIR%\mix...
     if not exist "%DOWNLOAD_DIR%\mix" mkdir "%DOWNLOAD_DIR%\mix"
     if not "%MIX_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mix\mix-%MIX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mix\mix-%MIX_VERSION%.zip"
     ) else (
         echo MIX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MIX_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mix
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends mix
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mix\mix-%MIX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MIX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MIX_DOWNLOAD_URL%" "%TEMP%\mix.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MIX_DOWNLOAD_URL%" "%TEMP%\mix.zip"
         tar -xf "%TEMP%\mix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mix.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "mix" "%ACTION%" "%MIX_VERSION%" "%MIX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mix\%MIX_VERSION%\\bin\\mix.exe\"" "%LIBSCRIPT_HOME%\mix\%MIX_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "mix" "%ACTION%" "%MIX_VERSION%" "%MIX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mix\%MIX_VERSION%\\bin\\mix.exe\"" "%LIBSCRIPT_HOME%\mix\%MIX_VERSION%"
 exit /b !errorlevel!

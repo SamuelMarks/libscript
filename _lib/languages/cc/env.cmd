@@ -65,7 +65,7 @@ if "%CC%"=="" (
     )
 )
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "cc" "%CC_VERSION%" "%LIBSCRIPT_HOME%\cc\%CC_VERSION%\bin"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "cc" "%CC_VERSION%" "%LIBSCRIPT_HOME%\cc\%CC_VERSION%\bin"
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "CC_VERSION=%CC_VERSION%"

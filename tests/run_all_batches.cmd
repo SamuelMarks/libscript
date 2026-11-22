@@ -84,7 +84,7 @@ cd /d "%SCRIPT_DIR%\.." || exit /b 1
 if not exist "TODO_PLAN.md" (
     echo TODO_PLAN.md not found. Generating it...
     for /d %%D in (_lib\*\*) do (
-        if not "%%D"=="_lib\_common\_noop" (
+        if not "%%D"=="engine\common\_noop" (
             set "COMP_PATH=%%D"
             set "COMP_PATH=!COMP_PATH:\=/!"
             echo - [ ] !COMP_PATH!>> TODO_PLAN.md

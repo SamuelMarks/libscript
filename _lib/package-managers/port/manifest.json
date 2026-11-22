@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "port",
-  "title": "BSD Ports / MacPorts",
-  "description": "Unified wrapper recipe for BSD Ports and MacPorts (port) package management.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "provides": ["port", "bsd-ports"],
+  "description": "Unified wrapper recipe for BSD Ports and MacPorts (port) package management.",
+  "name": "port",
   "os_whitelist": ["darwin", "freebsd", "openbsd", "netbsd"],
+  "provides": ["port", "bsd-ports"],
   "repository": "https://github.com/macports/macports-base",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "BSD Ports / MacPorts"
 }

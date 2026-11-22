@@ -50,7 +50,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "sh"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "sh"
 
 if "%SH_VERSION%"=="" set "SH_VERSION=0.5.12"
 if "%SH_VERSION%"=="latest" set "SH_VERSION=0.5.12"

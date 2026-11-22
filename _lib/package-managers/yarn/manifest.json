@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "yarn",
-  "provides": ["package-manager", "yarn"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "title": "yarn",
-  "description": "Bootstrap module for the `yarn` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `yarn` package manager.",
+  "name": "yarn",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "yarn"],
   "repository": "https://github.com/yarnpkg/berry",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "yarn"
 }

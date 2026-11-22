@@ -52,11 +52,11 @@ function Test-MsiGeneration {
     $env:BANNER_SIDE_PATH = Join-Path $TestTmpDir "test_banner_side.bmp"
     $env:LICENSE_PATH = Join-Path $TestTmpDir "LICENSE.txt"
 
-    $templateMsiCmd = Join-Path $LibscriptRootDir "packaging\template_msi.cmd"
+    $templateMsiCmd = Join-Path $LibscriptRootDir "synthesis\msi\template_msi.cmd"
     if (Test-Path $templateMsiCmd) {
         & cmd.exe /c "call `"$templateMsiCmd`""
     } else {
-        $templateMsiSh = Join-Path $LibscriptRootDir "packaging/template_msi.sh"
+        $templateMsiSh = Join-Path $LibscriptRootDir "synthesis/msi/template_msi.sh"
         & /bin/sh "$templateMsiSh"
     }
 

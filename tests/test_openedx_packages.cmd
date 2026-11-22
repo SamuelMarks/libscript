@@ -89,7 +89,7 @@ if not errorlevel 1 (
     echo [INFO] Building .deb package inside VM...
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
     vagrant rsync || rem
-    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as deb _lib/web-apps/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*_*.deb build/openedx-setup.deb"
+    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as deb workloads/apps/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*_*.deb build/openedx-setup.deb"
     goto step1
 )
 echo.!TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
@@ -98,7 +98,7 @@ if not errorlevel 1 (
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
     vagrant rsync || rem
     vagrant ssh -c "sudo dnf install -y rpm-build"
-    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as rpm _lib/web-apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.rpm build/openedx-setup.rpm"
+    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as rpm workloads/apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.rpm build/openedx-setup.rpm"
     goto step1
 )
 echo.!TARGET_OS! | findstr /b /i "alpine" >nul
@@ -107,7 +107,7 @@ if not errorlevel 1 (
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
     vagrant rsync || rem
     vagrant ssh -c "sudo apk add abuild && abuild-keygen -a -n 2>/dev/null || true; sudo cp -f ~/.abuild/*.rsa.pub /etc/apk/keys/ 2>/dev/null || true"
-    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as apk _lib/web-apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.apk build/openedx-setup.apk"
+    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as apk workloads/apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.apk build/openedx-setup.apk"
     goto step1
 )
 if "%REMOTE_TMPDIR%"=="" set "REMOTE_TMPDIR=/tmp"
@@ -117,14 +117,14 @@ if not errorlevel 1 (
     echo [INFO] Building package archive for OmniOS inside VM...
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
     vagrant rsync || rem
-    vagrant ssh -c "cd /opt/repos/libscript && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf !REMOTE_TMPDIR!/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib || tar -czf !REMOTE_TMPDIR!/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib; }"
+    vagrant ssh -c "cd /opt/repos/libscript && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf !REMOTE_TMPDIR!/openedx-setup.tar.gz workloads/apps/openedx libscript.sh _lib || tar -czf !REMOTE_TMPDIR!/openedx-setup.tar.gz workloads/apps/openedx libscript.sh _lib; }"
     goto step1
 )
 echo.!TARGET_OS! | findstr /b /i "windows" >nul
 if not errorlevel 1 (
     echo [INFO] Building .msi package natively on host...
     cd /d "!LIBSCRIPT_ROOT_DIR!"
-    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as msi _lib/web-apps/openedx
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as msi workloads/apps/openedx
     if not exist "build" mkdir "build"
     if exist "build\packages\msi\openedx-x64-verawood.1-online.msi" (
         copy /y "build\packages\msi\openedx-x64-verawood.1-online.msi" "build\OpenEdX-Setup.msi" >nul 2>&1
@@ -161,7 +161,7 @@ if not errorlevel 1 (
 )
 echo.!TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
-    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall _lib/web-apps/openedx --purge-data 2>/dev/null || true"
+    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall workloads/apps/openedx --purge-data 2>/dev/null || true"
     goto sync_pkg
 )
 echo.!TARGET_OS! | findstr /b /i "windows" >nul
@@ -195,7 +195,7 @@ if not errorlevel 1 (
 )
 echo.!TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
-    vagrant ssh -c "sudo mkdir -p !REMOTE_OPT_LIBSCRIPT! && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf !REMOTE_TMPDIR!/openedx-setup.tar.gz -C !REMOTE_OPT_LIBSCRIPT! || sudo tar -xzf !REMOTE_TMPDIR!/openedx-setup.tar.gz -C !REMOTE_OPT_LIBSCRIPT!; } && sudo !REMOTE_OPT_LIBSCRIPT!/libscript.sh install-service _lib/web-apps/openedx"
+    vagrant ssh -c "sudo mkdir -p !REMOTE_OPT_LIBSCRIPT! && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf !REMOTE_TMPDIR!/openedx-setup.tar.gz -C !REMOTE_OPT_LIBSCRIPT! || sudo tar -xzf !REMOTE_TMPDIR!/openedx-setup.tar.gz -C !REMOTE_OPT_LIBSCRIPT!; } && sudo !REMOTE_OPT_LIBSCRIPT!/libscript.sh install-service workloads/apps/openedx"
     goto verify
 )
 echo.!TARGET_OS! | findstr /b /i "windows" >nul
@@ -218,7 +218,7 @@ if not errorlevel 1 (
     if not errorlevel 1 (
         vagrant ssh -c "svcs -a 2>/dev/null | grep -i openedx || true"
     ) else (
-        vagrant ssh -c "sudo /opt/repos/libscript/_lib/_common/service.sh is-active openedx-lms 2>/dev/null || true"
+        vagrant ssh -c "sudo /opt/repos/libscript/engine/common/service.sh is-active openedx-lms 2>/dev/null || true"
     )
 )
 echo [PASS] Smoke tests passed.
@@ -241,7 +241,7 @@ if not errorlevel 1 (
 )
 echo.!TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
-    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall _lib/web-apps/openedx --purge-data 2>/dev/null || true"
+    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall workloads/apps/openedx --purge-data 2>/dev/null || true"
     goto end_uninstall
 )
 echo.!TARGET_OS! | findstr /b /i "windows" >nul

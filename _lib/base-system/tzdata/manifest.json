@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "tzdata",
-  "title": "IANA Time Zone Database",
-  "description": "IANA Time Zone Database (tzdata) compiler and zone dumper utilities (zdump, zic) with declarative /etc/localtime staging.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "provides": ["tzdata", "zdump", "zic"],
+  "description": "IANA Time Zone Database (tzdata) compiler and zone dumper utilities (zdump, zic) with declarative /etc/localtime staging.",
+  "name": "tzdata",
   "os_whitelist": ["all"],
+  "provides": ["tzdata", "zdump", "zic"],
   "repository": "https://github.com/eggert/tz",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T2",
+  "title": "IANA Time Zone Database"
 }

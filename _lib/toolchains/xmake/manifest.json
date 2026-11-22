@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "xmake",
-  "title": "Xmake",
-  "description": "A cross-platform Lua-based build utility.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["xmake", "build-system"],
+  "description": "A cross-platform Lua-based build utility.",
+  "name": "xmake",
   "os_whitelist": ["all"],
+  "provides": ["xmake", "build-system"],
   "repository": "https://github.com/xmake-io/xmake",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Xmake"
 }

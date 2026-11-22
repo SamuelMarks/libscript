@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "auto-win-msvc",
-  "title": "auto-win-msvc C89 Compatibility Layer",
-  "description": "91-module C89 POSIX/BSD/Linux/Solaris/macOS compatibility header and static library layer for MSVC and OpenWatcom.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["auto-win-msvc"],
+  "description": "91-module C89 POSIX/BSD/Linux/Solaris/macOS compatibility header and static library layer for MSVC and OpenWatcom.",
+  "name": "auto-win-msvc",
   "os_whitelist": ["all"],
+  "provides": ["auto-win-msvc"],
   "repository": "https://github.com/SamuelMarks/auto-win-msvc",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "auto-win-msvc C89 Compatibility Layer"
 }

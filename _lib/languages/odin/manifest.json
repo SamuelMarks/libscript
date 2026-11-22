@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "odin",
-  "title": "Odin",
-  "description": "Data-oriented systems programming language built for high performance, simplicity, and modern software development.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["odin"],
+  "description": "Data-oriented systems programming language built for high performance, simplicity, and modern software development.",
+  "name": "odin",
   "os_whitelist": ["all"],
+  "provides": ["odin"],
   "repository": "https://github.com/odin-lang/Odin",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Odin"
 }

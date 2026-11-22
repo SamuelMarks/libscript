@@ -62,7 +62,7 @@ if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 set "URL=https://github.com/mamba-org/micromamba-releases/releases/download/2.9.0-0/micromamba-win-%ARCH%.exe"
 
 echo Downloading micromamba (%ARCH%) from %URL%...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%DEST_DIR%\micromamba.exe"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%URL%" "%DEST_DIR%\micromamba.exe"
 if errorlevel 1 (
     echo Failed to download micromamba.
     exit /b 1

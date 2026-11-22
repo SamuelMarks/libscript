@@ -60,7 +60,7 @@ if exist "%TARGET_DIR%\bin\msvc.installed" (
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
 
 echo [INFO] Downloading Visual Studio Build Tools...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://aka.ms/vs/17/release/vs_buildtools.exe" "%TEMP%\vs_buildtools.exe"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://aka.ms/vs/17/release/vs_buildtools.exe" "%TEMP%\vs_buildtools.exe"
 
 echo [INFO] Installing Visual Studio Build Tools...
 start /wait "" "%TEMP%\vs_buildtools.exe" --quiet --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.19041

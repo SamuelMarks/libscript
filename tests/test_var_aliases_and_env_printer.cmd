@@ -56,7 +56,7 @@ if not exist "!TEST_TMP!" mkdir "!TEST_TMP!"
 set "STACK="
 set "LIBSCRIPT_TARGET_SYSROOT="
 set "LIBSCRIPT_TARGET_ROOTFS=!TEST_TMP!\legacy_rootfs"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\context.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\context.cmd"
 if not "!LIBSCRIPT_TARGET_SYSROOT!"=="!TEST_TMP!\legacy_rootfs" (
     echo [FAIL] context.cmd failed to normalize LIBSCRIPT_TARGET_ROOTFS >&2
     rmdir /s /q "!TEST_TMP!" 2>nul

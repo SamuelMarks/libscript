@@ -68,8 +68,8 @@ if /i "%ACTION%"=="ls-remote" (
 )
 if /i "%ACTION%"=="use" (
     call :do_install
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "libtpu-rs" "%LIBTPU_RS_VERSION%" "!EXACT_VERSION!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "libtpu-rs" "default" "!EXACT_VERSION!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu-rs" "%LIBTPU_RS_VERSION%" "!EXACT_VERSION!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu-rs" "default" "!EXACT_VERSION!"
     exit /b 0
 )
 if /i "%ACTION%"=="download" exit /b 0
@@ -121,13 +121,13 @@ set "_REQ_F=!TARGET_DIR!\jax_requirements.txt"
     echo jaxlib==%LIBTPU_RS_JAX_VERSION%
 ) > "!_REQ_F!"
 if not "%LIBSCRIPT_OFFLINE%"=="1" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\python_env.cmd" libscript_python_venv "!TARGET_DIR!\venv" "" "!_REQ_F!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\python_env.cmd" libscript_python_venv "!TARGET_DIR!\venv" "" "!_REQ_F!"
 )
 (
     echo @echo off
     echo echo libtpu-rs !EXACT_VERSION! ^(!TARGET_DIR!^)
 ) > "!TARGET_DIR!\bin\libtpu-rs-env.cmd.tmp"
 move /y "!TARGET_DIR!\bin\libtpu-rs-env.cmd.tmp" "!TARGET_DIR!\bin\libtpu-rs-env.cmd" >nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "libtpu-rs" "%LIBTPU_RS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "libtpu-rs" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu-rs" "%LIBTPU_RS_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu-rs" "default" "!EXACT_VERSION!"
 exit /b 0

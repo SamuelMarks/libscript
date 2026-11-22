@@ -75,7 +75,7 @@ if exist "!_CAND_P!" (
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 )
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "win-cmd-rs" "!_NORM_WCR_VER!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "win-cmd-rs" "!_NORM_WCR_VER!"
 
 endlocal & set "WIN_CMD_RS_VERSION=%WIN_CMD_RS_VERSION%" & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "PATH=%PATH%"
 exit /b 0

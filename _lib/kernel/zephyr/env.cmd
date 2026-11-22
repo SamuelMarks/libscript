@@ -63,7 +63,7 @@ if exist "!_CAND_P!" (
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 )
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "zephyr" "%ZEPHYR_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "zephyr" "%ZEPHYR_VERSION%"
 
 endlocal & (
     set "ZEPHYR_VERSION=%ZEPHYR_VERSION%"

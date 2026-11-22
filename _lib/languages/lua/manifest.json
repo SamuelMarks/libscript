@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "lua",
-  "title": "Lua",
-  "description": "Lightweight, embeddable, fast scripting language interpreter and bytecode compiler.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["lua", "luac"],
+  "description": "Lightweight, embeddable, fast scripting language interpreter and bytecode compiler.",
+  "memory_footprint_class": "mcu-sram-64k",
+  "name": "lua",
   "os_whitelist": ["all"],
+  "provides": ["lua", "luac"],
   "repository": "https://www.lua.org/",
   "rtos_support": ["zephyr", "freertos"],
-  "memory_footprint_class": "mcu-sram-64k",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Lua"
 }

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "celery",
+  "category": "web-apps",
+  "title": "celery",
+  "description": "celery stack",
+  "provides": ["celery"],
+  "dependencies": {
+    "runtime_deps": ["python", "redis"]
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
+}

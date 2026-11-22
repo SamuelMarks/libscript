@@ -58,7 +58,7 @@ set "DEST_DIR=%USERPROFILE%\.local\bin"
 if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 
 echo Downloading Cygwin setup from https://www.cygwin.com/setup-x86_64.exe...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://www.cygwin.com/setup-x86_64.exe" "%DEST_DIR%\setup-x86_64.exe"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://www.cygwin.com/setup-x86_64.exe" "%DEST_DIR%\setup-x86_64.exe"
 if errorlevel 1 (
     echo Failed to download Cygwin setup.
     exit /b 1

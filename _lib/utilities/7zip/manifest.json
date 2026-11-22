@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "7zip",
-  "title": "7-Zip",
-  "description": "A highly efficient, open-source file archiver known for its high compression ratio.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["7zip", "7z"],
+  "description": "A highly efficient, open-source file archiver known for its high compression ratio.",
+  "name": "7zip",
   "os_whitelist": ["all"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["7zip", "7z"],
+  "tier": "T1",
+  "title": "7-Zip"
 }

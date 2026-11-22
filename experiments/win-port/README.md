@@ -179,39 +179,39 @@ call .\libscript.cmd experiment run win-port --synthetic-fixtures "--results-dir
 ### 1. Console Output (`E0`–`E7` Execution)
 
 ```text
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [CONTINUE] processing "./experiments/win-port/run.sh"
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/benchmark_experiments.sh"
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e0_phase0_gates.sh"
+[CONTINUE] processing "./experiments/win-port/benchmark_experiments.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e0_phase0_gates.sh"
 [INFO] [E0] Phase 0 gates and lockfile provenance verified -> ./build/win_port_synthetic/raw/e0_phase0_gates.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e1a_cdd_eval.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e1a_cdd_eval.sh"
 [INFO] [E1A] Emitted CST round-trip and 4-pass lowering metrics -> ./build/win_port_synthetic/raw/e1_cdd_transform.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e1b_downstream_builds.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e1b_downstream_builds.sh"
 [INFO] [E1B] Emitted downstream cl.exe/wcl386 compilation & CTest metrics -> ./build/win_port_synthetic/raw/e1b_downstream_compile_ctest.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e2_port_audit.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e2_port_audit.sh"
 [INFO] [E2] Emitted auto-win-msvc 91-module & zero-fork patch audit -> ./build/win_port_synthetic/raw/e2_port_audit.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e3a_win64_servers.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e3a_win64_servers.sh"
 [INFO] [E3A] Emitted Win64 server throughput & P99 metrics -> ./build/win_port_synthetic/raw/e3a_win64_servers.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e3b_win64_cli.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e3b_win64_cli.sh"
 [INFO] [E3B] Emitted Win64 CLI spawn, 100 MiB workload & PE64 DLL purity metrics -> ./build/win_port_synthetic/raw/e3b_win64_cli.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e3c_dos_matrix.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e3c_dos_matrix.sh"
 [INFO] [E3C] Emitted 5-box MS-DOS / FreeDOS CTest matrix -> ./build/win_port_synthetic/raw/e3c_dos_matrix.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e4a_msi_authoring.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e4a_msi_authoring.sh"
 [INFO] [E4A] Emitted MSI authoring, 105-ICE validation & decompile metrics -> ./build/win_port_synthetic/raw/e4a_msi_authoring.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e4b_wine_matrix.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e4b_wine_matrix.sh"
 [INFO] [E4B] Emitted warm vs cold WINE confounded overhead matrix -> ./build/win_port_synthetic/raw/e4b_wine_warm_Linux_x86_64.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e4c_msi_rollback.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e4c_msi_rollback.sh"
 [INFO] [E4C] Emitted 5-OS msiexec install & fault-injected LIFO rollback matrix -> ./build/win_port_synthetic/raw/e4c_msi_rollback.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e5a_wincheck_corpus.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e5a_wincheck_corpus.sh"
 [INFO] [E5A] Emitted 82-repo wincheck throughput, Packrat O(n) scaling & rule counts -> ./build/win_port_synthetic/raw/e5a_wincheck_corpus.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e5b_cmd_oracle.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e5b_cmd_oracle.sh"
 [INFO] [E5B] Emitted 6-family cmd.exe oracle conformance & wincmd startup metrics -> ./build/win_port_synthetic/raw/e5b_cmd_oracle_comparison.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e5c_precision_audit.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e5c_precision_audit.sh"
 [INFO] [E5C] Emitted 120-diagnostic stratified precision sample & summary -> ./build/win_port_synthetic/raw/e5c_precision_summary.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e6_ecosystem_rigor.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e6_ecosystem_rigor.sh"
 [INFO] [E6] Emitted 14-repo hand-written LoC, test counts & coverage -> ./build/win_port_synthetic/raw/e6_ecosystem_rigor.json
-[CONTINUE] processing "./_lib/toolchains/win-port-suite/suites/e7_latex_verify.sh"
+[CONTINUE] processing "./experiments/win-port/suites/e7_latex_verify.sh"
 [INFO] [E7] Emitted all 285 verified LaTeX metrics -> ./build/win_port_synthetic/generated_metrics.tex
 [INFO] Completed win_port suites (E0,E1,E2,E3,E4,E5,E6,E7) -> ./build/win_port_synthetic/campaign_summary.json
 ```

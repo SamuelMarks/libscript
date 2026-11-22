@@ -37,7 +37,7 @@ fail_test() {
 }
 
 printf '%s\n' '=== 1. Test Zero-Dependency C11 ELF64 .gnu.version_r Patcher ==='
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/elf_verneed_patch.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/elf_verneed_patch.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -120,20 +120,20 @@ cat << 'EOF_TOPO' > "${TEST_TMP}/topo.json"
 EOF_TOPO
 LIBSCRIPT_TOPOLOGY_STATE_DIR="${TEST_TMP}/topo_state"
 export LIBSCRIPT_TOPOLOGY_STATE_DIR
-STACK="" "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" up "${TEST_TMP}/topo.json" >/dev/null
-STACK="" "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" up "${TEST_TMP}/topo.json" >/dev/null
-STACK="" "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" scale "${TEST_TMP}/topo.json" db=3 >/dev/null
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" up "${TEST_TMP}/topo.json" >/dev/null
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" up "${TEST_TMP}/topo.json" >/dev/null
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" scale "${TEST_TMP}/topo.json" db=3 >/dev/null
 _cnt=$(jq '[.nodes[] | select(.group=="db")] | length' "${LIBSCRIPT_TOPOLOGY_STATE_DIR}/.topology_state.json")
 [ "$_cnt" = "3" ] || fail_test "Expected 3 db nodes after scale, got ${_cnt}"
-STACK="" "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" drain "${TEST_TMP}/topo.json" db-2 >/dev/null
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" drain "${TEST_TMP}/topo.json" db-2 >/dev/null
 _dr=$(jq -r '.nodes[] | select(.id=="db-2") | .state' "${LIBSCRIPT_TOPOLOGY_STATE_DIR}/.topology_state.json")
 [ "$_dr" = "DRAINED" ] || fail_test "Expected db-2 DRAINED, got ${_dr}"
-STACK="" "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" failover "${TEST_TMP}/topo.json" leader-0 >/dev/null
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" failover "${TEST_TMP}/topo.json" leader-0 >/dev/null
 _fn=$(jq -r '.nodes[] | select(.id=="leader-0") | .state' "${LIBSCRIPT_TOPOLOGY_STATE_DIR}/.topology_state.json")
 [ "$_fn" = "FENCED" ] || fail_test "Expected leader-0 FENCED after failover, got ${_fn}"
-STACK="" "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" upgrade "${TEST_TMP}/topo.json" >/dev/null
-STACK="" "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" destroy "${TEST_TMP}/topo.json" >/dev/null
-STACK="" "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" destroy "${TEST_TMP}/topo.json" >/dev/null
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" upgrade "${TEST_TMP}/topo.json" >/dev/null
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" destroy "${TEST_TMP}/topo.json" >/dev/null
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" destroy "${TEST_TMP}/topo.json" >/dev/null
 
 printf '%s\n' '=== 3. Test Payload Schedulers (native, nomad, slurm_ray) ==='
 cat << 'EOF_PAY' > "${TEST_TMP}/payload.json"
@@ -145,13 +145,13 @@ cat << 'EOF_PAY' > "${TEST_TMP}/payload.json"
   "scaling": { "replicas": 2 }
 }
 EOF_PAY
-STACK="" "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/native.sh" compile "${TEST_TMP}/payload.json" --init sc | grep -q 'sc.exe create "LibScript-demo-worker"' || fail_test 'native.sh --init sc failed'
-STACK="" "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/nomad.sh" compile "${TEST_TMP}/payload.json" | jq -e '.Job.ID == "demo-worker"' >/dev/null || fail_test 'nomad.sh compile failed'
-STACK="" "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/slurm_ray.sh" compile "${TEST_TMP}/payload.json" | grep -q '#SBATCH --job-name=demo-worker' || fail_test 'slurm_ray.sh compile failed'
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/native.sh" compile "${TEST_TMP}/payload.json" --init sc | grep -q 'sc.exe create "LibScript-demo-worker"' || fail_test 'native.sh --init sc failed'
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/nomad.sh" compile "${TEST_TMP}/payload.json" | jq -e '.Job.ID == "demo-worker"' >/dev/null || fail_test 'nomad.sh compile failed'
+STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/slurm_ray.sh" compile "${TEST_TMP}/payload.json" | grep -q '#SBATCH --job-name=demo-worker' || fail_test 'slurm_ray.sh compile failed'
 
 printf '%s\n' '=== 4. Test Experiment Scaffold 2x Idempotency ==='
-STACK="" "${LIBSCRIPT_ROOT_DIR}/cli/commands/experiment/scaffold.sh" demo-std-suite --out-root="${TEST_TMP}/exps" >/dev/null
-_skip_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/cli/commands/experiment/scaffold.sh" demo-std-suite --out-root="${TEST_TMP}/exps")
+STACK="" "${LIBSCRIPT_ROOT_DIR}/experiments/cli/scaffold.sh" demo-std-suite --out-root="${TEST_TMP}/exps" >/dev/null
+_skip_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/experiments/cli/scaffold.sh" demo-std-suite --out-root="${TEST_TMP}/exps")
 case "$_skip_out" in
   *'[SKIP]'*) ;;
   *) fail_test "Expected [SKIP] on 2nd scaffold invocation, got: ${_skip_out}" ;;

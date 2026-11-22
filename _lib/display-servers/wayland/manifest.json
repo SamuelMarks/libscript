@@ -1,16 +1,17 @@
 {
-  "name": "wayland",
-  "title": "Wayland Protocol",
-  "description": "Core Wayland display server library and protocols",
-  "provides": ["wayland"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-servers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Core Wayland display server library and protocols",
+  "name": "wayland",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["wayland"],
+  "tier": "T2",
+  "title": "Wayland Protocol",
+  "versions": ["1.0.0"]
 }

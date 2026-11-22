@@ -72,7 +72,7 @@ for %%D in ("!_ROSBE_BASE!\amd64\bin" "!_ROSBE_BASE!\i386\bin" "!_ROSBE_BASE!\bi
     if errorlevel 1 set "PATH=%%~D;!PATH!"
 )
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "rosbe" "%ROSBE_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "rosbe" "%ROSBE_VERSION%"
 
 endlocal & (
     set "ROSBE_VERSION=%ROSBE_VERSION%"

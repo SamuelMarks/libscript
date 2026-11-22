@@ -66,7 +66,7 @@ echo [INFO] Testing pyenv integration...
 
 :: Test 1: Resolve python executable via pyenv
 echo [INFO] Testing Python resolution via pyenv...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\python_env.cmd" libscript_python_resolve > "%TEMP%\resolved_py.txt"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\python_env.cmd" libscript_python_resolve > "%TEMP%\resolved_py.txt"
 if errorlevel 1 (
     echo [ERROR] Failed to resolve python via pyenv.
     exit /b 1
@@ -78,7 +78,7 @@ echo [INFO] Resolved python: %py_path%
 :: Test 2: Create a venv using the resolved pyenv executable
 echo [INFO] Testing venv creation using pyenv executable...
 set "VENV_DIR=%LIBSCRIPT_HOME%\test_venv"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\python_env.cmd" libscript_python_venv "%VENV_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\python_env.cmd" libscript_python_venv "%VENV_DIR%"
 if errorlevel 1 (
     echo [ERROR] Failed to create venv using pyenv.
     exit /b 1

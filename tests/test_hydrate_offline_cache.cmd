@@ -86,7 +86,7 @@ set "CACHE_TARGET=%TEST_TMP_DIR%\cache"
 
 :: Test 1: Verify-only on empty cache
 echo [TEST 1/3] Verifying --verify-only fails on empty cache...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\hydrate_offline_cache.cmd" --manifest "%TEST_MANIFEST%" --cache-dir "%CACHE_TARGET%" --verify-only >nul 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\hydrate_offline_cache.cmd" --manifest "%TEST_MANIFEST%" --cache-dir "%CACHE_TARGET%" --verify-only >nul 2>&1
 if errorlevel 1 (
     echo [PASS] Verify-only correctly reports non-zero exit code on empty cache
 ) else (
@@ -96,7 +96,7 @@ if errorlevel 1 (
 
 :: Test 2: Hydrate cache
 echo [TEST 2/3] Verifying hydration...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\hydrate_offline_cache.cmd" --manifest "%TEST_MANIFEST%" --cache-dir "%CACHE_TARGET%" > "%TEST_TMP_DIR%\t2.log" 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\hydrate_offline_cache.cmd" --manifest "%TEST_MANIFEST%" --cache-dir "%CACHE_TARGET%" > "%TEST_TMP_DIR%\t2.log" 2>&1
 if exist "%CACHE_TARGET%\runtimes\dummy-runtime.zip" (
     echo [PASS] Artifact successfully hydrated
 ) else (
@@ -107,7 +107,7 @@ if exist "%CACHE_TARGET%\runtimes\dummy-runtime.zip" (
 
 :: Test 3: Verify-only on hydrated cache
 echo [TEST 3/3] Verifying --verify-only succeeds on intact cache...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\hydrate_offline_cache.cmd" --manifest "%TEST_MANIFEST%" --cache-dir "%CACHE_TARGET%" --verify-only >nul 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\hydrate_offline_cache.cmd" --manifest "%TEST_MANIFEST%" --cache-dir "%CACHE_TARGET%" --verify-only >nul 2>&1
 if not errorlevel 1 (
     echo [PASS] Intact cache verified successfully
 ) else (

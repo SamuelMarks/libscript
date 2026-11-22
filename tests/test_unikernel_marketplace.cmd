@@ -56,7 +56,7 @@ set "TEST_TMP=%TEMP%\libscript_mkt_test_%RANDOM%"
 if not exist "%TEST_TMP%" mkdir "%TEST_TMP%"
 
 set "STACK="
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" publish-marketplace "%LIBSCRIPT_ROOT_DIR%\marketplace\openedx-unikernel\offer.json" --clouds=aws,azure,gcp --out-dir="%TEST_TMP%\mkt" --dry-run --allow-stub-sdk
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" publish-marketplace "%LIBSCRIPT_ROOT_DIR%\infrastructure\marketplace\openedx-unikernel\offer.json" --clouds=aws,azure,gcp --out-dir="%TEST_TMP%\mkt" --dry-run --allow-stub-sdk
 if errorlevel 1 (
     echo [FAIL] publish-marketplace dry-run failed >&2
     rmdir /s /q "%TEST_TMP%" >nul 2>&1

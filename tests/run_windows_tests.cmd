@@ -53,7 +53,7 @@ if "%THIS_DIR:~-1%"=="\" set "THIS_DIR=%THIS_DIR:~0,-1%"
 set "REPO_ROOT=%THIS_DIR%\.."
 for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
 set "LIBSCRIPT_ROOT_DIR=%REPO_ROOT%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\test_matrix_driver.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\test_matrix_driver.cmd"
 set "VAGRANT_DIR=%REPO_ROOT%\vagrant\windows-11"
 set "TESTS_TMP_DIR=%REPO_ROOT%\tests_tmp"
 
@@ -126,8 +126,8 @@ if "%TARGETS%"=="all" (
     for /d %%T in ("%REPO_ROOT%\topologies\*") do (
         set "COMPONENTS=!COMPONENTS! topologies/%%~nxT"
     )
-    for %%S in ("%REPO_ROOT%\payloads\schedulers\*.sh") do (
-        set "COMPONENTS=!COMPONENTS! payloads/schedulers/%%~nS"
+    for %%S in ("%REPO_ROOT%\workloads\schedulers\*.sh") do (
+        set "COMPONENTS=!COMPONENTS! workloads/schedulers/%%~nS"
     )
     for /d %%R in ("%REPO_ROOT%\traits\*") do (
         set "COMPONENTS=!COMPONENTS! traits/%%~nxR"

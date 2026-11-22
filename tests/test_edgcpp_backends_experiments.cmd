@@ -79,7 +79,7 @@ if not exist "!_PAPER!" mkdir "!_PAPER!"
 ) > "!_PAPER!\edgecpp_backends.tex"
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" edgcpp-backends-suite experiments --synthetic-fixtures "--results-dir=!_RES!" "--paper-dir=!_PAPER!"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run edgcpp-backends --synthetic-fixtures "--results-dir=!_RES!" "--paper-dir=!_PAPER!"
 if errorlevel 1 exit /b 1
 
 for %%J in (metadata.json exp0_coverage.json exp0_bug4_ablation.json exp1_compile_perf.json exp2_sqlite_runtime.json exp2_ablation.json exp3_eh.json exp4_coro.json exp5_abi_fuzz.json exp5_gcc_torture.json exp5_diff_fuzz.json exp6_projects.json exp6_kernel.json) do (
@@ -96,7 +96,7 @@ if not exist "!_RES!\generated_metrics.tex" (
 copy /y "!_RES!\generated_metrics.tex" "!WORK_DIR!\metrics_run1.tex" >nul
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" edgcpp-backends-suite experiments --synthetic-fixtures "--results-dir=!_RES!" "--paper-dir=!_PAPER!"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run edgcpp-backends --synthetic-fixtures "--results-dir=!_RES!" "--paper-dir=!_PAPER!"
 if errorlevel 1 exit /b 1
 
 fc /b "!WORK_DIR!\metrics_run1.tex" "!_RES!\generated_metrics.tex" >nul 2>&1
@@ -132,7 +132,7 @@ echo int x = 2;> a.c
 popd
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\suites\e0_phase0_gates.cmd" "!_DIRTY!" "!WORK_DIR!\dirty_out" "windows_x64" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\experiments\edgcpp-backends\suites\e0_phase0_gates.cmd" "!_DIRTY!" "!WORK_DIR!\dirty_out" "windows_x64" >nul 2>&1
 if not errorlevel 1 (
     echo [FAIL] E0 accepted dirty git worktree^^! >&2
     exit /b 1
@@ -140,7 +140,7 @@ if not errorlevel 1 (
 
 set "EDGCPP_BACKENDS_SUITE_SYNTHETIC=0"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\suites\e6_corpus_and_kernel.cmd" "C:\none" "!WORK_DIR!\bad_k" "windows_x64" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\experiments\edgcpp-backends\suites\e6_corpus_and_kernel.cmd" "C:\none" "!WORK_DIR!\bad_k" "windows_x64" >nul 2>&1
 if not errorlevel 1 (
     echo [FAIL] E6 allowed fake Linux kernel Kbuild on Windows^^! >&2
     exit /b 1
@@ -155,7 +155,7 @@ if not exist "!_BAD_PAPER!" mkdir "!_BAD_PAPER!"
     echo \end{document}
 ) > "!_BAD_PAPER!\edgecpp_backends.tex"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\suites\e7_latex_verify.cmd" "!WORK_DIR!\run_results" "!_BAD_PAPER!" "0" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\experiments\edgcpp-backends\suites\e7_latex_verify.cmd" "!WORK_DIR!\run_results" "!_BAD_PAPER!" "0" >nul 2>&1
 if not errorlevel 1 (
     echo [FAIL] E7 accepted unresolved placeholder in edgecpp_backends.tex^^! >&2
     exit /b 1

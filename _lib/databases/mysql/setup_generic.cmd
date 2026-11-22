@@ -96,10 +96,10 @@ if "%ACTION%"=="install" (
     exit /b 0
 ) else if "%ACTION%"=="uninstall" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_uninstall_pkg Oracle.MySQL
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_uninstall_pkg Oracle.MySQL
     set "STACK="
     set "LIBSCRIPT_PKG_MGR=choco"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_uninstall_pkg mysql
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_uninstall_pkg mysql
     exit /b 0
 ) else if "%ACTION%"=="test" (
     mysql --version

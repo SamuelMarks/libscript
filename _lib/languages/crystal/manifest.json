@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "crystal",
-  "title": "Crystal",
-  "description": "Statically type-checked compiled systems programming language with Ruby-inspired syntax.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["crystal", "shards"],
+  "description": "Statically type-checked compiled systems programming language with Ruby-inspired syntax.",
+  "name": "crystal",
   "os_whitelist": ["all"],
+  "provides": ["crystal", "shards"],
   "repository": "https://github.com/crystal-lang/crystal",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Crystal"
 }

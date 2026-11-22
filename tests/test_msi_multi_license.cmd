@@ -70,8 +70,8 @@ if not exist "!TMP_BASE!" mkdir "!TMP_BASE!"
 set "OUT_PREFIX=!TMP_BASE!\wordpress-multi-lic-test"
 set "WXS_FILE=!OUT_PREFIX!.wxs"
 
-echo === Generating WordPress .wxs Manifest via packaging\build_msi.cmd ===
-call "!LIBSCRIPT_ROOT_DIR!\packaging\build_msi.cmd" "_lib\web-apps\wordpress" --online --out "!OUT_PREFIX!" >nul 2>&1
+echo === Generating WordPress .wxs Manifest via synthesis\msi\build_msi.cmd ===
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\msi\build_msi.cmd" "workloads\apps\wordpress" --online --out "!OUT_PREFIX!" >nul 2>&1
 
 if not exist "!WXS_FILE!" (
     echo [FAIL] WiX source file was not generated at !WXS_FILE! >&2

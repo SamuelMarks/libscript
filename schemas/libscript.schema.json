@@ -1,7 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/schemas/libscript.schema.json",
-  "title": "LibScript Configuration Schema Wrapper",
-  "description": "References the canonical root libscript.schema.json specification to avoid duplicate schema maintenance and broken relative $ref paths.",
-  "$ref": "../libscript.schema.json"
-}

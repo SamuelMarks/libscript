@@ -1,15 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "envoy",
-  "title": "Envoy",
-  "description": "Cloud-native high-performance C++ distributed L4/L7 edge and service proxy.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "web-servers",
-  "provides": ["envoy", "reverse-proxy", "edge-router", "load-balancer", "web-server"],
-  "os_whitelist": ["all"],
-  "ports": [10000, 9901],
-  "multitenant": true,
-  "repository": "https://github.com/envoyproxy/envoy",
+  "description": "Cloud-native high-performance C++ distributed L4/L7 edge and service proxy.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -22,9 +18,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "envoy",
+  "os_whitelist": ["all"],
+  "ports": [10000, 9901],
+  "provides": ["envoy", "reverse-proxy", "edge-router", "load-balancer", "web-server"],
+  "repository": "https://github.com/envoyproxy/envoy",
+  "tier": "T1",
+  "title": "Envoy"
 }

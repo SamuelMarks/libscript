@@ -32,7 +32,7 @@
     },
     "MCUBOOT_KEY_FILE": {
       "type": "string",
-      "description": "Optional PEM signing key path managed via traits/secrets for deterministic firmware signing.",
+      "description": "Optional PEM signing key path managed via secret key store for deterministic firmware signing.",
       "default": ""
     },
     "MCUBOOT_SLOT_SIZE": {

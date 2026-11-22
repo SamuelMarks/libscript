@@ -36,9 +36,9 @@ export LIBSCRIPT_ALLOW_STUB=1
 
 BOX_PATH="${1:-${TMP_DIR}/reactos.box}"
 if [ ! -f "$BOX_PATH" ]; then
-  STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_distro.sh" \
+  STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_distro.sh" \
     --format box \
-    --profile "${LIBSCRIPT_ROOT_DIR}/profiles/reactos/minimal-headless-i686.json" \
+    --profile "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/reactos/minimal-headless-i686.json" \
     --sysroot "${TMP_DIR}/sys" \
     --output "$BOX_PATH" >/dev/null
 fi

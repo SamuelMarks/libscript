@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%CPANM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%CPANM_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%CPANM_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%CPANM_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/miyagawa/cpanminus" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%CPANM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cpanm %CPANM_VERSION% to %DOWNLOAD_DIR%\cpanm...
     if not exist "%DOWNLOAD_DIR%\cpanm" mkdir "%DOWNLOAD_DIR%\cpanm"
     if not "%CPANM_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPANM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cpanm\cpanm-%CPANM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CPANM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cpanm\cpanm-%CPANM_VERSION%.zip"
     ) else (
         echo CPANM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CPANM_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cpanm
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends cpanm
     exit /b !errorlevel!
 )
 
@@ -161,11 +161,11 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cpanm\cpanm-%CPANM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CPANM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPANM_DOWNLOAD_URL%" "%TEMP%\cpanm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CPANM_DOWNLOAD_URL%" "%TEMP%\cpanm.zip"
         tar -xf "%TEMP%\cpanm.zip" -C "%TARGET_DIR%"
     ) else (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://cpanmin.us" "%TARGET_DIR%\bin\cpanm.pl"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://cpanmin.us" "%TARGET_DIR%\bin\cpanm.pl"
         > "%TARGET_DIR%\bin\cpanm.cmd" echo @echo off
         >> "%TARGET_DIR%\bin\cpanm.cmd" echo if /I "%%~1"=="--version" echo cpanm App::cpanminus version 1.7047 ^& exit /b 0
         >> "%TARGET_DIR%\bin\cpanm.cmd" echo if /I "%%~1"=="-V" echo cpanm App::cpanminus version 1.7047 ^& exit /b 0
@@ -196,5 +196,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "cpanm" "%ACTION%" "%CPANM_VERSION%" "%CPANM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cpanm\%CPANM_VERSION%\\bin\\cpanm.exe\"" "%LIBSCRIPT_HOME%\cpanm\%CPANM_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "cpanm" "%ACTION%" "%CPANM_VERSION%" "%CPANM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cpanm\%CPANM_VERSION%\\bin\\cpanm.exe\"" "%LIBSCRIPT_HOME%\cpanm\%CPANM_VERSION%"
 exit /b !errorlevel!

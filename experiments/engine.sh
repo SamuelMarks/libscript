@@ -82,7 +82,7 @@ case "$VERB" in
     exit 0
     ;;
   scaffold)
-    exec "${LIBSCRIPT_ROOT_DIR}/cli/commands/experiment/scaffold.sh" "$@"
+    exec "${LIBSCRIPT_ROOT_DIR}/experiments/cli/scaffold.sh" "$@"
     ;;
   update-readme)
     exec "${LIBSCRIPT_ROOT_DIR}/tests/update_results.sh" "$@"
@@ -100,7 +100,7 @@ SUITE_JSON="${SUITE_DIR}/suite.json"
 [ -f "$SUITE_JSON" ] || { printf '[ERROR] Experiment plugin not found: %s\n' "$SUITE_JSON" >&2; exit 1; }
 
 # ## validate_suite_manifest
-# Validates suite.json against experiment-suite.schema.json required fields, substrate enum, and installer_e2e references.
+# Validates suite.json against experiments/schemas/experiment-suite.schema.json required fields, substrate enum, and installer_e2e references.
 validate_suite_manifest() {
   jq -e '
     (.id | type == "string" and length > 0)
@@ -134,10 +134,13 @@ validate_and_export_suite_vars() {
         _raw_k="${_arg%%=*}"
         _raw_k="${_raw_k#--}"
         _val="${_arg#*=}"
-        case "$_raw_k" in
-          results-dir|paper-dir|repo-dir|subsuites|tfrc-config|backends|model|output|json|suite-dir|phase) continue ;;
-        esac
         _env_k=$(printf '%s' "$_raw_k" | tr '[:lower:]-' '[:upper:]_')
+        case "$_raw_k" in
+          results-dir|out-dir|paper-dir|repo-dir|repo|ecosystem-dir|subsuites|warmup|trials|host-arch|cargo-profile|tfrc-config|backends|model|output|json|suite-dir|phase)
+            export "${_env_k}=${_val}"
+            continue
+            ;;
+        esac
         case "$_raw_k" in
           target-os|bento-prefix|bento-dir|provider|pkg-format|pkg-source|release-repo|release-tag|install-modes|force-rebuild|dry-run)
             export "${_env_k}=${_val}"
@@ -168,8 +171,8 @@ provision_suite_dependencies() {
     fi
   done
   _sub=$(jq -r '.substrate // "local-native"' "$SUITE_JSON")
-  if [ "$_sub" = 'installer-e2e' ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/experiment/pkg_ui_runner.sh" ]; then
-    STACK='' sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/experiment/pkg_ui_runner.sh" --suite-dir="${SUITE_DIR}" --phase=provision "$@"
+  if [ "$_sub" = 'installer-e2e' ] && [ -f "${LIBSCRIPT_ROOT_DIR}/experiments/_common/pkg_ui_runner.sh" ]; then
+    STACK='' sh "${LIBSCRIPT_ROOT_DIR}/experiments/_common/pkg_ui_runner.sh" --suite-dir="${SUITE_DIR}" --phase=provision "$@"
   fi
 }
 
@@ -192,8 +195,8 @@ case "$VERB" in
       STACK='' exec sh "${SUITE_DIR}/${VERB}.sh" "$@"
     fi
     _sub=$(jq -r '.substrate // "local-native"' "$SUITE_JSON")
-    if [ "$_sub" = 'installer-e2e' ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/experiment/pkg_ui_runner.sh" ]; then
-      STACK='' exec sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/experiment/pkg_ui_runner.sh" --suite-dir="${SUITE_DIR}" --phase="${VERB}" "$@"
+    if [ "$_sub" = 'installer-e2e' ] && [ -f "${LIBSCRIPT_ROOT_DIR}/experiments/_common/pkg_ui_runner.sh" ]; then
+      STACK='' exec sh "${LIBSCRIPT_ROOT_DIR}/experiments/_common/pkg_ui_runner.sh" --suite-dir="${SUITE_DIR}" --phase="${VERB}" "$@"
     fi
     printf '[OK] Experiment "%s" lifecycle phase "%s" completed.\n' "$SUITE_ID" "$VERB"
     ;;

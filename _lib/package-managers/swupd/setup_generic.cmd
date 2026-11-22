@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%SWUPD_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%SWUPD_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%SWUPD_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%SWUPD_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/sbabic/swupdate" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%SWUPD_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading swupd %SWUPD_VERSION% to %DOWNLOAD_DIR%\swupd...
     if not exist "%DOWNLOAD_DIR%\swupd" mkdir "%DOWNLOAD_DIR%\swupd"
     if not "%SWUPD_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWUPD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\swupd\swupd-%SWUPD_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SWUPD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\swupd\swupd-%SWUPD_VERSION%.zip"
     ) else (
         echo SWUPD_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SWUPD_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends swupd
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends swupd
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\swupd\swupd-%SWUPD_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SWUPD_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWUPD_DOWNLOAD_URL%" "%TEMP%\swupd.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SWUPD_DOWNLOAD_URL%" "%TEMP%\swupd.zip"
         tar -xf "%TEMP%\swupd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for swupd.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "swupd" "%ACTION%" "%SWUPD_VERSION%" "%SWUPD_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\swupd\%SWUPD_VERSION%\\bin\\swupd.exe\"" "%LIBSCRIPT_HOME%\swupd\%SWUPD_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "swupd" "%ACTION%" "%SWUPD_VERSION%" "%SWUPD_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\swupd\%SWUPD_VERSION%\\bin\\swupd.exe\"" "%LIBSCRIPT_HOME%\swupd\%SWUPD_VERSION%"
 exit /b !errorlevel!

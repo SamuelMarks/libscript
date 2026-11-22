@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "win-cmd-rs",
-  "title": "win-cmd-rs Batch Interpreter & Linter",
-  "description": "Safe Rust Windows cmd.exe interpreter (wincmd) and linear Packrat 50-rule linter / 4-pass CST rewriter (wincheck).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["win-cmd-rs", "wincmd", "wincheck"],
+  "description": "Safe Rust Windows cmd.exe interpreter (wincmd) and linear Packrat 50-rule linter / 4-pass CST rewriter (wincheck).",
+  "name": "win-cmd-rs",
   "os_whitelist": ["all"],
+  "provides": ["win-cmd-rs", "wincmd", "wincheck"],
   "repository": "https://github.com/SamuelMarks/win-cmd-rs",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "win-cmd-rs Batch Interpreter & Linter"
 }

@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "bazel",
-  "title": "Bazel",
-  "description": "A fast, scalable, multi-language and extensible build system, installed via Bazelisk.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["build-system", "bazel", "bazelisk"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A fast, scalable, multi-language and extensible build system, installed via Bazelisk.",
+  "name": "bazel",
   "os_blacklist": ["alpine", "sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["build-system", "bazel", "bazelisk"],
+  "tier": "T1",
+  "title": "Bazel"
 }

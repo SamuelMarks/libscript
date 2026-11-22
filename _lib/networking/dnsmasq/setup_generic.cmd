@@ -82,7 +82,7 @@ exit /b 0
 set "RELEASES_URL=%DNSMASQ_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://thekelleys.org.uk/dnsmasq/"
 echo [ls-remote] Fetching available dnsmasq versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -95,8 +95,8 @@ if not exist "!TARGET_DIR!" (
     set "ACTION=install"
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "%DNSMASQ_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "%DNSMASQ_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -112,7 +112,7 @@ set "DL_DIR=!DL_DIR!\dnsmasq"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading dnsmasq %DNSMASQ_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -124,23 +124,23 @@ if /i "%DNSMASQ_INSTALL_METHOD%"=="from-source" (
     set "SRC_URL=%DNSMASQ_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://thekelleys.org.uk/dnsmasq/dnsmasq-{VERSION}.tar.xz"
     call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "dnsmasq" "!EXACT_VERSION!" "dnsmasq" "c" "make" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "dnsmasq" "!EXACT_VERSION!" "dnsmasq" "c" "make" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if "%DNSMASQ_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends dnsmasq
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends dnsmasq
     exit /b !errorlevel!
 )
 if /i "%DNSMASQ_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget dnsmasq
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget dnsmasq
     exit /b !errorlevel!
 )
 if /i "%DNSMASQ_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco dnsmasq
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco dnsmasq
     exit /b !errorlevel!
 )
 if /i "%DNSMASQ_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop dnsmasq
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop dnsmasq
     exit /b !errorlevel!
 )
 call :resolve_version
@@ -152,8 +152,8 @@ if exist "!TARGET_DIR!\bin\dnsmasq.bat" set "_BIN_FOUND=1"
 if "!_BIN_FOUND!"=="1" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] dnsmasq !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "%DNSMASQ_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "%DNSMASQ_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -161,7 +161,7 @@ set "URL=%DNSMASQ_DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=https://thekelleys.org.uk/dnsmasq/dnsmasq-{VERSION}.tar.xz"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends dnsmasq
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends dnsmasq
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -174,7 +174,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\dnsmasq-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 set "_IS_ARCHIVE=0"
@@ -226,8 +226,8 @@ if not "!_IS_ARCHIVE!"=="0" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\dnsmasq.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "%DNSMASQ_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "%DNSMASQ_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "dnsmasq" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -244,7 +244,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos//releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos//releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -257,5 +257,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "dnsmasq" "%ACTION%" "%DNSMASQ_VERSION%" "%DNSMASQ_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\dnsmasq\%DNSMASQ_VERSION%\\bin\\dnsmasq.exe\"" "%LIBSCRIPT_HOME%\dnsmasq\%DNSMASQ_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "dnsmasq" "%ACTION%" "%DNSMASQ_VERSION%" "%DNSMASQ_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\dnsmasq\%DNSMASQ_VERSION%\\bin\\dnsmasq.exe\"" "%LIBSCRIPT_HOME%\dnsmasq\%DNSMASQ_VERSION%"
 exit /b !errorlevel!

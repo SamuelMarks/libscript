@@ -106,7 +106,7 @@ exit /b 0
 :action_ls_remote
 if "%NGINX_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%NGINX_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%NGINX_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%NGINX_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -150,7 +150,7 @@ if "%NGINX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nginx %NGINX_VERSION% to %DOWNLOAD_DIR%\nginx...
     if not exist "%DOWNLOAD_DIR%\nginx" mkdir "%DOWNLOAD_DIR%\nginx"
     if not "%NGINX_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NGINX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NGINX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.zip"
     ) else (
         echo NGINX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -168,11 +168,11 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if /i "%NGINX_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "nginx" "%NGINX_VERSION%" "nginx" "c"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "nginx" "%NGINX_VERSION%" "nginx" "c"
     exit /b !errorlevel!
 )
 if "%NGINX_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nginx
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends nginx
     exit /b !errorlevel!
 )
 
@@ -188,11 +188,11 @@ if not exist "%TARGET_DIR%\bin\nginx.exe" (
         tar -xf "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NGINX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NGINX_DOWNLOAD_URL%" "%TEMP%\nginx.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NGINX_DOWNLOAD_URL%" "%TEMP%\nginx.zip"
         tar -xf "%TEMP%\nginx.zip" -C "%TARGET_DIR%"
     ) else (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://nginx.org/download/nginx-1.26.2.zip" "%TEMP%\nginx.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://nginx.org/download/nginx-1.26.2.zip" "%TEMP%\nginx.zip"
         if exist "%TEMP%\nginx.zip" (
             tar -xf "%TEMP%\nginx.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\nginx.zip" -C "%TARGET_DIR%"
             if exist "%TARGET_DIR%\nginx.exe" copy /y "%TARGET_DIR%\nginx.exe" "%TARGET_DIR%\bin\nginx.exe" >nul 2>&1
@@ -229,5 +229,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "nginx" "%ACTION%" "%NGINX_VERSION%" "%NGINX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%\\bin\\nginx.exe\"" "%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "nginx" "%ACTION%" "%NGINX_VERSION%" "%NGINX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%\\bin\\nginx.exe\"" "%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%"
 exit /b !errorlevel!

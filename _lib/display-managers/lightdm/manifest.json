@@ -1,16 +1,17 @@
 {
-  "name": "lightdm",
-  "title": "LightDM",
-  "description": "Cross-desktop lightweight display manager",
-  "provides": ["lightdm"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-managers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Cross-desktop lightweight display manager",
+  "name": "lightdm",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["lightdm"],
+  "tier": "T2",
+  "title": "LightDM",
+  "versions": ["1.0.0"]
 }

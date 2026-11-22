@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "lima",
-  "title": "Lima Linux Virtual Machines",
-  "description": "Lima (limactl) Linux virtual machines with automatic file sharing, port forwarding, and containerd/Docker support on macOS and Linux.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "virtualization",
-  "provides": ["lima", "limactl", "nerdctl.lima"],
-  "os_whitelist": ["macos", "linux", "freebsd", "netbsd"],
+  "description": "Lima (limactl) Linux virtual machines with automatic file sharing, port forwarding, and containerd/Docker support on macOS and Linux.",
+  "name": "lima",
   "os_blacklist": ["windows"],
+  "os_whitelist": ["macos", "linux", "freebsd", "netbsd"],
+  "provides": ["lima", "limactl", "nerdctl.lima"],
   "repository": "https://github.com/lima-vm/lima",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Lima Linux Virtual Machines"
 }

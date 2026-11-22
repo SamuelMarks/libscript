@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%GUIX_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%GUIX_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%GUIX_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%GUIX_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://git.savannah.gnu.org/git/guix.git" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%GUIX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading guix %GUIX_VERSION% to %DOWNLOAD_DIR%\guix...
     if not exist "%DOWNLOAD_DIR%\guix" mkdir "%DOWNLOAD_DIR%\guix"
     if not "%GUIX_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GUIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\guix\guix-%GUIX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%GUIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\guix\guix-%GUIX_VERSION%.zip"
     ) else (
         echo GUIX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GUIX_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends guix
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends guix
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\guix\guix-%GUIX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GUIX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GUIX_DOWNLOAD_URL%" "%TEMP%\guix.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%GUIX_DOWNLOAD_URL%" "%TEMP%\guix.zip"
         tar -xf "%TEMP%\guix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for guix.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "guix" "%ACTION%" "%GUIX_VERSION%" "%GUIX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\guix\%GUIX_VERSION%\\bin\\guix.exe\"" "%LIBSCRIPT_HOME%\guix\%GUIX_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "guix" "%ACTION%" "%GUIX_VERSION%" "%GUIX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\guix\%GUIX_VERSION%\\bin\\guix.exe\"" "%LIBSCRIPT_HOME%\guix\%GUIX_VERSION%"
 exit /b !errorlevel!

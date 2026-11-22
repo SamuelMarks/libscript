@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mas",
-  "provides": ["mas"],
-  "os_whitelist": ["darwin"],
-  "title": "mas",
-  "description": "Bootstrap module for the `mas` package manager (Mac App Store command line interface).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `mas` package manager (Mac App Store command line interface).",
+  "name": "mas",
+  "os_whitelist": ["darwin"],
+  "provides": ["mas"],
   "repository": "https://github.com/mas-cli/mas",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "mas"
 }

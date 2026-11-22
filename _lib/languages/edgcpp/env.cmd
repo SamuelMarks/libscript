@@ -56,7 +56,7 @@ set "_CAND_P=!_edg_home!\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "edgcpp"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "edgcpp"
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "EDGCPP_HOME=%_edg_home%"

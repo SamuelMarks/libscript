@@ -58,7 +58,7 @@ echo === Testing LibScript Repository Harvester (Windows) ===
 set "MANIFEST_FILE=%TEST_TMP_DIR%\manifest.txt"
 set "WIX_FILE=%TEST_TMP_DIR%\fragment.wxs"
 
-call "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_payload.cmd" --manifest-file "%MANIFEST_FILE%" --wix-fragment "%WIX_FILE%"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\harvest_payload.cmd" --manifest-file "%MANIFEST_FILE%" --wix-fragment "%WIX_FILE%"
 if errorlevel 1 (
     echo [FAIL] harvest_payload.cmd failed with exit code !ERRORLEVEL! >&2
     exit /b 1
@@ -79,7 +79,7 @@ for %%F in ("%MANIFEST_FILE%") do (
 echo [PASS] Manifest generated successfully
 
 :: Test 2: Essential engine files are included
-powershell -NoProfile -Command "$m = Get-Content '%MANIFEST_FILE%'; $reqs = @('libscript.sh', 'libscript.cmd', '_lib/_common/component_core.cmd', '_lib/web-apps/openedx/setup_generic.cmd', '_lib/web-apps/openedx/cli.cmd'); foreach ($r in $reqs) { if ($m -notcontains $r) { Write-Error ('Missing required file: ' + $r); exit 1 } }"
+powershell -NoProfile -Command "$m = Get-Content '%MANIFEST_FILE%'; $reqs = @('libscript.sh', 'libscript.cmd', 'engine/common/component_core.cmd', 'workloads/apps/openedx/setup_generic.cmd', 'workloads/apps/openedx/cli.cmd'); foreach ($r in $reqs) { if ($m -notcontains $r) { Write-Error ('Missing required file: ' + $r); exit 1 } }"
 if errorlevel 1 (
     echo [FAIL] Required engine or stack files missing from manifest >&2
     exit /b 1
@@ -117,7 +117,7 @@ if not exist "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\validate-npm-packag
 type nul > "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\validate-npm-package-license\node_modules\spdx-expression-parse\package.json"
 
 set "STAGE_WIX=%TEST_TMP_DIR%\stage_fragment.wxs"
-call "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_payload.cmd" --source-dir "%MOCK_STAGE_DIR%" --wix-fragment "%STAGE_WIX%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\harvest_payload.cmd" --source-dir "%MOCK_STAGE_DIR%" --wix-fragment "%STAGE_WIX%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
 if errorlevel 1 (
     echo [FAIL] harvest_payload.cmd failed on mock stage >&2
     exit /b 1

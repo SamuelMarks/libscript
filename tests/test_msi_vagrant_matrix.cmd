@@ -136,7 +136,7 @@ if errorlevel 1 exit /b 1
 
 if "!COMPARE_WIX!"=="1" (
     echo ==^> [4b/5] Running Windows-only differential comparison against WiX...
-    call "!LIBSCRIPT_ROOT_DIR!\packaging\compare_msirs_wix.cmd" --target "_lib\web-apps\openedx"
+    call "!LIBSCRIPT_ROOT_DIR!\synthesis\msi\compare_msirs_wix.cmd" --target "workloads\apps\openedx"
     if errorlevel 1 exit /b 1
 )
 

@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%WAIT4X_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%WAIT4X_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%WAIT4X_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%WAIT4X_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -108,8 +108,8 @@ exit /b 0
 :action_use
 if "%WAIT4X_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%WAIT4X_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/atkrad/wait4x/releases/latest"`) do set "EXACT_VERSION=%%a"
-) else if "%WAIT4X_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/atkrad/wait4x/releases/latest"`) do set "EXACT_VERSION=%%a"
+if "%WAIT4X_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/atkrad/wait4x/releases/latest"`) do set "EXACT_VERSION=%%a"
+) else if "%WAIT4X_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/atkrad/wait4x/releases/latest"`) do set "EXACT_VERSION=%%a"
 ) else (
     set "EXACT_VERSION=%WAIT4X_VERSION%"
 )
@@ -134,7 +134,7 @@ if "%WAIT4X_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading wait4x %WAIT4X_VERSION% to %DOWNLOAD_DIR%\wait4x...
     if not exist "%DOWNLOAD_DIR%\wait4x" mkdir "%DOWNLOAD_DIR%\wait4x"
     if not "%WAIT4X_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WAIT4X_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\wait4x\wait4x-%WAIT4X_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%WAIT4X_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\wait4x\wait4x-%WAIT4X_VERSION%.zip"
     ) else (
         echo WAIT4X_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%WAIT4X_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends wait4x
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends wait4x
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\wait4x\wait4x-%WAIT4X_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%WAIT4X_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WAIT4X_DOWNLOAD_URL%" "%TEMP%\wait4x.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%WAIT4X_DOWNLOAD_URL%" "%TEMP%\wait4x.zip"
         tar -xf "%TEMP%\wait4x.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for wait4x.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "wait4x" "%ACTION%" "%WAIT4X_VERSION%" "%WAIT4X_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\wait4x\%WAIT4X_VERSION%\\bin\\wait4x.exe\"" "%LIBSCRIPT_HOME%\wait4x\%WAIT4X_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "wait4x" "%ACTION%" "%WAIT4X_VERSION%" "%WAIT4X_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\wait4x\%WAIT4X_VERSION%\\bin\\wait4x.exe\"" "%LIBSCRIPT_HOME%\wait4x\%WAIT4X_VERSION%"
 exit /b !errorlevel!

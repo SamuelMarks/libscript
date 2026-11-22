@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "containers",
+  "description": "Daemonless, rootless OCI container and pod management engine (podman) compatible with Docker CLI workflows.",
+  "name": "podman",
+  "os_whitelist": ["all"],
+  "provides": ["podman"],
+  "repository": "https://github.com/containers/podman",
+  "tier": "T1",
+  "title": "Podman Daemonless Container Engine"
+}

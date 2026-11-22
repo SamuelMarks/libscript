@@ -1,17 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "caddy",
-  "title": "Caddy",
-  "description": "A powerful, enterprise-ready, open source web server with automatic HTTPS written in Go.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "web-servers",
-  "provides": ["web-server", "reverse-proxy", "caddy"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "ports": [80, 443],
-  "stateful": false,
-  "multitenant": true,
+  "description": "A powerful, enterprise-ready, open source web server with automatic HTTPS written in Go.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -24,11 +19,17 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
+  "multitenant": true,
+  "name": "caddy",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [80, 443],
   "process_model": "single-process",
-  "unikernel_support": ["unikraft", "nanos", "osv"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["web-server", "reverse-proxy", "caddy"],
+  "stateful": false,
+  "tier": "T1",
+  "title": "Caddy",
+  "unikernel_support": ["unikraft", "nanos", "osv"]
 }

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "msitools",
-  "title": "GNOME msitools (wixl)",
-  "description": "GNOME msitools suite providing wixl, msiinfo, msibuild, msidump, and msiextract for MSI authoring baselines.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["msitools", "wixl"],
+  "description": "GNOME msitools suite providing wixl, msiinfo, msibuild, msidump, and msiextract for MSI authoring baselines.",
+  "name": "msitools",
   "os_whitelist": ["linux", "darwin", "freebsd"],
+  "provides": ["msitools", "wixl"],
   "repository": "https://gitlab.gnome.org/GNOME/msitools",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "GNOME msitools (wixl)"
 }

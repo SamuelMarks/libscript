@@ -54,7 +54,7 @@ running the setup script.
 | `ARM_NONE_EABI_GCC_RELEASES_URL`   | Override URL for querying arm-none-eabi-gcc available remote releases.                                                                                     | `none`   |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

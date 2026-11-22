@@ -36,7 +36,7 @@ case "${1:-}" in
     exec "${SCRIPT_DIR}/service.sh" "$@"
     ;;
 esac
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%PYTHON_SERVER_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%PYTHON_SERVER_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%PYTHON_SERVER_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%PYTHON_SERVER_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/python/cpython" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%PYTHON_SERVER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading python-server %PYTHON_SERVER_VERSION% to %DOWNLOAD_DIR%\python-server...
     if not exist "%DOWNLOAD_DIR%\python-server" mkdir "%DOWNLOAD_DIR%\python-server"
     if not "%PYTHON_SERVER_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_SERVER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\python-server\python-server-%PYTHON_SERVER_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PYTHON_SERVER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\python-server\python-server-%PYTHON_SERVER_VERSION%.zip"
     ) else (
         echo PYTHON_SERVER_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs the requested python-server version using the configured installation method.
 :action_install
 if "%PYTHON_SERVER_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python-server
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends python-server
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\python-server\python-server-%PYTHON_SERVER_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PYTHON_SERVER_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_SERVER_DOWNLOAD_URL%" "%TEMP%\python-server.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PYTHON_SERVER_DOWNLOAD_URL%" "%TEMP%\python-server.zip"
         tar -xf "%TEMP%\python-server.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for python-server.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "python-server" "%ACTION%" "%PYTHON_SERVER_VERSION%" "%PYTHON_SERVER_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\python-server\%PYTHON_SERVER_VERSION%\\bin\\python-server.exe\"" "%LIBSCRIPT_HOME%\python-server\%PYTHON_SERVER_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "python-server" "%ACTION%" "%PYTHON_SERVER_VERSION%" "%PYTHON_SERVER_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\python-server\%PYTHON_SERVER_VERSION%\\bin\\python-server.exe\"" "%LIBSCRIPT_HOME%\python-server\%PYTHON_SERVER_VERSION%"
 exit /b !errorlevel!

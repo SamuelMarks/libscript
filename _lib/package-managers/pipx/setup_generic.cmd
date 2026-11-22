@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%PIPX_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%PIPX_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%PIPX_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%PIPX_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/pypa/pipx" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%PIPX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pipx %PIPX_VERSION% to %DOWNLOAD_DIR%\pipx...
     if not exist "%DOWNLOAD_DIR%\pipx" mkdir "%DOWNLOAD_DIR%\pipx"
     if not "%PIPX_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PIPX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pipx\pipx-%PIPX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PIPX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pipx\pipx-%PIPX_VERSION%.zip"
     ) else (
         echo PIPX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PIPX_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pipx
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends pipx
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pipx\pipx-%PIPX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PIPX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PIPX_DOWNLOAD_URL%" "%TEMP%\pipx.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PIPX_DOWNLOAD_URL%" "%TEMP%\pipx.zip"
         tar -xf "%TEMP%\pipx.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pipx.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "pipx" "%ACTION%" "%PIPX_VERSION%" "%PIPX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\pipx\%PIPX_VERSION%\\bin\\pipx.exe\"" "%LIBSCRIPT_HOME%\pipx\%PIPX_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "pipx" "%ACTION%" "%PIPX_VERSION%" "%PIPX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\pipx\%PIPX_VERSION%\\bin\\pipx.exe\"" "%LIBSCRIPT_HOME%\pipx\%PIPX_VERSION%"
 exit /b !errorlevel!

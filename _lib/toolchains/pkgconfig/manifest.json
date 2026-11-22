@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pkgconfig",
-  "title": "pkg-config / pkgconf",
-  "description": "Compiler and linker metadata query tool for installed libraries.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["pkgconfig", "pkg-config", "pkgconf"],
+  "description": "Compiler and linker metadata query tool for installed libraries.",
+  "name": "pkgconfig",
   "os_whitelist": ["all"],
+  "provides": ["pkgconfig", "pkg-config", "pkgconf"],
   "repository": "https://github.com/pkgconf/pkgconf",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pkg-config / pkgconf"
 }

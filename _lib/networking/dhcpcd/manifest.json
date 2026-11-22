@@ -1,16 +1,17 @@
 {
-  "name": "dhcpcd",
-  "title": "dhcpcd",
-  "description": "RFC-compliant DHCP client daemon",
-  "provides": ["dhcpcd"],
+  "capabilities": ["userland-package"],
   "category": "networking",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "RFC-compliant DHCP client daemon",
+  "name": "dhcpcd",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["dhcpcd"],
+  "tier": "T1",
+  "title": "dhcpcd",
+  "versions": ["1.0.0"]
 }

@@ -82,7 +82,7 @@ CACHE_TARGET="${TEST_TMP_DIR}/cache"
 # Test 1: Verify-only fails when file is missing
 printf '[TEST 1/4] Verifying --verify-only reports missing artifact and exits non-zero...\n'
 set +e
-"${LIBSCRIPT_ROOT_DIR}/packaging/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t1.log" 2>&1
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t1.log" 2>&1
 T1_EXIT=$?
 set -e
 if [ "$T1_EXIT" -ne 0 ]; then
@@ -95,7 +95,7 @@ fi
 
 # Test 2: Hydrate cache from local source
 printf '[TEST 2/4] Verifying cache hydration and SHA-256 verification...\n'
-"${LIBSCRIPT_ROOT_DIR}/packaging/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" > "${TEST_TMP_DIR}/t2.log" 2>&1
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" > "${TEST_TMP_DIR}/t2.log" 2>&1
 
 if [ -f "${CACHE_TARGET}/runtimes/dummy-runtime.zip" ]; then
   printf '[PASS] Artifact downloaded and placed in cache/runtimes/\n'
@@ -114,7 +114,7 @@ fi
 
 # Test 3: Verify-only succeeds when cache is fully intact
 printf '[TEST 3/4] Verifying --verify-only succeeds on intact cache...\n'
-"${LIBSCRIPT_ROOT_DIR}/packaging/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t3.log" 2>&1
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t3.log" 2>&1
 if grep -q "\[VALID\]" "${TEST_TMP_DIR}/t3.log"; then
   printf '[PASS] Cache verified successfully\n'
 else
@@ -127,7 +127,7 @@ fi
 printf '[TEST 4/4] Verifying corrupted artifact detection...\n'
 printf 'corrupted data truncated' > "${CACHE_TARGET}/runtimes/dummy-runtime.zip"
 set +e
-"${LIBSCRIPT_ROOT_DIR}/packaging/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t4.log" 2>&1
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t4.log" 2>&1
 T4_EXIT=$?
 set -e
 if [ "$T4_EXIT" -ne 0 ] && grep -q "CORRUPT" "${TEST_TMP_DIR}/t4.log"; then

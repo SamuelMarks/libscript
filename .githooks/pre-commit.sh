@@ -180,7 +180,7 @@ ensure_wincheck_bootstrapped() {
 printf '%s\n' 'Running pre-commit hooks...'
 
 AUDIT_MODE='--staged'
-STAGED_FILES=$(git diff --no-ext-diff --cached --name-only --diff-filter=ACM)
+STAGED_FILES=$(git diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM)
 if [ "${1:-}" = "--all" ]; then
     CHECK_FILES=$(git ls-files --cached --others --exclude-standard | while IFS= read -r _f; do [ -f "$_f" ] && printf '%s\n' "$_f"; done)
     AUDIT_MODE='--all'
@@ -285,6 +285,10 @@ fi
 
 if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_posix.sh" ]; then
     "${HOOK_REPO_ROOT}/devtools/audit/audit_posix.sh" "$AUDIT_MODE"
+fi
+
+if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_tiers.sh" ]; then
+    "${HOOK_REPO_ROOT}/devtools/audit/audit_tiers.sh" "$AUDIT_MODE"
 fi
 
 if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_version_manager.sh" ]; then

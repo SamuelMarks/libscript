@@ -50,7 +50,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "elixir"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "elixir"
 
 if "%ELIXIR_VERSION%"=="" set "ELIXIR_VERSION=1.16.2"
 if "%ELIXIR_VERSION%"=="latest" set "ELIXIR_VERSION=1.16.2"

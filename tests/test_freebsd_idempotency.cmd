@@ -65,16 +65,16 @@ set "REPO_ROOT=%SCRIPT_DIR%\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "PROFILE=%~1"
-if "%PROFILE%"=="" set "PROFILE=%REPO_ROOT%\profiles\freebsd\minimal-server.json"
+if "%PROFILE%"=="" set "PROFILE=%REPO_ROOT%\synthesis\profiles\freebsd\minimal-server.json"
 set "TEST_SYSROOT=%REPO_ROOT%\tests_tmp\idempotency_sysroot_%RANDOM%"
 
 if not exist "%REPO_ROOT%\tests_tmp" mkdir "%REPO_ROOT%\tests_tmp"
 
 echo [TEST]     Starting FreeBSD idempotency matrix test (Pass 1)...
-call "%REPO_ROOT%\_lib\freebsd\distro\assemble.cmd" "%PROFILE%" "%TEST_SYSROOT%" >nul 2>&1
+call "%REPO_ROOT%\synthesis\distro\freebsd\assemble.cmd" "%PROFILE%" "%TEST_SYSROOT%" >nul 2>&1
 
 echo [TEST]     Starting FreeBSD idempotency matrix test (Pass 2)...
-call "%REPO_ROOT%\_lib\freebsd\distro\assemble.cmd" "%PROFILE%" "%TEST_SYSROOT%" >nul 2>&1
+call "%REPO_ROOT%\synthesis\distro\freebsd\assemble.cmd" "%PROFILE%" "%TEST_SYSROOT%" >nul 2>&1
 
 echo [PASS]     Pass 2 skipped previously completed tasks.
 rd /s /q "%TEST_SYSROOT%" >nul 2>&1

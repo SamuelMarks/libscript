@@ -1,6 +1,10 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "package-managers",
+  "description": "Bootstrap module for the `msi-rs` package manager and WiX/msitools/msiexec replacement toolchain.",
   "name": "msi-rs",
+  "os_whitelist": ["linux", "darwin", "windows", "freebsd", "sunos", "illumos"],
   "provides": [
     "msi-rs",
     "msi",
@@ -26,9 +30,6 @@
     "msi-gui",
     "package-manager"
   ],
-  "os_whitelist": ["linux", "darwin", "windows", "freebsd", "sunos", "illumos"],
-  "title": "msi-rs",
-  "description": "Bootstrap module for the `msi-rs` package manager and WiX/msitools/msiexec replacement toolchain.",
-  "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "msi-rs"
 }

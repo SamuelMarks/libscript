@@ -53,19 +53,19 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\zookeeper\cli.cmd" install latest >nul
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\zookeeper\cli.cmd" start >nul
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\mesos\cli.cmd" install latest >nul
+call "%LIBSCRIPT_ROOT_DIR%\_lib\schedulers\mesos\cli.cmd" install latest >nul
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\mesos\cli.cmd" start >nul
+call "%LIBSCRIPT_ROOT_DIR%\_lib\schedulers\mesos\cli.cmd" start >nul
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\marathon\cli.cmd" install latest >nul
+call "%LIBSCRIPT_ROOT_DIR%\_lib\schedulers\marathon\cli.cmd" install latest >nul
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\marathon\cli.cmd" start >nul
+call "%LIBSCRIPT_ROOT_DIR%\_lib\schedulers\marathon\cli.cmd" start >nul
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\topologies\mesos-marathon-ha\cli.cmd" up >nul
+call "%LIBSCRIPT_ROOT_DIR%\infrastructure\clusters\mesos-marathon-ha\cli.cmd" up >nul
 if errorlevel 1 exit /b 1
 
 for %%V in (compile submit status logs stop destroy) do (
-    call "%LIBSCRIPT_ROOT_DIR%\payloads\schedulers\mesos.cmd" %%V "%LIBSCRIPT_ROOT_DIR%\payloads\ai\vllm\payload.json" >nul
+    call "%LIBSCRIPT_ROOT_DIR%\workloads\schedulers\mesos.cmd" %%V "%LIBSCRIPT_ROOT_DIR%\workloads\payloads\ai\vllm\payload.json" >nul
     if errorlevel 1 exit /b 1
 )
 echo [PASS] Apache Mesos + Marathon + ZooKeeper live end-to-end suite verified.

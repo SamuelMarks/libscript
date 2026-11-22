@@ -1,19 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "valkey",
-  "title": "Valkey",
-  "license": "BSD-3-Clause",
-  "license_name": "BSD 3-Clause 'New' or 'Revised' License",
-  "description": "A high-performance, open-source, in-memory data store that is fully compatible with Redis.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "caches",
-  "provides": ["cache", "kv-store", "redis-compatible", "valkey"],
   "conflicts": ["redis"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["windows"],
-  "ports": [6379],
-  "stateful": true,
-  "multitenant": true,
+  "description": "A high-performance, open-source, in-memory data store that is fully compatible with Redis.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -26,11 +19,19 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
+  "license": "BSD-3-Clause",
+  "license_name": "BSD 3-Clause 'New' or 'Revised' License",
+  "multitenant": true,
+  "name": "valkey",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["all"],
+  "ports": [6379],
   "process_model": "single-process",
-  "unikernel_support": ["unikraft", "nanos", "osv", "rumprun"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["cache", "kv-store", "redis-compatible", "valkey"],
+  "stateful": true,
+  "tier": "T1",
+  "title": "Valkey",
+  "unikernel_support": ["unikraft", "nanos", "osv", "rumprun"]
 }

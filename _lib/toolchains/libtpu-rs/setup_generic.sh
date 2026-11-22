@@ -27,13 +27,35 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for _ltr_lib in '_lib/_common/pkg_mgr.sh' '_lib/_common/versioning.sh' '_lib/_common/python_env.sh' '_lib/toolchains/_common/experiment_harness.sh'; do
+for _ltr_lib in 'engine/common/pkg_mgr.sh' 'engine/common/versioning.sh' 'engine/common/python_env.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_ltr_lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 unset SCRIPT_NAME _ltr_lib || true
+
+# ## write_pinned_cargo_profile
+# Emits deterministic Cargo release profile metadata JSON and exports Cargo CARGO_PROFILE_RELEASE_* invariants.
+write_pinned_cargo_profile() {
+  _wcp_prof="$1"
+  _wcp_out="$2"
+  export CARGO_PROFILE_RELEASE_OPT_LEVEL='3'
+  export CARGO_PROFILE_RELEASE_LTO='thin'
+  export CARGO_PROFILE_RELEASE_CODEGEN_UNITS='1'
+  printf '{"profile":"%s","opt_level":"3","lto":"thin","codegen_units":1}\n' "${_wcp_prof}" > "${_wcp_out}"
+}
+
+# ## strip_shared_lib_artifact
+# Copies and strips debug symbols from a shared library when strip is available on PATH.
+strip_shared_lib_artifact() {
+  _ssl_src="$1"
+  _ssl_dst="$2"
+  cp -f "${_ssl_src}" "${_ssl_dst}"
+  if command -v strip >/dev/null 2>&1; then
+    strip -x "${_ssl_dst}" 2>/dev/null || strip --strip-unneeded "${_ssl_dst}" 2>/dev/null || true
+  fi
+}
 
 LIBTPU_RS_INSTALL_METHOD="${LIBTPU_RS_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-from-source}}"
 ACTION="${ACTION:-install}"
@@ -108,7 +130,7 @@ case "$ACTION" in
     fi
 
     mkdir -p "${TARGET_DIR}/bin" "${TARGET_DIR}/lib"
-    libscript_exp_pin_cargo_release "${LIBTPU_RS_CARGO_PROFILE}" "${TARGET_DIR}/cargo_profile.json"
+    write_pinned_cargo_profile "${LIBTPU_RS_CARGO_PROFILE}" "${TARGET_DIR}/cargo_profile.json"
 
     _so_ext='so'
     if [ "${UNAME:-}" = "Darwin" ]; then
@@ -126,7 +148,7 @@ case "$ACTION" in
       _built_lib="${_src_repo}/target/release/libtpu_c_api.${_so_ext}"
       if [ -f "${_built_lib}" ]; then
         cp -f "${_built_lib}" "${TARGET_DIR}/lib/libtpu_c_api.unstripped.${_so_ext}"
-        libscript_exp_strip_shared_lib "${_built_lib}" "${TARGET_DIR}/lib/libtpu_c_api.${_so_ext}"
+        strip_shared_lib_artifact "${_built_lib}" "${TARGET_DIR}/lib/libtpu_c_api.${_so_ext}"
       fi
       if [ -n "${LIBTPU_RS_SLIM_FEATURES}" ]; then
         (
@@ -137,7 +159,7 @@ case "$ACTION" in
         _slim_lib="${_src_repo}/target/release-slim/release/libtpu_c_api.${_so_ext}"
         if [ -f "${_slim_lib}" ]; then
           cp -f "${_slim_lib}" "${TARGET_DIR}/lib/libtpu_c_api_slim.unstripped.${_so_ext}"
-          libscript_exp_strip_shared_lib "${_slim_lib}" "${TARGET_DIR}/lib/libtpu_c_api_slim.${_so_ext}"
+          strip_shared_lib_artifact "${_slim_lib}" "${TARGET_DIR}/lib/libtpu_c_api_slim.${_so_ext}"
         fi
       fi
     fi

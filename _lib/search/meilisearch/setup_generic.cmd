@@ -82,7 +82,7 @@ if "%ACTION%"=="install" (
         set "BIN_URL=https://github.com/meilisearch/meilisearch/releases/download/%MEILISEARCH_VERSION%/meilisearch-windows-amd64.exe"
     )
     echo [INFO] Downloading Meilisearch from !BIN_URL!...
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!BIN_URL!" "!TARGET_DIR!\meilisearch.exe" "SKIP"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!BIN_URL!" "!TARGET_DIR!\meilisearch.exe" "SKIP"
     exit /b 0
 ) else if "%ACTION%"=="uninstall" (
     rmdir /s /q "%LIBSCRIPT_HOME%\meilisearch\%MEILISEARCH_VERSION%" 2>nul

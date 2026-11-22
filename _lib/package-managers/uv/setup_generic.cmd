@@ -103,7 +103,7 @@ exit /b 0
 :action_ls_remote
 if "%UV_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%UV_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%UV_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%UV_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/astral-sh/uv" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -147,7 +147,7 @@ if "%UV_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading uv %UV_VERSION% to %DOWNLOAD_DIR%\uv...
     if not exist "%DOWNLOAD_DIR%\uv" mkdir "%DOWNLOAD_DIR%\uv"
     if not "%UV_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%UV_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%UV_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.zip"
     ) else (
         echo UV_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -165,7 +165,7 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if "%UV_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends uv
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends uv
     exit /b !errorlevel!
 )
 
@@ -181,12 +181,12 @@ if not exist "%TARGET_DIR%\bin\uv.exe" (
         tar -xf "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%UV_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%UV_DOWNLOAD_URL%" "%TEMP%\uv.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%UV_DOWNLOAD_URL%" "%TEMP%\uv.zip"
         tar -xf "%TEMP%\uv.zip" -C "%TARGET_DIR%"
     ) else (
         set "_UV_ARCH=x86_64"
         if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_UV_ARCH=aarch64"
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/astral-sh/uv/releases/latest/download/uv-!_UV_ARCH!-pc-windows-msvc.zip" "%TEMP%\uv.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/astral-sh/uv/releases/latest/download/uv-!_UV_ARCH!-pc-windows-msvc.zip" "%TEMP%\uv.zip"
         if not errorlevel 1 (
             tar -xf "%TEMP%\uv.zip" -C "%TARGET_DIR%\bin"
             del /f /q "%TEMP%\uv.zip" 2>nul
@@ -225,5 +225,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "uv" "%ACTION%" "%UV_VERSION%" "%UV_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\uv\%UV_VERSION%\\bin\\uv.exe\"" "%LIBSCRIPT_HOME%\uv\%UV_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "uv" "%ACTION%" "%UV_VERSION%" "%UV_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\uv\%UV_VERSION%\\bin\\uv.exe\"" "%LIBSCRIPT_HOME%\uv\%UV_VERSION%"
 exit /b !errorlevel!

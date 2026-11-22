@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cpp",
-  "title": "C++ Toolchain",
-  "description": "Standard C++ compiler and toolchain (G++/Clang++).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["compiler", "c++", "cpp", "g++", "clang++"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Standard C++ compiler and toolchain (G++/Clang++).",
+  "name": "cpp",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["compiler", "c++", "cpp", "g++", "clang++"],
+  "tier": "T1",
+  "title": "C++ Toolchain"
 }

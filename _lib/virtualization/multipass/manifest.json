@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "multipass",
-  "title": "Canonical Multipass",
-  "description": "Canonical Multipass lightweight Ubuntu VM orchestrator (multipass and multipassd) across Linux, macOS, and Windows.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "virtualization",
-  "provides": ["multipass", "multipassd"],
+  "description": "Canonical Multipass lightweight Ubuntu VM orchestrator (multipass and multipassd) across Linux, macOS, and Windows.",
+  "name": "multipass",
   "os_whitelist": ["linux", "macos", "windows"],
+  "provides": ["multipass", "multipassd"],
   "repository": "https://github.com/canonical/multipass",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Canonical Multipass"
 }

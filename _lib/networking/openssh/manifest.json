@@ -1,15 +1,16 @@
 {
-  "name": "openssh",
-  "title": "OpenSSH Server",
-  "description": "Hardened secure remote login and shell daemon",
-  "provides": ["openssh"],
+  "capabilities": ["userland-package"],
   "category": "networking",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "capabilities": ["versioned-artifact"]
+  "description": "Hardened secure remote login and shell daemon",
+  "name": "openssh",
+  "provides": ["openssh"],
+  "tier": "T1",
+  "title": "OpenSSH Server",
+  "versions": ["1.0.0"]
 }

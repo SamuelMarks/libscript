@@ -7,10 +7,11 @@ Self-contained empirical research campaigns (`experiments/<suite-id>/`) auto-dis
 `.\libscript.cmd experiment <verb> <suite-id>` on Windows) without modifying core CLI routers or
 Tier 1 `_lib/` software recipes.
 
-Every experiment plugin pairs declarative manifest validation (`experiment-suite.schema.json` and
-per-suite `vars.schema.json`), hermetic Tier 1 dependency provisioning, idempotent benchmark or VM
-execution, provenance-stamped JSON/CSV telemetry, and deterministic LaTeX macro or Markdown table
-synthesis with zero hand-typed manuscript numbers.
+Every experiment plugin pairs declarative manifest validation
+(`experiments/schemas/experiment-suite.schema.json` and per-suite `vars.schema.json`), hermetic Tier
+1 dependency provisioning, idempotent benchmark or VM execution, provenance-stamped JSON/CSV
+telemetry, and deterministic LaTeX macro or Markdown table synthesis with zero hand-typed manuscript
+numbers.
 
 ---
 
@@ -24,7 +25,7 @@ flowchart LR
     end
 
     subgraph Engine["Auto-Discovery & Schema Gate (experiments/engine.{sh,cmd})"]
-        ManifestGate["Validate suite.json against<br/>experiment-suite.schema.json"]
+        ManifestGate["Validate suite.json against<br/>experiments/schemas/experiment-suite.schema.json"]
         VarsGate["Validate --key=value flags against<br/>suite vars.schema.json"]
         DepGate["Provision required_components<br/>from _lib/<category>/<component>"]
     end
@@ -95,7 +96,7 @@ experiments/
 ├── engine.cmd                    # Native Windows Batch Open/Closed lifecycle engine
 └── <suite-id>/
     ├── README.md                 # Suite-specific documentation, CLI flags & expected outputs
-    ├── suite.json                # Declarative manifest validated against experiment-suite.schema.json
+    ├── suite.json                # Declarative manifest validated against experiments/schemas/experiment-suite.schema.json
     ├── vars.schema.json          # JSON Schema governing suite-specific CLI/env variables
     ├── run.sh                    # POSIX benchmark/verification entrypoint
     ├── run.cmd                   # Windows Batch benchmark/verification entrypoint
@@ -105,14 +106,14 @@ experiments/
 
 ### Supported Execution Substrates (`suite.json` -> `.substrate`)
 
-| Substrate           | Description                                                                                                                                                                                                                    |
-| :------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `local-native`      | Executes directly on bare-metal or pinned host hardware (enforcing native ISA checks, optional cache-drop, and optional cross-ISA `qemu-user` baselines).                                                                      |
-| `tpu-slice`         | Orchestrates single-host or multi-host Cloud TPU VMs / Queued Resources under TFRC zero-cost policy gates (`tfrc_guard.sh`), or runs locally with `--local-exec` / `--synthetic-fixtures`.                                     |
-| `installer-e2e`     | Delegates to `_lib/_common/experiment/pkg_ui_runner.{sh,cmd}` to boot Bento Vagrant guests, snapshot clean state, install native packages across `headless`/`quick`/`custom` modes, and capture guest UI/CDP browser evidence. |
-| `vagrant-os-matrix` | Coordinates multi-OS Bento Vagrant boxes (Linux, BSD, illumos, macOS, Windows, MS-DOS/FreeDOS) and host runners for cross-OS portability and idempotency campaigns.                                                            |
-| `cloud-vm`          | Provisions ephemeral bare-metal or dedicated cloud VMs (`mac2.metal`, `Standard_D160ads_v7`, `c7g.metal`, `Standard_D32s_v5`) via `_lib/cloud/core/experiment_cloud.{sh,cmd}`.                                                 |
-| `gke-xpk`           | Targets Google Kubernetes Engine / XPK multi-slice accelerator clusters.                                                                                                                                                       |
+| Substrate           | Description                                                                                                                                                                                                                |
+| :------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `local-native`      | Executes directly on bare-metal or pinned host hardware (enforcing native ISA checks, optional cache-drop, and optional cross-ISA `qemu-user` baselines).                                                                  |
+| `tpu-slice`         | Orchestrates single-host or multi-host Cloud TPU VMs / Queued Resources under TFRC zero-cost policy gates (`tfrc_guard.sh`), or runs locally with `--local-exec` / `--synthetic-fixtures`.                                 |
+| `installer-e2e`     | Delegates to `experiments/_common/pkg_ui_runner.{sh,cmd}` to boot Bento Vagrant guests, snapshot clean state, install native packages across `headless`/`quick`/`custom` modes, and capture guest UI/CDP browser evidence. |
+| `vagrant-os-matrix` | Coordinates multi-OS Bento Vagrant boxes (Linux, BSD, illumos, macOS, Windows, MS-DOS/FreeDOS) and host runners for cross-OS portability and idempotency campaigns.                                                        |
+| `cloud-vm`          | Provisions ephemeral bare-metal or dedicated cloud VMs (`mac2.metal`, `Standard_D160ads_v7`, `c7g.metal`, `Standard_D32s_v5`) via `experiments/cli/experiment_cloud.{sh,cmd}`.                                             |
+| `gke-xpk`           | Targets Google Kubernetes Engine / XPK multi-slice accelerator clusters.                                                                                                                                                   |
 
 ---
 
@@ -250,7 +251,7 @@ cp README.md ./build/smoke/README.staging.md
 # Or scaffold a declarative installer-e2e GUI/browser verification suite for any packaged web app
 ./libscript.sh experiment scaffold wordpress-e2e \
   --template=installer-e2e \
-  --packaging-manifest=../../_lib/web-apps/wordpress/packaging.json
+  --packaging-manifest=../../workloads/apps/wordpress/packaging.json
 ```
 
 > **Tip:** Set `LIBSCRIPT_EXPERIMENTS_DIR=/path/to/custom/experiments` (or `--out-root=...` during
@@ -267,7 +268,7 @@ cp README.md ./build/smoke/README.staging.md
 `STACK` trace diagnostics on `stderr`):
 
 ```text
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 edgcpp-backends	local-native	EDG C/C++ v7.0.1 Multi-Backend Empirical Evaluation & Zero-Hallucination Benchmarking Protocol (E0-E7)
 gemma-tpu	tpu-slice	Gemma 4 7-Backend Cloud TPU & TFRC Zero-Cost Evaluation Suite
@@ -281,12 +282,12 @@ win-port	vagrant-os-matrix	win_port 14-Repository Empirical Evaluation & Zero-Ha
 
 ```text
 $ ./libscript.sh experiment validate edgcpp-backends
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [PASS] Experiment suite "edgcpp-backends" validated cleanly.
 
 $ ./libscript.sh experiment provision openedx --dry-run=1
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [PROVISION] Verified required Tier 1 component: jq
 [DRY-RUN] Suite=openedx Box=bento/windows-11 Provider=qemu Artifact=msi (github-release) Modes=headless,quick,custom -> .../execution_plan.json
@@ -329,8 +330,7 @@ Depending on the suite class, artifacts are written under `--results-dir=<dir>` 
 - **Cloud & Multi-OS Rapid Host Lifecycle (`a_provision_instance`..`i_deprovision_instance`)**:
   [`../EXPERIMENTS.md`](../EXPERIMENTS.md)
 - **Master Suite Manifest JSON Schema**:
-  [`../experiment-suite.schema.json`](../experiment-suite.schema.json)
+  [`../experiments/schemas/experiment-suite.schema.json`](../experiments/schemas/experiment-suite.schema.json)
 - **7-OS Matrix Results JSON Schema**:
-  [`../schemas/os-matrix-results.schema.json`](../schemas/os-matrix-results.schema.json)
-- **CLI Router & Scaffolder**:
-  [`../cli/commands/experiment/README.md`](../cli/commands/experiment/README.md)
+  [`../experiments/schemas/os-matrix-results.schema.json`](../experiments/schemas/os-matrix-results.schema.json)
+- **CLI Router & Scaffolder**: [`../experiments/cli/README.md`](../experiments/cli/README.md)

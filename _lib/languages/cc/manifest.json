@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cc",
-  "title": "C Compiler",
-  "description": "Generic C compiler interface.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["cc", "toolchain"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Generic C compiler interface.",
+  "name": "cc",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["cc", "toolchain"],
+  "tier": "T1",
+  "title": "C Compiler"
 }

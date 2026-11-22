@@ -171,7 +171,7 @@ exit /b 0
 :action_ls_remote
 if "%NODEJS_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%NODEJS_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%NODEJS_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%NODEJS_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -215,7 +215,7 @@ if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nodejs %NODEJS_VERSION% to %DOWNLOAD_DIR%\nodejs...
     if not exist "%DOWNLOAD_DIR%\nodejs" mkdir "%DOWNLOAD_DIR%\nodejs"
     if not "%NODEJS_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NODEJS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NODEJS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.zip"
     ) else (
         echo NODEJS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -243,7 +243,7 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if "%NODEJS_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nodejs
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends nodejs
     exit /b !errorlevel!
 )
 
@@ -273,7 +273,7 @@ if "!_NODE_INSTALLED!"=="0" (
         tar -xf "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NODEJS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NODEJS_DOWNLOAD_URL%" "%TEMP%\nodejs.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NODEJS_DOWNLOAD_URL%" "%TEMP%\nodejs.zip"
         tar -xf "%TEMP%\nodejs.zip" -C "%TARGET_DIR%"
     ) else (
         set "_NODE_ARCH=x64"
@@ -288,7 +288,7 @@ if "!_NODE_INSTALLED!"=="0" (
         if not "!_NODE_VER:~0,1!"=="v" set "_NODE_VER=v!_NODE_VER!"
         set "_NODE_URL=https://nodejs.org/dist/!_NODE_VER!/node-!_NODE_VER!-win-!_NODE_ARCH!.zip"
         echo Downloading Node.js from !_NODE_URL!...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_NODE_URL!" "%TEMP%\nodejs.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!_NODE_URL!" "%TEMP%\nodejs.zip"
         set "_NODE_DL_OK=0"
         if not errorlevel 1 (
             if exist "%TEMP%\nodejs.zip" set "_NODE_DL_OK=1"
@@ -298,7 +298,7 @@ if "!_NODE_INSTALLED!"=="0" (
             if exist "%TARGET_DIR%\node.exe" copy /y "%TARGET_DIR%\node.exe" "%TARGET_DIR%\bin\node.exe" >nul 2>&1
             del /f /q "%TEMP%\nodejs.zip" 2>nul
         ) else (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nodejs
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends nodejs
         )
     )
 ) else (
@@ -314,7 +314,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\nodejs\default"
 if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "nodejs" "default" "%NODEJS_VERSION%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "nodejs" "default" "%NODEJS_VERSION%"
 )
 exit /b 0
 
@@ -330,5 +330,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "nodejs" "%ACTION%" "%NODEJS_VERSION%" "%NODEJS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%\\bin\\nodejs.exe\"" "%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "nodejs" "%ACTION%" "%NODEJS_VERSION%" "%NODEJS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%\\bin\\nodejs.exe\"" "%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%"
 exit /b !errorlevel!

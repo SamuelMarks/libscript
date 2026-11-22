@@ -63,7 +63,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\vcpkg-tool\%VCPKG_TOOL_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "vcpkg-tool" "%VCPKG_TOOL_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "vcpkg-tool" "%VCPKG_TOOL_VERSION%"
 
 endlocal & (
     set "VCPKG_TOOL_VERSION=%VCPKG_TOOL_VERSION%"

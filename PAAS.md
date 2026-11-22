@@ -13,20 +13,19 @@ can run on any infrastructure—from a single laptop to a distributed multicloud
 
 ```mermaid
 flowchart TD
-    ControlPlane["Control Plane: libscript CLI + libscript-rest-api (OpenAPI 3.2.0)"]
-    Tier4["Tier 4 Payloads & Schedulers: K8s | Nomad | Mesos | 8+ Native Inits | MicroVMs | XPK/Slurm"]
-    Tier35["Tier 3.5 Topologies: .topology_state.json + Lease Locking + Split-Brain Fencing"]
-    Traits["Unified Traits: Storage | Zero-Leak Secrets | Firewall | Mesh/Cloud DNS | netctl Ingress | CoW/Object Backup"]
-    Tier3["Tier 3 Multicloud IaaS: AWS | Azure | GCP (TPU/GPU) | Hetzner | Proxmox | Vagrant"]
-    Tier1Hooks["Tier 1 Component Hooks: Physical (configure/probe/announce/backup) + Logical Multi-Tenant (provision_tenant)"]
+    ControlPlane["Plane B Control Plane: libscript CLI + libscript-rest-api (OpenAPI 3.2.0)"]
+    T5["T5 Workloads, Stacks & Constellations: K8s | Nomad | Mesos | Native Inits | MicroVMs | XPK/Slurm | HA Constellations"]
+    T4["T4 Multicloud IaaS & Cluster Substrates: AWS | Azure | GCP (TPU/GPU) | Hetzner | Proxmox | k0s-ha | gke-tpu-cluster"]
+    Traits["Plane A Unified Traits: Storage | Zero-Leak Secrets | Firewall | Mesh/Cloud DNS | netctl Ingress | CoW/Object Backup"]
+    T1Hooks["T1/T2 Component Hooks + T0 Consensus: Physical/Logical Hooks + Lease Locking & Split-Brain Fencing"]
 
-    ControlPlane --> Tier4
-    ControlPlane --> Tier35
+    ControlPlane --> T5
+    ControlPlane --> T4
     ControlPlane --> Traits
-    Tier4 --> Tier35
-    Tier35 --> Tier3
-    Tier35 --> Traits
-    Traits --> Tier1Hooks
+    T5 --> T4
+    T5 --> Traits
+    T4 --> Traits
+    Traits --> T1Hooks
 ```
 
 ## PaaS Capabilities
@@ -57,22 +56,22 @@ flowchart TD
 - **Flexible Deployment Targets:** Stacks can be deployed as native system services, generated into
   `docker-compose` manifests, or bundled into standalone native installers.
 - **Machine Learning, TPU Slices & 4-Role GCS Coordination:** Unified scheduling across `tpu_vm`,
-  `xpk` (GKE TPU slices), and `kubernetes` via `payloads/engine.{sh,cmd}`, paired with
-  `schemas/gcs-ml-storage.schema.json` and `traits/storage/gcs_ml.{sh,cmd}` separating native
+  `xpk` (GKE TPU slices), and `kubernetes` via `workloads/engine.{sh,cmd}`, paired with
+  `engine/schemas/gcs-ml-storage.schema.json` and `traits/storage/gcs_ml.{sh,cmd}` separating native
   `gs://` streaming datasets, Orbax/PyTorch multi-host checkpoints, persistent
   `JAX_COMPILATION_CACHE_DIR`, and GKE `gke-gcsfuse-csi-driver` / Workload Identity mounts under
   TFRC zero-cost regionality guards.
 - **Unikernel Constellations & Cloud Marketplace Publishing:** Decomposes multi-service stacks such
-  as Open edX (`profiles/openedx-unikernel/*.json` +
-  `topologies/openedx-unikernel-pod/topology.json`) into single-process UEFI/GPT unikernel images
-  (`--cloud-boot=uefi-gpt`) and publishes compliance-gated SPDX 2.3 SBOM + CloudFormation, Azure
-  Managed Application, and GCP Terraform Marketplace offers via
+  as Open edX (`synthesis/profiles/unikernel/openedx/*.json` +
+  `workloads/constellations/openedx-unikernel-pod/topology.json`) into single-process UEFI/GPT
+  unikernel images (`--cloud-boot=uefi-gpt`) and publishes compliance-gated SPDX 2.3 SBOM +
+  CloudFormation, Azure Managed Application, and GCP Terraform Marketplace offers via
   `./libscript.sh publish-marketplace`.
 - **Programmatic REST API & OpenAPI Engine:** The native C11 HTTP daemon (`libscript-rest-api`,
   built on `c-rest-framework`) provides an HTTP API conforming to OpenAPI 3.2.0 (including
-  `/api/v1/experiments`, `/api/v1/marketplace/publish`, and
-  `/api/v1/components/{name}/capabilities`) for remote provisioning, continuous deployment, and
-  fleet management.
+  `/v1/recipes`, `/v1/synthesis`, `/v1/infrastructure`, `/v1/workloads`, `/v1/traits`,
+  `/v1/experiments`, and `/v1/recipes/{name}/capabilities`) for remote provisioning, continuous
+  deployment, and fleet management.
 
 ## Roadmap to Maturity
 
@@ -87,9 +86,10 @@ resolution, and service bootstrapping into a single atomic operation.
 
 ### Phase 3: Global State Management & Consensus Topologies (Implemented)
 
-Distributed state tracking (`.topology_state.json`), lease locking (`topologies/lock.{sh,cmd}`),
-automated split-brain fencing (`topologies/fence.{sh,cmd}`), and ZFS/Btrfs CoW + object storage
-backup synchronization (`traits/backup/`) across multiple cloud providers and local nodes.
+Distributed state tracking (`.topology_state.json`), lease locking
+(`engine/consensus/lock.{sh,cmd}`), automated split-brain fencing
+(`engine/consensus/fence.{sh,cmd}`), and ZFS/Btrfs CoW + object storage backup synchronization
+(`traits/backup/`) across multiple cloud providers and local nodes.
 
 ### Phase 4: Programmatic REST API & Edge Interface (Implemented)
 
@@ -98,11 +98,11 @@ for orchestrating provisioning, monitoring stack health, and remote execution ac
 
 ### Phase 5: Multi-Node Cluster Schedulers & HA Topologies (Implemented)
 
-Compile and schedule declarative workloads (`payloads/payload.schema.json`) onto **Kubernetes**
-(`kubernetes`, `k8s-marathon`, `k0s`), **Apache Mesos & Marathon** (`mesos`, `marathon`),
-**HashiCorp Nomad** (`nomad`), **Slurm/Ray** (`slurm_ray`), **Google XPK & Cloud TPU VMs** (`xpk`,
-`tpu_vm`), **MicroVMs/Unikernels & RTOS** (`microvm`, `rtos_firmware`), and **8+ Native Init
-Systems** (`native`), backed by turnkey High-Availability blueprints (`postgres-ha`,
+Compile and schedule declarative workloads (`workloads/schemas/payload.schema.json`) onto
+**Kubernetes** (`kubernetes`, `k8s-marathon`, `k0s`), **Apache Mesos & Marathon** (`mesos`,
+`marathon`), **HashiCorp Nomad** (`nomad`), **Slurm/Ray** (`slurm_ray`), **Google XPK & Cloud TPU
+VMs** (`xpk`, `tpu_vm`), **MicroVMs/Unikernels & RTOS** (`microvm`, `rtos_firmware`), and **8+
+Native Init Systems** (`native`), backed by turnkey High-Availability blueprints (`postgres-ha`,
 `redis-cluster`, `valkey-cluster`, `openedx-ha`, `openedx-unikernel-pod`, `minio-distributed`,
 `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `gke-tpu-cluster`).
 

@@ -1,18 +1,19 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rosbe",
-  "title": "ReactOS Build Environment (RosBE)",
-  "description": "Isolated ReactOS Build Environment cross-compilation toolchain providing i686-w64-mingw32 and x86_64-w64-mingw32 GCC/binutils and host-tools integration alongside CMake and Ninja.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "cross-toolchain"],
   "category": "toolchains",
-  "provides": ["rosbe"],
   "conflicts": [],
-  "versions": ["latest", "2.2.1"],
+  "description": "Isolated ReactOS Build Environment cross-compilation toolchain providing i686-w64-mingw32 and x86_64-w64-mingw32 GCC/binutils and host-tools integration alongside CMake and Ninja.",
+  "name": "rosbe",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "provides": ["rosbe"],
+  "repository": "https://reactos.org/wiki/Build_Environment",
   "sub_artifacts": {
     "targets": ["i686-w64-mingw32", "x86_64-w64-mingw32"]
   },
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "repository": "https://reactos.org/wiki/Build_Environment",
-  "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "ReactOS Build Environment (RosBE)",
+  "versions": ["latest", "2.2.1"]
 }

@@ -1,15 +1,16 @@
 {
-  "name": "busybox",
-  "title": "BusyBox",
-  "description": "Swiss Army Knife of embedded Linux utilities",
-  "provides": ["busybox"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "capabilities": ["versioned-artifact"]
+  "description": "Swiss Army Knife of embedded Linux utilities",
+  "name": "busybox",
+  "provides": ["busybox"],
+  "tier": "T2",
+  "title": "BusyBox",
+  "versions": ["1.0.0"]
 }

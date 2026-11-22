@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/workloads/apps/phpbb/vars.schema.json",
+  "title": "phpBB Variables",
+  "description": "Configuration variables for deploying and serving the phpBB forum web application.",
+  "type": "object",
+  "properties": {
+    "PHPBB_LISTEN": {
+      "type": "string",
+      "description": "HTTP bind address:port or UNIX socket endpoint configured for phpBB."
+    },
+    "PHPBB_PHP_FPM_LISTEN": {
+      "type": "string",
+      "description": "PHP-FPM FastCGI upstream socket or host:port endpoint executing phpBB scripts."
+    },
+    "PHPBB_SERVER_NAME": {
+      "type": "string",
+      "description": "Virtual host domain or hostname serving the phpBB forum."
+    },
+    "PHPBB_WEBSERVER": {
+      "type": "string",
+      "description": "Frontend web server component fronting phpBB (e.g., nginx, caddy, httpd)."
+    },
+    "PHPBB_VERSION": {
+      "type": "string",
+      "description": "Target phpBB release version or alias (e.g., latest) to install."
+    },
+    "PHPBB_DB_PASS": {
+      "type": "string",
+      "description": "Database password authenticating the phpBB database account."
+    },
+    "PHPBB_DB_TYPE": {
+      "type": "string",
+      "description": "Database driver backend for phpBB (e.g., postgres, mysql, mariadb, sqlite3)."
+    },
+    "PHPBB_WWWROOT": {
+      "type": "string",
+      "description": "Filesystem document root directory containing the unpacked phpBB installation."
+    },
+    "PHPBB_DB_NAME": {
+      "type": "string",
+      "description": "Database name storing phpBB forum topics, users, and configuration."
+    },
+    "PHPBB_DB_USER": {
+      "type": "string",
+      "description": "Database username used by phpBB to connect to its database."
+    }
+  }
+}

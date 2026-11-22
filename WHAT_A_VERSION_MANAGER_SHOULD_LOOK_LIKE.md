@@ -39,7 +39,7 @@ _Example for Python (assuming default `LIBSCRIPT_HOME`):_
 **Aliases via Symlinks & `O(1)` Active Bin Farm:** When a user requests an alias (like `lts`,
 `latest`, `stable`, or `beta`), the setup script resolves the exact version, installs it to its
 exact version directory, and creates a symlink/junction for the alias. When `default` is updated via
-`libscript use <pkg> <ver>` (or `install --use`), `_lib/_common/versioning.{sh,cmd}` atomically
+`libscript use <pkg> <ver>` (or `install --use`), `engine/common/versioning.{sh,cmd}` atomically
 synchronizes executable shims in `${LIBSCRIPT_HOME}/bin` (`O(1)` `PATH` entry) and redirects or
 prunes stale shims on `uninstall`.
 
@@ -49,10 +49,13 @@ single `.libscript-version` file (`rust=1.85.0`, `nodejs=22.14.0`, `python=3.12.
 sourced activation file without `eval`.
 
 **Capability-Typed Manifests & Toolchain Sub-Artifacts:** Every `manifest.json` declares its
-`"capabilities"` (`"versioned-artifact"`, `"service-daemon"`, `"sysroot-library"`,
-`"cloud-operator"`, `"os-synthesizer"`). Daemon-only verbs (`start`, `stop`, `install-service`) fail
-fast with a non-zero semantic error on non-daemons, while cross-compiling toolchains expose
-`target-add`, `target-rm`, `target-ls`, `component-add`, and `component-ls`.
+`"tier"` (`"T1"` userland/daemon or `"T2"` sysroot/OS plumbing) and `"capabilities"`
+(`"userland-package"`, `"service-daemon"`, `"sysroot-package"`, `"sysroot-library"`,
+`"cross-toolchain"`, `"kernel-image"`, `"bootloader"`). Unprivileged `use` switching applies
+strictly to `T1` packages (failing with exit code `2` on `T2` sysroot-only packages), daemon-only
+verbs (`start`, `stop`, `install-service`) fail fast with a non-zero semantic error on non-daemons,
+and cross-compiling toolchains expose `target-add`, `target-rm`, `target-ls`, `component-add`, and
+`component-ls`.
 
 _Example:_ `${LIBSCRIPT_HOME}/nodejs/lts` -> `${LIBSCRIPT_HOME}/nodejs/v22.14.0`
 
@@ -156,7 +159,7 @@ Supported methods:
 - **`libscript_native`**: (Default) The libscript_native isolated version manager logic detailed in
   this document.
 - **`from-source`**: Compiles the component from verified source code via
-  `_lib/_common/source_builder.{sh,cmd}` using either the default platform C toolchain
+  `engine/common/source_builder.{sh,cmd}` using either the default platform C toolchain
   (`--toolchain=default`) or a specified C/C++ compiler
   (`--toolchain=gcc|clang|tcc|edgcpp|custom-cc` or `--custom-cc=/path/to/cc`), staging into
   `${LIBSCRIPT_HOME}/<component>/<version>[-<cc>]/` and writing `build-metrics.json`.
@@ -185,14 +188,14 @@ integration or prohibitive compilation requirements:
 ## 7. Dual-Layer Component Lifecycle Hook Contract (`hooks/<action>.{sh,cmd}`)
 
 Stateful daemons and multi-tenant engines expose an optional `hooks/` directory dispatched via
-`_lib/_common/hooks.sh` and `_lib/_common/hooks.cmd`
+`engine/common/hooks.sh` and `engine/common/hooks.cmd`
 (`libscript_exec_hook <component> <hook> [args...]`).
 
 ### 7.1 Physical Instance Hooks
 
 Manage the physical daemon instance and its data directory:
 
-1. **`configure`**: Renders configuration templates via `_lib/_common/envsubst_safe.{sh,cmd}`,
+1. **`configure`**: Renders configuration templates via `engine/common/envsubst_safe.{sh,cmd}`,
    accepting `--role <standalone|leader|follower|arbiter>`, `--sysroot <path>`, and
    `--secrets-file <fifo_or_path>` (for zero-env-leak secret streaming).
 2. **`probe <startup|liveness|readiness> [--remote-host <host>]`**:

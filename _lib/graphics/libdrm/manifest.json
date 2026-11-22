@@ -1,16 +1,17 @@
 {
-  "name": "libdrm",
-  "title": "Direct Rendering Manager",
-  "description": "Low-level userspace interface to kernel DRM",
-  "provides": ["libdrm"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "graphics",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Low-level userspace interface to kernel DRM",
+  "name": "libdrm",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "provides": ["libdrm"],
+  "tier": "T2",
+  "title": "Direct Rendering Manager",
+  "versions": ["1.0.0"]
 }

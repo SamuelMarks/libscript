@@ -77,17 +77,17 @@ if /i "!_ACT!"=="override-env" (
 if /i "!_ACT!"=="configure" (
     call :configure_ollama_env "%~2"
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" status "!_SVC!" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" status "!_SVC!" >nul 2>&1
     if not errorlevel 1 (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" restart "!_SVC!"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" restart "!_SVC!"
         call :wait_for_ollama_ready
     )
     exit /b 0
 )
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "!_ACT!" "!_SVC!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" "!_ACT!" "!_SVC!"
 set "_SVC_RC=!ERRORLEVEL!"
 if /i "!_ACT!"=="start" call :wait_for_ollama_ready
 if /i "!_ACT!"=="restart" call :wait_for_ollama_ready
@@ -179,12 +179,12 @@ set "_COE_EXTRA="
 if not "!_COE_LLM!"=="" set "_COE_EXTRA=!_COE_EXTRA! \"OLLAMA_LLM_LIBRARY=!_COE_LLM!\""
 if not "!_COE_GPU!"=="" set "_COE_EXTRA=!_COE_EXTRA! \"OLLAMA_NUM_GPU=!_COE_GPU!\""
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "!_SVC!" "OLLAMA_MODELS=!OLLAMA_MODELS!" "OLLAMA_HOST=!_COE_HOST!" "OLLAMA_NUM_PARALLEL=!_COE_PAR!" "OLLAMA_MAX_LOADED_MODELS=!_COE_MAX!" "OLLAMA_FLASH_ATTENTION=!_COE_FA!" "OLLAMA_KV_CACHE_TYPE=!_COE_KV!" "OLLAMA_CONTEXT_LENGTH=!_COE_CTX!" "OLLAMA_MAX_QUEUE=!_COE_Q!" "OLLAMA_KEEP_ALIVE=!_COE_KA!" "GGML_BACKEND_AMX=!_COE_AMX!" !_COE_EXTRA!
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\service_install.cmd" override-env "!_SVC!" "OLLAMA_MODELS=!OLLAMA_MODELS!" "OLLAMA_HOST=!_COE_HOST!" "OLLAMA_NUM_PARALLEL=!_COE_PAR!" "OLLAMA_MAX_LOADED_MODELS=!_COE_MAX!" "OLLAMA_FLASH_ATTENTION=!_COE_FA!" "OLLAMA_KV_CACHE_TYPE=!_COE_KV!" "OLLAMA_CONTEXT_LENGTH=!_COE_CTX!" "OLLAMA_MAX_QUEUE=!_COE_Q!" "OLLAMA_KEEP_ALIVE=!_COE_KA!" "GGML_BACKEND_AMX=!_COE_AMX!" !_COE_EXTRA!
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" status "!_SVC!" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" status "!_SVC!" >nul 2>&1
 if not errorlevel 1 (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" restart "!_SVC!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" restart "!_SVC!"
     call :wait_for_ollama_ready
 )
 exit /b 0
@@ -270,7 +270,7 @@ set "_WOR_MAX=%OLLAMA_READY_TIMEOUT%"
 if "!_WOR_MAX!"=="" set "_WOR_MAX=30"
 for /l %%I in (1,1,!_WOR_MAX!) do (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!OLLAMA_HOST!/api/tags" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!OLLAMA_HOST!/api/tags" >nul 2>&1
     if not errorlevel 1 exit /b 0
     where ollama >nul 2>&1
     if not errorlevel 1 (

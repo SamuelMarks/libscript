@@ -48,7 +48,7 @@ trap cleanup EXIT INT TERM
 printf '=== Test: Validating Modular Zero-.EXE MSI Packaging and Reuse ===\n'
 
 # 1. Validate GUID registry existence and format
-REGISTRY_JSON="${LIBSCRIPT_ROOT_DIR}/packaging/guid_registry.json"
+REGISTRY_JSON="${LIBSCRIPT_ROOT_DIR}/synthesis/msi/guid_registry.json"
 if [ ! -f "$REGISTRY_JSON" ]; then
   printf '[FAIL] guid_registry.json missing.\n' >&2
   exit 1
@@ -58,14 +58,14 @@ printf '[PASS] Verified guid_registry.json exists.\n'
 # 2. Build standalone component MSIs
 for comp in mysql redis mongodb python nodejs meilisearch caddy gunicorn exim nodeenv; do
   printf '[INFO] Building standalone MSI for %s...\n' "$comp"
-  "${LIBSCRIPT_ROOT_DIR}/packaging/build_component_msi.sh" --component "$comp" --variant online
+  "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/build_component_msi.sh" --component "$comp" --variant online
   if ! find "${LIBSCRIPT_ROOT_DIR}/dist/msi" -maxdepth 1 -name "libscript-${comp}-*.msi" | grep -q .; then
     printf '[FAIL] Missing expected standalone MSI for component %s\n' "$comp" >&2
     exit 1
   fi
 done
 for comp in gunicorn exim nodeenv; do
-  "${LIBSCRIPT_ROOT_DIR}/packaging/build_component_msi.sh" --component "$comp" --variant offline
+  "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/build_component_msi.sh" --component "$comp" --variant offline
   if ! find "${LIBSCRIPT_ROOT_DIR}/dist/msi" -maxdepth 1 -name "${comp}-*-offline.msi" | grep -q .; then
     printf '[FAIL] Missing expected offline standalone MSI for component %s\n' "$comp" >&2
     exit 1
@@ -75,12 +75,12 @@ printf '[PASS] All 10 standalone component MSIs built successfully.\n'
 
 # 3. Build Master Orchestrator MSIs (Online and Offline)
 printf '[INFO] Building Master Orchestrator MSIs...\n'
-"${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "_lib/web-apps/openedx" --version "22.1.0" --variant "online" --out "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-22.1.0" >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/build_msi.sh" "workloads/apps/openedx" --version "22.1.0" --variant "online" --out "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-22.1.0" >/dev/null
 if [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-22.1.0.msi" ] && [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-22.1.0.wxs" ]; then
   printf '[FAIL] Missing openedx-22.1.0.msi or .wxs (online)\n' >&2
   exit 1
 fi
-"${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "_lib/web-apps/openedx" --version "22.1.0" --variant "offline" --out "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-offline-22.1.0" >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/build_msi.sh" "workloads/apps/openedx" --version "22.1.0" --variant "offline" --out "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-offline-22.1.0" >/dev/null
 if [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-offline-22.1.0.msi" ] && [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-offline-22.1.0.wxs" ]; then
   printf '[FAIL] Missing openedx-offline-22.1.0.msi or .wxs (offline)\n' >&2
   exit 1

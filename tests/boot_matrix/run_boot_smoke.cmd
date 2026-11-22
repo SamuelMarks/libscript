@@ -56,7 +56,7 @@ set "TMP_BOOT=%TEMP%\libscript_bootsmoke_%RANDOM%"
 for %%K in (linux freebsd illumos unikraft nanos osv rumprun mirageos) do (
     set "LIBSCRIPT_ALLOW_STUB=1"
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\direct_kernel.cmd" --kernel=%%K --allow-stub "!TMP_BOOT!\sys_%%K" "!TMP_BOOT!\dk_%%K" >nul || exit /b 1
+    call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\direct_kernel.cmd" --kernel=%%K --allow-stub "!TMP_BOOT!\sys_%%K" "!TMP_BOOT!\dk_%%K" >nul || exit /b 1
 )
 if exist "!TMP_BOOT!" rmdir /s /q "!TMP_BOOT!" 2>nul
 echo [PASS] Boot smoke descriptors verified across all 8 kernels on Windows^^!

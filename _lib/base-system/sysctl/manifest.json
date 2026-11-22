@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "sysctl",
-  "title": "Kernel sysctl.d Parameter Manager",
-  "description": "Declarative kernel runtime parameter manager (sysctl and /etc/sysctl.d drop-in configuration).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "provides": ["sysctl", "sysctl-d"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "macos"],
+  "description": "Declarative kernel runtime parameter manager (sysctl and /etc/sysctl.d drop-in configuration).",
+  "name": "sysctl",
   "os_blacklist": ["windows", "sunos"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "macos"],
+  "provides": ["sysctl", "sysctl-d"],
   "repository": "https://gitlab.com/procps-ng/procps",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T2",
+  "title": "Kernel sysctl.d Parameter Manager"
 }

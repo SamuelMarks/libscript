@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/synthesis/distro/illumos/vars.schema.json",
+  "title": "illumos Distro Variables",
+  "description": "Configuration variables for illumos/OmniOS distribution synthesis.",
+  "type": "object",
+  "x-libscript-var-packs": ["image_synth"],
+  "properties": {
+    "ILLUMOS_DISTRO_VERSION": {
+      "description": "Target illumos/OmniOS release version to synthesize.",
+      "type": "string",
+      "default": "r151050"
+    },
+    "ILLUMOS_DISTRO_INSTALL_METHOD": {
+      "description": "How to run illumos distro synthesis ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "libscript_native"
+    },
+    "ILLUMOS_DISTRO_FETCH_BASE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) instructing synthesis/distro/illumos/base.sh to fetch and extract upstream OmniOS, OpenIndiana, Tribblix, or SmartOS base archives.",
+      "deprecated_aliases": ["LIBSCRIPT_FETCH_ILLUMOS_BASE"]
+    }
+  }
+}

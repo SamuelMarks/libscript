@@ -458,9 +458,9 @@ for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\
     )
 )
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\env_printer.cmd" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!APPLY_JSON!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\env_printer.cmd" --hydrate "!APPLY_JSON!"
 )
 
 if "!APPLY_FORMAT!"=="" (
@@ -709,9 +709,9 @@ if /I "!_RP_FMT!"=="iis" (
     echo [INFO] [DAEMON] [ACTIVE] !_RP_FMT! reverse proxy reloaded successfully. 1>&2
     exit /b 0
 )
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" (
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" restart "!_RP_FMT!" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" restart "!_RP_FMT!" >nul 2>&1
 )
 echo [INFO] [DAEMON] [ACTIVE] !_RP_FMT! reverse proxy reloaded successfully. 1>&2
 exit /b 0

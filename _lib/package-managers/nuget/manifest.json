@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nuget",
-  "provides": ["package-manager", "nuget"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "os_blacklist": ["freebsd", "alpine", "sunos"],
-  "title": "nuget",
-  "description": "Bootstrap module for the `nuget` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `nuget` package manager.",
+  "name": "nuget",
+  "os_blacklist": ["freebsd", "alpine", "sunos"],
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["package-manager", "nuget"],
   "repository": "https://github.com/NuGet/NuGet.Client",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "nuget"
 }

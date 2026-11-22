@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%HTTPD_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%HTTPD_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%HTTPD_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%HTTPD_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -134,7 +134,7 @@ if "%HTTPD_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading httpd %HTTPD_VERSION% to %DOWNLOAD_DIR%\httpd...
     if not exist "%DOWNLOAD_DIR%\httpd" mkdir "%DOWNLOAD_DIR%\httpd"
     if not "%HTTPD_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HTTPD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\httpd\httpd-%HTTPD_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%HTTPD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\httpd\httpd-%HTTPD_VERSION%.zip"
     ) else (
         echo HTTPD_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%HTTPD_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends httpd
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends httpd
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\httpd\httpd-%HTTPD_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%HTTPD_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HTTPD_DOWNLOAD_URL%" "%TEMP%\httpd.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%HTTPD_DOWNLOAD_URL%" "%TEMP%\httpd.zip"
         tar -xf "%TEMP%\httpd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for httpd.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "httpd" "%ACTION%" "%HTTPD_VERSION%" "%HTTPD_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\httpd\%HTTPD_VERSION%\\bin\\httpd.exe\"" "%LIBSCRIPT_HOME%\httpd\%HTTPD_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "httpd" "%ACTION%" "%HTTPD_VERSION%" "%HTTPD_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\httpd\%HTTPD_VERSION%\\bin\\httpd.exe\"" "%LIBSCRIPT_HOME%\httpd\%HTTPD_VERSION%"
 exit /b !errorlevel!

@@ -1,16 +1,17 @@
 {
-  "name": "pipewire",
-  "title": "PipeWire Audio",
-  "description": "Modern multimedia graph processing server",
-  "provides": ["pipewire"],
+  "capabilities": ["sysroot-package"],
   "category": "audio",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Modern multimedia graph processing server",
+  "name": "pipewire",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["pipewire"],
+  "tier": "T2",
+  "title": "PipeWire Audio",
+  "versions": ["1.0.0"]
 }

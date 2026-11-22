@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Delegates safe template rendering to _lib/_common/envsubst_safe.sh and _lib/_common/find_replace.sh.
+# Delegates safe template rendering to engine/common/envsubst_safe.sh and engine/common/find_replace.sh.
 #
 # ## Usage
 # ./traits/secrets/render.sh <template_file> <output_file> [secrets_kv_file]
@@ -53,7 +53,7 @@ mkdir -p "$(dirname -- "$OUT_FILE")"
 cp -f "$TPL_FILE" "$OUT_FILE"
 chmod 0600 "$OUT_FILE" 2>/dev/null || true
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/find_replace.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/find_replace.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -68,7 +68,7 @@ if [ -n "$SECRETS_FILE" ] && [ -f "$SECRETS_FILE" ]; then
     mv -f "${OUT_FILE}.tmp" "$OUT_FILE"
   done < "$SECRETS_FILE"
 else
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/envsubst_safe.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/envsubst_safe.sh"
   export SCRIPT_NAME
-  "${LIBSCRIPT_ROOT_DIR}/_lib/_common/envsubst_safe.sh" "$TPL_FILE" "$OUT_FILE"
+  "${LIBSCRIPT_ROOT_DIR}/engine/common/envsubst_safe.sh" "$TPL_FILE" "$OUT_FILE"
 fi

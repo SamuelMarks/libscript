@@ -52,10 +52,10 @@ goto :find_root
 if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
 if "%POSTGRES_VERSION%"=="" set "POSTGRES_VERSION=15"
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "postgresql-x64-%POSTGRES_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\status_service.cmd" "postgresql-x64-%POSTGRES_VERSION%"
 if "!ERRORLEVEL!" equ "0" exit /b 0
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "postgresql-%POSTGRES_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\status_service.cmd" "postgresql-%POSTGRES_VERSION%"
 if "!ERRORLEVEL!" equ "0" exit /b 0
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "postgresql"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\status_service.cmd" "postgresql"
 if "!ERRORLEVEL!" equ "0" exit /b 0
 exit /b 1

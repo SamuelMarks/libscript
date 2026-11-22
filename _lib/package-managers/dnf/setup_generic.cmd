@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%DNF_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%DNF_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%DNF_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%DNF_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/1995chen/dnf" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%DNF_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading dnf %DNF_VERSION% to %DOWNLOAD_DIR%\dnf...
     if not exist "%DOWNLOAD_DIR%\dnf" mkdir "%DOWNLOAD_DIR%\dnf"
     if not "%DNF_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DNF_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\dnf\dnf-%DNF_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DNF_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\dnf\dnf-%DNF_VERSION%.zip"
     ) else (
         echo DNF_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%DNF_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends dnf
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends dnf
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\dnf\dnf-%DNF_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%DNF_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DNF_DOWNLOAD_URL%" "%TEMP%\dnf.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DNF_DOWNLOAD_URL%" "%TEMP%\dnf.zip"
         tar -xf "%TEMP%\dnf.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for dnf.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "dnf" "%ACTION%" "%DNF_VERSION%" "%DNF_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\dnf\%DNF_VERSION%\\bin\\dnf.exe\"" "%LIBSCRIPT_HOME%\dnf\%DNF_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "dnf" "%ACTION%" "%DNF_VERSION%" "%DNF_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\dnf\%DNF_VERSION%\\bin\\dnf.exe\"" "%LIBSCRIPT_HOME%\dnf\%DNF_VERSION%"
 exit /b !errorlevel!

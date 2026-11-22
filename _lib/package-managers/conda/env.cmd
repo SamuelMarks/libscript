@@ -61,7 +61,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\conda\%CONDA_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "conda" "%CONDA_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "conda" "%CONDA_VERSION%"
 
 endlocal & (
     set "CONDA_VERSION=%CONDA_VERSION%"

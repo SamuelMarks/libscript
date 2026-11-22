@@ -30,17 +30,17 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
-BASE_SCHEMA="${LIBSCRIPT_ROOT_DIR}/_lib/_common/base_vars.schema.json"
-MANIFEST_SCHEMA="${LIBSCRIPT_ROOT_DIR}/_lib/_common/manifest.schema.json"
-OS_CONFIG_SCHEMA="${LIBSCRIPT_ROOT_DIR}/os-config.schema.json"
-FREEBSD_SCHEMA="${LIBSCRIPT_ROOT_DIR}/execution-plan.freebsd.schema.json"
-ILLUMOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/execution-plan.illumos.schema.json"
-REACTOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/execution-plan.reactos.schema.json"
-RTOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/execution-plan.rtos.schema.json"
-EXEC_COMMON_SCHEMA="${LIBSCRIPT_ROOT_DIR}/schemas/execution-plan-common.schema.json"
+BASE_SCHEMA="${LIBSCRIPT_ROOT_DIR}/engine/schemas/base_vars.schema.json"
+MANIFEST_SCHEMA="${LIBSCRIPT_ROOT_DIR}/engine/schemas/manifest.schema.json"
+OS_CONFIG_SCHEMA="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/os-config.schema.json"
+FREEBSD_SCHEMA="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.freebsd.schema.json"
+ILLUMOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.illumos.schema.json"
+REACTOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.reactos.schema.json"
+RTOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.rtos.schema.json"
+EXEC_COMMON_SCHEMA="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan-common.schema.json"
 ROOT_LIBSCRIPT_SCHEMA="${LIBSCRIPT_ROOT_DIR}/libscript.schema.json"
-NESTED_LIBSCRIPT_SCHEMA="${LIBSCRIPT_ROOT_DIR}/schemas/libscript.schema.json"
-TFRC_POLICY_SCHEMA="${LIBSCRIPT_ROOT_DIR}/schemas/tfrc-policy.schema.json"
+NESTED_LIBSCRIPT_SCHEMA="${LIBSCRIPT_ROOT_DIR}/workloads/schemas/libscript.schema.json"
+TFRC_POLICY_SCHEMA="${LIBSCRIPT_ROOT_DIR}/engine/schemas/tfrc-policy.schema.json"
 VARS_PACK_DIR="${LIBSCRIPT_ROOT_DIR}/schemas/vars"
 ERRORS=0
 AUDITED=0
@@ -188,7 +188,7 @@ resolve_component_pack_keys() {
 }
 
 # ## audit_manifest_json
-# Validates a component's manifest.json against _lib/_common/manifest.schema.json.
+# Validates a component's manifest.json against engine/schemas/manifest.schema.json.
 audit_manifest_json() {
   _comp_dir="$1"
   _rel_dir="${_comp_dir#"${LIBSCRIPT_ROOT_DIR}"/}"
@@ -256,24 +256,24 @@ audit_root_schemas_and_profiles() {
     for _bk in $_base_raw_keys; do
       _base_count=$((_base_count + 1))
       if is_internal_runtime_var "$_bk"; then
-        printf '[STANDARDS VIOLATION] [INTERNAL_VAR_IN_BASE_SCHEMA] _lib/_common/base_vars.schema.json: Internal variable "%s" must not appear in user-facing base_vars.schema.json.\n' "$_bk" >&2
+        printf '[STANDARDS VIOLATION] [INTERNAL_VAR_IN_BASE_SCHEMA] engine/schemas/base_vars.schema.json: Internal variable "%s" must not appear in user-facing base_vars.schema.json.\n' "$_bk" >&2
         ERRORS=$((ERRORS + 1))
       fi
     done
     if [ "$_base_count" -gt 32 ]; then
-      printf '[STANDARDS VIOLATION] [BASE_SCHEMA_BLOAT] _lib/_common/base_vars.schema.json: Contains %d properties (maximum allowed core globals is 32; move domain variables to schemas/vars/*.schema.json).\n' "$_base_count" >&2
+      printf '[STANDARDS VIOLATION] [BASE_SCHEMA_BLOAT] engine/schemas/base_vars.schema.json: Contains %d properties (maximum allowed core globals is 32; move domain variables to schemas/vars/*.schema.json).\n' "$_base_count" >&2
       ERRORS=$((ERRORS + 1))
     fi
   fi
 
   if [ -f "$NESTED_LIBSCRIPT_SCHEMA" ]; then
     if ! jq empty "$NESTED_LIBSCRIPT_SCHEMA" >/dev/null 2>&1; then
-      printf '[STANDARDS VIOLATION] [INVALID_JSON] schemas/libscript.schema.json: File is not valid JSON.\n' >&2
+      printf '[STANDARDS VIOLATION] [INVALID_JSON] workloads/schemas/libscript.schema.json: File is not valid JSON.\n' >&2
       ERRORS=$((ERRORS + 1))
     else
       _wrap_ref=$(jq -r '."$ref" // empty' "$NESTED_LIBSCRIPT_SCHEMA" 2>/dev/null || true)
-      if [ "$_wrap_ref" != '../libscript.schema.json' ]; then
-        printf '[STANDARDS VIOLATION] [SCHEMA_SYNC] schemas/libscript.schema.json must %s "../libscript.schema.json" as a thin canonical wrapper.\n' "\$ref" >&2
+      if [ "$_wrap_ref" != '../../libscript.schema.json' ]; then
+        printf '[STANDARDS VIOLATION] [SCHEMA_SYNC] workloads/schemas/libscript.schema.json must %s "../../libscript.schema.json" as a thin canonical wrapper.\n' "\$ref" >&2
         ERRORS=$((ERRORS + 1))
       fi
     fi
@@ -281,11 +281,11 @@ audit_root_schemas_and_profiles() {
 
   audit_schema_refs
 
-  if [ ! -d "${LIBSCRIPT_ROOT_DIR}/profiles" ]; then
+  if [ ! -d "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles" ]; then
     return 0
   fi
   set +f
-  for _pf in "${LIBSCRIPT_ROOT_DIR}/profiles"/*.json "${LIBSCRIPT_ROOT_DIR}/profiles"/*/*.json; do
+  for _pf in "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles"/*/*.json "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles"/*/*/*.json; do
     [ -f "$_pf" ] || continue
     _rel_pf="${_pf#"${LIBSCRIPT_ROOT_DIR}"/}"
     if ! jq empty "$_pf" >/dev/null 2>&1; then
@@ -334,9 +334,9 @@ audit_root_schemas_and_profiles() {
                 (if has("profile_name") | not then "missing required field: profile_name" else empty end),
                 (if has("target") | not then "missing required field: target" else empty end),
                 (if has("rtos") | not then "missing required field: rtos" else empty end),
-                (if ((.target.arch // "") as $a | ($archs | index($a)) == null) then "target.arch \"\(.target.arch // "")\" not in os-config.schema.json enum" else empty end),
-                (if ((.target.libc // "") as $l | ($libcs | index($l)) == null) then "target.libc \"\(.target.libc // "")\" not in os-config.schema.json enum" else empty end),
-                (if ((.rtos.kernel // "") as $k | ($kernels | index($k)) == null) then "rtos.kernel \"\(.rtos.kernel // "")\" not in os-config.schema.json enum" else empty end)
+                (if ((.target.arch // "") as $a | ($archs | index($a)) == null) then "target.arch \"\(.target.arch // "")\" not in synthesis/schemas/os-config.schema.json enum" else empty end),
+                (if ((.target.libc // "") as $l | ($libcs | index($l)) == null) then "target.libc \"\(.target.libc // "")\" not in synthesis/schemas/os-config.schema.json enum" else empty end),
+                (if ((.rtos.kernel // "") as $k | ($kernels | index($k)) == null) then "rtos.kernel \"\(.rtos.kernel // "")\" not in synthesis/schemas/os-config.schema.json enum" else empty end)
               ] | .[]
           ' "$_pf" 2>/dev/null || true)
         fi
@@ -350,8 +350,8 @@ audit_root_schemas_and_profiles() {
             | ($os[0].properties.target.properties.libc.enum // []) as $libcs
             | [
                 ($req[] as $r | select(($doc | has($r)) | not) | "missing required field: \($r)"),
-                (if ((.target.arch // "") as $a | ($archs | index($a)) == null) then "target.arch \"\(.target.arch // "")\" not in os-config.schema.json enum" else empty end),
-                (if ((.target.libc // "") as $l | ($libcs | index($l)) == null) then "target.libc \"\(.target.libc // "")\" not in os-config.schema.json enum" else empty end)
+                (if ((.target.arch // "") as $a | ($archs | index($a)) == null) then "target.arch \"\(.target.arch // "")\" not in synthesis/schemas/os-config.schema.json enum" else empty end),
+                (if ((.target.libc // "") as $l | ($libcs | index($l)) == null) then "target.libc \"\(.target.libc // "")\" not in synthesis/schemas/os-config.schema.json enum" else empty end)
               ] | .[]
           ' "$_pf" 2>/dev/null || true)
         fi
@@ -367,18 +367,27 @@ audit_root_schemas_and_profiles() {
   done
 
   # Validate higher-tier schemas (descriptions) and declarative instances (STD-03)
-  for _hts in "${LIBSCRIPT_ROOT_DIR}/experiment-suite.schema.json" "${LIBSCRIPT_ROOT_DIR}/topologies/topology.schema.json" "${LIBSCRIPT_ROOT_DIR}/payloads/payload.schema.json" "${LIBSCRIPT_ROOT_DIR}/traits/trait.schema.json" "${LIBSCRIPT_ROOT_DIR}/schemas"/*.schema.json; do
-    if [ -f "$_hts" ]; then
+  for _hts in \
+    "${LIBSCRIPT_ROOT_DIR}/engine/schemas"/*.schema.json \
+    "${LIBSCRIPT_ROOT_DIR}/synthesis/schemas"/*.schema.json \
+    "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/cluster-substrate.schema.json" \
+    "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/marketplace-offer.schema.json" \
+    "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/constellation.schema.json" \
+    "${LIBSCRIPT_ROOT_DIR}/workloads/schemas"/*.schema.json \
+    "${LIBSCRIPT_ROOT_DIR}/traits/trait.schema.json" \
+    "${LIBSCRIPT_ROOT_DIR}/experiments/schemas"/*.schema.json; do
+    if [ -f "$_hts" ] && [ "$_hts" != "$NESTED_LIBSCRIPT_SCHEMA" ]; then
       check_schema_descriptions "$_hts" || true
     fi
   done
 
   for _pair in \
-    "TOPOLOGY_SCHEMA|${LIBSCRIPT_ROOT_DIR}/topologies/topology.schema.json|topologies/*/topology.json" \
-    "PAYLOAD_SCHEMA|${LIBSCRIPT_ROOT_DIR}/payloads/payload.schema.json|payloads/*/*/payload.json" \
+    "CLUSTER_SCHEMA|${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/cluster-substrate.schema.json|infrastructure/clusters/*/topology.json" \
+    "CONSTELLATION_SCHEMA|${LIBSCRIPT_ROOT_DIR}/workloads/constellations/constellation.schema.json|workloads/constellations/*/topology.json" \
+    "PAYLOAD_SCHEMA|${LIBSCRIPT_ROOT_DIR}/workloads/schemas/payload.schema.json|workloads/payloads/*/*/payload.json" \
     "TRAIT_SCHEMA|${LIBSCRIPT_ROOT_DIR}/traits/trait.schema.json|traits/*/trait.json" \
-    "EXPERIMENT_SCHEMA|${LIBSCRIPT_ROOT_DIR}/experiment-suite.schema.json|experiments/*/suite.json" \
-    "MARKETPLACE_SCHEMA|${LIBSCRIPT_ROOT_DIR}/schemas/marketplace-offer.schema.json|marketplace/*/offer.json"; do
+    "EXPERIMENT_SCHEMA|${LIBSCRIPT_ROOT_DIR}/experiments/schemas/experiment-suite.schema.json|experiments/*/suite.json" \
+    "MARKETPLACE_SCHEMA|${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/marketplace-offer.schema.json|infrastructure/marketplace/*/offer.json"; do
     _tag="${_pair%%|*}"
     _rest="${_pair#*|}"
     _sch="${_rest%%|*}"
@@ -489,7 +498,7 @@ audit_component_vars() {
     esac
     case " ${BASE_RAW_KEYS} " in
       *" ${_lk} "*)
-        printf '[STANDARDS VIOLATION] [DUPLICATE_BASE_VAR] %s/vars.schema.json: Property "%s" redundantly duplicates _lib/_common/base_vars.schema.json.\n' "$_rel_dir" "$_lk" >&2
+        printf '[STANDARDS VIOLATION] [DUPLICATE_BASE_VAR] %s/vars.schema.json: Property "%s" redundantly duplicates engine/schemas/base_vars.schema.json.\n' "$_rel_dir" "$_lk" >&2
         ERRORS=$((ERRORS + 1))
         ;;
     esac

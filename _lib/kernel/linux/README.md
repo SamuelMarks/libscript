@@ -52,7 +52,7 @@ running the setup script.
 | `LINUX_BUILD_KERNEL_FROM_SOURCE` | Flag (0 or 1) instructing kernel synthesis to compile the Linux kernel from source when no prebuilt kernel exists.                                                                                                                                                  | `0`                     | LIBSCRIPT_BUILD_KERNEL_FROM_SOURCE |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Platform Support

@@ -82,7 +82,7 @@ exit /b 0
 set "RELEASES_URL=%OPENWATCOM_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/open-watcom/open-watcom-v2/releases/latest"
 echo [ls-remote] Fetching available openwatcom versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -95,8 +95,8 @@ if not exist "!TARGET_DIR!" (
     set "ACTION=install"
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openwatcom" "%OPENWATCOM_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openwatcom" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openwatcom" "%OPENWATCOM_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openwatcom" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -112,7 +112,7 @@ set "DL_DIR=!DL_DIR!\openwatcom"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading openwatcom %OPENWATCOM_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -124,23 +124,23 @@ if /i "%OPENWATCOM_INSTALL_METHOD%"=="from-source" (
     set "SRC_URL=%OPENWATCOM_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://github.com/open-watcom/open-watcom-v2/releases/download/Current-build/ow-snapshot.tar.xz"
     call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "openwatcom" "!EXACT_VERSION!" "wcl386" "c" "autotools" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "openwatcom" "!EXACT_VERSION!" "wcl386" "c" "autotools" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if "%OPENWATCOM_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends openwatcom
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends openwatcom
     exit /b !errorlevel!
 )
 if /i "%OPENWATCOM_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget openwatcom
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget openwatcom
     exit /b !errorlevel!
 )
 if /i "%OPENWATCOM_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco openwatcom
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco openwatcom
     exit /b !errorlevel!
 )
 if /i "%OPENWATCOM_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop openwatcom
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop openwatcom
     exit /b !errorlevel!
 )
 call :resolve_version
@@ -152,8 +152,8 @@ if exist "!TARGET_DIR!\bin\wcl386.bat" set "_BIN_FOUND=1"
 if "!_BIN_FOUND!"=="1" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] openwatcom !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openwatcom" "%OPENWATCOM_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openwatcom" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openwatcom" "%OPENWATCOM_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openwatcom" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -161,7 +161,7 @@ set "URL=%OPENWATCOM_DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=https://github.com/open-watcom/open-watcom-v2/releases/download/Current-build/ow-snapshot.tar.xz"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends openwatcom
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends openwatcom
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -174,7 +174,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\openwatcom-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 set "_IS_ARCHIVE=0"
@@ -226,8 +226,8 @@ if not "!_IS_ARCHIVE!"=="0" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\wcl386.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openwatcom" "%OPENWATCOM_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openwatcom" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openwatcom" "%OPENWATCOM_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openwatcom" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -244,7 +244,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "open-watcom/open-watcom-v2" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/open-watcom/open-watcom-v2/releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/open-watcom/open-watcom-v2/releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -257,5 +257,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "openwatcom" "%ACTION%" "%OPENWATCOM_VERSION%" "%OPENWATCOM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\openwatcom\%OPENWATCOM_VERSION%\\bin\\wcl386.exe\"" "%LIBSCRIPT_HOME%\openwatcom\%OPENWATCOM_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "openwatcom" "%ACTION%" "%OPENWATCOM_VERSION%" "%OPENWATCOM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\openwatcom\%OPENWATCOM_VERSION%\\bin\\wcl386.exe\"" "%LIBSCRIPT_HOME%\openwatcom\%OPENWATCOM_VERSION%"
 exit /b !errorlevel!

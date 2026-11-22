@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "scala",
-  "title": "Scala",
-  "description": "Expressive statically typed JVM programming language seamlessly combining object-oriented and functional paradigms.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["scala", "scalac"],
+  "description": "Expressive statically typed JVM programming language seamlessly combining object-oriented and functional paradigms.",
+  "name": "scala",
   "os_whitelist": ["all"],
+  "provides": ["scala", "scalac"],
   "repository": "https://github.com/scala/scala3",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Scala"
 }

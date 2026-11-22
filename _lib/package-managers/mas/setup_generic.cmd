@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%MAS_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MAS_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MAS_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MAS_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/mas-cli/mas" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%MAS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mas %MAS_VERSION% to %DOWNLOAD_DIR%\mas...
     if not exist "%DOWNLOAD_DIR%\mas" mkdir "%DOWNLOAD_DIR%\mas"
     if not "%MAS_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mas\mas-%MAS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MAS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mas\mas-%MAS_VERSION%.zip"
     ) else (
         echo MAS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MAS_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mas
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends mas
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mas\mas-%MAS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MAS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAS_DOWNLOAD_URL%" "%TEMP%\mas.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MAS_DOWNLOAD_URL%" "%TEMP%\mas.zip"
         tar -xf "%TEMP%\mas.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mas.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "mas" "%ACTION%" "%MAS_VERSION%" "%MAS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mas\%MAS_VERSION%\\bin\\mas.exe\"" "%LIBSCRIPT_HOME%\mas\%MAS_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "mas" "%ACTION%" "%MAS_VERSION%" "%MAS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mas\%MAS_VERSION%\\bin\\mas.exe\"" "%LIBSCRIPT_HOME%\mas\%MAS_VERSION%"
 exit /b !errorlevel!

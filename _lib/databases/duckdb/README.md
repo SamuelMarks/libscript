@@ -47,7 +47,7 @@ isolated by default in `~/.libscript/<component>/<version>` and do not pollute g
 | `DUCKDB_VERSION`        | Specific version of duckdb to install (e.g., latest, lts, or exact version).                                                                                           | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Platform Support

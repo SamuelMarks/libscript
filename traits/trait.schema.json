@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/traits/trait.schema.json",
   "title": "LibScript Unified Node & Sysroot Trait Specification",
-  "description": "Declarative contract defining composable cross-cutting traits that orchestrate _lib components across both Tier 2 offline sysroot image baking and Tier 3 live node execution.",
+  "description": "Declarative contract defining composable cross-cutting traits that orchestrate _lib components across both T3 offline sysroot image baking and T4 live node execution.",
   "type": "object",
   "required": [
     "id",
@@ -55,7 +55,7 @@
     },
     "execution_modes": {
       "type": "object",
-      "description": "Dual-mode execution capability flags for Tier 2 offline sysroots vs Tier 3 live hosts",
+      "description": "Dual-mode execution capability flags for T3 offline sysroots vs T4 live hosts",
       "required": ["supports_offline_sysroot_bake", "supports_live_runtime"],
       "properties": {
         "supports_offline_sysroot_bake": {
@@ -64,7 +64,7 @@
         },
         "supports_live_runtime": {
           "type": "boolean",
-          "description": "Whether the trait can execute live mutations and service reloads on a running Tier 3 host"
+          "description": "Whether the trait can execute live mutations and service reloads on a running T4 host"
         }
       }
     },

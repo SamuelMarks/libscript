@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# End-to-end hermetic test suite for the 7-backend Gemma 4 TPU matrix (_lib/ml-training/_common/tpu_matrix.sh, _lib/toolchains/gemma-tpu-suite/, experiment_cloud.sh, VM cycling, custom templates, CPU-fallback exit 65, and libscript.cmd %* parity).
+# End-to-end hermetic test suite for the 7-backend Gemma 4 TPU matrix (workloads/ai/_common/tpu_matrix.sh, experiments/gemma-tpu/, experiment_cloud.sh, VM cycling, custom templates, CPU-fallback exit 65, and libscript.cmd %* parity).
 #
 # ## Usage
 # ./tests/test_gemma_tpu_matrix.sh
@@ -142,7 +142,7 @@ run_gemma_matrix_tests() {
   export TPU_MOCK_SHM_FREE_KB='67108864'
 
   # 1. Full 7-backend E0-E4 execution including manifest .ml.command_matrix
-  "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/gemma-tpu-suite/benchmark_experiments.sh" \
+  "${LIBSCRIPT_ROOT_DIR}/experiments/gemma-tpu/benchmark_experiments.sh" \
     --local-exec \
     --tfrc-config="${WORK_DIR}/repo/tfrc.policy.json" \
     --repo-dir="${WORK_DIR}/repo" \
@@ -176,7 +176,7 @@ run_gemma_matrix_tests() {
   # 2. Spot preemption --resume 2x idempotency: second run executes zero new workloads and preserves summary byte-for-byte
   cp "${WORK_DIR}/results/comparison_summary.json" "${WORK_DIR}/summary_pass1.json"
   _wlines_before=$(wc -l < "${WORKLOAD_LOG}" | tr -d ' ')
-  "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/gemma-tpu-suite/benchmark_experiments.sh" \
+  "${LIBSCRIPT_ROOT_DIR}/experiments/gemma-tpu/benchmark_experiments.sh" \
     --local-exec \
     --resume \
     --tfrc-config="${WORK_DIR}/repo/tfrc.policy.json" \
@@ -189,7 +189,7 @@ run_gemma_matrix_tests() {
   cmp -s "${WORK_DIR}/summary_pass1.json" "${WORK_DIR}/results/comparison_summary.json"
 
   # 3. /dev/shm watermark eviction preserves cache/hf/model.safetensors
-  TPU_MOCK_SHM_FREE_KB='1024' sh -c "SCRIPT_NAME='${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/_common/tpu_matrix.sh' . '${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/_common/tpu_matrix.sh' && libscript_tpu_evict_shm_if_needed 'jax-native' '${WORK_DIR}/shm' '32'"
+  TPU_MOCK_SHM_FREE_KB='1024' sh -c "SCRIPT_NAME='${LIBSCRIPT_ROOT_DIR}/workloads/ai/_common/tpu_matrix.sh' . '${LIBSCRIPT_ROOT_DIR}/workloads/ai/_common/tpu_matrix.sh' && libscript_tpu_evict_shm_if_needed 'jax-native' '${WORK_DIR}/shm' '32'"
   [ -f "${WORK_DIR}/shm/cache/hf/model.safetensors" ]
   [ ! -d "${WORK_DIR}/shm/venvs/maxtext" ]
   [ -d "${WORK_DIR}/shm/venvs/jax-native" ]
@@ -198,14 +198,14 @@ run_gemma_matrix_tests() {
   : > "${GCLOUD_LOG}"
   touch "${WORK_DIR}/qr_live" "${WORK_DIR}/vm_live"
   TFRC_CONFIG="${WORK_DIR}/repo/tfrc.policy.json" GCP_PROJECT_ID='trc-gemma-proj' TPU_ZONE='us-central2-b' TPU_ACCELERATOR_TYPE='v4-8' TPU_SCHEDULING_TYPE='spot' TPU_WAIT_POLL_SEC='0' TPU_FRESH_VM_PER_BACKEND='1' \
-    sh -c "SCRIPT_NAME='${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/_common/tpu_matrix.sh' . '${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/_common/tpu_matrix.sh' && libscript_tpu_cycle_vm_for_backend 'gemma-tfrc-node' 'keras_tensorflow' '${WORK_DIR}/repo'"
+    sh -c "SCRIPT_NAME='${LIBSCRIPT_ROOT_DIR}/workloads/ai/_common/tpu_matrix.sh' . '${LIBSCRIPT_ROOT_DIR}/workloads/ai/_common/tpu_matrix.sh' && libscript_tpu_cycle_vm_for_backend 'gemma-tfrc-node' 'keras_tensorflow' '${WORK_DIR}/repo'"
   grep -q 'queued-resources delete gemma-tfrc-node-qr' "${GCLOUD_LOG}"
   grep -q 'queued-resources create gemma-tfrc-node-qr' "${GCLOUD_LOG}"
 
   # 5. Stage B fail-fast CPU-fallback detection (peak_tpu_hbm_bytes == 0 -> status == failed_cpu_fallback, exit 65)
   _fb_rc=0
   TPU_MOCK_PEAK_HBM_BYTES='0' TPU_MOCK_ACCEL_FD_OPENED='false' \
-    "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/gemma-tpu-suite/benchmark_experiments.sh" \
+    "${LIBSCRIPT_ROOT_DIR}/experiments/gemma-tpu/benchmark_experiments.sh" \
     --local-exec --no-resume \
     --tfrc-config="${WORK_DIR}/repo/tfrc.policy.json" \
     --repo-dir="${WORK_DIR}/repo" \
@@ -232,7 +232,7 @@ run_gemma_matrix_tests() {
 
   # 7. Verify libscript.cmd forwards %* (no %2..%9 truncation) and experiment_cloud.cmd uses :parse_args shift loop
   grep -q 'experiment\.cmd" %\*' "${LIBSCRIPT_ROOT_DIR}/libscript.cmd"
-  grep -q '^:parse_args' "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/experiment_cloud.cmd"
+  grep -q '^:parse_args' "${LIBSCRIPT_ROOT_DIR}/experiments/cli/experiment_cloud.cmd"
 
   printf '[PASS] All hermetic 7-backend Gemma 4 TPU matrix tests passed!\n'
 }

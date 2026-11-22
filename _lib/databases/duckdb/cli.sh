@@ -28,7 +28,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
+for LIB in engine/common/pkg_mgr.sh engine/common/log.sh; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -72,7 +72,7 @@ case "$ACTION" in
   *)
     export PACKAGE_NAME='duckdb'
     SCRIPT_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/databases/duckdb"
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/component_core.sh"
     export SCRIPT_NAME
     # shellcheck disable=SC1090,SC1091
     . "${SCRIPT_NAME}"

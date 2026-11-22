@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "iac",
+  "conflicts": [],
+  "description": "HashiCorp Vagrant development environment and virtual machine manager.",
+  "name": "vagrant",
+  "os_blacklist": ["alpine", "sunos"],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "provides": ["vagrant", "hashicorp-vagrant", "vm-manager"],
+  "tier": "T1",
+  "title": "Vagrant"
+}

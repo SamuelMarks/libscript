@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "waitress",
-  "title": "Waitress",
-  "description": "Production-quality pure-Python WSGI server with native Windows support.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["app-server", "wsgi", "waitress"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Production-quality pure-Python WSGI server with native Windows support.",
+  "name": "waitress",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [8000],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["app-server", "wsgi", "waitress"],
+  "tier": "T1",
+  "title": "Waitress"
 }

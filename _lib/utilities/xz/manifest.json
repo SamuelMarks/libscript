@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "xz",
-  "title": "XZ Utils",
-  "description": "General-purpose lossless data compression CLI and liblzma library utilizing the LZMA2 algorithm.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["xz", "lzma"],
+  "description": "General-purpose lossless data compression CLI and liblzma library utilizing the LZMA2 algorithm.",
+  "name": "xz",
   "os_whitelist": ["all"],
+  "provides": ["xz", "lzma"],
   "repository": "https://github.com/tukaani-project/xz",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "XZ Utils"
 }

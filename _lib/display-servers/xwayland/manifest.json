@@ -1,16 +1,17 @@
 {
-  "name": "xwayland",
-  "title": "Xwayland",
-  "description": "X11 server running as a Wayland client",
-  "provides": ["xwayland"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-servers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "X11 server running as a Wayland client",
+  "name": "xwayland",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["xwayland"],
+  "tier": "T2",
+  "title": "Xwayland",
+  "versions": ["1.0.0"]
 }

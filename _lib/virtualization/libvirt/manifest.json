@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "virtualization",
+  "description": "Open-source virtualization management API, daemon (libvirtd / virtqemud), and CLI shell (virsh) for QEMU/KVM, Xen, LXC, and Bhyve.",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "name": "libvirt",
+  "os_whitelist": ["all"],
+  "ports": [16509],
+  "provides": ["libvirt", "virsh", "libvirtd"],
+  "repository": "https://gitlab.com/libvirt/libvirt",
+  "tier": "T1",
+  "title": "libvirt Virtualization API & Daemon"
+}

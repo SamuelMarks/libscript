@@ -75,24 +75,23 @@ goto :find_root
 
 ## 🛑 Option A Win32 Hard-Fail Boundary Proforma
 
-Operating system image assembly and kernel baking (Tier 2) inherently rely on Linux kernel
-primitives (`unshare`, `mount`, `losetup`, `mknod`). Windows Batch and PowerShell scripts must
-**never** attempt fake Win32 emulation of these primitives.
+Operating system image assembly and kernel baking (`T3` `synthesis/`) inherently rely on Linux
+kernel primitives (`unshare`, `mount`, `losetup`, `mknod`). Windows Batch and PowerShell scripts
+must **never** attempt fake Win32 emulation of these primitives.
 
 Instead, companion Windows scripts for these operations adhere to the **Option A Proforma**:
 
 1. **Immediate Exit Code 86**: Terminates execution immediately with **exit code `86`**
    (`EX_UNAVAILABLE` / `ENOSYS`).
 2. **Clear Redirection**: Emits diagnostic output instructing the operator to invoke the
-   containerized or virtualized builder (`_lib/orchestration/vm_builder.cmd` or
-   `package-as docker`).
+   containerized or virtualized builder (`engine/common/vm_builder.cmd` or `package-as docker`).
 
 ```cmd
 :: Standard Option A Proforma Header
 if not "%OS%"=="Windows_NT" exit /b 86
 echo [ERROR] Native Linux kernel synthesis (mount/unshare/losetup) is unsupported on Win32. >&2
 echo [INFO]  Please delegate synthesis to the VM builder: >&2
-echo         call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\vm_builder.cmd" %* >&2
+echo         call "%LIBSCRIPT_ROOT_DIR%\engine\common\vm_builder.cmd" %* >&2
 echo [INFO]  Or generate containerized artifacts: >&2
 echo         call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" package-as docker >&2
 exit /b 86
@@ -103,19 +102,19 @@ exit /b 86
 Representative Unix-kernel and distro-specific scripts implementing Option A (`exit /b 86`) on
 Windows include:
 
-- `_lib/orchestration/vfs/mount_target_vfs.cmd` / `.ps1`
-- `_lib/orchestration/vfs/umount_target_vfs.cmd` / `.ps1`
-- `_lib/orchestration/runner/runner.cmd` / `.ps1`
-- `_lib/storage/provision_disk.cmd` / `.ps1` & `_lib/storage/format_fs.cmd` / `.ps1`
-- `_lib/base-system/lfs-chroot.cmd`, `_lib/base-system/lfs-mount-vfs.cmd`,
+- `synthesis/vfs/sysroot/mount_target_vfs.cmd` / `.ps1`
+- `synthesis/vfs/sysroot/umount_target_vfs.cmd` / `.ps1`
+- `synthesis/vfs/runner/runner.cmd` / `.ps1`
+- `synthesis/disk/provision_disk.cmd` / `.ps1` & `engine/common/format_fs.cmd` / `.ps1`
+- `synthesis/vfs/lfs-chroot.cmd`, `synthesis/vfs/lfs-mount-vfs.cmd`,
   `_lib/base-system/{lfs-base,lfs-temp-tools}/setup_generic.cmd`, and
   `_lib/toolchains/lfs-toolchain/setup_generic.cmd`
-- `cli/commands/package_as/{disk_builder,vagrant_box}.cmd` and Unix-distro-specific
+- `synthesis/formats/{disk_builder,vagrant_box}.cmd` and Unix-distro-specific
   `setup_{alpine,debian,freebsd,macos,rhel}.{cmd,ps1}` shims
 
 ---
 
-## ⚡ Native Toolchain Version Management (Tier 1)
+## ⚡ Native Toolchain Version Management (`T1`)
 
 LibScript serves as a native Windows version manager, eliminating the need for `nvm-windows`,
 `pyenv-win`, or separate toolchain installers.
@@ -156,7 +155,7 @@ installers:
 ### 1. WiX Toolset (.MSI)
 
 Generates standard Microsoft Installer packages via WiX Toolset v3/v4
-(`packaging/template_msi.cmd`):
+(`synthesis/msi/template_msi.cmd`):
 
 - Embeds ARP icons (`.ico`), scrollable RTF license agreements, and top/dialog banner bitmaps.
 - Registers native Windows Services using WiX `<ServiceInstall>` and `<ServiceControl>` tags.
@@ -164,7 +163,7 @@ Generates standard Microsoft Installer packages via WiX Toolset v3/v4
 
 ### 2. Inno Setup (.EXE)
 
-Generates lightweight single-file setup executables (`packaging/template_inno.cmd`):
+Generates lightweight single-file setup executables (`synthesis/msi/template_inno.cmd`):
 
 - Modern wizard UI with support for multi-license review.
 - Silent non-interactive installation flag: `/VERYSILENT /SUPPRESSMSGBOXES`.
@@ -172,7 +171,7 @@ Generates lightweight single-file setup executables (`packaging/template_inno.cm
 ### 3. NSIS (.EXE)
 
 Compiles scriptable setup wizards using the Nullsoft Scriptable Install System
-(`packaging/template_nsis.cmd`):
+(`synthesis/msi/template_nsis.cmd`):
 
 - Header image bitmaps and multi-page license agreements.
 - Silent non-interactive flag: `/S`.
@@ -234,12 +233,13 @@ machines:
 
 ---
 
-## 🖥️ ReactOS Guest & Built-in Distribution Synthesis (`_lib/reactos/distro/`)
+## 🖥️ ReactOS Guest & Built-in Distribution Synthesis (`synthesis/distro/reactos/`)
 
 LibScript supports synthesizing redistributable **ReactOS** (`0.4.16+` `i686` and `nightly`
-`x86_64`) distributions with pre-installed default applications (`profiles/reactos/*.json`):
+`x86_64`) distributions with pre-installed default applications
+(`synthesis/profiles/reactos/*.json`):
 
-- **PowerShell-Free `.cmd` Execution**: `_lib/_common/os_info.cmd`, `pkg_mgr.cmd`, and
+- **PowerShell-Free `.cmd` Execution**: `engine/common/os_info.cmd`, `pkg_mgr.cmd`, and
   `setup_base.cmd` detect ReactOS (`IS_REACTOS=1`, `TARGET_OS_FLAVOR=reactos`), prepend portable
   Win32 bootstrap tools (`%SystemDrive%\libscript\bootstrap\bin`: `curl.exe`, `7za.exe`, `jq.exe`,
   `sha256sum.exe`), and avoid `powershell.exe` / `winget` dependencies.
@@ -257,7 +257,7 @@ LibScript supports synthesizing redistributable **ReactOS** (`0.4.16+` `i686` an
 
 ## 🧱 Native Windows & MS-DOS (`dos32`) Component-Level Package Managers
 
-LibScript includes dedicated Tier 1 component-level package managers under `_lib/utilities/` for six
+LibScript includes dedicated `T1` component-level package managers under `_lib/utilities/` for six
 zero-POSIX-emulation MSVC Win32 and OpenWatcom `dos32` port suites:
 
 - **`_lib/utilities/freebsd-usr-bin/`** (`SamuelMarks/freebsd-usr-bin-windows`): ~200 FreeBSD
@@ -275,8 +275,8 @@ zero-POSIX-emulation MSVC Win32 and OpenWatcom `dos32` port suites:
   `sh.exe`).
 
 Invoking `libscript depends <pkg>` (or `depends <pkg>` / `:libscript_depends <pkg>` inside recipes)
-resolves target-specific binaries automatically via `_lib/_common/os_info.{sh,cmd}`,
-`_lib/_common/pkg_mgr.{sh,cmd}`, and `_lib/_common/pkg_map.tsv` (`PKG_MGR=libscript`): on MS-DOS
+resolves target-specific binaries automatically via `engine/common/os_info.{sh,cmd}`,
+`engine/common/pkg_mgr.{sh,cmd}`, and `engine/common/pkg_map.tsv` (`PKG_MGR=libscript`): on MS-DOS
 (`TARGET_OS=msdos`, `IS_MSDOS=1`), `depends jq` stages the `dos32` `jq.exe` (co-staging `DOS32A.EXE`
 / `DOS4GW.EXE` when bundled), while on Windows (`TARGET_OS=windows`) it stages the native PE
 executable (`jq-{VER}-{X64|X86|ARM64}.exe`).

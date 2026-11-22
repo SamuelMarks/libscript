@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%CPP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%CPP_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%CPP_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%CPP_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/gcc-mirror/gcc" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%CPP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cpp %CPP_VERSION% to %DOWNLOAD_DIR%\cpp...
     if not exist "%DOWNLOAD_DIR%\cpp" mkdir "%DOWNLOAD_DIR%\cpp"
     if not "%CPP_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cpp\cpp-%CPP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CPP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cpp\cpp-%CPP_VERSION%.zip"
     ) else (
         echo CPP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CPP_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cpp
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends cpp
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cpp\cpp-%CPP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CPP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPP_DOWNLOAD_URL%" "%TEMP%\cpp.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CPP_DOWNLOAD_URL%" "%TEMP%\cpp.zip"
         tar -xf "%TEMP%\cpp.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cpp.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "cpp" "%ACTION%" "%CPP_VERSION%" "%CPP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\\bin\\cpp.exe\"" "%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "cpp" "%ACTION%" "%CPP_VERSION%" "%CPP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\\bin\\cpp.exe\"" "%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%"
 exit /b !errorlevel!

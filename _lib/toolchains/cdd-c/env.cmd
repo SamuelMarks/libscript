@@ -63,7 +63,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\cdd-c\%CDD_C_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "cdd-c" "%CDD_C_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "cdd-c" "%CDD_C_VERSION%"
 
 endlocal & (
     set "CDD_C_VERSION=%CDD_C_VERSION%"

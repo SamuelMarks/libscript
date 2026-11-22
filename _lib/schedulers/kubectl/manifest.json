@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "schedulers",
+  "conflicts": [],
+  "description": "Command-line client (kubectl) for communicating with a Kubernetes cluster control plane.",
+  "name": "kubectl",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "provides": ["kubectl", "kubernetes"],
+  "tier": "T1",
+  "title": "Kubernetes CLI (kubectl)"
+}

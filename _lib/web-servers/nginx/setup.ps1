@@ -14,7 +14,7 @@ Execute this script to install and configure nginx on the local system.
 
 $ErrorActionPreference = "Stop"
 $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+. (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
     libscript_depends @("Nginx.Nginx")
 
 if ($Action -eq "ls") {
@@ -44,7 +44,7 @@ if ($Action -eq "download") {
 
 if ($Action -match "^(start|stop|restart|status|health|logs|up|down)$") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_nginx" }
         if (Get-Command libscript_service -ErrorAction SilentlyContinue) {
@@ -62,7 +62,7 @@ if ($Action -match "^(start|stop|restart|status|health|logs|up|down)$") {
 
 if ($Action -eq "install-service") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_nginx" }
         if (Get-Command libscript_install_service -ErrorAction SilentlyContinue) {
@@ -80,7 +80,7 @@ if ($Action -eq "install-service") {
 
 if ($Action -eq "uninstall-service") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_nginx" }
         if (Get-Command libscript_uninstall_service -ErrorAction SilentlyContinue) {

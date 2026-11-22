@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "schedulers",
+  "description": "Cilium CLI (cilium) for installing, managing, and troubleshooting eBPF-powered Kubernetes networking, observability, and security.",
+  "name": "cilium",
+  "os_whitelist": ["all"],
+  "provides": ["cilium", "cilium-cli"],
+  "repository": "https://github.com/cilium/cilium-cli",
+  "tier": "T1",
+  "title": "Cilium CLI"
+}

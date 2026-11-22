@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "huggingface-cli"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "huggingface-cli"
 if "%HUGGINGFACE_CLI_VERSION%"=="" set "HUGGINGFACE_CLI_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%USERPROFILE%\.libscript"

@@ -85,7 +85,7 @@ if "!_DB_URL!"=="" set "_DB_URL=%LIBSCRIPT_RAPPS_DB_URL%"
 if "!_DB_URL!"=="" set "_DB_URL=https://github.com/reactos/rapps-db/archive/refs/heads/master.tar.gz"
 if "%DOWNLOAD_DIR%"=="" set "DOWNLOAD_DIR=%TEMP%\libscript_downloads"
 if not exist "%DOWNLOAD_DIR%\rapps" mkdir "%DOWNLOAD_DIR%\rapps"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!_DB_URL!" "%DOWNLOAD_DIR%\rapps\rapps-db-%RAPPS_VERSION%.tar.gz" "SKIP"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!_DB_URL!" "%DOWNLOAD_DIR%\rapps\rapps-db-%RAPPS_VERSION%.tar.gz" "SKIP"
 exit /b 0
 
 :: ## action_install
@@ -162,5 +162,5 @@ exit /b 0
 :: ## action_generic
 :: Delegates generic lifecycle actions to versioning.cmd.
 :action_generic
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_handle_generic_action "rapps" "%ACTION%" "%RAPPS_VERSION%" "libscript_native"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_handle_generic_action "rapps" "%ACTION%" "%RAPPS_VERSION%" "libscript_native"
 exit /b !errorlevel!

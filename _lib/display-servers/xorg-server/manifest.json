@@ -1,16 +1,17 @@
 {
-  "name": "xorg-server",
-  "title": "X.Org Server",
-  "description": "Traditional X Window System display server",
-  "provides": ["xorg-server"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-servers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Traditional X Window System display server",
+  "name": "xorg-server",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["xorg-server"],
+  "tier": "T2",
+  "title": "X.Org Server",
+  "versions": ["1.0.0"]
 }

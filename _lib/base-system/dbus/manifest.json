@@ -1,14 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "dbus",
-  "title": "D-Bus Message Bus",
-  "description": "Freedesktop D-Bus inter-process communication message bus daemon (dbus-daemon) and CLI tools.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "provides": ["dbus", "dbus-daemon", "dbus-send"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos", "macos"],
-  "os_blacklist": ["windows"],
-  "repository": "https://gitlab.freedesktop.org/dbus/dbus",
+  "description": "Freedesktop D-Bus inter-process communication message bus daemon (dbus-daemon) and CLI tools.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -21,9 +18,13 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact"]
+  "name": "dbus",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos", "macos"],
+  "provides": ["dbus", "dbus-daemon", "dbus-send"],
+  "repository": "https://gitlab.freedesktop.org/dbus/dbus",
+  "tier": "T2",
+  "title": "D-Bus Message Bus"
 }

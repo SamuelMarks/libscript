@@ -82,7 +82,7 @@ exit /b 0
 set "RELEASES_URL=%JUICEFS_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/juicedata/juicefs/releases/latest"
 echo [ls-remote] Fetching available juicefs versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -95,8 +95,8 @@ if not exist "!TARGET_DIR!" (
     set "ACTION=install"
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "juicefs" "%JUICEFS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "juicefs" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "juicefs" "%JUICEFS_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "juicefs" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -112,7 +112,7 @@ set "DL_DIR=!DL_DIR!\juicefs"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading juicefs %JUICEFS_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -124,23 +124,23 @@ if /i "%JUICEFS_INSTALL_METHOD%"=="from-source" (
     set "SRC_URL=%JUICEFS_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://github.com/juicedata/juicefs/archive/refs/tags/v{VERSION}.tar.gz"
     call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "juicefs" "!EXACT_VERSION!" "juicefs" "go" "make" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "juicefs" "!EXACT_VERSION!" "juicefs" "go" "make" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if "%JUICEFS_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends juicefs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends juicefs
     exit /b !errorlevel!
 )
 if /i "%JUICEFS_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget juicefs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget juicefs
     exit /b !errorlevel!
 )
 if /i "%JUICEFS_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco juicefs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco juicefs
     exit /b !errorlevel!
 )
 if /i "%JUICEFS_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop juicefs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop juicefs
     exit /b !errorlevel!
 )
 call :resolve_version
@@ -152,8 +152,8 @@ if exist "!TARGET_DIR!\bin\juicefs.bat" set "_BIN_FOUND=1"
 if "!_BIN_FOUND!"=="1" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] juicefs !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "juicefs" "%JUICEFS_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "juicefs" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "juicefs" "%JUICEFS_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "juicefs" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -161,7 +161,7 @@ set "URL=%JUICEFS_DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=https://github.com/juicedata/juicefs/releases/download/v{VERSION}/juicefs-{VERSION}-windows-amd64.zip"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends juicefs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends juicefs
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -174,7 +174,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\juicefs-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 set "_IS_ARCHIVE=0"
@@ -226,8 +226,8 @@ if not "!_IS_ARCHIVE!"=="0" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\juicefs.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "juicefs" "%JUICEFS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "juicefs" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "juicefs" "%JUICEFS_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "juicefs" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -244,7 +244,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "juicedata/juicefs" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/juicedata/juicefs/releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/juicedata/juicefs/releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -257,5 +257,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "juicefs" "%ACTION%" "%JUICEFS_VERSION%" "%JUICEFS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\juicefs\%JUICEFS_VERSION%\\bin\\juicefs.exe\"" "%LIBSCRIPT_HOME%\juicefs\%JUICEFS_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "juicefs" "%ACTION%" "%JUICEFS_VERSION%" "%JUICEFS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\juicefs\%JUICEFS_VERSION%\\bin\\juicefs.exe\"" "%LIBSCRIPT_HOME%\juicefs\%JUICEFS_VERSION%"
 exit /b !errorlevel!

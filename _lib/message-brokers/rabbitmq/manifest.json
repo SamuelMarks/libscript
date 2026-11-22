@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rabbitmq",
-  "title": "RabbitMQ",
-  "description": "The most widely deployed open source message broker.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "message-brokers",
-  "provides": ["message-broker", "rabbitmq"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "The most widely deployed open source message broker.",
+  "name": "rabbitmq",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [5672, 15672],
+  "provides": ["message-broker", "rabbitmq"],
   "repository": "https://github.com/rabbitmq/rabbitmq-server",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "RabbitMQ"
 }

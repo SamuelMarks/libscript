@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "fzf",
-  "title": "fzf",
-  "description": "General-purpose interactive command-line fuzzy finder written in Go.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["fzf", "fuzzy-finder"],
+  "description": "General-purpose interactive command-line fuzzy finder written in Go.",
+  "name": "fzf",
   "os_whitelist": ["all"],
+  "provides": ["fzf", "fuzzy-finder"],
   "repository": "https://github.com/junegunn/fzf",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "fzf"
 }

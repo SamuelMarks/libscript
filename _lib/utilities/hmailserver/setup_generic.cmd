@@ -56,10 +56,10 @@ if "%ACTION%"=="install" (
     if exist "!HMAILSERVER_INSTALL_DIR!\Bin\hMailServer.exe" (
         echo [INFO] hMailServer is already installed at !HMAILSERVER_INSTALL_DIR!.
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active hMailServer >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active hMailServer >nul 2>&1
         if errorlevel 1 (
             set "STACK="
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start hMailServer >nul 2>&1
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" start hMailServer >nul 2>&1
         )
         exit /b 0
     )
@@ -67,13 +67,13 @@ if "%ACTION%"=="install" (
     if not errorlevel 1 (
         echo [INFO] Installing hMailServer via pkg_mgr...
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco hmailserver >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends_via choco hmailserver >nul 2>&1
     )
     echo [INFO] hMailServer configuration ready.
     exit /b 0
 ) else if "%ACTION%"=="test" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active hMailServer >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active hMailServer >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] hMailServer service is registered and active.
         exit /b 0
@@ -86,7 +86,7 @@ if "%ACTION%"=="install" (
 ) else if "%ACTION%"=="uninstall" (
     set "STACK="
     set "LIBSCRIPT_PKG_MGR=choco"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_uninstall_pkg hmailserver
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_uninstall_pkg hmailserver
     exit /b 0
 )
 

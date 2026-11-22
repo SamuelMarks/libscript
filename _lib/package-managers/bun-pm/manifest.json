@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "bun-pm",
-  "provides": ["package-manager", "bun-pm", "bun"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "bun-pm",
-  "description": "Fast all-in-one JavaScript runtime, bundler, transpiler, and package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Fast all-in-one JavaScript runtime, bundler, transpiler, and package manager.",
+  "name": "bun-pm",
   "os_blacklist": ["freebsd"],
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["package-manager", "bun-pm", "bun"],
   "repository": "https://github.com/oven-sh/bun",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "bun-pm"
 }

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "azure-cli",
-  "provides": ["azure-cli"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "title": "Azure Cli",
   "description": "Bootstrap module for the `azure-cli` package manager.",
+  "name": "azure-cli",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["azure-cli"],
   "repository": "https://github.com/Azure/azure-cli",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Azure Cli"
 }

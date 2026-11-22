@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "tar",
-  "title": "GNU/BSD tar",
-  "description": "Tape archive creation, inspection, and extraction utility supporting POSIX ustar and pax formats.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["tar", "archiver"],
+  "description": "Tape archive creation, inspection, and extraction utility supporting POSIX ustar and pax formats.",
+  "name": "tar",
   "os_whitelist": ["all"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["tar", "archiver"],
+  "tier": "T1",
+  "title": "GNU/BSD tar"
 }

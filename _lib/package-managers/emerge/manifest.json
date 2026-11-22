@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "emerge",
-  "provides": ["package-manager", "emerge"],
-  "os_whitelist": ["gentoo"],
-  "os_blacklist": ["darwin", "windows", "freebsd"],
-  "title": "emerge",
-  "description": "Bootstrap module for the Gentoo `emerge` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap module for the Gentoo `emerge` package manager.",
+  "name": "emerge",
+  "os_blacklist": ["darwin", "windows", "freebsd"],
+  "os_whitelist": ["gentoo"],
+  "provides": ["package-manager", "emerge"],
+  "tier": "T1",
+  "title": "emerge"
 }

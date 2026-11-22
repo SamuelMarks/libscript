@@ -99,7 +99,7 @@ exit /b 0
 :action_ls_remote
 if "%ANSIBLE_GALAXY_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%ANSIBLE_GALAXY_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%ANSIBLE_GALAXY_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%ANSIBLE_GALAXY_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/ansible/ansible" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -136,7 +136,7 @@ if "%ANSIBLE_GALAXY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading ansible-galaxy %ANSIBLE_GALAXY_VERSION% to %DOWNLOAD_DIR%\ansible-galaxy...
     if not exist "%DOWNLOAD_DIR%\ansible-galaxy" mkdir "%DOWNLOAD_DIR%\ansible-galaxy"
     if not "%ANSIBLE_GALAXY_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ANSIBLE_GALAXY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ansible-galaxy\ansible-galaxy-%ANSIBLE_GALAXY_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ANSIBLE_GALAXY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ansible-galaxy\ansible-galaxy-%ANSIBLE_GALAXY_VERSION%.zip"
     ) else (
         echo ANSIBLE_GALAXY_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -147,7 +147,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ANSIBLE_GALAXY_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends ansible-galaxy
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends ansible-galaxy
     exit /b !errorlevel!
 )
 
@@ -163,7 +163,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\ansible-galaxy\ansible-galaxy-%ANSIBLE_GALAXY_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ANSIBLE_GALAXY_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ANSIBLE_GALAXY_DOWNLOAD_URL%" "%TEMP%\ansible-galaxy.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ANSIBLE_GALAXY_DOWNLOAD_URL%" "%TEMP%\ansible-galaxy.zip"
         tar -xf "%TEMP%\ansible-galaxy.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ansible-galaxy.
@@ -194,5 +194,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "ansible-galaxy" "%ACTION%" "%ANSIBLE_GALAXY_VERSION%" "%ANSIBLE_GALAXY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\ansible-galaxy\%ANSIBLE_GALAXY_VERSION%\\bin\\ansible-galaxy.exe\"" "%LIBSCRIPT_HOME%\ansible-galaxy\%ANSIBLE_GALAXY_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "ansible-galaxy" "%ACTION%" "%ANSIBLE_GALAXY_VERSION%" "%ANSIBLE_GALAXY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\ansible-galaxy\%ANSIBLE_GALAXY_VERSION%\\bin\\ansible-galaxy.exe\"" "%LIBSCRIPT_HOME%\ansible-galaxy\%ANSIBLE_GALAXY_VERSION%"
 exit /b !errorlevel!

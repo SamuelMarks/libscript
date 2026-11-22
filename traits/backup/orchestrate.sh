@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/hooks.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/hooks.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -54,6 +54,6 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 if [ -f "${1:-}" ] && case "${1:-}" in *.json) true ;; *) false ;; esac; then
-  exec "${LIBSCRIPT_ROOT_DIR}/_lib/databases/export_db.sh" "$1" "${2:-/tmp/libscript_export_stage}"
+  exec "${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/export_db.sh" "$1" "${2:-/tmp/libscript_export_stage}"
 fi
 orchestrate_backups "$@"

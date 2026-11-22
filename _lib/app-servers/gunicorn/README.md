@@ -26,7 +26,7 @@ running the setup script.
 | `GUNICORN_BIND`           | Socket to bind (e.g. '0.0.0.0:8000', '127.0.0.1:8000').            | `0.0.0.0:8000` |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Platform Support

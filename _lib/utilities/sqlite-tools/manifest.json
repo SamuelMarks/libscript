@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "sqlite-tools",
-  "title": "SQLite CLI Tools",
-  "description": "Official SQLite command-line bundle providing sqlite3 shell, sqldiff, and sqlite3_analyzer.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["sqlite-tools", "sqldiff", "sqlite3_analyzer"],
+  "description": "Official SQLite command-line bundle providing sqlite3 shell, sqldiff, and sqlite3_analyzer.",
+  "name": "sqlite-tools",
   "os_whitelist": ["all"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["sqlite-tools", "sqldiff", "sqlite3_analyzer"],
+  "tier": "T1",
+  "title": "SQLite CLI Tools"
 }

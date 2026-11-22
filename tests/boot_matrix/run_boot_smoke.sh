@@ -77,7 +77,7 @@ TMP_BOOT=$(mktemp -d "${TMPDIR:-/tmp}/libscript_bootsmoke.XXXXXX")
 trap 'rm -rf "$TMP_BOOT"' EXIT INT TERM HUP
 
 for _kf in linux freebsd illumos unikraft nanos osv rumprun mirageos; do
-  LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/direct_kernel.sh" --allow-stub --kernel="$_kf" "${TMP_BOOT}/sys_${_kf}" "${TMP_BOOT}/dk_${_kf}" >/dev/null
+  LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/direct_kernel.sh" --allow-stub --kernel="$_kf" "${TMP_BOOT}/sys_${_kf}" "${TMP_BOOT}/dk_${_kf}" >/dev/null
   [ -f "${TMP_BOOT}/dk_${_kf}/boot-manifest.json" ] || exit 1
   [ -f "${TMP_BOOT}/dk_${_kf}/firecracker.json" ] || exit 1
 done

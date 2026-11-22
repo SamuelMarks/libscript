@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "wine",
-  "title": "WINE Win32 Compatibility Layer",
-  "description": "WINE 9+ Win32 runtime and wineserver daemon for unconfounded warm and cold baseline evaluations.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "virtualization",
-  "provides": ["wine", "wineserver"],
+  "description": "WINE 9+ Win32 runtime and wineserver daemon for unconfounded warm and cold baseline evaluations.",
+  "name": "wine",
   "os_whitelist": ["linux", "darwin", "freebsd"],
+  "provides": ["wine", "wineserver"],
   "repository": "https://gitlab.winehq.org/wine/wine",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "WINE Win32 Compatibility Layer"
 }

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "vim",
-  "title": "Vim",
-  "description": "Vi IMproved highly configurable modal text editor built for efficient code editing.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["vim", "editor"],
+  "description": "Vi IMproved highly configurable modal text editor built for efficient code editing.",
+  "name": "vim",
   "os_whitelist": ["all"],
+  "provides": ["vim", "editor"],
   "repository": "https://github.com/vim/vim",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Vim"
 }

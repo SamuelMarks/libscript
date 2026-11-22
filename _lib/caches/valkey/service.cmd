@@ -89,5 +89,5 @@ set "REDIS_DATA_DIR=!_CVS_DIR!"
 if not exist "!VALKEY_DATA_DIR!" mkdir "!VALKEY_DATA_DIR!" >nul 2>&1
 icacls "!VALKEY_DATA_DIR!" /grant "*S-1-5-32-544:(OI)(CI)F" /grant "*S-1-5-18:(OI)(CI)F" /T /C /Q >nul 2>&1
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "!_SVC!" "VALKEY_DATA_DIR=!VALKEY_DATA_DIR!" "REDIS_DATA_DIR=!REDIS_DATA_DIR!" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\service_install.cmd" override-env "!_SVC!" "VALKEY_DATA_DIR=!VALKEY_DATA_DIR!" "REDIS_DATA_DIR=!REDIS_DATA_DIR!" >nul 2>&1
 exit /b 0

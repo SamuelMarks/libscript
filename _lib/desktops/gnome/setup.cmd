@@ -1,7 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Installation and configuration entrypoint for the gnome component on Windows. Delegates execution to the shared _lib\_common\setup_base.cmd module.
+:: Installation and configuration entrypoint for the gnome component on Windows. Delegates execution to the shared engine\common\setup_base.cmd module.
 :: ## Usage
 :: setup.cmd [action]
 
@@ -49,4 +49,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" %*

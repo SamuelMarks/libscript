@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "texlive",
-  "title": "TeX Live Typesetting Toolchain",
-  "description": "Reproducible scholarly LaTeX typesetting toolchain providing pdflatex and bibtex.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["texlive", "pdflatex", "bibtex", "latex"],
+  "description": "Reproducible scholarly LaTeX typesetting toolchain providing pdflatex and bibtex.",
+  "name": "texlive",
   "os_whitelist": ["all"],
+  "provides": ["texlive", "pdflatex", "bibtex", "latex"],
   "repository": "https://tug.org/texlive/",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "TeX Live Typesetting Toolchain"
 }

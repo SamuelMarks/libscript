@@ -21,7 +21,7 @@ running the setup script.
 | `XORG_SERVER_INSTALL_METHOD` | How to install XORG_SERVER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager. | `system` |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Platform Support

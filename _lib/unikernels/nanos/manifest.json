@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
+  "category": "unikernels",
+  "description": "NanoVMs Ops CLI and Nanos unikernel image packager running unmodified ELF binaries on KVM, QEMU, Xen, and cloud hypervisors.",
+  "name": "nanos",
+  "os_whitelist": ["all"],
+  "provides": ["nanos", "ops", "unikernel-builder"],
+  "repository": "https://github.com/nanovms/ops",
+  "tier": "T2",
+  "title": "Nanos Unikernel (Ops)"
+}

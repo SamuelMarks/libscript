@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "riscv-none-elf-gcc",
-  "title": "RISC-V Bare-Metal GNU Toolchain",
-  "description": "Bare-metal 32/64-bit RISC-V multilib (rv32imac/rv64imac) embedded GNU cross-toolchain with newlib and picolibc support.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["riscv64-unknown-elf-gcc", "riscv-none-elf-gcc"],
+  "description": "Bare-metal 32/64-bit RISC-V multilib (rv32imac/rv64imac) embedded GNU cross-toolchain with newlib and picolibc support.",
+  "name": "riscv-none-elf-gcc",
   "os_whitelist": ["all"],
+  "provides": ["riscv64-unknown-elf-gcc", "riscv-none-elf-gcc"],
   "repository": "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "RISC-V Bare-Metal GNU Toolchain"
 }

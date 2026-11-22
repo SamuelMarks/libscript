@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "android-sdk",
-  "title": "Android SDK Command-Line Tools",
-  "description": "Google Android SDK command-line tools (sdkmanager), platform-tools, platforms, and build-tools for Android and Kotlin Multiplatform builds.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["android-sdk", "sdkmanager"],
-  "os_whitelist": ["linux", "darwin", "windows"],
+  "description": "Google Android SDK command-line tools (sdkmanager), platform-tools, platforms, and build-tools for Android and Kotlin Multiplatform builds.",
+  "name": "android-sdk",
   "os_blacklist": ["sunos", "freebsd"],
-  "capabilities": ["versioned-artifact"]
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["android-sdk", "sdkmanager"],
+  "tier": "T1",
+  "title": "Android SDK Command-Line Tools"
 }

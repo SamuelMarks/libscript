@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%NIX_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%NIX_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%NIX_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%NIX_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/NixOS/nix" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%NIX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nix %NIX_VERSION% to %DOWNLOAD_DIR%\nix...
     if not exist "%DOWNLOAD_DIR%\nix" mkdir "%DOWNLOAD_DIR%\nix"
     if not "%NIX_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nix\nix-%NIX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nix\nix-%NIX_VERSION%.zip"
     ) else (
         echo NIX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NIX_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nix
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends nix
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\nix\nix-%NIX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NIX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NIX_DOWNLOAD_URL%" "%TEMP%\nix.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NIX_DOWNLOAD_URL%" "%TEMP%\nix.zip"
         tar -xf "%TEMP%\nix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nix.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "nix" "%ACTION%" "%NIX_VERSION%" "%NIX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nix\%NIX_VERSION%\\bin\\nix.exe\"" "%LIBSCRIPT_HOME%\nix\%NIX_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "nix" "%ACTION%" "%NIX_VERSION%" "%NIX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nix\%NIX_VERSION%\\bin\\nix.exe\"" "%LIBSCRIPT_HOME%\nix\%NIX_VERSION%"
 exit /b !errorlevel!

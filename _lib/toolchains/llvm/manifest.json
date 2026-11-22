@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "llvm",
-  "title": "LLVM",
-  "description": "Modular compiler infrastructure and backend toolchain utilities.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["llvm", "llvm-config", "llc", "opt"],
+  "description": "Modular compiler infrastructure and backend toolchain utilities.",
+  "name": "llvm",
   "os_whitelist": ["all"],
+  "provides": ["llvm", "llvm-config", "llc", "opt"],
   "repository": "https://github.com/llvm/llvm-project",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "LLVM"
 }

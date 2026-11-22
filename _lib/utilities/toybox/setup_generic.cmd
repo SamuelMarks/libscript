@@ -48,7 +48,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\os_info.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\os_info.cmd"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%TOYBOX_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
@@ -85,14 +85,14 @@ exit /b 0
 set "RELEASES_URL=%TOYBOX_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/SamuelMarks/toybox-windows/releases/latest"
 echo [ls-remote] Fetching available toybox versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
 :: Activates a specific installed version of toybox and updates alias junctions.
 :action_use
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "toybox" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "toybox" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
@@ -100,8 +100,8 @@ if not exist "!TARGET_DIR!" (
     set "STACK="
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "%TOYBOX_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "toybox" "%TOYBOX_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "toybox" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -115,7 +115,7 @@ set "DL_DIR=!DL_DIR!\toybox"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading toybox !EXACT_VERSION! ^(!TARGET_OS!^) from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -125,34 +125,34 @@ if /i "%TOYBOX_INSTALL_METHOD%"=="from-source" (
     call :resolve_version
     set "SRC_URL=%TOYBOX_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://landley.net/toybox/downloads/toybox-!EXACT_VERSION!.tar.gz"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "toybox" "!EXACT_VERSION!" "toybox" "c" "make-defconfig" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "toybox" "!EXACT_VERSION!" "toybox" "c" "make-defconfig" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if /i "%TOYBOX_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget toybox
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget toybox
     exit /b !errorlevel!
 )
 if /i "%TOYBOX_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget toybox
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget toybox
     exit /b !errorlevel!
 )
 if /i "%TOYBOX_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco toybox
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco toybox
     exit /b !errorlevel!
 )
 if /i "%TOYBOX_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop toybox
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop toybox
     exit /b !errorlevel!
 )
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "toybox" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "toybox" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if exist "!TARGET_DIR!\bin\toybox.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] toybox !EXACT_VERSION! is already installed at !TARGET_DIR!.
         call :materialize_toybox_shims "!TARGET_DIR!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "%TOYBOX_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "toybox" "%TOYBOX_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "toybox" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -167,12 +167,12 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\toybox-!RANDOM!-!ARCHIVE_NAME!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 (
         if "%TOYBOX_DOWNLOAD_URL%"=="" (
             call :resolve_toybox_fallback_exe_url
             set "TMP_FILE=%TEMP%\toybox-!RANDOM!.exe"
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+            call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
             if errorlevel 1 exit /b 1
         ) else (
             exit /b 1
@@ -183,8 +183,8 @@ call :stage_toybox_artifact "!TMP_FILE!" "!URL!" "!TARGET_DIR!"
 if errorlevel 1 exit /b 1
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
 call :materialize_toybox_shims "!TARGET_DIR!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "%TOYBOX_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "toybox" "%TOYBOX_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "toybox" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## materialize_toybox_shims
@@ -327,7 +327,7 @@ exit /b 0
 set "EXACT_VERSION="
 set "_REL_API=%TOYBOX_RELEASES_URL%"
 if "!_REL_API!"=="" set "_REL_API=https://api.github.com/repos/SamuelMarks/toybox-windows/releases/latest"
-for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
+for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
     set "EXACT_VERSION=%%T"
 )
 if not "!EXACT_VERSION!"=="" (
@@ -339,5 +339,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "toybox" "%ACTION%" "%TOYBOX_VERSION%" "%TOYBOX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\toybox\%TOYBOX_VERSION%\\bin\\toybox.exe\"" "%LIBSCRIPT_HOME%\toybox\%TOYBOX_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "toybox" "%ACTION%" "%TOYBOX_VERSION%" "%TOYBOX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\toybox\%TOYBOX_VERSION%\\bin\\toybox.exe\"" "%LIBSCRIPT_HOME%\toybox\%TOYBOX_VERSION%"
 exit /b !errorlevel!

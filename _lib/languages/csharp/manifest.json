@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "csharp",
-  "title": "C# Toolchain",
-  "description": "C# compiler and .NET runtime.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["compiler", "c#", "csharp", "dotnet"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "C# compiler and .NET runtime.",
+  "name": "csharp",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["compiler", "c#", "csharp", "dotnet"],
   "repository": "https://github.com/dotnet/sdk",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "C# Toolchain"
 }

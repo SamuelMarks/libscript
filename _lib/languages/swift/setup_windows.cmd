@@ -66,7 +66,7 @@ for /d %%S in ("%ProgramFiles%\Swift\Toolchains\*") do (
 )
 
 echo Installing Swift Toolchain via pkg_mgr...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "Swift.Toolchain"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends "Swift.Toolchain"
 goto :create_shims
 
 :: ## create_shims

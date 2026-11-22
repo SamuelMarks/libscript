@@ -60,7 +60,7 @@ if not exist "%TEST_DIR%" mkdir "%TEST_DIR%"
 
 set "OUT_ARCHIVE=%TEST_DIR%\test_container.tar"
 
-call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\container_base.cmd" "%TEST_DIR%" "%OUT_ARCHIVE%" "libscript-test:v1.0.0"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\formats\container_base.cmd" "%TEST_DIR%" "%OUT_ARCHIVE%" "libscript-test:v1.0.0"
 
 if not exist "%OUT_ARCHIVE%" (
     echo [FAIL] Container archive was not generated. >&2

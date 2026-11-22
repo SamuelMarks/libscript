@@ -55,7 +55,7 @@ set "LIBSCRIPT_HOME=!_TMP!\home"
 set "LIBSCRIPT_OFFLINE=1"
 set "LIBSCRIPT_ALLOW_STUB=1"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\reactos\distro\assemble.cmd" "!LIBSCRIPT_ROOT_DIR!\profiles\reactos\developer-win32-i686.json" "!_TMP!\sys"
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\reactos\assemble.cmd" "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\reactos\developer-win32-i686.json" "!_TMP!\sys"
 if errorlevel 1 exit /b 1
 if not exist "!_TMP!\sys\iso_root\libscript\bootstrap\bin\curl.exe" exit /b 1
 rmdir /s /q "!_TMP!" >nul 2>&1

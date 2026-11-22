@@ -91,9 +91,9 @@ if "!LIBSCRIPT_SECRETS!"=="" (
     )
 )
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\env_printer.cmd" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\env_printer.cmd" --hydrate "!json_file!"
 )
 
 for %%F in ("!json_file!") do set "_manifest_dir=%%~dpF"
@@ -126,9 +126,9 @@ if exist "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" (
     )
 )
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_install"
+call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\run_hooks.cmd" "!json_file!" "pre_install"
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
+call "!LIBSCRIPT_ROOT_DIR!\engine\solver\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
 REM Parallel Download Phase
 echo Checking and downloading missing dependencies in parallel...
 set "_DL_LOCK_DIR=%TEMP%\libscript_dl_%RANDOM%"
@@ -141,9 +141,9 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
     )
     if "!_dl_skip!"=="0" (
         if "!force_reinstall!"=="0" (
-            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" (
+            if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" (
                 set "STACK="
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_check_installed_version "%%a" "%%b" >nul 2>&1
+                call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_check_installed_version "%%a" "%%b" >nul 2>&1
                 if not errorlevel 1 set "_dl_skip=1"
             )
         )
@@ -184,9 +184,9 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
     ) else (
         set "_dep_reused=0"
         if "!force_reinstall!"=="0" (
-            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" (
+            if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" (
                 set "STACK="
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_check_installed_version "%%a" "%%b" >nul 2>&1
+                call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_check_installed_version "%%a" "%%b" >nul 2>&1
                 if not errorlevel 1 set "_dep_reused=1"
             )
         )
@@ -213,9 +213,9 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
 set "LIBSCRIPT_VERSION="
 if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\env_printer.cmd" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\env_printer.cmd" --hydrate "!json_file!"
 )
 
 for %%F in ("!json_file!") do set "_MANIFEST_DIR=%%~dpF"
@@ -230,31 +230,31 @@ if defined SERVICE_EXTRA_PATH (
 )
 echo SERVICE_PATH=!PATH!>> "!_ENV_OUT!"
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\python_env.cmd" (
     set "_PY_VER=3.12"
     for /f "delims=" %%V in ('jq -r ".deps.python // .dependencies.python // \"3.12\"" "!json_file!" 2^>nul') do set "_PY_VER=%%V"
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "!_MANIFEST_DIR!" "!_PY_VER!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\python_env.cmd" libscript_python_ensure_venv_owner "!_MANIFEST_DIR!" "!_PY_VER!"
     for /d %%P in ("!_MANIFEST_DIR!\*") do (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "%%~fP" "!_PY_VER!"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\python_env.cmd" libscript_python_ensure_venv_owner "%%~fP" "!_PY_VER!"
     )
 )
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "install"
+call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\run_hooks.cmd" "!json_file!" "install"
 if errorlevel 1 exit /b 1
 
 set "_HAS_EMBEDDED_DB=0"
 for /f "delims=" %%E in ('jq -r "[((.databases // .infrastructure.databases) | if type == \"object\" then [to_entries[].value] elif type == \"array\" then . else [] end)[]? | (.engine // .type // \"\") | ascii_downcase | select(. == \"duckdb\" or . == \"sqlite\" or . == \"sqlite3\")] | length" "!json_file!" 2^>nul') do set "_HAS_EMBEDDED_DB=%%E"
 if not "!_HAS_EMBEDDED_DB!"=="0" (
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\daemonize.cmd" (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" stop "!json_file!" >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\daemonize.cmd" stop "!json_file!" >nul 2>&1
     )
 )
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_db.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_db.cmd" "!json_file!"
     if errorlevel 1 exit /b 1
 )
 if exist "!_MANIFEST_DIR!\.env.libscript" (
@@ -264,13 +264,13 @@ if exist "!_MANIFEST_DIR!\.env.libscript" (
     )
 )
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_install"
+call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\run_hooks.cmd" "!json_file!" "post_install"
 if errorlevel 1 exit /b 1
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
+call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\run_hooks.cmd" "!json_file!" "db_migrate"
 if errorlevel 1 exit /b 1
 for /f "delims=" %%T in ('jq -rn "now | floor" 2^>nul') do set "LIBSCRIPT_PRE_BUILD_TS=%%T"
 if "!LIBSCRIPT_PRE_BUILD_TS!"=="" set "LIBSCRIPT_PRE_BUILD_TS=1"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
+call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\run_hooks.cmd" "!json_file!" "build"
 if errorlevel 1 exit /b 1
 set "_HAS_FE=0"
 for /f "delims=" %%F in ('jq -r "([ (.services | if type == \"array\" then .[] elif type == \"object\" then to_entries[].value else empty end) | select(.type == \"static\" or .type == \"spa\" or .type == \"frontend\" or .type == \"kmp\" or .framework != null or .target != null) ] + [ (.frontends | if type == \"array\" then .[] elif type == \"object\" then to_entries[].value else empty end) ]) | length" "!json_file!" 2^>nul') do set "_HAS_FE=%%F"
@@ -283,12 +283,12 @@ if "!_HAS_FE!"=="0" (
     )
 )
 if not "!_HAS_FE!"=="0" (
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\engine\hooks\app-servers\provision_frontend.cmd" (
         set "_FE_FLAGS="
         if "!force_rebuild!"=="1" set "_FE_FLAGS=--force-rebuild"
         if "!force_reinstall!"=="1" set "_FE_FLAGS=!_FE_FLAGS! --force-reinstall"
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" --app-dir "!_MANIFEST_DIR!" --manifest "!json_file!" !_FE_FLAGS!
+        call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\app-servers\provision_frontend.cmd" --app-dir "!_MANIFEST_DIR!" --manifest "!json_file!" !_FE_FLAGS!
         if errorlevel 1 exit /b 1
     )
 )

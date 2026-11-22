@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "iac",
+  "description": "Agentless IT automation, configuration management, and application deployment engine (ansible, ansible-playbook, ansible-vault).",
+  "name": "ansible",
+  "os_whitelist": ["all"],
+  "provides": ["ansible", "ansible-playbook", "ansible-core"],
+  "repository": "https://github.com/ansible/ansible",
+  "tier": "T1",
+  "title": "Ansible Automation Engine"
+}

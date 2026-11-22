@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "coremqtt",
-  "title": "FreeRTOS coreMQTT C11 Library",
-  "description": "Zero-dynamic-allocation C11 MQTT 3.1.1 and MQTT 5.0 client library for FreeRTOS and Zephyr IoT appliances.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "message-brokers",
-  "provides": ["coremqtt", "mqtt-embedded-client"],
+  "description": "Zero-dynamic-allocation C11 MQTT 3.1.1 and MQTT 5.0 client library for FreeRTOS and Zephyr IoT appliances.",
+  "memory_footprint_class": "mcu-sram-64k",
+  "name": "coremqtt",
   "os_whitelist": ["all"],
+  "provides": ["coremqtt", "mqtt-embedded-client"],
   "repository": "https://github.com/FreeRTOS/coreMQTT",
   "rtos_support": ["zephyr", "freertos"],
-  "memory_footprint_class": "mcu-sram-64k",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "FreeRTOS coreMQTT C11 Library"
 }

@@ -73,17 +73,17 @@ if /i "%ACTION%"=="override-env" (
 if /i "%ACTION%"=="start" (
     call :configure_redis_storage
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active Redis >nul 2>&1 && exit /b 0
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active Redis >nul 2>&1 && exit /b 0
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start Redis >nul 2>&1 && exit /b 0
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" start Redis >nul 2>&1 && exit /b 0
     if exist "%REDIS_EXE%" (
-        powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\_common\daemon_launcher.ps1" -Port 6379 -Executable "%REDIS_EXE%" 2>nul
+        powershell -NoProfile -ExecutionPolicy Bypass -File "!LIBSCRIPT_ROOT_DIR!\engine\common\daemon_launcher.ps1" -Port 6379 -Executable "%REDIS_EXE%" 2>nul
     )
     exit /b 0
 )
 if /i "%ACTION%"=="stop" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop Redis >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" stop Redis >nul 2>&1
     taskkill /F /IM redis-server.exe >nul 2>&1
     exit /b 0
 )
@@ -95,7 +95,7 @@ if /i "%ACTION%"=="restart" (
 )
 if /i "%ACTION%"=="status" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active Redis >nul 2>&1 && (echo [RUNNING] Redis & exit /b 0)
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active Redis >nul 2>&1 && (echo [RUNNING] Redis & exit /b 0)
     powershell -NoProfile -Command "if (Get-Process redis-server -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul && (echo [RUNNING] redis-server.exe & exit /b 0)
     echo [STOPPED] redis
     exit /b 1
@@ -119,5 +119,5 @@ set "VALKEY_DATA_DIR=!_CRS_DIR!"
 if not exist "!REDIS_DATA_DIR!" mkdir "!REDIS_DATA_DIR!" >nul 2>&1
 icacls "!REDIS_DATA_DIR!" /grant "*S-1-5-32-544:(OI)(CI)F" /grant "*S-1-5-18:(OI)(CI)F" /T /C /Q >nul 2>&1
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "Redis" "REDIS_DATA_DIR=!REDIS_DATA_DIR!" "VALKEY_DATA_DIR=!VALKEY_DATA_DIR!" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\service_install.cmd" override-env "Redis" "REDIS_DATA_DIR=!REDIS_DATA_DIR!" "VALKEY_DATA_DIR=!VALKEY_DATA_DIR!" >nul 2>&1
 exit /b 0

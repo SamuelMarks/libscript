@@ -1,16 +1,17 @@
 {
-  "name": "gnome",
-  "title": "GNOME Desktop",
-  "description": "Modern desktop environment for Linux",
-  "provides": ["gnome"],
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Modern desktop environment for Linux",
+  "name": "gnome",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["gnome"],
+  "tier": "T2",
+  "title": "GNOME Desktop",
+  "versions": ["1.0.0"]
 }

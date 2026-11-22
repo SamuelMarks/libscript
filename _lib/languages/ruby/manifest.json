@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ruby",
-  "title": "Ruby Runtime",
-  "description": "A dynamic, open source programming language with a focus on simplicity and productivity.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["runtime", "ruby", "gem"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A dynamic, open source programming language with a focus on simplicity and productivity.",
+  "name": "ruby",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["runtime", "ruby", "gem"],
   "repository": "https://github.com/ruby/ruby",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Ruby Runtime"
 }

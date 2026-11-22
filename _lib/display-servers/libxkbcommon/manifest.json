@@ -1,16 +1,17 @@
 {
-  "name": "libxkbcommon",
-  "title": "libxkbcommon",
-  "description": "Keyboard description parser and keymap library",
-  "provides": ["libxkbcommon"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-servers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Keyboard description parser and keymap library",
+  "name": "libxkbcommon",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["libxkbcommon"],
+  "tier": "T2",
+  "title": "libxkbcommon",
+  "versions": ["1.0.0"]
 }

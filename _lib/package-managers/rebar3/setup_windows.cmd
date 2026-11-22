@@ -72,7 +72,7 @@ if "%errorlevel%" equ "0" (
 if "%ESCRIPT_BIN%"=="" (
     echo Erlang OTP not detected. Installing via pkg_mgr...
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends erlang
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends erlang
     for /d %%E in ("%ProgramFiles%\Erlang*" "%ProgramFiles%\erl*") do (
         if exist "%%E\bin\escript.exe" set "ESCRIPT_BIN=%%E\bin\escript.exe"
     )
@@ -88,7 +88,7 @@ set "REBAR_PATH=%DEST_DIR%\rebar3.escript"
 
 echo Downloading rebar3 from %URL%...
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%REBAR_PATH%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%URL%" "%REBAR_PATH%"
 
 > "%BIN_DIR%\rebar3.cmd" echo @echo off
 >> "%BIN_DIR%\rebar3.cmd" echo "%ESCRIPT_BIN%" "%REBAR_PATH%" %%*

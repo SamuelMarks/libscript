@@ -51,5 +51,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_hook_impl.cmd" "prometheus" "rollback" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_hook_impl.cmd" "prometheus" "rollback" %*
 exit /b %errorlevel%

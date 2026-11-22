@@ -9,17 +9,17 @@ $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = (Resolve-Path (Join-Path $scriptDir "..\..")).Path
-$baseSchemaPath = Join-Path $repoRoot "_lib\_common\base_vars.schema.json"
-$manifestSchemaPath = Join-Path $repoRoot "_lib\_common\manifest.schema.json"
-$osConfigSchemaPath = Join-Path $repoRoot "os-config.schema.json"
-$freebsdSchemaPath = Join-Path $repoRoot "execution-plan.freebsd.schema.json"
-$illumosSchemaPath = Join-Path $repoRoot "execution-plan.illumos.schema.json"
-$reactosSchemaPath = Join-Path $repoRoot "execution-plan.reactos.schema.json"
-$rtosSchemaPath = Join-Path $repoRoot "execution-plan.rtos.schema.json"
-$execCommonSchemaPath = Join-Path $repoRoot "schemas\execution-plan-common.schema.json"
+$baseSchemaPath = Join-Path $repoRoot "engine\schemas\base_vars.schema.json"
+$manifestSchemaPath = Join-Path $repoRoot "engine\schemas\manifest.schema.json"
+$osConfigSchemaPath = Join-Path $repoRoot "synthesis/schemas/os-config.schema.json"
+$freebsdSchemaPath = Join-Path $repoRoot "synthesis/schemas/execution-plan.freebsd.schema.json"
+$illumosSchemaPath = Join-Path $repoRoot "synthesis/schemas/execution-plan.illumos.schema.json"
+$reactosSchemaPath = Join-Path $repoRoot "synthesis/schemas/execution-plan.reactos.schema.json"
+$rtosSchemaPath = Join-Path $repoRoot "synthesis/schemas/execution-plan.rtos.schema.json"
+$execCommonSchemaPath = Join-Path $repoRoot "synthesis\schemas\execution-plan-common.schema.json"
 $rootLibscriptSchemaPath = Join-Path $repoRoot "libscript.schema.json"
-$nestedLibscriptSchemaPath = Join-Path $repoRoot "schemas\libscript.schema.json"
-$tfrcPolicySchemaPath = Join-Path $repoRoot "schemas\tfrc-policy.schema.json"
+$nestedLibscriptSchemaPath = Join-Path $repoRoot "workloads\schemas\libscript.schema.json"
+$tfrcPolicySchemaPath = Join-Path $repoRoot "engine\schemas\tfrc-policy.schema.json"
 $varsPackDir = Join-Path $repoRoot "schemas\vars"
 
 $script:errorsCount = 0
@@ -182,7 +182,7 @@ function Test-SchemaRefs {
 function Test-ManifestJson {
     <#
     .SYNOPSIS
-    Validates a component's manifest.json against _lib/_common/manifest.schema.json.
+    Validates a component's manifest.json against engine/schemas/manifest.schema.json.
     #>
     param([string]$CompDir, $ManifestSchema)
     $relDir = $CompDir.Substring($repoRoot.Length + 1) -replace '\\', '/'
@@ -268,24 +268,24 @@ function Test-RootSchemasAndProfiles {
         $baseProps = @($baseObj.properties.PSObject.Properties.Name)
         foreach ($bk in $baseProps) {
             if (Test-InternalRuntimeVar -VarName $bk) {
-                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [INTERNAL_VAR_IN_BASE_SCHEMA] _lib/_common/base_vars.schema.json: Internal variable `"$bk`" must not appear in user-facing base_vars.schema.json.")
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [INTERNAL_VAR_IN_BASE_SCHEMA] engine/schemas/base_vars.schema.json: Internal variable `"$bk`" must not appear in user-facing base_vars.schema.json.")
                 $script:errorsCount++
             }
         }
         if ($baseProps.Count -gt 32) {
-            [Console]::Error.WriteLine("[STANDARDS VIOLATION] [BASE_SCHEMA_BLOAT] _lib/_common/base_vars.schema.json: Contains $($baseProps.Count) properties (maximum allowed core globals is 32).")
+            [Console]::Error.WriteLine("[STANDARDS VIOLATION] [BASE_SCHEMA_BLOAT] engine/schemas/base_vars.schema.json: Contains $($baseProps.Count) properties (maximum allowed core globals is 32).")
             $script:errorsCount++
         }
     }
     if (Test-Path -LiteralPath $nestedLibscriptSchemaPath) {
         try {
             $wrapObj = Get-Content -LiteralPath $nestedLibscriptSchemaPath -Raw -Encoding UTF8 | ConvertFrom-Json
-            if ([string]$wrapObj.'$ref' -ne "../libscript.schema.json") {
-                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [SCHEMA_SYNC] schemas/libscript.schema.json must `$ref `"../libscript.schema.json`" as a thin canonical wrapper.")
+            if ([string]$wrapObj.'$ref' -ne "../../libscript.schema.json") {
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [SCHEMA_SYNC] workloads/schemas/libscript.schema.json must `$ref `"../../libscript.schema.json`" as a thin canonical wrapper.")
                 $script:errorsCount++
             }
         } catch {
-            [Console]::Error.WriteLine("[STANDARDS VIOLATION] [INVALID_JSON] schemas/libscript.schema.json: File is not valid JSON.")
+            [Console]::Error.WriteLine("[STANDARDS VIOLATION] [INVALID_JSON] workloads/schemas/libscript.schema.json: File is not valid JSON.")
             $script:errorsCount++
         }
     }
@@ -343,15 +343,15 @@ function Test-RootSchemasAndProfiles {
             $libcs = @($osSchema.properties.target.properties.libc.enum)
             $kernels = @($osSchema.properties.rtos.properties.kernel.enum)
             if ($null -ne $pf.target -and $archs -notcontains [string]$pf.target.arch) {
-                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: target.arch `"$($pf.target.arch)`" not in os-config.schema.json enum")
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: target.arch `"$($pf.target.arch)`" not in synthesis/schemas/os-config.schema.json enum")
                 $script:errorsCount++
             }
             if ($null -ne $pf.target -and $libcs -notcontains [string]$pf.target.libc) {
-                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: target.libc `"$($pf.target.libc)`" not in os-config.schema.json enum")
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: target.libc `"$($pf.target.libc)`" not in synthesis/schemas/os-config.schema.json enum")
                 $script:errorsCount++
             }
             if ($null -ne $pf.rtos -and $kernels -notcontains [string]$pf.rtos.kernel) {
-                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: rtos.kernel `"$($pf.rtos.kernel)`" not in os-config.schema.json enum")
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: rtos.kernel `"$($pf.rtos.kernel)`" not in synthesis/schemas/os-config.schema.json enum")
                 $script:errorsCount++
             }
         } elseif ($null -ne $osSchema) {
@@ -364,11 +364,11 @@ function Test-RootSchemasAndProfiles {
             $archs = @($osSchema.properties.target.properties.arch.enum)
             $libcs = @($osSchema.properties.target.properties.libc.enum)
             if ($null -ne $pf.target -and $archs -notcontains [string]$pf.target.arch) {
-                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: target.arch `"$($pf.target.arch)`" not in os-config.schema.json enum")
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: target.arch `"$($pf.target.arch)`" not in synthesis/schemas/os-config.schema.json enum")
                 $script:errorsCount++
             }
             if ($null -ne $pf.target -and $libcs -notcontains [string]$pf.target.libc) {
-                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: target.libc `"$($pf.target.libc)`" not in os-config.schema.json enum")
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: target.libc `"$($pf.target.libc)`" not in synthesis/schemas/os-config.schema.json enum")
                 $script:errorsCount++
             }
         }
@@ -429,7 +429,7 @@ function Invoke-ComponentVarAudit {
                 continue
             }
             if ($baseRawKeys.Contains($lp.Name)) {
-                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [DUPLICATE_BASE_VAR] ${relDir}/vars.schema.json: Property `"$($lp.Name)`" redundantly duplicates _lib/_common/base_vars.schema.json.")
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [DUPLICATE_BASE_VAR] ${relDir}/vars.schema.json: Property `"$($lp.Name)`" redundantly duplicates engine/schemas/base_vars.schema.json.")
                 $script:errorsCount++
             }
         }

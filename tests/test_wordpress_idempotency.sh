@@ -34,7 +34,7 @@ printf '==> Testing WordPress Setup Two-Pass Idempotency...\n'
 TMP_WWW=$(mktemp -d)
 
 printf '[INFO] Executing Setup Pass 1...\n'
-"${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --skip-deps --server-name "wordpress.local"
+"${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --skip-deps --server-name "wordpress.local"
 
 if [ ! -f "${TMP_WWW}/wp-config.php" ]; then
   printf '[ERROR] wp-config.php not created in Pass 1!\n' >&2
@@ -43,7 +43,7 @@ if [ ! -f "${TMP_WWW}/wp-config.php" ]; then
 fi
 
 printf '[INFO] Executing Setup Pass 2...\n'
-"${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --skip-deps --server-name "wordpress.local"
+"${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --skip-deps --server-name "wordpress.local"
 
 # Check that wp-config.php does not contain duplicate DB_NAME definitions
 DEF_COUNT=$(grep -c "define( *'DB_NAME'" "${TMP_WWW}/wp-config.php" || true)

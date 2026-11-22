@@ -1,15 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "questdb",
-  "title": "QuestDB",
-  "description": "High-throughput open-source time-series database with fast SQL, InfluxDB Line Protocol, and PostgreSQL wire support.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["questdb", "tsdb", "database"],
-  "os_whitelist": ["all"],
-  "ports": [9000, 8812],
-  "stateful": true,
-  "repository": "https://github.com/questdb/questdb",
+  "description": "High-throughput open-source time-series database with fast SQL, InfluxDB Line Protocol, and PostgreSQL wire support.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -22,9 +18,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "questdb",
+  "os_whitelist": ["all"],
+  "ports": [9000, 8812],
+  "provides": ["questdb", "tsdb", "database"],
+  "repository": "https://github.com/questdb/questdb",
+  "stateful": true,
+  "tier": "T1",
+  "title": "QuestDB"
 }

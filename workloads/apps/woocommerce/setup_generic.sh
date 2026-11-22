@@ -1,0 +1,71 @@
+#!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the WooCommerce e-commerce platform stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for woocommerce.
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export DIR="${SCRIPT_DIR}"
+
+_woo_sg_this="${THIS_FILE}"
+_woo_sg_dir="${SCRIPT_DIR}"
+# Delegate core WP setup
+for LIB in "workloads/apps/wordpress/setup_generic.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
+THIS_FILE="${_woo_sg_this}"
+SCRIPT_DIR="${_woo_sg_dir}"
+export DIR="${SCRIPT_DIR}"
+unset _woo_sg_this _woo_sg_dir || true
+
+# Install WooCommerce
+WOOCOMMERCE_VERSION="${WOOCOMMERCE_VERSION:-latest}"
+export WOOCOMMERCE_VERSION
+WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-${WORDPRESS_WWWROOT:-/var/www/wordpress}}"
+export WOOCOMMERCE_WWWROOT
+
+PLUGIN_DIR="${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
+if [ ! -d "${PLUGIN_DIR}" ]; then
+  if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+    libscript_depends 'unzip' || true
+  fi
+  printf '%s\n' "Downloading WooCommerce (${WOOCOMMERCE_VERSION}) to ${WOOCOMMERCE_WWWROOT}..."
+  if [ "${WOOCOMMERCE_VERSION}" = "latest" ]; then
+    dl_url='https://downloads.wordpress.org/plugin/woocommerce.zip'
+  else
+    dl_url="https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
+  fi
+
+  tmp_woo=$(mktemp)
+  libscript_download "${dl_url:-}" "${tmp_woo}"
+  priv unzip -q -o "${tmp_woo}" -d "${WOOCOMMERCE_WWWROOT}/wp-content/plugins"
+  rm -f "${tmp_woo}"
+  priv chown -R www-data:www-data "${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce" 2>/dev/null || true
+fi
+
+printf '%s\n' "WooCommerce setup complete on ${WOOCOMMERCE_SERVER_NAME:-localhost}"

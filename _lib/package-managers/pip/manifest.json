@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pip",
-  "provides": ["pip"],
-  "os_whitelist": ["all"],
-  "title": "pip",
-  "description": "Bootstrap module for the `pip` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `pip` package manager.",
+  "name": "pip",
+  "os_whitelist": ["all"],
+  "provides": ["pip"],
   "repository": "https://github.com/pypa/pip",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pip"
 }

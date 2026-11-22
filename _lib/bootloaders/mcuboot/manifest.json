@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mcuboot",
-  "title": "MCUboot Secure Bootloader & imgtool",
-  "description": "Cryptographic A/B dual-slot microcontroller and RTOS bootloader with imgtool RSA/ECDSA/Ed25519 firmware signing.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "bootloader"],
   "category": "bootloaders",
-  "provides": ["mcuboot", "imgtool"],
+  "description": "Cryptographic A/B dual-slot microcontroller and RTOS bootloader with imgtool RSA/ECDSA/Ed25519 firmware signing.",
+  "name": "mcuboot",
   "os_whitelist": ["all"],
+  "provides": ["mcuboot", "imgtool"],
   "repository": "https://github.com/mcu-tools/mcuboot",
-  "capabilities": ["versioned-artifact", "os-synthesizer"]
+  "tier": "T2",
+  "title": "MCUboot Secure Bootloader & imgtool"
 }

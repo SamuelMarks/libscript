@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "choco",
-  "provides": ["choco"],
-  "os_whitelist": ["windows"],
-  "title": "choco",
-  "description": "This document describes **Chocolatey (choco)**, a machine-level, command-line package manager and installer for Windows software.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "This document describes **Chocolatey (choco)**, a machine-level, command-line package manager and installer for Windows software.",
+  "name": "choco",
+  "os_whitelist": ["windows"],
+  "provides": ["choco"],
   "repository": "https://github.com/chocolatey/choco",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "choco"
 }

@@ -1,7 +1,7 @@
 @echo off
 :: # mount.cmd
 :: ## Overview
-:: Idempotently formats unformatted disks via _lib\storage\format_fs.cmd, supports --auto-data-disk discovery, and mounts volumes on Windows.
+:: Idempotently formats unformatted disks via engine\common\format_fs.cmd, supports --auto-data-disk discovery, and mounts volumes on Windows.
 :: ## Usage
 :: traits\storage\mount.cmd <device_or_disk|--auto-data-disk> <mount_point> [fstype]
 

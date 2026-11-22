@@ -1,14 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ntp",
-  "title": "Network Time Protocol Daemon (ntpd)",
-  "description": "Reference Network Time Protocol (NTP) clock synchronization daemon (ntpd) and query tools.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "base-system",
-  "provides": ["ntp", "ntpd", "ntpq"],
-  "os_whitelist": ["all"],
-  "ports": [123],
-  "repository": "https://www.ntp.org/",
+  "description": "Reference Network Time Protocol (NTP) clock synchronization daemon (ntpd) and query tools.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -21,9 +18,13 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "ntp",
+  "os_whitelist": ["all"],
+  "ports": [123],
+  "provides": ["ntp", "ntpd", "ntpq"],
+  "repository": "https://www.ntp.org/",
+  "tier": "T2",
+  "title": "Network Time Protocol Daemon (ntpd)"
 }

@@ -58,7 +58,7 @@ if "%ACTION%"=="remove" goto :delegate
 if "%ACTION%"=="info" goto :delegate
 if "%ACTION%"=="env" goto :delegate
 
-set "LOG_CMD=%~dp0..\..\_common\log.cmd"
+set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\engine\common\log.cmd"
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 ^<action^> [args...]
@@ -89,5 +89,5 @@ exit /b %errorlevel%
 :: ## delegate
 :: Delegates execution to the shared component_core router.
 :delegate
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*
 exit /b %errorlevel%

@@ -1,9 +1,10 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "utils",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "git-servers",
-  "title": "Git Servers Shared Utilities",
   "description": "Shared functions and utilities for Git Server components (Gitea, GitLab).",
+  "name": "utils",
   "provides": ["git-servers-utils"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "Git Servers Shared Utilities"
 }

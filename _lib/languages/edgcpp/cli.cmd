@@ -53,14 +53,10 @@ if /i "%~1"=="experiments" (
     call "!SCRIPT_DIR!\benchmark_experiments.cmd" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )
-if /i "%~1"=="cloud-experiments" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\experiment_cloud.cmd" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b !errorlevel!
-)
 if /i "%~1"=="torture" (
     call "!SCRIPT_DIR!\torture_suite.cmd" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )
 
 set "PACKAGE_NAME=edgcpp"
-call "%~dp0..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*

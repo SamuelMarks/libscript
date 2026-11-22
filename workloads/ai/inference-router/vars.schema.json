@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/workloads/ai/inference-router/vars.schema.json",
+  "title": "Inference Router Variables",
+  "description": "Configuration variables for Cloud TPU and GPU inference serving orchestration.",
+  "type": "object",
+  "properties": {
+    "INFERENCE_SCHEDULER": {
+      "type": "string",
+      "default": "tpu_vm",
+      "description": "Target scheduler driver used for inference deployment (tpu_vm, xpk, kubernetes, native)."
+    }
+  }
+}

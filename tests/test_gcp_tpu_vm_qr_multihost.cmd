@@ -1,7 +1,7 @@
 @echo off
 :: # test_gcp_tpu_vm_qr_multihost.cmd
 :: ## Overview
-:: Hermetic Windows Batch test suite for _lib\cloud-providers\gcp-tpu-vm\cli.cmd testing Queued Resource 2x idempotent create/delete, wait-ready polling, 1-worker/4-worker topology-info, --all-workers scp/ssh, sync-repo tree-hash skip, arm-ttl, and release-locks.
+:: Hermetic Windows Batch test suite for infrastructure\providers\gcp-tpu-vm\cli.cmd testing Queued Resource 2x idempotent create/delete, wait-ready polling, 1-worker/4-worker topology-info, --all-workers scp/ssh, sync-repo tree-hash skip, arm-ttl, and release-locks.
 :: ## Usage
 :: tests\test_gcp_tpu_vm_qr_multihost.cmd
 
@@ -64,7 +64,7 @@ set "TPU_ZONE=us-central1-a"
 set "TPU_ACCELERATOR_TYPE=v6e-8"
 set "TPU_SCHEDULING_TYPE=spot"
 set "TPU_USE_QUEUED_RESOURCE=true"
-set "_T_CLI=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd"
+set "_T_CLI=!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\gcp-tpu-vm\cli.cmd"
 
 :: 1. 2x idempotent create + runtime auto-resolution (v2-alpha-tpuv6e)
 call "!_T_CLI!" create node-1
@@ -96,7 +96,7 @@ if errorlevel 1 goto :fail
 findstr /I /C:"--worker=all --ssh-flag=-L6006:6006" "!_G_LOG!" >nul || goto :fail
 
 :: 5. sync-repo tree-hash skip on second run
-for /f "usebackq delims=" %%H in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" compute-hash "!_WDIR!\repo"`) do set "_RH=%%H"
+for /f "usebackq delims=" %%H in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" compute-hash "!_WDIR!\repo"`) do set "_RH=%%H"
 call "!_T_CLI!" sync-repo node-1 "!_WDIR!\repo" "./workspace" --all-workers
 if errorlevel 1 goto :fail
 > "!_WDIR!\state\sync_hash" echo.!_RH!

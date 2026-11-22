@@ -51,7 +51,7 @@ if [ ! -d "${VAGRANT_DIR}" ]; then
 fi
 
 if [ "$LIVE_MODE" -eq 0 ]; then
-  printf '[PASS] Validated Open edX package configuration for %s (_lib/web-apps/openedx).\n' "${TARGET_OS}"
+  printf '[PASS] Validated Open edX package configuration for %s (workloads/apps/openedx).\n' "${TARGET_OS}"
   exit 0
 fi
 
@@ -68,7 +68,7 @@ case "${TARGET_OS}" in
     # Start VM early just for building
     vagrant up --no-provision || { printf '[ERROR] Vagrant up failed.\n' >&2; exit 1; }
     vagrant rsync || true
-    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as deb _lib/web-apps/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*_*.deb ${REMOTE_TMP}/openedx-setup.deb"
+    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as deb workloads/apps/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*_*.deb ${REMOTE_TMP}/openedx-setup.deb"
     ;;
   rockylinux-*|almalinux-*|fedora-*|centos-*)
     printf '[INFO] Building .rpm package inside VM...\n'
@@ -76,7 +76,7 @@ case "${TARGET_OS}" in
     vagrant rsync || true
     # Make sure rpm-build is installed
     vagrant ssh -c "sudo dnf install -y rpm-build"
-    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as rpm _lib/web-apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.rpm ${REMOTE_TMP}/openedx-setup.rpm"
+    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as rpm workloads/apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.rpm ${REMOTE_TMP}/openedx-setup.rpm"
     ;;
   alpine-*)
     printf '[INFO] Building .apk package inside VM...\n'
@@ -84,18 +84,18 @@ case "${TARGET_OS}" in
     vagrant rsync || true
     # Make sure abuild and signing key are initialized
     vagrant ssh -c "sudo apk add abuild && abuild-keygen -a -n 2>/dev/null || true; sudo cp -f ~/.abuild/*.rsa.pub /etc/apk/keys/ 2>/dev/null || true"
-    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as apk _lib/web-apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.apk ${REMOTE_TMP}/openedx-setup.apk"
+    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as apk workloads/apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.apk ${REMOTE_TMP}/openedx-setup.apk"
     ;;
   omnios*|illumos*)
     printf '[INFO] Building package archive for OmniOS inside VM...\n'
     vagrant up --no-provision || { printf '[ERROR] Vagrant up failed.\n' >&2; exit 1; }
     vagrant rsync || true
-    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf ${REMOTE_TMP}/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib || tar -czf ${REMOTE_TMP}/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib; }"
+    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf ${REMOTE_TMP}/openedx-setup.tar.gz workloads/apps/openedx libscript.sh _lib || tar -czf ${REMOTE_TMP}/openedx-setup.tar.gz workloads/apps/openedx libscript.sh _lib; }"
     ;;
   windows-*)
     printf '[INFO] Building .msi package natively on host...\n'
     cd "${LIBSCRIPT_ROOT_DIR}"
-    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" package-as msi _lib/web-apps/openedx
+    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" package-as msi workloads/apps/openedx
     mkdir -p build
     if [ -f build/packages/msi/openedx-x64-verawood.1-online.msi ]; then
       cp build/packages/msi/openedx-x64-verawood.1-online.msi build/OpenEdX-Setup.msi || true
@@ -121,7 +121,7 @@ case "${TARGET_OS}" in
     vagrant ssh -c "sudo apk del openedx-setup 2>/dev/null || true"
     ;;
   omnios*|illumos*)
-    vagrant ssh -c "sudo ${REMOTE_OPT_LIBSCRIPT}/libscript.sh uninstall _lib/web-apps/openedx --purge-data 2>/dev/null || true"
+    vagrant ssh -c "sudo ${REMOTE_OPT_LIBSCRIPT}/libscript.sh uninstall workloads/apps/openedx --purge-data 2>/dev/null || true"
     ;;
   windows-*)
     vagrant ssh -c 'cmd.exe /c "msiexec /x C:\libscript\build\OpenEdX-Setup.msi /qn 2>nul || exit /b 0"'
@@ -143,7 +143,7 @@ case "${TARGET_OS}" in
     vagrant ssh -c "sudo apk add --allow-untrusted ${REMOTE_TMP}/openedx-setup.apk"
     ;;
   omnios*|illumos*)
-    vagrant ssh -c "sudo mkdir -p ${REMOTE_OPT_LIBSCRIPT} && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf ${REMOTE_TMP}/openedx-setup.tar.gz -C ${REMOTE_OPT_LIBSCRIPT} || sudo tar -xzf ${REMOTE_TMP}/openedx-setup.tar.gz -C ${REMOTE_OPT_LIBSCRIPT}; } && sudo ${REMOTE_OPT_LIBSCRIPT}/libscript.sh install-service _lib/web-apps/openedx"
+    vagrant ssh -c "sudo mkdir -p ${REMOTE_OPT_LIBSCRIPT} && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf ${REMOTE_TMP}/openedx-setup.tar.gz -C ${REMOTE_OPT_LIBSCRIPT} || sudo tar -xzf ${REMOTE_TMP}/openedx-setup.tar.gz -C ${REMOTE_OPT_LIBSCRIPT}; } && sudo ${REMOTE_OPT_LIBSCRIPT}/libscript.sh install-service workloads/apps/openedx"
     ;;
   windows-*)
     vagrant ssh -c 'cmd.exe /c "msiexec /i C:\libscript\build\OpenEdX-Setup.msi /qn /l*v C:\libscript\install.log & exit /b 0"'
@@ -163,7 +163,7 @@ case "${TARGET_OS}" in
     vagrant ssh -c "svcs -a 2>/dev/null | grep -i openedx || true"
     ;;
   *)
-    vagrant ssh -c "sudo /opt/repos/libscript/_lib/_common/service.sh is-active openedx-lms 2>/dev/null || true"
+    vagrant ssh -c "sudo /opt/repos/libscript/engine/common/service.sh is-active openedx-lms 2>/dev/null || true"
     ;;
 esac
 printf '[PASS] Smoke tests passed.\n'
@@ -180,7 +180,7 @@ case "${TARGET_OS}" in
     vagrant ssh -c "sudo apk del openedx-setup-lib-web-apps-openedx openedx-setup 2>/dev/null || sudo apk del openedx-setup-lib-web-apps-openedx || true"
     ;;
   omnios*|illumos*)
-    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall _lib/web-apps/openedx --purge-data 2>/dev/null || true"
+    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall workloads/apps/openedx --purge-data 2>/dev/null || true"
     ;;
   windows-*)
     vagrant ssh -c 'cmd.exe /c "msiexec /x C:\libscript\build\OpenEdX-Setup.msi /qn 2>nul || exit /b 0"'

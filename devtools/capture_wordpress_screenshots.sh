@@ -46,7 +46,7 @@ fi
 # ## main
 # Delegates WordPress screenshot capture to capture_running_system.sh.
 main() {
-  "${SCRIPT_DIR}/capture_running_system.sh" --target _lib/web-apps/wordpress "$@"
+  "${SCRIPT_DIR}/capture_running_system.sh" --target workloads/apps/wordpress "$@"
 }
 
 main "$@"

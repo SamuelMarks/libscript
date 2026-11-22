@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "limine",
-  "title": "Limine Bootloader",
-  "description": "Modern, portable, multiprotocol UEFI and BIOS bootloader supporting Linux, Limine boot protocol, multiboot2, and chainloading.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "bootloader"],
   "category": "bootloaders",
-  "provides": ["limine"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos", "macos"],
+  "description": "Modern, portable, multiprotocol UEFI and BIOS bootloader supporting Linux, Limine boot protocol, multiboot2, and chainloading.",
+  "name": "limine",
   "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos", "macos"],
+  "provides": ["limine"],
   "repository": "https://github.com/limine-bootloader/limine",
-  "capabilities": ["versioned-artifact", "os-synthesizer"]
+  "tier": "T2",
+  "title": "Limine Bootloader"
 }

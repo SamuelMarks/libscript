@@ -36,8 +36,8 @@ export LIBSCRIPT_ALLOW_STUB=1
 
 TARGET="${1:-${TMP_DIR}/gui-sysroot}"
 if [ ! -d "${TARGET}/iso_root" ]; then
-  STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/reactos/distro/assemble.sh" \
-    "${LIBSCRIPT_ROOT_DIR}/profiles/reactos/desktop-classic-i686.json" "$TARGET" >/dev/null
+  STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/reactos/assemble.sh" \
+    "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/reactos/desktop-classic-i686.json" "$TARGET" >/dev/null
 fi
 
 grep -q 'protocol=win32-gdi' "${TARGET}/iso_root/libscript/display.conf"

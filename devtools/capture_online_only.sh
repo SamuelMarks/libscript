@@ -184,14 +184,14 @@ vm_wait_dialog() {
 # Helper to launch MSI in Session 1 via LaunchMsi scheduled task.
 vm_launch_msi() {
   _msi_path="$(echo "$1" | sed 's|/|\\|g')"
-  vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive -RunLevel Highest; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument \"/i \`\"C:\libscript\packaging\\\\${_msi_path}\`\"\"; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
+  vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive -RunLevel Highest; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument \"/i \`\"C:\libscript\synthesis\msi\\\\${_msi_path}\`\"\"; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
 }
 
 # ## launch_browser_url
 # Helper to launch web browser to a specified URL in Session 1 without console windows.
 launch_browser_url() {
   _url="$1"
-  vm_run "cmd.exe /c call C:\libscript\packaging\open_browser.cmd $_url"
+  vm_run "cmd.exe /c call C:\libscript\synthesis\msi\open_browser.cmd $_url"
   sleep 5
 }
 
@@ -205,61 +205,61 @@ clean_guest_installations() {
 # Transfers packaging tooling, assets, stacks, and MSIs to the Windows guest.
 sync_guest_environment() {
   printf '=== Syncing packaging and stack files to Windows guest ===\n'
-  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/_lib/web-apps/openedx" -Force -ErrorAction SilentlyContinue | Out-Null'
+  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/synthesis/msi/assets", "C:/libscript/workloads/apps/openedx" -Force -ErrorAction SilentlyContinue | Out-Null'
 
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
-    "${REPO_ROOT}/packaging/build_msi.cmd" \
-    "${REPO_ROOT}/packaging/build_msi.sh" \
-    "${REPO_ROOT}/packaging/harvest_licenses.cmd" \
-    "${REPO_ROOT}/packaging/harvest_licenses.ps1" \
-    "${REPO_ROOT}/packaging/harvest_licenses.sh" \
-    "${REPO_ROOT}/packaging/harvest_payload.cmd" \
-    "${REPO_ROOT}/packaging/harvest_payload.ps1" \
-    "${REPO_ROOT}/packaging/harvest_payload.sh" \
-    "${REPO_ROOT}/packaging/launch_browser.cmd" \
-    "${REPO_ROOT}/packaging/launch_browser.ps1" \
-    "${REPO_ROOT}/packaging/launch_browser.sh" \
-    "${REPO_ROOT}/packaging/open_browser.cmd" \
-    "${REPO_ROOT}/packaging/open_browser.ps1" \
-    "${REPO_ROOT}/packaging/click_button.ps1" \
-    "${REPO_ROOT}/packaging/create_desktop_shortcuts.cmd" \
-    "${REPO_ROOT}/packaging/create_desktop_shortcuts.ps1" \
-    "${REPO_ROOT}/packaging/create_desktop_shortcuts.sh" \
-    "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" \
-    "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" \
-    vagrant@127.0.0.1:C:/libscript/packaging/
+    "${REPO_ROOT}/synthesis/msi/build_msi.cmd" \
+    "${REPO_ROOT}/synthesis/msi/build_msi.sh" \
+    "${REPO_ROOT}/synthesis/msi/harvest_licenses.cmd" \
+    "${REPO_ROOT}/synthesis/msi/harvest_licenses.ps1" \
+    "${REPO_ROOT}/synthesis/msi/harvest_licenses.sh" \
+    "${REPO_ROOT}/synthesis/msi/harvest_payload.cmd" \
+    "${REPO_ROOT}/synthesis/msi/harvest_payload.ps1" \
+    "${REPO_ROOT}/synthesis/msi/harvest_payload.sh" \
+    "${REPO_ROOT}/synthesis/msi/launch_browser.cmd" \
+    "${REPO_ROOT}/synthesis/msi/launch_browser.ps1" \
+    "${REPO_ROOT}/synthesis/msi/launch_browser.sh" \
+    "${REPO_ROOT}/synthesis/msi/open_browser.cmd" \
+    "${REPO_ROOT}/synthesis/msi/open_browser.ps1" \
+    "${REPO_ROOT}/synthesis/msi/click_button.ps1" \
+    "${REPO_ROOT}/synthesis/msi/create_desktop_shortcuts.cmd" \
+    "${REPO_ROOT}/synthesis/msi/create_desktop_shortcuts.ps1" \
+    "${REPO_ROOT}/synthesis/msi/create_desktop_shortcuts.sh" \
+    "${REPO_ROOT}/synthesis/msi/OpenEdX-Setup.msi" \
+    "${REPO_ROOT}/synthesis/msi/OpenEdX-Setup-Offline.msi" \
+    vagrant@127.0.0.1:C:/libscript/synthesis/msi/
 
   if [ -d "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets" ]; then
     scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
       "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets/"* \
-      vagrant@127.0.0.1:C:/libscript/packaging/assets/
+      vagrant@127.0.0.1:C:/libscript/synthesis/msi/assets/
   else
     scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
-      "${REPO_ROOT}/packaging/assets/openedx.ico" \
-      "${REPO_ROOT}/packaging/assets/openedx_lms.ico" \
-      "${REPO_ROOT}/packaging/assets/openedx_studio.ico" \
-      "${REPO_ROOT}/packaging/assets/openedx_banner_side.bmp" \
-      "${REPO_ROOT}/packaging/assets/openedx_banner_top.bmp" \
-      "${REPO_ROOT}/packaging/assets/openedx_eula.rtf" \
-      vagrant@127.0.0.1:C:/libscript/packaging/assets/
+      "${REPO_ROOT}/synthesis/msi/assets/openedx.ico" \
+      "${REPO_ROOT}/synthesis/msi/assets/openedx_lms.ico" \
+      "${REPO_ROOT}/synthesis/msi/assets/openedx_studio.ico" \
+      "${REPO_ROOT}/synthesis/msi/assets/openedx_banner_side.bmp" \
+      "${REPO_ROOT}/synthesis/msi/assets/openedx_banner_top.bmp" \
+      "${REPO_ROOT}/synthesis/msi/assets/openedx_eula.rtf" \
+      vagrant@127.0.0.1:C:/libscript/synthesis/msi/assets/
   fi
 
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/packaging.json" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/offline_bundle.json" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/manifest.json" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/vars.schema.json" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/cli.cmd" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/cli.sh" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/service.cmd" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/service.sh" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/setup_generic.cmd" \
-    "${REPO_ROOT}/_lib/web-apps/openedx/setup_generic.sh" \
-    vagrant@127.0.0.1:C:/libscript/_lib/web-apps/openedx/
+    "${REPO_ROOT}/workloads/apps/openedx/packaging.json" \
+    "${REPO_ROOT}/workloads/apps/openedx/offline_bundle.json" \
+    "${REPO_ROOT}/workloads/apps/openedx/manifest.json" \
+    "${REPO_ROOT}/workloads/apps/openedx/vars.schema.json" \
+    "${REPO_ROOT}/workloads/apps/openedx/cli.cmd" \
+    "${REPO_ROOT}/workloads/apps/openedx/cli.sh" \
+    "${REPO_ROOT}/workloads/apps/openedx/service.cmd" \
+    "${REPO_ROOT}/workloads/apps/openedx/service.sh" \
+    "${REPO_ROOT}/workloads/apps/openedx/setup_generic.cmd" \
+    "${REPO_ROOT}/workloads/apps/openedx/setup_generic.sh" \
+    vagrant@127.0.0.1:C:/libscript/workloads/apps/openedx/
 
   # Configure scheduled tasks on guest
   # shellcheck disable=SC2016
-  vm_run '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive -RunLevel Highest; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:/libscript/packaging/click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:/libscript/run_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'
+  vm_run '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive -RunLevel Highest; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:/libscript/synthesis/msi/click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:/libscript/run_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'
 
   # Ensure broken Edge shortcuts are cleaned from desktop
   vm_run 'Remove-Item "C:/Users/Public/Desktop/Microsoft Edge.lnk" -Force -ErrorAction SilentlyContinue; Remove-Item "C:/Users/vagrant/Desktop/Microsoft Edge.lnk" -Force -ErrorAction SilentlyContinue'
@@ -313,7 +313,7 @@ run_installer_wizard() {
 === Flow 1: Simple Mode Installation (%s) ===
 ' "$_mode_name"
   printf '[INFO] Launching %s in Session 1...\n' "$_msi_file"
-  vm_launch_msi "C:/libscript/packaging/${_msi_file}"
+  vm_launch_msi "C:/libscript/synthesis/msi/${_msi_file}"
 
   # Step 1: Welcome
   vm_wait_dialog "Welcome"
@@ -352,7 +352,7 @@ run_installer_wizard() {
 === Flow 2: Advanced Mode Customization (%s) ===
 ' "$_mode_name"
   printf '[INFO] Launching %s for Advanced Mode in Session 1...\n' "$_msi_file"
-  vm_launch_msi "C:/libscript/packaging/${_msi_file}"
+  vm_launch_msi "C:/libscript/synthesis/msi/${_msi_file}"
   vm_wait_dialog "Welcome"
   vm_click "Next"
   vm_wait_dialog "License"
@@ -435,7 +435,7 @@ run_installer_wizard() {
   vm_click "Finish"
   sleep 2
   vm_run 'Stop-Process -Name msiexec -Force -ErrorAction SilentlyContinue'
-  vm_run 'cmd /c call C:\libscript\packaging\create_desktop_shortcuts.cmd -Stack openedx; Start-Sleep -Seconds 2'
+  vm_run 'cmd /c call C:\libscript\synthesis\msi\create_desktop_shortcuts.cmd -Stack openedx; Start-Sleep -Seconds 2'
   capture_screen "${_prefix}10b_desktop_icons"
 
   # Confirm advanced mode installation works

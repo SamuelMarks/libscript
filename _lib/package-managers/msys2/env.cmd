@@ -54,7 +54,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\msys2\%MSYS2_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "msys2"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "msys2"
 
 endlocal & (
     set "MSYS2_VERSION=%MSYS2_VERSION%"

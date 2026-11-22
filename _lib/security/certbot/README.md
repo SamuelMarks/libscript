@@ -62,13 +62,13 @@ running the setup script.
 | `LIBSCRIPT_ALLOW_CERTBOT_SHIM`     | Flag (0 or 1) to allow creating a lightweight certbot CLI shim in isolated dry-run test environments.                                                     | `0`               |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture
 
-- `cli.sh` / `cli.cmd`: Primary CLI router delegating to `_lib/_common/component_core.*`.
-- `setup.sh` / `setup.cmd`: Main installation entrypoint delegating to `_lib/_common/setup_base.*`.
+- `cli.sh` / `cli.cmd`: Primary CLI router delegating to `engine/common/component_core.*`.
+- `setup.sh` / `setup.cmd`: Main installation entrypoint delegating to `engine/common/setup_base.*`.
 - `setup_generic.sh` / `setup_generic.cmd`: Installs Certbot via `libscript_depends 'certbot'` and
   disables automatic background renewal timers when `LETSENCRYPT_DISABLE_AUTO_RENEW=1`.
 - `env.sh` / `env.cmd`: Exports `CERT_STORE_DIR` and `LETSENCRYPT_RENEW_BEFORE_SECONDS`.

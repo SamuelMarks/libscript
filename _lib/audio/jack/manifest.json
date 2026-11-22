@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "jack",
-  "title": "JACK Audio Connection Kit",
-  "description": "JACK2 low-latency professional real-time audio and MIDI server daemon (jackd).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "audio",
-  "provides": ["jack", "jack2", "jackd"],
+  "description": "JACK2 low-latency professional real-time audio and MIDI server daemon (jackd).",
+  "name": "jack",
   "os_whitelist": ["all"],
+  "provides": ["jack", "jack2", "jackd"],
   "repository": "https://github.com/jackaudio/jack2",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T2",
+  "title": "JACK Audio Connection Kit"
 }

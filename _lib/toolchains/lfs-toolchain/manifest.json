@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "lfs-toolchain",
-  "title": "LFS Cross-Compilation Toolchain",
-  "description": "Linux From Scratch (LFS) Chapter 5 Stage 1 & 2 cross-compiler and binutils toolchain.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["lfs-toolchain"],
   "conflicts": [],
-  "versions": ["latest", "12.2"],
-  "os_whitelist": ["linux"],
+  "description": "Linux From Scratch (LFS) Chapter 5 Stage 1 & 2 cross-compiler and binutils toolchain.",
+  "name": "lfs-toolchain",
   "os_blacklist": ["windows", "darwin", "sunos"],
+  "os_whitelist": ["linux"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["lfs-toolchain"],
+  "tier": "T1",
+  "title": "LFS Cross-Compilation Toolchain",
+  "versions": ["latest", "12.2"]
 }

@@ -1,16 +1,17 @@
 {
-  "name": "nftables",
-  "title": "nftables",
-  "description": "Netfilter project packet classification framework",
-  "provides": ["nftables"],
+  "capabilities": ["sysroot-package"],
   "category": "networking",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Netfilter project packet classification framework",
+  "name": "nftables",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["nftables"],
+  "tier": "T2",
+  "title": "nftables",
+  "versions": ["1.0.0"]
 }

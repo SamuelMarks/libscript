@@ -50,7 +50,7 @@ printf '=== Testing LibScript Repository Harvester ===\n'
 MANIFEST_FILE="${TEST_TMP_DIR}/manifest.txt"
 WIX_FILE="${TEST_TMP_DIR}/fragment.wxs"
 
-"${LIBSCRIPT_ROOT_DIR}/packaging/harvest_payload.sh" \
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/harvest_payload.sh" \
   --manifest-file "${MANIFEST_FILE}" \
   --wix-fragment "${WIX_FILE}"
 
@@ -62,7 +62,7 @@ fi
 printf '[PASS] Manifest generated with %s files\n' "$(wc -l < "${MANIFEST_FILE}" | tr -d ' ')"
 
 # Test 2: Essential engine files are included
-for _req in "libscript.sh" "libscript.cmd" "_lib/_common/component_core.cmd" "_lib/web-apps/openedx/setup_generic.cmd" "_lib/web-apps/openedx/cli.cmd"; do
+for _req in "libscript.sh" "libscript.cmd" "engine/common/component_core.cmd" "workloads/apps/openedx/setup_generic.cmd" "workloads/apps/openedx/cli.cmd"; do
   if ! grep -Fxq "$_req" "${MANIFEST_FILE}"; then
     printf '[FAIL] Required file missing from harvest manifest: %s\n' "$_req" >&2
     exit 1
@@ -107,7 +107,7 @@ printf 'edx codebase' > "${MOCK_CACHE_DIR}/codebase/edx-platform.zip"
 OFFLINE_MANIFEST="${TEST_TMP_DIR}/offline_manifest.txt"
 OFFLINE_WIX="${TEST_TMP_DIR}/offline_fragment.wxs"
 
-"${LIBSCRIPT_ROOT_DIR}/packaging/harvest_payload.sh" \
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/harvest_payload.sh" \
   --root-dir "${LIBSCRIPT_ROOT_DIR}" \
   --manifest-file "${OFFLINE_MANIFEST}" \
   --wix-fragment "${OFFLINE_WIX}" \
@@ -157,7 +157,7 @@ mkdir -p "${MOCK_STAGE_DIR}/node_modules/npm/node_modules/validate-npm-package-l
 touch "${MOCK_STAGE_DIR}/node_modules/npm/node_modules/validate-npm-package-license/node_modules/spdx-expression-parse/package.json"
 
 STAGE_WIX="${TEST_TMP_DIR}/stage_fragment.wxs"
-"${LIBSCRIPT_ROOT_DIR}/packaging/harvest_payload.sh" \
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/harvest_payload.sh" \
   --source-dir "${MOCK_STAGE_DIR}" \
   --wix-fragment "${STAGE_WIX}" \
   --component-group "PayloadComponents" \

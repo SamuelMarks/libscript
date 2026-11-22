@@ -80,7 +80,8 @@ set "SCAF_SRC_FALLBACK_VER=1.0.0"
 set "SCAF_OS_WHITELIST=all"
 set "SCAF_OS_BLACKLIST="
 set "SCAF_ARCH_WHITELIST=all"
-set "SCAF_CAPABILITIES=versioned-artifact"
+set "SCAF_TIER=T1"
+set "SCAF_CAPABILITIES=userland-package"
 set "SCAF_IS_SERVICE=false"
 set "SCAF_PORTS="
 set "SCAF_ENABLE_HOOKS=false"
@@ -354,8 +355,8 @@ if not errorlevel 1 (
     set "_SCAF_AWK=gawk"
     exit /b 0
 )
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :depends gawk >nul 2>&1
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :depends gawk >nul 2>&1
 )
 where gawk >nul 2>&1
 if not errorlevel 1 (
@@ -374,13 +375,16 @@ exit /b 1
 :synthesize_component_batch
 set "_CDIR=%~1"
 call :compute_comp_prefix "!SCAF_NAME!"
-set "_CAPS_JSON=[\"versioned-artifact\"]"
-if /i "!SCAF_IS_SERVICE!"=="true" set "_CAPS_JSON=[\"versioned-artifact\", \"service-daemon\"]"
+set "_BASE_CAP=userland-package"
+if /i "!SCAF_TIER!"=="T2" set "_BASE_CAP=sysroot-package"
+set "_CAPS_JSON=[\"!_BASE_CAP!\"]"
+if /i "!SCAF_IS_SERVICE!"=="true" set "_CAPS_JSON=[\"!_BASE_CAP!\", \"service-daemon\"]"
 if not exist "!_CDIR!\manifest.json" (
     (
         echo {
-        echo   "$schema": "../../_common/manifest.schema.json",
+        echo   "$schema": "../../../engine/schemas/manifest.schema.json",
         echo   "name": "!SCAF_NAME!",
+        echo   "tier": "!SCAF_TIER!",
         echo   "title": "!SCAF_TITLE!",
         echo   "description": "!SCAF_DESCRIPTION!",
         echo   "category": "!SCAF_CATEGORY!",

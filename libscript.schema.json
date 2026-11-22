@@ -559,18 +559,18 @@
     },
     "experiments": {
       "type": ["object", "array"],
-      "description": "Declarative empirical benchmark suite specification(s) conforming to experiment-suite.schema.json.",
+      "description": "Declarative empirical benchmark suite specification(s) conforming to experiments/schemas/experiment-suite.schema.json.",
       "items": {
-        "$ref": "./experiment-suite.schema.json",
+        "$ref": "./experiments/schemas/experiment-suite.schema.json",
         "description": "Single empirical experiment suite manifest."
       }
     },
     "ml": {
-      "$ref": "./schemas/ml-workload.schema.json",
+      "$ref": "./workloads/schemas/ml-workload.schema.json",
       "description": "Declarative machine learning training, inference, evaluation, multi-slice TPU, and 4-role GCS configuration."
     },
     "tfrc": {
-      "$ref": "./schemas/tfrc-policy.schema.json",
+      "$ref": "./engine/schemas/tfrc-policy.schema.json",
       "description": "Optional inline or referenced TFRC zero-cost policy configuration."
     }
   }

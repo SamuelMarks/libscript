@@ -40,7 +40,7 @@ if grep -q 'Oh wait, we already shifted' "${LIBSCRIPT_ROOT_DIR}/libscript.sh"; t
   fail_test 'Scratchpad comments still present in libscript.sh'
 fi
 
-if grep -Eq '(netctl\\cli\.cmd|payloads\\engine\.cmd|topologies\\engine\.cmd|traits\\engine\.cmd|_lib\\cloud\\core\\cli\.cmd)" %2 %3 %4 %5 %6 %7 %8 %9' "${LIBSCRIPT_ROOT_DIR}/libscript.cmd"; then
+if grep -Eq '(netctl\\cli\.cmd|workloads\\engine\.cmd|workloads\\constellations\\engine\.cmd|traits\\engine\.cmd|infrastructure\\resources\\core\\cli\.cmd)" %2 %3 %4 %5 %6 %7 %8 %9' "${LIBSCRIPT_ROOT_DIR}/libscript.cmd"; then
   fail_test 'libscript.cmd still truncates subcommand arguments at %9'
 fi
 

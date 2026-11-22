@@ -3,7 +3,7 @@
 ## Overview
 
 `traits/secrets/` renders configuration templates by delegating directly to
-`_lib/_common/envsubst_safe.{sh,cmd}` and `_lib/_common/find_replace.{sh,cmd}` while enforcing a
+`engine/common/envsubst_safe.{sh,cmd}` and `engine/common/find_replace.{sh,cmd}` while enforcing a
 strict **Zero-Environment-Variable-Leakage Guarantee**.
 
 ## Why Exporting Secrets to Environment Variables is Forbidden

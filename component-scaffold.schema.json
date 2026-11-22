@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/component-scaffold.schema.json",
   "title": "LibScript Component Scaffold Specification",
-  "description": "Declarative specification for non-interactively generating a new LibScript Tier 1 component-package-manager directory under _lib/<category>/<component>/.",
+  "description": "Declarative specification for non-interactively generating a new LibScript T1 component-package-manager directory under _lib/<category>/<component>/.",
   "type": "object",
   "required": ["name", "category", "description"],
   "properties": {
@@ -18,41 +18,35 @@
     "category": {
       "type": "string",
       "enum": [
-        "ai-serving",
         "app-servers",
         "audio",
         "base-system",
         "bootloaders",
         "caches",
-        "cloud",
-        "cloud-providers",
+        "containers",
         "databases",
         "desktops",
         "display-managers",
         "display-servers",
-        "freebsd",
         "git-servers",
         "graphics",
-        "illumos",
+        "iac",
         "init-systems",
         "kernel",
         "languages",
         "logging",
         "message-brokers",
-        "ml-training",
         "networking",
-        "orchestration",
         "package-managers",
-        "reactos",
         "runtimes",
+        "schedulers",
         "search",
         "security",
-        "storage",
         "storage-layers",
         "toolchains",
+        "unikernels",
         "utilities",
         "virtualization",
-        "web-apps",
         "web-servers"
       ],
       "description": "Target category directory under _lib/ where the component will be created."
@@ -78,11 +72,13 @@
       "items": {
         "type": "string",
         "enum": [
-          "versioned-artifact",
+          "userland-package",
           "service-daemon",
+          "sysroot-package",
           "sysroot-library",
-          "cloud-operator",
-          "os-synthesizer"
+          "cross-toolchain",
+          "kernel-image",
+          "bootloader"
         ],
         "description": "Canonical component capability identifier."
       }
@@ -416,6 +412,12 @@
     "test_command": {
       "type": "string",
       "description": "Smoke test command executed in test.sh and test.cmd (defaults to '<binary_name> --version')."
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["T1", "T2"],
+      "default": "T1",
+      "description": "Target architectural recipe tier (T1 userland/daemon or T2 sysroot/OS plumbing)."
     }
   }
 }

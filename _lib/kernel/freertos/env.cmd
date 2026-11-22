@@ -60,7 +60,7 @@ if exist "%FREERTOS_KERNEL_PATH%\bin" (
     if errorlevel 1 set "PATH=%FREERTOS_KERNEL_PATH%\bin;!PATH!"
 )
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "freertos" "%FREERTOS_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "freertos" "%FREERTOS_VERSION%"
 
 endlocal & (
     set "FREERTOS_VERSION=%FREERTOS_VERSION%"

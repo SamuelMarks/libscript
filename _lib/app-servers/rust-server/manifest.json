@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rust-server",
-  "title": "Rust App Server",
-  "description": "Generic Rust application server component.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["app-server", "rust"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Generic Rust application server component.",
+  "name": "rust-server",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["app-server", "rust"],
+  "tier": "T1",
+  "title": "Rust App Server"
 }

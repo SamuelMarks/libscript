@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "search",
+  "description": "Open-source data visualization, search analytics, and observability UI dashboard server for OpenSearch.",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "name": "opensearch-dashboards",
+  "os_whitelist": ["all"],
+  "ports": [5601],
+  "provides": ["opensearch-dashboards"],
+  "repository": "https://github.com/opensearch-project/OpenSearch-Dashboards",
+  "tier": "T1",
+  "title": "OpenSearch Dashboards"
+}

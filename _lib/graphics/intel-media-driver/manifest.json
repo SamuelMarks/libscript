@@ -1,17 +1,18 @@
 {
-  "name": "intel-media-driver",
-  "title": "Intel Media Driver",
-  "description": "VAAPI hardware accelerated video driver for Intel",
-  "provides": ["intel-media-driver"],
+  "arch_whitelist": ["x86_64", "amd64"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "graphics",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "VAAPI hardware accelerated video driver for Intel",
+  "name": "intel-media-driver",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "arch_whitelist": ["x86_64", "amd64"],
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "provides": ["intel-media-driver"],
+  "tier": "T2",
+  "title": "Intel Media Driver",
+  "versions": ["1.0.0"]
 }

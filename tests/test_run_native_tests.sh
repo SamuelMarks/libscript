@@ -37,7 +37,7 @@ run_tests() {
 
   mkdir -p "${_test_tmp}/_lib/catA/compA"
   mkdir -p "${_test_tmp}/_lib/catB/compB"
-  mkdir -p "${_test_tmp}/_lib/_common"
+  mkdir -p "${_test_tmp}/engine/common"
   mkdir -p "${_test_tmp}/tests"
 
   # Mock libscript.sh

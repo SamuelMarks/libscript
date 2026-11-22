@@ -1,16 +1,17 @@
 {
-  "name": "sway",
-  "title": "Sway Compositor",
-  "description": "i3-compatible tiling Wayland compositor",
-  "provides": ["sway"],
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "i3-compatible tiling Wayland compositor",
+  "name": "sway",
   "os_blacklist": ["windows", "sunos", "rhel", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["sway"],
+  "tier": "T2",
+  "title": "Sway Compositor",
+  "versions": ["1.0.0"]
 }

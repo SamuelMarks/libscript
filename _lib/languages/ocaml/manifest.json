@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ocaml",
-  "title": "OCaml",
-  "description": "Industrial-strength functional, imperative, and object-oriented programming language with static type inference.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["ocaml", "ocamlc", "ocamlopt"],
+  "description": "Industrial-strength functional, imperative, and object-oriented programming language with static type inference.",
+  "name": "ocaml",
   "os_whitelist": ["all"],
+  "provides": ["ocaml", "ocamlc", "ocamlopt"],
   "repository": "https://github.com/ocaml/ocaml",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "OCaml"
 }

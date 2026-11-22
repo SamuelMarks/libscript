@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%NATS_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%NATS_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%NATS_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%NATS_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/nats-io/nats-server" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%NATS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nats %NATS_VERSION% to %DOWNLOAD_DIR%\nats...
     if not exist "%DOWNLOAD_DIR%\nats" mkdir "%DOWNLOAD_DIR%\nats"
     if not "%NATS_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NATS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nats\nats-%NATS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NATS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nats\nats-%NATS_VERSION%.zip"
     ) else (
         echo NATS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NATS_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nats
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends nats
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\nats\nats-%NATS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NATS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NATS_DOWNLOAD_URL%" "%TEMP%\nats.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NATS_DOWNLOAD_URL%" "%TEMP%\nats.zip"
         tar -xf "%TEMP%\nats.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nats.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "nats" "%ACTION%" "%NATS_VERSION%" "%NATS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nats\%NATS_VERSION%\\bin\\nats-server.exe\"" "%LIBSCRIPT_HOME%\nats\%NATS_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "nats" "%ACTION%" "%NATS_VERSION%" "%NATS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nats\%NATS_VERSION%\\bin\\nats-server.exe\"" "%LIBSCRIPT_HOME%\nats\%NATS_VERSION%"
 exit /b !errorlevel!

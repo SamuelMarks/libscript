@@ -127,29 +127,29 @@ for _fmt in live-iso raw zfs-stream rootfs-tar direct-kernel unikernel; do
   mkdir -p "$(dirname "$_out_target")"
   case "$_fmt" in
     live-iso)
-      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/iso.sh" --allow-stub "$SYS_STUB" "$_out_target" >/dev/null
-      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/iso.sh" --allow-stub "$SYS_STUB" "$_out_target")
+      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/iso.sh" --allow-stub "$SYS_STUB" "$_out_target" >/dev/null
+      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/iso.sh" --allow-stub "$SYS_STUB" "$_out_target")
       ;;
     raw)
-      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/raw_img.sh" --allow-stub "$SYS_STUB" "$_out_target" 1 >/dev/null
-      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/raw_img.sh" --allow-stub "$SYS_STUB" "$_out_target" 1)
+      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/raw_img.sh" --allow-stub "$SYS_STUB" "$_out_target" 1 >/dev/null
+      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/raw_img.sh" --allow-stub "$SYS_STUB" "$_out_target" 1)
       ;;
     zfs-stream)
-      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/zfs_stream.sh" --allow-stub "$SYS_STUB" "$_out_target" >/dev/null
-      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/zfs_stream.sh" --allow-stub "$SYS_STUB" "$_out_target")
+      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/zfs_stream.sh" --allow-stub "$SYS_STUB" "$_out_target" >/dev/null
+      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/zfs_stream.sh" --allow-stub "$SYS_STUB" "$_out_target")
       ;;
     rootfs-tar)
-      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/rootfs_tar.sh" "$SYS_STUB" "${_out_target}.tar.gz" >/dev/null
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/rootfs_tar.sh" "$SYS_STUB" "${_out_target}.tar.gz" >/dev/null
       [ -s "${_out_target}.tar.gz" ] || fail_test 'rootfs_tar produced empty archive'
       OUT2='[SKIP]'
       ;;
     direct-kernel)
-      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/direct_kernel.sh" --allow-stub --kernel=linux "$SYS_STUB" "$_out_target" >/dev/null
-      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/direct_kernel.sh" --allow-stub --kernel=linux "$SYS_STUB" "$_out_target")
+      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/direct_kernel.sh" --allow-stub --kernel=linux "$SYS_STUB" "$_out_target" >/dev/null
+      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/direct_kernel.sh" --allow-stub --kernel=linux "$SYS_STUB" "$_out_target")
       ;;
     unikernel)
-      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" --allow-stub --framework=unikraft "$SYS_STUB" "$_out_target" >/dev/null
-      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" --allow-stub --framework=unikraft "$SYS_STUB" "$_out_target")
+      LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/unikernel_img.sh" --allow-stub --framework=unikraft "$SYS_STUB" "$_out_target" >/dev/null
+      OUT2=$(LIBSCRIPT_ALLOW_STUB='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/unikernel_img.sh" --allow-stub --framework=unikraft "$SYS_STUB" "$_out_target")
       ;;
   esac
   printf '%s\n' "$OUT2" | grep -q '\[SKIP\]' || fail_test "Pass 2 did not emit [SKIP] for format ${_fmt}"
@@ -158,7 +158,7 @@ done
 printf '=== [3/4] Verifying Strict Mode Rejects Missing-Tool Stubs Without Poisoning Stamps ===\n'
 STRICT_UK="${TMP_MAT}/strict_uk/app.elf"
 if ! command -v rumpbake >/dev/null 2>&1; then
-  if STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" --strict --framework=rumprun "$SYS_STUB" "$STRICT_UK" >/dev/null 2>&1; then
+  if STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/unikernel_img.sh" --strict --framework=rumprun "$SYS_STUB" "$STRICT_UK" >/dev/null 2>&1; then
     fail_test 'Strict mode should fail when rumpbake is absent'
   fi
   if [ -f "${STRICT_UK}.stamp" ]; then
@@ -171,7 +171,7 @@ LIBSCRIPT_TARGET_SYSROOT="${TMP_MAT}/pod_sysroot" \
   LIBSCRIPT_UNIKERNEL_FRAMEWORK='unikraft' \
   LIBSCRIPT_POD_DAEMONS='caddy,redis' \
   LIBSCRIPT_ALLOW_STUB='1' \
-  STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/unikernel_pod/setup_generic.sh" assemble >/dev/null
+  STACK='' "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/unikernel_pod/setup_generic.sh" assemble >/dev/null
 [ -f "${TMP_MAT}/pod_sysroot/unikernel-pod/pod-manifest.json" ] || fail_test 'Missing pod-manifest.json'
 jq -e '.appliances | length == 2' "${TMP_MAT}/pod_sysroot/unikernel-pod/pod-manifest.json" >/dev/null || fail_test 'Expected 2 decomposed unikernel appliances'
 

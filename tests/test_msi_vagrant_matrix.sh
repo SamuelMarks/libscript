@@ -119,7 +119,7 @@ run_matrix() {
   if [ "$COMPARE_WIX" -eq 1 ]; then
     printf '==> [4b/5] Running Windows-only differential comparison against WiX...
 '
-    "${LIBSCRIPT_ROOT_DIR}/packaging/compare_msirs_wix.sh" --target "_lib/web-apps/openedx"
+    "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/compare_msirs_wix.sh" --target "workloads/apps/openedx"
   fi
 
   if [ "$LIVE_VAGRANT" -eq 1 ]; then

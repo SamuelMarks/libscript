@@ -637,8 +637,12 @@ int rest_query_component_capabilities(const char *root_dir, const char *comp_nam
                     char buf[4096];
                     size_t nread = fread(buf, 1u, sizeof(buf) - 1u, fp);
                     const char *cap_key;
+                    const char *tier_val = "T1";
                     fclose(fp);
                     buf[nread] = '\0';
+                    if (strstr(buf, "\"T2\"") != NULL && strstr(buf, "\"tier\"") != NULL) {
+                        tier_val = "T2";
+                    }
                     cap_key = strstr(buf, "\"capabilities\"");
                     if (cap_key != NULL) {
                         const char *lb = strchr(cap_key, '[');
@@ -653,15 +657,15 @@ int rest_query_component_capabilities(const char *root_dir, const char *comp_nam
                             arr_buf[arr_len] = '\0';
                             closedir(dp);
                             snprintf(json_out, json_cap,
-                                     "{\"component\":\"%s\",\"category\":\"%s\",\"capabilities\":%s}",
-                                     comp_name, de->d_name, arr_buf);
+                                     "{\"component\":\"%s\",\"tier\":\"%s\",\"category\":\"%s\",\"capabilities\":%s}",
+                                     comp_name, tier_val, de->d_name, arr_buf);
                             return 0;
                         }
                     }
                     closedir(dp);
                     snprintf(json_out, json_cap,
-                             "{\"component\":\"%s\",\"category\":\"%s\",\"capabilities\":[\"versioned-artifact\"]}",
-                             comp_name, de->d_name);
+                             "{\"component\":\"%s\",\"tier\":\"%s\",\"category\":\"%s\",\"capabilities\":[\"userland-package\"]}",
+                             comp_name, tier_val, de->d_name);
                     return 0;
                 }
             }

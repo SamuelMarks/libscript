@@ -49,7 +49,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "W3SVC"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\status_service.cmd" "W3SVC"
 if "!ERRORLEVEL!" equ "0" exit /b 0
 
 exit /b 1

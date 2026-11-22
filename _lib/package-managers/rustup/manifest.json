@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rustup",
-  "provides": ["rustup"],
-  "os_whitelist": ["all"],
-  "title": "rustup",
-  "description": "Bootstrap module for `rustup` (Rust toolchain installer).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for `rustup` (Rust toolchain installer).",
+  "name": "rustup",
+  "os_whitelist": ["all"],
+  "provides": ["rustup"],
   "repository": "https://github.com/rust-lang/rustup",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "rustup"
 }

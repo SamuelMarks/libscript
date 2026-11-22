@@ -1,16 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "neo4j",
-  "title": "Neo4j",
-  "description": "High-performance native graph database platform for connected data and Cypher query workloads.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["neo4j", "graph-database", "database"],
-  "os_whitelist": ["all"],
-  "ports": [7474, 7687],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/neo4j/neo4j",
+  "description": "High-performance native graph database platform for connected data and Cypher query workloads.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +18,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "neo4j",
+  "os_whitelist": ["all"],
+  "ports": [7474, 7687],
+  "provides": ["neo4j", "graph-database", "database"],
+  "repository": "https://github.com/neo4j/neo4j",
+  "stateful": true,
+  "tier": "T1",
+  "title": "Neo4j"
 }

@@ -53,7 +53,7 @@ if "%LIBSCRIPT_ROOT_DIR%"=="" (
     for %%i in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
-set "WP_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress"
+set "WP_DIR=%LIBSCRIPT_ROOT_DIR%\workloads\apps\wordpress"
 
 echo ==> Testing WordPress CLI Router on Windows...
 call "%WP_DIR%\cli.cmd" help

@@ -1,7 +1,7 @@
 @echo off
 :: # render.cmd
 :: ## Overview
-:: Delegates safe template rendering to _lib\_common\envsubst_safe.cmd and find_replace.cmd on Windows.
+:: Delegates safe template rendering to engine\common\envsubst_safe.cmd and find_replace.cmd on Windows.
 :: ## Usage
 :: traits\secrets\render.cmd <template_file> <output_file> [secrets_kv_file]
 
@@ -58,7 +58,7 @@ set "SECRETS_FILE=%~3"
 if "%TPL_FILE%"=="" goto :help_err
 if "%OUT_FILE%"=="" goto :help_err
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\envsubst_safe.cmd" "%TPL_FILE%" "%OUT_FILE%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\envsubst_safe.cmd" "%TPL_FILE%" "%OUT_FILE%"
 exit /b %errorlevel%
 
 :: ## help

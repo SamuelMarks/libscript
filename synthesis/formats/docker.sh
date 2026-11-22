@@ -1,0 +1,45 @@
+#!/bin/sh
+# ## Overview
+# Dual-modality container export driver for Docker and Docker Compose.
+# Generates online layer-cached or completely air-gapped offline Dockerfile
+# and multi-service docker-compose.yml configurations.
+# ## Usage
+# Run `docker.sh [--compose] [--offline|--online] [args...]`
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export LIBSCRIPT_ROOT_DIR
+
+IS_COMPOSE=0
+for arg in "$@"; do
+  if [ "$arg" = "--compose" ]; then
+    IS_COMPOSE=1
+    break
+  fi
+done
+
+if [ "$IS_COMPOSE" -eq 1 ]; then
+  exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/docker_compose.sh" "$@"
+else
+  exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dockerfile.sh" "$@"
+fi

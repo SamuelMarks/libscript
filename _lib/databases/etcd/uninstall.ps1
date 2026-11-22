@@ -14,7 +14,7 @@ Execute this script to remove etcd and its associated configurations from the sy
 
 $ErrorActionPreference = "Stop"
 $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+. (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
 
 
 #!/usr/bin/env pwsh

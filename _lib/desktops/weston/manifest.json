@@ -1,16 +1,17 @@
 {
-  "name": "weston",
-  "title": "Weston",
-  "description": "Reference Wayland compositor implementation",
-  "provides": ["weston"],
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Reference Wayland compositor implementation",
+  "name": "weston",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["weston"],
+  "tier": "T2",
+  "title": "Weston",
+  "versions": ["1.0.0"]
 }

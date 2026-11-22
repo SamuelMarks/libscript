@@ -1,16 +1,17 @@
 {
-  "name": "xfsprogs",
-  "title": "XFS Progs",
-  "description": "XFS filesystem administration utilities",
-  "provides": ["xfsprogs"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "XFS filesystem administration utilities",
+  "name": "xfsprogs",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["xfsprogs"],
+  "tier": "T2",
+  "title": "XFS Progs",
+  "versions": ["1.0.0"]
 }

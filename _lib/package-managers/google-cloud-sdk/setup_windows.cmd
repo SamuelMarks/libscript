@@ -58,7 +58,7 @@ if exist "%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" 
 if exist "%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" goto :create_shims
 
 echo Installing Google Cloud SDK via pkg_mgr...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends Google.CloudSDK
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends Google.CloudSDK
 goto :create_shims
 
 :: ## create_shims

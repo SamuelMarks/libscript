@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "schedulers",
+  "conflicts": [],
+  "description": "A zero-friction, all-in-one Kubernetes distribution.",
+  "name": "kubernetes-k0s",
+  "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
+  "os_whitelist": ["all"],
+  "ports": [6443, 8132, 10250],
+  "provides": ["kubernetes", "k0s", "orchestration", "server"],
+  "repository": "https://github.com/k0sproject/k0s",
+  "tier": "T1",
+  "title": "Kubernetes k0s"
+}

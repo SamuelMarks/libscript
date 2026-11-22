@@ -52,7 +52,7 @@ export LIBSCRIPT_TARGET_ARCH="$TARGET_ARCH"
 export LIBSCRIPT_TARGET_LIBC="$TARGET_LIBC"
 export LIBSCRIPT_TARGET_OS="$TARGET_OS"
 _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/triplets.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/target/triplets.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

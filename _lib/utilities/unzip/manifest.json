@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "unzip",
-  "title": "Info-ZIP UnZip",
-  "description": "Portable Info-ZIP extraction and integrity testing utility for PKZIP (.zip) archives.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["unzip", "zip-extractor"],
+  "description": "Portable Info-ZIP extraction and integrity testing utility for PKZIP (.zip) archives.",
+  "name": "unzip",
   "os_whitelist": ["all"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["unzip", "zip-extractor"],
+  "tier": "T1",
+  "title": "Info-ZIP UnZip"
 }

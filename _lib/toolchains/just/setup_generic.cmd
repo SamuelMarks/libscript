@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%JUST_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%JUST_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%JUST_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%JUST_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -108,8 +108,8 @@ exit /b 0
 :action_use
 if "%JUST_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%JUST_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/casey/just/releases/latest"`) do set "EXACT_VERSION=%%a"
-) else if "%JUST_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/casey/just/releases/latest"`) do set "EXACT_VERSION=%%a"
+if "%JUST_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/casey/just/releases/latest"`) do set "EXACT_VERSION=%%a"
+) else if "%JUST_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/casey/just/releases/latest"`) do set "EXACT_VERSION=%%a"
 ) else (
     set "EXACT_VERSION=%JUST_VERSION%"
 )
@@ -134,7 +134,7 @@ if "%JUST_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading just %JUST_VERSION% to %DOWNLOAD_DIR%\just...
     if not exist "%DOWNLOAD_DIR%\just" mkdir "%DOWNLOAD_DIR%\just"
     if not "%JUST_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%JUST_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\just\just-%JUST_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%JUST_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\just\just-%JUST_VERSION%.zip"
     ) else (
         echo JUST_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%JUST_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends just
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends just
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\just\just-%JUST_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%JUST_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%JUST_DOWNLOAD_URL%" "%TEMP%\just.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%JUST_DOWNLOAD_URL%" "%TEMP%\just.zip"
         tar -xf "%TEMP%\just.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for just.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "just" "%ACTION%" "%JUST_VERSION%" "%JUST_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\just\%JUST_VERSION%\\bin\\just.exe\"" "%LIBSCRIPT_HOME%\just\%JUST_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "just" "%ACTION%" "%JUST_VERSION%" "%JUST_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\just\%JUST_VERSION%\\bin\\just.exe\"" "%LIBSCRIPT_HOME%\just\%JUST_VERSION%"
 exit /b !errorlevel!

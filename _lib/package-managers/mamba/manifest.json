@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mamba",
-  "provides": ["mamba"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "mamba",
-  "description": "Bootstrap module for the `mamba` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `mamba` package manager.",
+  "name": "mamba",
   "os_blacklist": ["freebsd", "alpine"],
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["mamba"],
   "repository": "https://github.com/mamba-org/mamba",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "mamba"
 }

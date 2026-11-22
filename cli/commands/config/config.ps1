@@ -22,7 +22,7 @@ param(
 )
 
 $rootDir = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path }
-$schemaFile = Join-Path $rootDir "os-config.schema.json"
+$schemaFile = Join-Path $rootDir "synthesis/schemas/os-config.schema.json"
 
 if ($Validate) {
     if (-not (Test-Path $Validate)) {
@@ -68,7 +68,7 @@ if ($Profile) {
     }
     $chosenConfig = Get-Content -Path $profilePath -Raw
 } else {
-    $defaultProfile = Join-Path $rootDir "profiles\linux-standard-server-glibc.json"
+    $defaultProfile = Join-Path $rootDir "synthesis\profiles\linux\linux-standard-server-glibc.json"
     $chosenConfig = Get-Content -Path $defaultProfile -Raw
 }
 

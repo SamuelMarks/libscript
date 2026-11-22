@@ -31,7 +31,7 @@ _EB_CALLER_DIR="${SCRIPT_DIR}"
 if [ -z "${PYTHON_VERSION:-}" ] || [ "${PYTHON_VERSION:-}" = "latest" ]; then
   export _PY_VERSION_UNPINNED=1
 fi
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

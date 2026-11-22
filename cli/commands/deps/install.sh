@@ -65,18 +65,18 @@ if [ "$CMD" = "install-deps" ]; then
     fi
   fi
 
-  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh"
+  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/engine/common/env_printer.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/engine/common/env_printer.sh"
     # shellcheck disable=SC1090,SC1091
-    . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh"
+    . "${LIBSCRIPT_ROOT_DIR:-.}/engine/common/env_printer.sh"
     unset SCRIPT_NAME || true
     libscript_hydrate_manifest_env "$json_file" || true
   fi
 
-  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/versioning.sh" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/versioning.sh"
+  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/engine/common/versioning.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/engine/common/versioning.sh"
     # shellcheck disable=SC1090,SC1091
-    . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/versioning.sh"
+    . "${LIBSCRIPT_ROOT_DIR:-.}/engine/common/versioning.sh"
     unset SCRIPT_NAME || true
   fi
 
@@ -108,10 +108,10 @@ if [ "$CMD" = "install-deps" ]; then
     done
   fi
 
-  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_install" 
+  "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/run_hooks.sh" "$json_file" "pre_install" 
 
   unset SCRIPT_NAME || true
-  deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
+  deps=$("${LIBSCRIPT_ROOT_DIR:-.}/engine/solver/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
   if [ -z "$deps" ]; then
     printf '%s\n' "No dependencies found in $json_file."
   else
@@ -224,10 +224,10 @@ if [ "$CMD" = "install-deps" ]; then
     export UV_PYTHON_INSTALL_DIR="${_target_home}/.local/share/uv/python"
     export UV_CACHE_DIR="${_target_home}/.cache/uv"
   fi
-  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/python_env.sh" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/python_env.sh"
+  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/engine/common/python_env.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/engine/common/python_env.sh"
     # shellcheck disable=SC1090,SC1091
-    . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/python_env.sh"
+    . "${LIBSCRIPT_ROOT_DIR:-.}/engine/common/python_env.sh"
     unset SCRIPT_NAME || true
   fi
   for _py_proj in "$_manifest_dir" "$_manifest_dir"/*; do
@@ -237,15 +237,15 @@ if [ "$CMD" = "install-deps" ]; then
     fi
   done
 
-  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "install"
+  "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/run_hooks.sh" "$json_file" "install"
 
   _has_embedded_db=$(jq -r '[((.databases // .infrastructure.databases) | if type == "object" then [to_entries[].value] elif type == "array" then . else [] end)[]? | (.engine // .type // "") | ascii_downcase | select(. == "duckdb" or . == "sqlite" or . == "sqlite3")] | length' "$json_file" 2>/dev/null || printf '0')
-  if { [ "${_has_embedded_db:-0}" -gt 0 ] || [ "$force_reinstall" -eq 1 ] || [ "${LIBSCRIPT_FORCE_SEED:-0}" = "1" ]; } && [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" ]; then
-    STACK="" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" stop "$json_file" || true
+  if { [ "${_has_embedded_db:-0}" -gt 0 ] || [ "$force_reinstall" -eq 1 ] || [ "${LIBSCRIPT_FORCE_SEED:-0}" = "1" ]; } && [ -f "${LIBSCRIPT_ROOT_DIR:-.}/engine/common/daemonize.sh" ]; then
+    STACK="" "${LIBSCRIPT_ROOT_DIR:-.}/engine/common/daemonize.sh" stop "$json_file" || true
   fi
 
-  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" ]; then
-    "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" "$json_file"
+  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/databases/provision_db.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/databases/provision_db.sh" "$json_file"
   fi
 
   if [ -f "${_manifest_dir}/.env.libscript" ]; then
@@ -257,11 +257,11 @@ if [ "$CMD" = "install-deps" ]; then
     set +a
   fi
 
-  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_install"
-  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
+  "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/run_hooks.sh" "$json_file" "post_install"
+  "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/run_hooks.sh" "$json_file" "db_migrate"
   LIBSCRIPT_PRE_BUILD_TS=$(date +%s)
   export LIBSCRIPT_PRE_BUILD_TS
-  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
+  "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/run_hooks.sh" "$json_file" "build"
   _has_fe=$(jq -r '([ (.services | if type == "array" then .[] elif type == "object" then to_entries[].value else empty end) | select(.type == "static" or .type == "spa" or .type == "frontend" or .type == "kmp" or .framework != null or .target != null) ] + [ (.frontends | if type == "array" then .[] elif type == "object" then to_entries[].value else empty end) ]) | length' "$json_file" 2>/dev/null || printf '0')
   if [ "${_has_fe:-0}" -eq 0 ]; then
     for _fe_cand in "$_manifest_dir" "$_manifest_dir"/*; do
@@ -272,12 +272,12 @@ if [ "$CMD" = "install-deps" ]; then
       fi
     done
   fi
-  if [ "${_has_fe:-0}" -gt 0 ] && [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/provision_frontend.sh" ]; then
+  if [ "${_has_fe:-0}" -gt 0 ] && [ -f "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/app-servers/provision_frontend.sh" ]; then
     _fe_flags=""
     [ "$force_rebuild" -eq 1 ] && _fe_flags="--force-rebuild"
     [ "$force_reinstall" -eq 1 ] && _fe_flags="${_fe_flags:+$_fe_flags }--force-reinstall"
     # shellcheck disable=SC2086
-    STACK="" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/provision_frontend.sh" --app-dir "$_manifest_dir" --manifest "$json_file" $_fe_flags
+    STACK="" "${LIBSCRIPT_ROOT_DIR:-.}/engine/hooks/app-servers/provision_frontend.sh" --app-dir "$_manifest_dir" --manifest "$json_file" $_fe_flags
   fi
   exit 0
 fi

@@ -71,19 +71,19 @@ For automated mass provisioning or automated cloud/hypervisor initializations, i
 
 ```sh
 # Direct CLI invocation with MSI property injection
-./_lib/package-managers/msi-rs/engine/headless.sh /i installer.msi /qn
+./synthesis/msi/live_installer/engine/headless.sh /i installer.msi /qn
     TARGET_DISK=/dev/nvme0n1
     OS_FLAVOR=debian
     WORKLOAD=openedx
 
 # Or driven via declarative response file:
-./_lib/package-managers/msi-rs/engine/headless.sh --config /etc/autoinstall.json
+./synthesis/msi/live_installer/engine/headless.sh --config /etc/autoinstall.json
 ```
 
 On Windows Command Prompt:
 
 ```cmd
-call _lib\package-managers\msi-rs\engine\headless.cmd /i installer.msi /qn TARGET_DISK=0
+call synthesis\msi\live_installer\engine\headless.cmd /i installer.msi /qn TARGET_DISK=0
 ```
 
 ### Mode B: Terminal User Interface (TUI) Mode
@@ -91,7 +91,7 @@ call _lib\package-managers\msi-rs\engine\headless.cmd /i installer.msi /qn TARGE
 The TUI wizard provides high-contrast terminal navigation for server consoles and SSH sessions:
 
 ```sh
-./_lib/package-managers/msi-rs/engine/tui.sh
+./synthesis/msi/live_installer/engine/tui.sh
 ```
 
 Wizards steps:
@@ -110,7 +110,7 @@ The graphical kiosk interface launches fullscreen on top of hardware GPU drivers
 NVIDIA, VirtIO) with software rasterization fallback (`llvmpipe`):
 
 ```sh
-./_lib/package-managers/msi-rs/engine/gui.sh
+./synthesis/msi/live_installer/engine/gui.sh
 ```
 
 ---
@@ -240,20 +240,20 @@ The live installer allows choosing between clean base installations and customiz
 Install pure vanilla OS base without preloading any LibScript components:
 
 ```sh
-./_lib/package-managers/msi-rs/engine/headless.sh WORKLOAD=none TARGET_DISK=/dev/sda
+./synthesis/msi/live_installer/engine/headless.sh WORKLOAD=none TARGET_DISK=/dev/sda
 ```
 
 ### Option B: Scrollable Dynamic Component Selection
 
-Select any combination of components from the 360+ Tier 1 package catalog (542+ documented
-subsystems, e.g., `nginx`, `wordpress`, `odoo`, `openedx`):
+Select any combination of `T1`/`T2` atomic packages (`_lib/*`, e.g., `nginx`, `mariadb`) and `T5`
+application stacks (`workloads/apps/*`, e.g., `wordpress`, `odoo`, `openedx`):
 
 ```sh
 # Query dynamic catalog via CLI
 ./_lib/package-managers/msi-rs/preloader/catalog.sh --search web
 
 # Install clean base with specific dynamic components
-./_lib/package-managers/msi-rs/engine/headless.sh TARGET_DISK=/dev/sda \
+./synthesis/msi/live_installer/engine/headless.sh TARGET_DISK=/dev/sda \
     COMPONENTS="nginx,mariadb,wordpress,odoo"
 ```
 
@@ -267,7 +267,7 @@ Preloads LMS and Studio environments, MariaDB, MongoDB, Redis, and OpenSearch wi
 database schemas:
 
 ```sh
-./_lib/package-managers/msi-rs/workloads/openedx.sh /mnt/target
+./synthesis/msi/live_installer/presets/openedx.sh /mnt/target
 ```
 
 ### WordPress Stack
@@ -275,7 +275,7 @@ database schemas:
 Preloads Nginx, PHP-FPM, MariaDB, and WordPress core with unique cryptographic salts:
 
 ```sh
-./_lib/package-managers/msi-rs/workloads/wordpress.sh /mnt/target
+./synthesis/msi/live_installer/presets/wordpress.sh /mnt/target
 ```
 
 ---

@@ -65,7 +65,7 @@ set "REPO_ROOT=%SCRIPT_DIR%\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "PROFILE=%~1"
-if "%PROFILE%"=="" set "PROFILE=%REPO_ROOT%\profiles\illumos\minimal-server.json"
+if "%PROFILE%"=="" set "PROFILE=%REPO_ROOT%\synthesis\profiles\illumos\minimal-server.json"
 set "TEST_SYSROOT=%REPO_ROOT%/tests_tmp\idempotency_win_sysroot"
 set "TEST_IMG=%REPO_ROOT%/tests_tmp\idempotency_win.qcow2"
 
@@ -74,12 +74,12 @@ if not exist "%REPO_ROOT%/tests_tmp" mkdir "%REPO_ROOT%/tests_tmp"
 echo [TEST]     Starting 2-Pass Idempotency Verification Test on illumos...
 
 echo [PASS 1]   Executing initial build and export pass...
-call "%REPO_ROOT%\_lib\illumos\distro\assemble.cmd" "%PROFILE%" "%TEST_SYSROOT%"
-call "%REPO_ROOT%\cli\commands\package_as\illumos_qcow2.cmd" "%TEST_SYSROOT%" "%TEST_IMG%" 10
+call "%REPO_ROOT%\synthesis\distro\illumos\assemble.cmd" "%PROFILE%" "%TEST_SYSROOT%"
+call "%REPO_ROOT%\synthesis\formats\illumos_qcow2.cmd" "%TEST_SYSROOT%" "%TEST_IMG%" 10
 
 echo [PASS 2]   Executing consecutive idempotency verification pass...
-call "%REPO_ROOT%\_lib\illumos\distro\assemble.cmd" "%PROFILE%" "%TEST_SYSROOT%"
-call "%REPO_ROOT%\cli\commands\package_as\illumos_qcow2.cmd" "%TEST_SYSROOT%" "%TEST_IMG%" 10
+call "%REPO_ROOT%\synthesis\distro\illumos\assemble.cmd" "%PROFILE%" "%TEST_SYSROOT%"
+call "%REPO_ROOT%\synthesis\formats\illumos_qcow2.cmd" "%TEST_SYSROOT%" "%TEST_IMG%" 10
 
 echo [PASS]     Pass 2 skipped previously completed tasks.
 echo [OK]       illumos idempotency matrix test PASSED.

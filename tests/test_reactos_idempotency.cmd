@@ -55,10 +55,10 @@ set "LIBSCRIPT_HOME=!_TMP!\home"
 set "LIBSCRIPT_OFFLINE=1"
 set "LIBSCRIPT_ALLOW_STUB=1"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\reactos\distro\assemble.cmd" "!LIBSCRIPT_ROOT_DIR!\profiles\reactos\minimal-headless-i686.json" "!_TMP!\sys" >nul
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\reactos\assemble.cmd" "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\reactos\minimal-headless-i686.json" "!_TMP!\sys" >nul
 if errorlevel 1 exit /b 1
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\reactos\distro\assemble.cmd" "!LIBSCRIPT_ROOT_DIR!\profiles\reactos\minimal-headless-i686.json" "!_TMP!\sys" > "!_TMP!\p2.log" 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\reactos\assemble.cmd" "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\reactos\minimal-headless-i686.json" "!_TMP!\sys" > "!_TMP!\p2.log" 2>&1
 if errorlevel 1 exit /b 1
 findstr /I /C:"[SKIP]" "!_TMP!\p2.log" >nul 2>&1
 if errorlevel 1 exit /b 1

@@ -84,6 +84,8 @@ call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_standards.cmd" --all
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_posix.cmd"
 if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_tiers.cmd" --all
+if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_cmd.cmd" --all
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_version_manager.cmd"

@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/os_info.sh" "engine/common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -171,7 +171,7 @@ MSRC
             rm -f "$_shim_src" "$_map_src"
             if [ -f "${TARGET_DIR}/bin/libmeili_glibc235.so" ]; then
               mv "${TARGET_DIR}/bin/meilisearch" "${TARGET_DIR}/bin/meilisearch.bin"
-              SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/elf_verneed_patch.sh"
+              SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/elf_verneed_patch.sh"
               export SCRIPT_NAME
               # shellcheck disable=SC1090
               . "${SCRIPT_NAME}"

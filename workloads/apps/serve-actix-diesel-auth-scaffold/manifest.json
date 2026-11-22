@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "serve-actix-diesel-auth-scaffold",
+  "category": "web-apps",
+  "title": "serve-actix-diesel-auth-scaffold",
+  "description": "serve-actix-diesel-auth-scaffold stack",
+  "provides": ["serve-actix-diesel-auth-scaffold"],
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["caddy", "postgres", "redis", "rust"]
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
+}

@@ -1,16 +1,17 @@
 {
-  "name": "mesa",
-  "title": "Mesa 3D Graphics",
-  "description": "Open-source OpenGL and Vulkan driver collection",
-  "provides": ["mesa"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "graphics",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Open-source OpenGL and Vulkan driver collection",
+  "name": "mesa",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "provides": ["mesa"],
+  "tier": "T2",
+  "title": "Mesa 3D Graphics",
+  "versions": ["1.0.0"]
 }

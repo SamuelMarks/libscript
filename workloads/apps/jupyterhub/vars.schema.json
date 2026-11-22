@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/workloads/apps/jupyterhub/vars.schema.json",
+  "title": "JupyterHub Variables",
+  "description": "Configuration variables for deploying and operating the multi-user JupyterHub notebook server.",
+  "type": "object",
+  "properties": {
+    "JUPYTERHUB_SERVICE_USER": {
+      "description": "System user account running the JupyterHub daemon (created if nonexistent).",
+      "type": "string"
+    },
+    "JUPYTERHUB_SERVICE_GROUP": {
+      "type": "string",
+      "description": "Primary system group assigned to the JupyterHub daemon user."
+    },
+    "JUPYTERHUB_IP": {
+      "description": "Bind IP address on which JupyterHub listens for incoming HTTP connections.",
+      "type": "string"
+    },
+    "JUPYTERHUB_PORT": {
+      "description": "TCP port on which JupyterHub listens for incoming HTTP connections.",
+      "type": "string"
+    },
+    "JUPYTERHUB_NOTEBOOK_DIR": {
+      "description": "Default working directory for spawned user notebook servers (created if nonexistent).",
+      "type": "string"
+    },
+    "JUPYTERHUB_VENV": {
+      "description": "Filesystem path to the isolated Python virtual environment hosting JupyterHub.",
+      "type": "string"
+    },
+    "JUPYTERHUB_USERNAME": {
+      "type": "string",
+      "description": "Initial administrative JupyterHub login username."
+    },
+    "JUPYTERHUB_PASSWORD": {
+      "description": "Initial administrative password or salted Argon2 password hash for JupyterHub.",
+      "type": "string"
+    },
+    "GROUP": {
+      "type": "string",
+      "description": "Fallback system group name used when creating the JupyterHub service account."
+    },
+    "PYTHON_VERSION": {
+      "type": "string",
+      "description": "Python interpreter version provisioned for the JupyterHub virtual environment."
+    }
+  }
+}

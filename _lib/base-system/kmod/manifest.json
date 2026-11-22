@@ -1,16 +1,17 @@
 {
-  "name": "kmod",
-  "title": "Kmod",
-  "description": "Linux kernel module loader and management library",
-  "provides": ["kmod"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Linux kernel module loader and management library",
+  "name": "kmod",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["kmod"],
+  "tier": "T2",
+  "title": "Kmod",
+  "versions": ["1.0.0"]
 }

@@ -27,7 +27,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for _hm_lib in "_lib/_common/log.sh" "_lib/_common/os_info.sh"; do
+for _hm_lib in "engine/common/log.sh" "engine/common/os_info.sh"; do
   if [ -f "${LIBSCRIPT_ROOT_DIR}/${_hm_lib}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_hm_lib}"
     export SCRIPT_NAME

@@ -1,19 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mysql",
-  "title": "MySQL",
-  "license": "GPL-2.0-only",
-  "license_name": "GNU General Public License v2.0 only",
-  "description": "MySQL 8.x relational database management system.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["database", "mysql", "rdbms", "sql"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "ports": [3306],
-  "stateful": true,
-  "multitenant": true,
+  "description": "MySQL 8.x relational database management system.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -26,11 +19,19 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
+  "license": "GPL-2.0-only",
+  "license_name": "GNU General Public License v2.0 only",
+  "multitenant": true,
+  "name": "mysql",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [3306],
   "process_model": "single-process",
-  "unikernel_support": ["osv", "nanos"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["database", "mysql", "rdbms", "sql"],
+  "stateful": true,
+  "tier": "T1",
+  "title": "MySQL",
+  "unikernel_support": ["osv", "nanos"]
 }

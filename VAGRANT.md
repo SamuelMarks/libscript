@@ -291,7 +291,7 @@ Individual platform execution runners:
 
 ```sh
 # Package a ReactOS distribution profile as a QEMU Vagrant .box
-./libscript.sh package-as reactos-distro --format box --profile profiles/reactos/desktop-classic-i686.json
+./libscript.sh package-as reactos-distro --format box --profile synthesis/profiles/reactos/desktop-classic-i686.json
 
 # Execute the 5-platform ReactOS verification matrix
 ./tests/run_reactos_distro_matrix.sh

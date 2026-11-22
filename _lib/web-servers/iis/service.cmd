@@ -52,5 +52,5 @@ goto :find_root
 set "_IIS_ACTION=%~1"
 if "%_IIS_ACTION%"=="" set "_IIS_ACTION=status"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%_IIS_ACTION%" w3svc
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" "%_IIS_ACTION%" w3svc
 exit /b !ERRORLEVEL!

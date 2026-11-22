@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "npm",
-  "provides": ["npm"],
-  "os_whitelist": ["all"],
-  "title": "npm",
-  "description": "Bootstrap module for the `npm` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `npm` package manager.",
+  "name": "npm",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["npm"],
   "repository": "https://github.com/npm/cli",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "npm"
 }

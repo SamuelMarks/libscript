@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%MOSQUITTO_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MOSQUITTO_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MOSQUITTO_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MOSQUITTO_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/eclipse-mosquitto/mosquitto" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%MOSQUITTO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mosquitto %MOSQUITTO_VERSION% to %DOWNLOAD_DIR%\mosquitto...
     if not exist "%DOWNLOAD_DIR%\mosquitto" mkdir "%DOWNLOAD_DIR%\mosquitto"
     if not "%MOSQUITTO_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MOSQUITTO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mosquitto\mosquitto-%MOSQUITTO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MOSQUITTO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mosquitto\mosquitto-%MOSQUITTO_VERSION%.zip"
     ) else (
         echo MOSQUITTO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MOSQUITTO_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mosquitto
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends mosquitto
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mosquitto\mosquitto-%MOSQUITTO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MOSQUITTO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MOSQUITTO_DOWNLOAD_URL%" "%TEMP%\mosquitto.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MOSQUITTO_DOWNLOAD_URL%" "%TEMP%\mosquitto.zip"
         tar -xf "%TEMP%\mosquitto.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mosquitto.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "mosquitto" "%ACTION%" "%MOSQUITTO_VERSION%" "%MOSQUITTO_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mosquitto\%MOSQUITTO_VERSION%\\bin\\mosquitto.exe\"" "%LIBSCRIPT_HOME%\mosquitto\%MOSQUITTO_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "mosquitto" "%ACTION%" "%MOSQUITTO_VERSION%" "%MOSQUITTO_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mosquitto\%MOSQUITTO_VERSION%\\bin\\mosquitto.exe\"" "%LIBSCRIPT_HOME%\mosquitto\%MOSQUITTO_VERSION%"
 exit /b !errorlevel!

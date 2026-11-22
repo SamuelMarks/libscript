@@ -278,7 +278,7 @@ audit_companions() {
 
 if [ "${1:-}" = "--staged" ]; then
   _staged_list=$(mktemp)
-  (cd "$LIBSCRIPT_ROOT_DIR" && git diff --no-ext-diff --cached --name-only --diff-filter=ACM -- "*.sh" ".githooks/pre-commit" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_staged_list"
+  (cd "$LIBSCRIPT_ROOT_DIR" && git diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM -- "*.sh" ".githooks/pre-commit" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_staged_list"
   if [ -s "$_staged_list" ]; then
     audit_batch < "$_staged_list"
   fi

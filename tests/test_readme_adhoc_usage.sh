@@ -64,7 +64,7 @@ cmp -s "${TMP_DIR}/sway1.json" "${TMP_DIR}/sway2.json"
 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${TMP_DIR}/sway1.json" >/dev/null
 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${TMP_DIR}/sway1.json" >/dev/null
 
-for prof in "profiles/linux-minimal-headless-musl.json" "profiles/linux-standard-server-glibc.json" "profiles/linux-desktop-sway-wayland.json" "profiles/linux-desktop-hyprland.json" "profiles/linux-desktop-kde-plasma.json" "profiles/linux-desktop-xfce-x11.json" "profiles/freebsd-server-standard.json" "profiles/freebsd-desktop-xfce.json" "profiles/freebsd/minimal-server.json" "profiles/freebsd/zfs-cloud.json" "profiles/freebsd/hardened-runit.json" "profiles/freebsd/openrc-wayland-sway.json" "profiles/freebsd/plasma-wayland.json" "profiles/freebsd/desktop-xfce-x11.json" "profiles/illumos/minimal-server.json" "profiles/illumos/zfs-cloud.json" "profiles/illumos/pkgsrc-developer.json" "profiles/illumos/hardened-runit.json" "profiles/illumos/desktop-xfce-x11.json" "profiles/illumos/desktop-mate-x11.json" "profiles/illumos/cde-retro-x11.json" "profiles/firecracker-microvm-appliance.json" "profiles/unikraft-nginx-redis.json" "profiles/osv-cloud-runtime.json"; do
+for prof in "synthesis/profiles/linux/linux-minimal-headless-musl.json" "synthesis/profiles/linux/linux-standard-server-glibc.json" "synthesis/profiles/linux/linux-desktop-sway-wayland.json" "synthesis/profiles/linux/linux-desktop-hyprland.json" "synthesis/profiles/linux/linux-desktop-kde-plasma.json" "synthesis/profiles/linux/linux-desktop-xfce-x11.json" "synthesis/profiles/freebsd/freebsd-server-standard.json" "synthesis/profiles/freebsd/freebsd-desktop-xfce.json" "synthesis/profiles/freebsd/minimal-server.json" "synthesis/profiles/freebsd/zfs-cloud.json" "synthesis/profiles/freebsd/hardened-runit.json" "synthesis/profiles/freebsd/openrc-wayland-sway.json" "synthesis/profiles/freebsd/plasma-wayland.json" "synthesis/profiles/freebsd/desktop-xfce-x11.json" "synthesis/profiles/illumos/minimal-server.json" "synthesis/profiles/illumos/zfs-cloud.json" "synthesis/profiles/illumos/pkgsrc-developer.json" "synthesis/profiles/illumos/hardened-runit.json" "synthesis/profiles/illumos/desktop-xfce-x11.json" "synthesis/profiles/illumos/desktop-mate-x11.json" "synthesis/profiles/illumos/cde-retro-x11.json" "synthesis/profiles/hypervisor/firecracker-microvm-appliance.json" "synthesis/profiles/unikernel/unikraft-nginx-redis.json" "synthesis/profiles/unikernel/osv-cloud-runtime.json"; do
   pfile="${LIBSCRIPT_ROOT_DIR}/${prof}"
   if [ -f "$pfile" ]; then
     "${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="$pfile" >/dev/null
@@ -73,8 +73,8 @@ done
 
 printf '=== 2.5 Testing Rootfs Staging & FHS Layout (2x Idempotent) ===
 '
-LIBSCRIPT_TARGET_SYSROOT="${TMP_DIR}/sysroot" "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/create_fhs_layout.sh" >/dev/null
-LIBSCRIPT_TARGET_SYSROOT="${TMP_DIR}/sysroot" "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/create_fhs_layout.sh" >/dev/null
+LIBSCRIPT_TARGET_SYSROOT="${TMP_DIR}/sysroot" "${LIBSCRIPT_ROOT_DIR}/synthesis/vfs/create_fhs_layout.sh" >/dev/null
+LIBSCRIPT_TARGET_SYSROOT="${TMP_DIR}/sysroot" "${LIBSCRIPT_ROOT_DIR}/synthesis/vfs/create_fhs_layout.sh" >/dev/null
 
 printf '=== 2.6 Testing Universal Artifact Packaging (package-as) ===
 '

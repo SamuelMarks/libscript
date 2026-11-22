@@ -47,7 +47,7 @@ if [ -z "${HTML_ROOT+x}" ]; then
 fi
 
 export GIT_REPO="${GIT_REPO:-https://github.com/SamuelMarks/libscript}"
-export LIBSCRIPT_EXTENDED_SCHEMAS="topologies/topology.schema.json topologies/topology-state.schema.json payloads/payload.schema.json traits/trait.schema.json _lib/_common/manifest.schema.json"
+export LIBSCRIPT_EXTENDED_SCHEMAS="workloads/constellations/constellation.schema.json engine/schemas/consensus-state.schema.json workloads/schemas/payload.schema.json traits/trait.schema.json engine/schemas/manifest.schema.json"
 
 _envsubst_dirs=""
 for _tool in awk cat env printenv sort grep; do
@@ -63,7 +63,7 @@ done
 ENVSUBST_PATH="${_envsubst_dirs}:"
 export ENVSUBST_PATH
 
-export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/find_replace.sh'
+export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/engine/common/find_replace.sh'
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
@@ -121,7 +121,7 @@ while IFS= read -r f; do
           env -i PATH="${ENVSUBST_PATH}" \
                   PORT_PATH="${PORT_PATH}" \
                   PORT_PATH_WIN="$(printf '%s' "${PORT_PATH}" | tr '/' '\\')" \
-                  "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/usage.html' >> "${html}"'.usage'
+                  "${LIBSCRIPT_ROOT_DIR}"'/engine/common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/usage.html' >> "${html}"'.usage'
           # shellcheck disable=SC2016
           printf '${USAGE}' >> "${html}"
 #           wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
@@ -308,7 +308,7 @@ for url in ${URLS}; do
           USAGE="${USAGE}" \
           URL_PATHNAME="${URL_PATHNAME}" \
           GIT_HTTP_LINK="${GIT_HTTP_LINK}" \
-          "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
+          "${LIBSCRIPT_ROOT_DIR}"'/engine/common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
 
   within_first_header='<a class="right" href="'"${GIT_HTTP_LINK}"'" aria-label="Open on GitHub"><img class="deploy-img" src="/assets/github-badge-small.png" alt="Open on GitHub"/></a>'
   awk -v within_first_header="$within_first_header" '/<\/h1>/ && !done { sub(/<\/h1>/, within_first_header "</h1>"); done=1 } 1' "${url}.tmp" > "${url}.tmp1"
@@ -404,7 +404,7 @@ if [ -d "${LIBSCRIPT_ROOT_DIR}"'/node_modules/tuicss' ]; then
 fi
 env -i PATH="${ENVSUBST_PATH}" \
         URLS="${URLS_JS}" \
-        "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/assets/first_scripts.js' > "${LIBSCRIPT_ASSETS_DIR}"'/first_scripts.js'
+        "${LIBSCRIPT_ROOT_DIR}"'/engine/common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/assets/first_scripts.js' > "${LIBSCRIPT_ASSETS_DIR}"'/first_scripts.js'
 [ -d "${LIBSCRIPT_ROOT_DIR}"'/assets/' ] || mkdir -p "${LIBSCRIPT_ROOT_DIR}"'/assets/'
 
 set +f

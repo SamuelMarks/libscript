@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "composer",
-  "provides": ["package-manager", "composer"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "title": "composer",
-  "description": "Bootstrap module for the `composer` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap module for the `composer` package manager.",
+  "name": "composer",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "composer"],
+  "tier": "T1",
+  "title": "composer"
 }

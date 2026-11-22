@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cargo",
-  "provides": ["cargo"],
-  "os_whitelist": ["all"],
-  "title": "cargo",
-  "description": "Bootstrap module for the `cargo` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `cargo` package manager.",
+  "name": "cargo",
+  "os_whitelist": ["all"],
+  "provides": ["cargo"],
   "repository": "https://github.com/rust-lang/cargo",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "cargo"
 }

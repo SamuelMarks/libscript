@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "zypper",
-  "provides": ["zypper"],
-  "os_whitelist": ["suse", "opensuse"],
-  "title": "zypper",
-  "description": "Bootstrap module for the `zypper` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `zypper` package manager.",
+  "name": "zypper",
+  "os_whitelist": ["suse", "opensuse"],
+  "provides": ["zypper"],
   "repository": "https://github.com/openSUSE/zypper",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "zypper"
 }

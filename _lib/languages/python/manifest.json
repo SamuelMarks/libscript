@@ -1,15 +1,16 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "python",
-  "title": "Python Runtime",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "languages",
+  "conflicts": [],
+  "description": "A versatile programming language that lets you work quickly and integrate systems more effectively.",
   "license": "Python-2.0",
   "license_name": "Python Software Foundation License 2.0",
-  "description": "A versatile programming language that lets you work quickly and integrate systems more effectively.",
-  "category": "languages",
-  "provides": ["runtime", "python", "pip"],
-  "conflicts": [],
-  "os_whitelist": ["all"],
+  "name": "python",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["runtime", "python", "pip"],
+  "tier": "T1",
+  "title": "Python Runtime"
 }

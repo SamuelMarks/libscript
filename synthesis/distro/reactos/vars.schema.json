@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/synthesis/distro/reactos/vars.schema.json",
+  "title": "ReactOS Distro Variables",
+  "description": "Configuration variables for ReactOS modular distribution synthesis and media generation.",
+  "type": "object",
+  "x-libscript-var-packs": ["image_synth"],
+  "properties": {
+    "REACTOS_DISTRO_VERSION": {
+      "type": "string",
+      "default": "0.4.16",
+      "description": "Target ReactOS release or channel version synthesized by reactos-distro."
+    },
+    "REACTOS_DISTRO_INSTALL_METHOD": {
+      "type": "string",
+      "default": "libscript_native",
+      "description": "Installation strategy for reactos-distro ('libscript_native' or 'system')."
+    },
+    "REACTOS_DISTRO_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading a custom ReactOS BootCD or LiveCD ISO/ZIP archive."
+    },
+    "REACTOS_DISTRO_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying upstream ReactOS releases."
+    },
+    "REACTOS_DISTRO_FETCH_BASE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Set to '1' to download and unpack full upstream ReactOS ISO archives when online.",
+      "deprecated_aliases": ["LIBSCRIPT_FETCH_REACTOS_BASE"]
+    },
+    "REACTOS_VERSION": {
+      "type": "string",
+      "default": "0.4.16",
+      "description": "Target ReactOS version passed to base and kernel synthesis scripts."
+    },
+    "REACTOS_BUILD_FROM_SOURCE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Set to '1' to compile ReactOS from REACTOS_SRC_DIR via RosBE instead of repacking upstream ISOs."
+    },
+    "REACTOS_SRC_DIR": {
+      "type": "string",
+      "description": "Path to a local ReactOS git checkout used when REACTOS_BUILD_FROM_SOURCE=1."
+    },
+    "REACTOS_QEMU_BAKE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Set to '1' to execute headless QEMU Stage-1/Stage-2 unattended installation when generating disk images."
+    },
+    "LIBSCRIPT_REACTOS_MIRROR": {
+      "type": "string",
+      "default": "https://sourceforge.net/projects/reactos/files/ReactOS",
+      "description": "Base mirror URL for official ReactOS release BootCD and LiveCD archives."
+    },
+    "LIBSCRIPT_REACTOS_NIGHTLY_URL": {
+      "type": "string",
+      "description": "Direct override URL for fetching a ReactOS i686 or x86_64 nightly ISO/7z archive."
+    }
+  }
+}

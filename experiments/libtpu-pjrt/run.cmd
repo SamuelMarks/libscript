@@ -36,7 +36,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-set "_WIN_RUN=_lib/toolchains/libtpu-rs/benchmark_experiments"
+set "_WIN_RUN=experiments/libtpu-pjrt/benchmark_experiments"
 set "_WIN_RUN=!_WIN_RUN:/=\!"
 call "!LIBSCRIPT_ROOT_DIR!\!_WIN_RUN!.cmd" %*
 exit /b !errorlevel!

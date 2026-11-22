@@ -1,0 +1,621 @@
+#!/bin/sh
+# ## Overview
+# Environment variable exporter and formatting utility for LibScript.
+# Supports single-component evaluation (`libscript_print_env <format> <prefix>`)
+# and manifest-wide multi-component evaluation (`libscript_print_manifest_env <format> <manifest>`).
+# ## Usage
+# Outputs environment configurations for evaluated components.
+set -feu
+_ep_caller_this="${_EP_CALLER_THIS:-${THIS_FILE:-}}"
+_ep_caller_dir="${_EP_CALLER_DIR:-${SCRIPT_DIR:-}}"
+unset _EP_CALLER_THIS _EP_CALLER_DIR || true
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+# ## _emit_path_entry
+# Emits a single PATH directory addition in the requested shell/container format.
+_emit_path_entry() {
+  _ep_fmt="${1:-sh}"
+  _ep_dir="${2:-}"
+  [ -z "$_ep_dir" ] && return 0
+  case "$_ep_fmt" in
+    docker)
+      # shellcheck disable=SC2016
+      printf 'ENV PATH="%s:$PATH"\n' "$_ep_dir"
+      ;;
+    docker_compose)
+      printf '%s\n' "PATH=${_ep_dir}:\$PATH"
+      ;;
+    powershell)
+      cat <<EOF
+if (\$env:PATH -notlike '*${_ep_dir}*') {
+  \$env:PATH = "${_ep_dir};" + \$env:PATH
+}
+EOF
+      ;;
+    cmd)
+      cat <<EOF
+echo %PATH% | findstr /i /c:"${_ep_dir}" >nul || SET "PATH=${_ep_dir};%PATH%"
+EOF
+      ;;
+    fish)
+      cat <<EOF
+if not contains "${_ep_dir}" \$PATH
+  set -gx PATH "${_ep_dir}" \$PATH
+end
+EOF
+      ;;
+    json)
+      ;;
+    *)
+      cat <<EOF
+if case ":\${PATH:-}:" in *":${_ep_dir}:"*) false;; *) true;; esac; then
+  export PATH="${_ep_dir}:\$PATH"
+fi
+EOF
+      ;;
+  esac
+}
+
+# ## libscript_dedup_path
+# Deduplicates a colon-separated PATH string while preserving first-seen directory order.
+libscript_dedup_path() {
+  _ldp_in="${1:-${PATH:-}}"
+  _ldp_out=""
+  _ldp_old_ifs="${IFS:-}"
+  IFS=':'
+  for _ldp_seg in $_ldp_in; do
+    [ -z "$_ldp_seg" ] && continue
+    case ":${_ldp_out}:" in
+      *":${_ldp_seg}:"*) ;;
+      *) _ldp_out="${_ldp_out:+${_ldp_out}:}${_ldp_seg}" ;;
+    esac
+  done
+  IFS="$_ldp_old_ifs"
+  printf '%s\n' "$_ldp_out"
+}
+
+# ## libscript_expand_manifest_vars
+# Pure POSIX awk-based expander for ${VAR:-default}, ${VAR}, and $VAR references in manifest strings.
+# Uses ENVIRON["LEMV_INPUT"] instead of awk -v to preserve C-style escape sequences (\", \r, \n, \t, \\) verbatim.
+# Supports nested ${VAR:-...${INNER}...} defaults and preserves local shell variables ($_var) or unset unbraced $VAR references.
+libscript_expand_manifest_vars() {
+  _emv_val="${1:-}"
+  case "$_emv_val" in
+    *'$'*)
+      _emv_val=$(LEMV_INPUT="$_emv_val" awk '
+        BEGIN {
+          s = ENVIRON["LEMV_INPUT"]
+          for (pass = 0; pass < 6; pass++) {
+            out = ""
+            while (match(s, /\$\{[A-Za-z_][A-Za-z0-9_]*(:-[^{}]*)?\}/)) {
+              out = out substr(s, 1, RSTART - 1)
+              token = substr(s, RSTART + 2, RLENGTH - 3)
+              sep = index(token, ":-")
+              if (sep > 0) {
+                k = substr(token, 1, sep - 1)
+                def_val = substr(token, sep + 2)
+                if (substr(k, 1, 1) == "_" && !(k in ENVIRON)) {
+                  v = substr(s, RSTART, RLENGTH)
+                } else {
+                  v = (k in ENVIRON && ENVIRON[k] != "") ? ENVIRON[k] : def_val
+                }
+              } else {
+                k = token
+                if (substr(k, 1, 1) == "_" && !(k in ENVIRON)) {
+                  v = substr(s, RSTART, RLENGTH)
+                } else {
+                  v = (k in ENVIRON) ? ENVIRON[k] : ""
+                }
+              }
+              out = out v
+              s = substr(s, RSTART + RLENGTH)
+            }
+            s = out s
+          }
+          out2 = ""
+          while (match(s, /\$[A-Za-z_][A-Za-z0-9_]*/)) {
+            out2 = out2 substr(s, 1, RSTART - 1)
+            k = substr(s, RSTART + 1, RLENGTH - 1)
+            if (substr(k, 1, 1) == "_" && !(k in ENVIRON)) {
+              v = "$" k
+            } else {
+              v = (k in ENVIRON && ENVIRON[k] != "") ? ENVIRON[k] : "$" k
+            }
+            out2 = out2 v
+            s = substr(s, RSTART + RLENGTH)
+          }
+          s = out2 s
+          print s
+        }
+      ' </dev/null 2>/dev/null || printf '%s' "$_emv_val")
+      ;;
+  esac
+  printf '%s\n' "$_emv_val"
+}
+
+# ## libscript_ensure_default_env_vars
+# Sets resilient fallback values for common deployment variables before sourcing .env files.
+libscript_ensure_default_env_vars() {
+  _ede_dir="${1:-.}"
+  if [ -d "$_ede_dir" ]; then
+    _ede_dir=$(cd -- "$_ede_dir" && pwd)
+  fi
+  _ede_default_user="${SERVICE_USER:-${REMOTE_USER:-${SUDO_USER:-${ADMIN_USER:-}}}}"
+  if [ -z "$_ede_default_user" ]; then
+    _ede_default_user=$(id -un 2>/dev/null || whoami 2>/dev/null || printf 'root')
+  fi
+  : "${REMOTE_USER:=$_ede_default_user}"
+  : "${REMOTE_GROUP:=$REMOTE_USER}"
+  _ede_root_home="${LIBSCRIPT_ROOT_HOME:-/root}"
+  _ede_etc_dir="${LIBSCRIPT_ETC_DIR:-/etc}"
+  _ede_home_base="${LIBSCRIPT_HOME_BASE:-/home}"
+  _ede_usr_local_bin="${LIBSCRIPT_USR_LOCAL_BIN:-/usr/local/bin}"
+  if [ -z "${REMOTE_HOME:-}" ]; then
+    if [ "$REMOTE_USER" = "root" ]; then
+      REMOTE_HOME="$_ede_root_home"
+    elif [ -r "${_ede_etc_dir}/passwd" ]; then
+      REMOTE_HOME=$(awk -F: -v u="$REMOTE_USER" '$1==u {print $6; exit}' "${_ede_etc_dir}/passwd" 2>/dev/null || true)
+    fi
+    if [ -z "${REMOTE_HOME:-}" ]; then
+      if [ -d "${_ede_home_base}/${REMOTE_USER}" ]; then
+        REMOTE_HOME="${_ede_home_base}/${REMOTE_USER}"
+      else
+        REMOTE_HOME="${HOME:-$_ede_root_home}"
+      fi
+    fi
+  fi
+  : "${REMOTE_APP_DIR:=$_ede_dir}"
+  : "${SERVICE_USER:=$REMOTE_USER}"
+  : "${SERVICE_GROUP:=$REMOTE_GROUP}"
+  : "${DATA_DISK_MOUNT:=/mnt/data}"
+  : "${DATA_MOUNT_DIR:=/mnt/data}"
+  : "${TMP_DATA_DIR:=${TMPDIR:-/tmp}/data}"
+  export REMOTE_USER REMOTE_GROUP REMOTE_HOME REMOTE_APP_DIR SERVICE_USER SERVICE_GROUP DATA_DISK_MOUNT DATA_MOUNT_DIR TMP_DATA_DIR
+
+  for _ede_bin_dir in "${REMOTE_HOME}/.local/bin" "${REMOTE_HOME}/.cargo/bin" "${_ede_root_home}/.local/bin" "${_ede_usr_local_bin}"; do
+    if [ -d "$_ede_bin_dir" ]; then
+      case ":${PATH:-}:" in
+        *":${_ede_bin_dir}:"*) ;;
+        *) export PATH="${_ede_bin_dir}:${PATH:-/usr/bin:/bin}" ;;
+      esac
+    fi
+  done
+  for _ede_node_bin in "${REMOTE_HOME}/.libscript/nodejs/"*/bin "${_ede_root_home}/.libscript/nodejs/"*/bin "${LIBSCRIPT_HOME:-${HOME:-$_ede_root_home}/.libscript}/nodejs/"*/bin; do
+    if [ -d "$_ede_node_bin" ]; then
+      case ":${PATH:-}:" in
+        *":${_ede_node_bin}:"*) ;;
+        *) export PATH="${_ede_node_bin}:${PATH:-/usr/bin:/bin}" ;;
+      esac
+    fi
+  done
+}
+
+# ## libscript_source_env_preserve_existing
+# Sources an .env file without clobbering variables already set in the environment.
+libscript_source_env_preserve_existing() {
+  _sep_file="$1"
+  [ -f "$_sep_file" ] || return 0
+  _sep_snap=$(mktemp "${TMPDIR:-/tmp}/libscript_env_snap.XXXXXX" 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_env_snap.$$")
+  export -p > "$_sep_snap" 2>/dev/null || true
+  set -a
+  set +u
+  # shellcheck disable=SC1090
+  . "$_sep_file" 2>/dev/null || true
+  set -u
+  set +a
+  # shellcheck disable=SC1090
+  . "$_sep_snap" 2>/dev/null || true
+  rm -f "$_sep_snap"
+}
+
+# ## libscript_print_env
+# Evaluates a component's env.sh and emits PATH and exported variables in the target format.
+libscript_print_env() {
+  _format="${1:-sh}"
+  _prefix_path="${2:-}"
+  _comp_dir="${COMP_DIR:-$SCRIPT_DIR}"
+
+  case "$_format" in
+    dockerfile) _format="docker" ;;
+    envfile)    _format="docker_compose" ;;
+    ps1)        _format="powershell" ;;
+  esac
+
+  if [ -n "$_prefix_path" ] && [ "$_format" != "json" ] && { [ -d "${_prefix_path}/bin" ] || [ ! -f "$_comp_dir/env.sh" ]; }; then
+    _emit_path_entry "$_format" "${_prefix_path}/bin"
+  fi
+
+  if [ -f "$_comp_dir/env.sh" ]; then
+    _comp_name=$(basename "$_comp_dir")
+    _comp_up=$(printf '%s' "$_comp_name" | tr '[:lower:]-' '[:upper:]_')
+    _comp_ver="${VERSION:-}"
+    if [ -z "$_comp_ver" ] && [ -n "$_prefix_path" ]; then
+      _comp_ver=$(basename "$_prefix_path")
+    fi
+    _lpe_base_path='/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin'
+    _lpe_jq_bin='jq'
+    if command -v jq >/dev/null 2>&1; then
+      _lpe_jq_bin=$(command -v jq)
+      _jq_dir=$(dirname -- "$_lpe_jq_bin")
+      case ":${_lpe_base_path}:" in
+        *":${_jq_dir}:"*) ;;
+        *) _lpe_base_path="${_jq_dir}:${_lpe_base_path}" ;;
+      esac
+    fi
+    _lpe_pass_env=$(mktemp "${TMPDIR:-/tmp}/libscript_lpe_pass.XXXXXX" 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_lpe_pass.$$")
+    : > "$_lpe_pass_env"
+    _lpe_keys='PYTHON_VENV VIRTUAL_ENV DATABASE_URL PGDATA REDIS_URL VALKEY_URL DUCKDB_PATH SQLITE_PATH UV_PYTHON_INSTALL_DIR UV_CACHE_DIR'
+    if command -v jq >/dev/null 2>&1 && [ -f "$_comp_dir/vars.schema.json" ]; then
+      _lpe_schema_keys=$(jq -r '((.properties // {} | keys[]), (.properties // {} | to_entries[] | .value.deprecated_aliases[]?))' "$_comp_dir/vars.schema.json" 2>/dev/null || true)
+      _lpe_packs=$(jq -r '."x-libscript-var-packs"[]? // empty' "$_comp_dir/vars.schema.json" 2>/dev/null || true)
+      for _lp in $_lpe_packs; do
+        _lpf="${LIBSCRIPT_ROOT_DIR}/schemas/vars/${_lp}.schema.json"
+        if [ -f "$_lpf" ]; then
+          _lpe_schema_keys="${_lpe_schema_keys} $(jq -r '((.properties // {} | keys[]), (.properties // {} | to_entries[] | .value.deprecated_aliases[]?))' "$_lpf" 2>/dev/null || true)"
+        fi
+      done
+      _lpe_keys="${_lpe_keys} ${_lpe_schema_keys}"
+    fi
+    for _lk in $_lpe_keys; do
+      case "$_lk" in
+        [A-Za-z_][A-Za-z0-9_]*)
+          if _lv=$(printenv "$_lk" 2>/dev/null); then
+            _lv_esc=$(printf '%s' "$_lv" | sed "s/'/'\\\\''/g")
+            printf "export %s='%s'\n" "$_lk" "$_lv_esc" >> "$_lpe_pass_env"
+          fi
+          ;;
+      esac
+    done
+    env -i PATH="$_lpe_base_path" BASE_PATH="$_lpe_base_path" _JQ_BIN="$_lpe_jq_bin" _LPE_PASS_ENV="$_lpe_pass_env" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" REMOTE_HOME="${REMOTE_HOME:-}" DATA_DISK_MOUNT="${DATA_DISK_MOUNT:-}" DATA_MOUNT_DIR="${DATA_MOUNT_DIR:-}" sh << 'EOF_SH'
+            if [ -n "${_LPE_PASS_ENV:-}" ] && [ -f "$_LPE_PASS_ENV" ]; then
+              # shellcheck disable=SC1090
+              . "$_LPE_PASS_ENV" 2>/dev/null || true
+            fi
+            unset _LPE_PASS_ENV || true
+            SCRIPT_NAME="$COMP_DIR/env.sh"
+            export SCRIPT_NAME
+            # shellcheck disable=SC1090
+            . "$COMP_DIR/env.sh" >/dev/null 2>&1 || true
+            if [ -f "$LIBSCRIPT_DATA_DIR/dyn_env.sh" ]; then
+              SCRIPT_NAME="$LIBSCRIPT_DATA_DIR/dyn_env.sh"
+              export SCRIPT_NAME
+              # shellcheck disable=SC1090
+              . "$LIBSCRIPT_DATA_DIR/dyn_env.sh" >/dev/null 2>&1 || true
+            fi
+
+            if [ "$FORMAT" != "json" ]; then
+              _old_ifs="$IFS"
+              IFS=":"
+              for _p in $PATH; do
+                [ -z "$_p" ] && continue
+                case ":${BASE_PATH:-/usr/bin:/bin}:" in
+                  *":${_p}:"*) continue ;;
+                esac
+                [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ] && [ "$_p" = "$PREFIX/bin" ] && continue
+                case "$FORMAT" in
+                  docker)         printf 'ENV PATH="%s:$PATH"\n' "$_p" ;;
+                  docker_compose) printf 'PATH=%s:$PATH\n' "$_p" ;;
+                  powershell)     printf 'if ($env:PATH -notlike \047*%s*\047) {\n  $env:PATH = "%s;" + $env:PATH\n}\n' "$_p" "$_p" ;;
+                  cmd)            printf 'echo %%PATH%% | findstr /i /c:"%s" >nul || SET "PATH=%s;%%PATH%%"\n' "$_p" "$_p" ;;
+                  fish)           printf 'if not contains "%s" $PATH\n  set -gx PATH "%s" $PATH\nend\n' "$_p" "$_p" ;;
+                  *)              printf 'if case ":${PATH:-}:" in *":%s:"*) false;; *) true;; esac; then\n  export PATH="%s:$PATH"\nfi\n' "$_p" "$_p" ;;
+                esac
+              done
+              IFS="$_old_ifs"
+            fi
+
+            _filter="^(PWD|SHLVL|_|PATH|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_HOME|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE)="
+
+            case "$FORMAT" in
+              docker)
+                env | grep -vE "$_filter" | while read -r line; do
+                  [ -z "$line" ] && continue
+                  printf 'ENV %s="%s"\n' "${line%%=*}" "${line#*=}"
+                done
+                ;;
+              docker_compose)
+                env | grep -vE "$_filter"
+                ;;
+              powershell)
+                env | grep -vE "$_filter" | while read -r line; do
+                  [ -z "$line" ] && continue
+                  printf '$env:%s="%s"\n' "${line%%=*}" "${line#*=}"
+                done
+                ;;
+              cmd)
+                env | grep -vE "$_filter" | while read -r line; do
+                  [ -z "$line" ] && continue
+                  printf 'SET "%s=%s"\n' "${line%%=*}" "${line#*=}"
+                done
+                ;;
+              json)
+                if [ -x "${_JQ_BIN:-}" ] || command -v "${_JQ_BIN:-jq}" >/dev/null 2>&1; then
+                  env | grep -vE "^(PWD|SHLVL|_|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE)=" | "${_JQ_BIN:-jq}" -c -R -s '
+                    split("\n") | map(select(length > 0)) |
+                    map(split("=")) | map({(.[0]): (.[1:] | join("="))}) | add
+                  '
+                else
+                  printf '{"PATH":"%s"}\n' "${PREFIX:+$PREFIX/bin:}$PATH"
+                fi
+                ;;
+              *)
+                env | grep -vE "$_filter" | while read -r line; do
+                  [ -z "$line" ] && continue
+                  printf 'export %s="%s"\n' "${line%%=*}" "${line#*=}"
+                done
+                ;;
+            esac
+EOF_SH
+    rm -f "$_lpe_pass_env"
+    unset _lpe_pass_env _lpe_keys _lpe_schema_keys _lpe_packs _lp _lpf _lk _lv _lv_esc || true
+  elif [ "$_format" = "json" ] && [ -n "$_prefix_path" ]; then
+    printf '{"PATH":"%s/bin"}\n' "$_prefix_path"
+  fi
+}
+
+# ## libscript_hydrate_manifest_env
+# Sources env.sh for all dependencies declared in a libscript.json manifest into the current shell.
+libscript_hydrate_manifest_env() {
+  _hm_json="${1:-libscript.json}"
+  [ ! -f "$_hm_json" ] && return 0
+  _hm_dir=$(cd -- "$(dirname -- "$_hm_json")" && pwd)
+
+  if [ -f "${_hm_dir}/.env.libscript" ] && { [ -n "${OLLAMA_MODEL_LIST:-}" ] || grep -q '^OLLAMA_MODEL_LIST=' "${_hm_dir}/.env" "${_hm_dir}/.env.secrets" "${_hm_dir}/.env.libscript" 2>/dev/null || grep -qE '^OLLAMA_MODELS=["'"'"']?[^/"'"'"']' "${_hm_dir}/.env" 2>/dev/null || { command -v jq >/dev/null 2>&1 && jq -e '.. | objects | has("OLLAMA_MODEL_LIST")' "$_hm_json" >/dev/null 2>&1; }; }; then
+    if grep -qE '^OLLAMA_MODELS=(/|[A-Za-z]:[\\/])' "${_hm_dir}/.env.libscript" 2>/dev/null; then
+      _hm_tmp_el=$(mktemp "${TMPDIR:-/tmp}/libscript_el.XXXXXX" 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_el.$$")
+      grep -vE '^OLLAMA_MODELS=(/|[A-Za-z]:[\\/])' "${_hm_dir}/.env.libscript" > "$_hm_tmp_el" 2>/dev/null || true
+      cat "$_hm_tmp_el" > "${_hm_dir}/.env.libscript"
+      rm -f "$_hm_tmp_el"
+    fi
+  fi
+
+  for _hm_ef in "$_hm_dir/.env" "$_hm_dir/.env.secrets" "$_hm_dir/.env.libscript"; do
+    libscript_source_env_preserve_existing "$_hm_ef"
+  done
+
+  case "${OLLAMA_MODELS_DIR:-}" in
+    /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+    *) unset OLLAMA_MODELS_DIR || true ;;
+  esac
+
+  if [ -n "${OLLAMA_MODEL_LIST:-}" ]; then
+    case "${OLLAMA_MODELS:-}" in
+      /*|[A-Za-z]:\\*|[A-Za-z]:/*)
+        OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-$OLLAMA_MODELS}"
+        export OLLAMA_MODELS_DIR
+        unset OLLAMA_MODELS || true
+        ;;
+    esac
+  fi
+
+  if [ -d "${_hm_dir}/.venv" ]; then
+    [ -z "${PYTHON_VENV:-}" ] && export PYTHON_VENV="${_hm_dir}/.venv"
+    [ -z "${VIRTUAL_ENV:-}" ] && export VIRTUAL_ENV="${_hm_dir}/.venv"
+  fi
+
+  libscript_ensure_default_env_vars "$_hm_dir"
+
+  command -v jq >/dev/null 2>&1 || return 0
+
+  _hm_tmp=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_hm_deps.$$")
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" ]; then
+    env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" "$_hm_json" 2>/dev/null | jq -r '.selected[]? | "\(.name) \(.version // "latest")"' > "$_hm_tmp" 2>/dev/null || true
+  fi
+  if [ ! -s "$_hm_tmp" ]; then
+    jq -r '
+      def norm(n): (n | tostring | ascii_downcase) as $s | if $s == "postgresql" then "postgres" elif $s == "node" then "nodejs" elif $s == "redis" then "valkey" else $s end;
+      (
+        [ (.dependencies // .deps // {}) | if type == "object" then to_entries[] | select(.key != "runtime" and .key != "build" and .key != "optional") | "\(norm(.key)) \(if (.value | type) == "object" then (.value.version // "latest") elif (.value | type) == "string" or (.value | type) == "number" then .value else "latest" end)" elif type == "array" then .[] | if type == "string" then "\(norm(.)) latest" elif type == "object" and .name then "\(norm(.name)) \(.version // "latest")" else empty end else empty end ] +
+        [ (.dependencies.runtime // [])[]? | if type == "string" then "\(norm(.)) latest" elif type == "object" and .name then "\(norm(.name)) \(.version // "latest")" else empty end ] +
+        [ ((.databases // .infrastructure.databases) | if type == "object" then to_entries[] | select((.value | type) == "object") | "\(norm(.value.engine // .value.type // "postgres")) \(.value.version // "latest")" elif type == "array" then .[] | select(type == "object") | "\(norm(.engine // .type // "postgres")) \(.version // "latest")" else empty end) ]
+      )[]
+    ' "$_hm_json" > "$_hm_tmp" 2>/dev/null || true
+  fi
+
+  _hm_saved_script_dir="${SCRIPT_DIR:-}"
+  _hm_saved_this_file="${THIS_FILE:-}"
+  _hm_saved_stack="${STACK:-}"
+  _hm_saved_ls_ver="${LIBSCRIPT_VERSION:-}"
+  while read -r _dep_pkg _dep_ver <&3; do
+    [ -z "$_dep_pkg" ] && continue
+    [ "$_dep_ver" = "null" ] || [ -z "$_dep_ver" ] && _dep_ver="latest"
+    _pkg_up=$(printf '%s' "$_dep_pkg" | tr '[:lower:]-' '[:upper:]_')
+    export "${_pkg_up}_VERSION=${_dep_ver}"
+    export LIBSCRIPT_VERSION="${_dep_ver}"
+    for _cat_name in $(ls -1 "${LIBSCRIPT_ROOT_DIR}/_lib" 2>/dev/null || true); do
+      _cat_dir="${LIBSCRIPT_ROOT_DIR}/_lib/${_cat_name}"
+      if [ -f "${_cat_dir}/${_dep_pkg}/env.sh" ]; then
+        STACK=""
+        SCRIPT_NAME="${_cat_dir}/${_dep_pkg}/env.sh"
+        # shellcheck disable=SC1090
+        . "${SCRIPT_NAME}" </dev/null || true
+        unset SCRIPT_NAME || true
+      fi
+    done
+    unset LIBSCRIPT_VERSION || true
+  done 3< "$_hm_tmp"
+  SCRIPT_DIR="$_hm_saved_script_dir"
+  THIS_FILE="$_hm_saved_this_file"
+  STACK="$_hm_saved_stack"
+  export STACK
+  if [ -n "$_hm_saved_ls_ver" ]; then
+    export LIBSCRIPT_VERSION="$_hm_saved_ls_ver"
+  else
+    unset LIBSCRIPT_VERSION || true
+  fi
+  unset SCRIPT_NAME _hm_saved_ls_ver || true
+  rm -f "$_hm_tmp"
+
+  for _hm_local_bin in "${_hm_dir}/.venv/bin" "${_hm_dir}/node_modules/.bin"; do
+    if [ -d "$_hm_local_bin" ]; then
+      case ":${PATH:-}:" in
+        *":${_hm_local_bin}:"*) ;;
+        *) export PATH="${_hm_local_bin}:${PATH:-/usr/bin:/bin}" ;;
+      esac
+    fi
+  done
+  if [ -d "${_hm_dir}/.venv" ] && [ -z "${VIRTUAL_ENV:-}" ]; then
+    export VIRTUAL_ENV="${_hm_dir}/.venv"
+  fi
+
+  if [ -z "${UV_BIN:-}" ]; then
+    UV_BIN=$(command -v uv 2>/dev/null || printf 'uv')
+    export UV_BIN
+  fi
+  if [ -z "${NPX_BIN:-}" ]; then
+    NPX_BIN=$(command -v npx 2>/dev/null || printf 'npx')
+    export NPX_BIN
+  fi
+  PATH=$(libscript_dedup_path "${PATH:-/usr/bin:/bin}")
+  export PATH
+  export SERVICE_PATH="$PATH"
+}
+
+# ## libscript_print_manifest_env
+# Prints the combined environment for all dependencies in a manifest file.
+libscript_print_manifest_env() {
+  _pm_fmt="${1:-sh}"
+  _pm_json="${2:-libscript.json}"
+  if [ ! -f "$_pm_json" ]; then
+    printf 'Error: Manifest file %s not found.\n' "$_pm_json" >&2
+    return 1
+  fi
+  command -v jq >/dev/null 2>&1 || return 1
+
+  case "$_pm_fmt" in
+    dockerfile) _pm_fmt="docker" ;;
+    ps1)        _pm_fmt="powershell" ;;
+  esac
+
+  case "$_pm_fmt" in
+    dotenv|envfile|docker_compose|systemd|json)
+      (
+        libscript_hydrate_manifest_env "$_pm_json"
+        _pm_filter="^(PWD|SHLVL|_|PATH|SERVICE_PATH|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_HOME|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE|_pm_.*|_hm_.*|_ede_.*)="
+        case "$_pm_fmt" in
+          json)
+            SERVICE_PATH="${PATH}"
+            export SERVICE_PATH
+            env | grep -vE "^(PWD|SHLVL|_|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE|_pm_.*|_hm_.*|_ede_.*)=" | jq -c -R -s '
+              split("\n") | map(select(length > 0)) |
+              map(split("=")) | map({(.[0]): (.[1:] | join("="))}) | add
+            '
+            ;;
+          *)
+            printf 'PATH="%s"\n' "$PATH"
+            printf 'SERVICE_PATH="%s"\n' "$PATH"
+            env | grep -vE "$_pm_filter" | while read -r _pm_line; do
+              [ -z "$_pm_line" ] && continue
+              printf '%s="%s"\n' "${_pm_line%%=*}" "${_pm_line#*=}"
+            done
+            ;;
+        esac
+      )
+      return 0
+      ;;
+  esac
+
+  _pm_tmp=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_pm_deps.$$")
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" ]; then
+    env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" "$_pm_json" 2>/dev/null | jq -r '.selected[]? | "\(.name) \(.version // "latest")"' > "$_pm_tmp" 2>/dev/null || true
+  fi
+  if [ ! -s "$_pm_tmp" ]; then
+    jq -r '
+      def norm(n): (n | tostring | ascii_downcase) as $s | if $s == "postgresql" then "postgres" elif $s == "node" then "nodejs" elif $s == "redis" then "valkey" else $s end;
+      (
+        [ (.dependencies // .deps // {}) | if type == "object" then to_entries[] | select(.key != "runtime" and .key != "build" and .key != "optional") | "\(norm(.key)) \(if (.value | type) == "object" then (.value.version // "latest") elif (.value | type) == "string" or (.value | type) == "number" then .value else "latest" end)" elif type == "array" then .[] | if type == "string" then "\(norm(.)) latest" elif type == "object" and .name then "\(norm(.name)) \(.version // "latest")" else empty end else empty end ] +
+        [ (.dependencies.runtime // [])[]? | if type == "string" then "\(norm(.)) latest" elif type == "object" and .name then "\(norm(.name)) \(.version // "latest")" else empty end ] +
+        [ ((.databases // .infrastructure.databases) | if type == "object" then to_entries[] | select((.value | type) == "object") | "\(norm(.value.engine // .value.type // "postgres")) \(.value.version // "latest")" elif type == "array" then .[] | select(type == "object") | "\(norm(.engine // .type // "postgres")) \(.version // "latest")" else empty end) ]
+      )[]
+    ' "$_pm_json" > "$_pm_tmp" 2>/dev/null || true
+  fi
+
+  _pm_agg_path=""
+  _pm_raw_out=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_pm_out.$$")
+  : > "$_pm_raw_out"
+  while read -r _dep_pkg _dep_ver <&3; do
+    [ -z "$_dep_pkg" ] && continue
+    [ "$_dep_ver" = "null" ] || [ -z "$_dep_ver" ] && _dep_ver="latest"
+    _pkg_up=$(printf '%s' "$_dep_pkg" | tr '[:lower:]-' '[:upper:]_')
+    export "${_pkg_up}_VERSION=${_dep_ver}"
+    for _cat_name in $(ls -1 "${LIBSCRIPT_ROOT_DIR}/_lib" 2>/dev/null || true); do
+      _cat_dir="${LIBSCRIPT_ROOT_DIR}/_lib/${_cat_name}"
+      if [ -f "${_cat_dir}/${_dep_pkg}/env.sh" ]; then
+        COMP_DIR="${_cat_dir}/${_dep_pkg}"
+        export COMP_DIR
+        _comp_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_dep_pkg}/${_dep_ver}"
+        libscript_print_env "$_pm_fmt" "$_comp_prefix" </dev/null >> "$_pm_raw_out"
+        if [ -d "${_comp_prefix}/bin" ]; then
+          case ":${_pm_agg_path}:" in
+            *":${_comp_prefix}/bin:"*) ;;
+            *) _pm_agg_path="${_pm_agg_path:+${_pm_agg_path}:}${_comp_prefix}/bin" ;;
+          esac
+        fi
+      fi
+    done
+  done 3< "$_pm_tmp" 2>/dev/null || true
+  rm -f "$_pm_tmp"
+  awk '!seen[$0]++' "$_pm_raw_out" 2>/dev/null || cat "$_pm_raw_out"
+  rm -f "$_pm_raw_out"
+
+  _pm_base_path='/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin'
+  _pm_hydrated_path=$(
+    PATH="$_pm_base_path"
+    export PATH
+    libscript_hydrate_manifest_env "$_pm_json" >/dev/null 2>&1 || true
+    printf '%s' "$PATH"
+  )
+  if [ -n "$_pm_hydrated_path" ]; then
+    _pm_old_ifs="$IFS"
+    IFS=':'
+    for _pm_hp in $_pm_hydrated_path; do
+      [ -z "$_pm_hp" ] && continue
+      case ":${_pm_base_path}:" in
+        *":${_pm_hp}:"*) continue ;;
+      esac
+      case ":${_pm_agg_path}:" in
+        *":${_pm_hp}:"*) ;;
+        *)
+          _emit_path_entry "$_pm_fmt" "$_pm_hp"
+          _pm_agg_path="${_pm_agg_path:+${_pm_agg_path}:}${_pm_hp}"
+          ;;
+      esac
+    done
+    IFS="$_pm_old_ifs"
+  fi
+
+  if [ -n "$_pm_agg_path" ]; then
+    # shellcheck disable=SC2016
+    case "$_pm_fmt" in
+      docker)         printf 'ENV SERVICE_PATH="%s:$PATH"\n' "$_pm_agg_path" ;;
+      powershell|ps1) printf '$env:SERVICE_PATH = "%s;" + $env:PATH\n' "$_pm_agg_path" ;;
+      cmd)            printf 'SET "SERVICE_PATH=%s;%%PATH%%"\n' "$_pm_agg_path" ;;
+      fish)           printf 'set -gx SERVICE_PATH "%s:$PATH"\n' "$_pm_agg_path" ;;
+      *)              printf 'export SERVICE_PATH="%s:${PATH:-/usr/bin:/bin}"\n' "$_pm_agg_path" ;;
+    esac
+  fi
+}
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_ep_caller_dir:-}" ] && SCRIPT_DIR="$_ep_caller_dir"
+[ -n "${_ep_caller_this:-}" ] && THIS_FILE="$_ep_caller_this"
+unset SCRIPT_NAME _ep_caller_this _ep_caller_dir || true

@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
-PROFILE="${1:-${REPO_ROOT}/profiles/illumos/minimal-server.json}"
+PROFILE="${1:-${REPO_ROOT}/synthesis/profiles/illumos/minimal-server.json}"
 TEST_SYSROOT="${REPO_ROOT}/tests_tmp/idempotency_sysroot_$$"
 TEST_IMG="${REPO_ROOT}/tests_tmp/idempotency_img_$$.qcow2"
 
@@ -42,8 +42,8 @@ printf '[TEST]     Starting 2-Pass Idempotency Verification Test on illumos...\n
 
 # --- PASS 1: Initial Clean Build ---
 printf '[PASS 1]   Executing initial build and export pass...\n'
-"${REPO_ROOT}/_lib/illumos/distro/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS1}" 2>&1
-"${REPO_ROOT}/cli/commands/package_as/illumos_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS1}" 2>&1
+"${REPO_ROOT}/synthesis/distro/illumos/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS1}" 2>&1
+"${REPO_ROOT}/synthesis/formats/illumos_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS1}" 2>&1
 
 if [ ! -f "${TEST_IMG}.stamp" ]; then
   printf '[FAIL]     Pass 1 failed to generate valid stamp marker!\n' >&2
@@ -57,8 +57,8 @@ export MTIME_PASS1
 
 # --- PASS 2: Consecutive Idempotency Re-run ---
 printf '[PASS 2]   Executing consecutive idempotency verification pass...\n'
-"${REPO_ROOT}/_lib/illumos/distro/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS2}" 2>&1
-"${REPO_ROOT}/cli/commands/package_as/illumos_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS2}" 2>&1
+"${REPO_ROOT}/synthesis/distro/illumos/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS2}" 2>&1
+"${REPO_ROOT}/synthesis/formats/illumos_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS2}" 2>&1
 
 # Assert Pass 2 emitted [SKIP]
 if ! grep -q "\[SKIP\]" "${LOG_PASS2}"; then

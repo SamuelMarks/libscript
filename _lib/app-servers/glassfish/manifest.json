@@ -1,15 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "glassfish",
-  "title": "Eclipse GlassFish",
-  "description": "Eclipse Foundation open-source Jakarta EE compatible enterprise application server.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["glassfish", "jakarta-ee", "app-server"],
-  "os_whitelist": ["all"],
-  "ports": [8080, 4848],
-  "multitenant": true,
-  "repository": "https://github.com/eclipse-ee4j/glassfish",
+  "description": "Eclipse Foundation open-source Jakarta EE compatible enterprise application server.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -22,9 +18,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "glassfish",
+  "os_whitelist": ["all"],
+  "ports": [8080, 4848],
+  "provides": ["glassfish", "jakarta-ee", "app-server"],
+  "repository": "https://github.com/eclipse-ee4j/glassfish",
+  "tier": "T1",
+  "title": "Eclipse GlassFish"
 }

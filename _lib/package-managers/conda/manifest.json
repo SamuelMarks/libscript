@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "conda",
-  "provides": ["version-manager", "package-manager", "conda"],
-  "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": ["windows", "alpine"],
-  "title": "conda",
-  "description": "Bootstrap module for the `conda` package manager via Miniconda.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap module for the `conda` package manager via Miniconda.",
+  "name": "conda",
+  "os_blacklist": ["windows", "alpine"],
+  "os_whitelist": ["linux", "darwin"],
+  "provides": ["version-manager", "package-manager", "conda"],
+  "tier": "T1",
+  "title": "conda"
 }

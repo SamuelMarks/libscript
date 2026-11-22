@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "sysvinit",
-  "title": "SysVinit",
-  "description": "Traditional System V style init program and runlevel controller.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "init-systems",
-  "provides": ["sysvinit", "init-system"],
   "conflicts": [],
-  "versions": ["latest", "3.09"],
-  "os_whitelist": ["linux"],
+  "description": "Traditional System V style init program and runlevel controller.",
+  "name": "sysvinit",
   "os_blacklist": ["windows"],
+  "os_whitelist": ["linux"],
   "ports": [],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["sysvinit", "init-system"],
+  "tier": "T2",
+  "title": "SysVinit",
+  "versions": ["latest", "3.09"]
 }

@@ -1,0 +1,267 @@
+#!/bin/sh
+# ## Overview
+# Template file for installer generation.
+# 
+# ## Usage
+# This file is processed during the build phase and not executed directly.
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  printf '%s\n' "Usage: ${THIS_FILE} [OPTIONS]"
+  printf '%s\n' 'See script source or documentation for more details.'
+  exit 0
+fi
+
+
+
+      cat << EOF2
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel ${nsis_admin:-admin}
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "${WELCOME_TEXT:-$APP_NAME Installer}"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "${ICON_PATH:-}" ]; then printf '%s\n' "Icon \"$ICON_PATH\""; fi
+      if [ -n "${BANNER_TOP_PATH:-}" ]; then
+        printf '%s\n' '!define MUI_HEADERIMAGE'
+        printf '%s\n' "!define MUI_HEADERIMAGE_BITMAP \"$BANNER_TOP_PATH\""
+      fi
+      if [ -n "${BANNER_SIDE_PATH:-}" ]; then
+        printf '%s\n' "!define MUI_WELCOMEFINISHPAGE_BITMAP \"$BANNER_SIDE_PATH\""
+      fi
+      printf '%s\n' ""
+
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/engine/solver/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
+      fi
+
+      printf '%s\n' 'Include nsDialogs.nsh'
+      printf '%s\n' 'Page components'
+
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            printf '%s\n' "Var Dialog_$pkg"
+            printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
+              printf '%s\n' "Var HWND_${pkg}_${varname}"
+              printf '%s\n' "Var VAL_${pkg}_${varname}"
+            done
+
+            printf '%s\n' "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+
+      if [ -n "${LICENSE_PATH:-}" ]; then printf '%s\n' "Page license \"\" \"$LICENSE_PATH\""; fi
+
+      # Multi-license agreement pages for bundled dependencies
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        pkg_man=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "manifest.json" 2>/dev/null | grep "/$pkg/manifest.json" | head -n 1)
+        pkg_spdx='MIT'
+        pkg_title="$pkg"
+        if [ -n "$pkg_man" ] && [ -f "$pkg_man" ]; then
+          pkg_spdx=$(jq -r '.license // "MIT"' "$pkg_man" 2>/dev/null || printf 'MIT')
+          pkg_title=$(jq -r '.title // .name' "$pkg_man" 2>/dev/null || printf '%s' "$pkg")
+        fi
+
+        pkg_lic_txt="${OUT_FILE}_${pkg}_license.txt"
+        canon_txt=""
+        for _lic_dir in "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/synthesis/msi/licenses" \
+                        "${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/synthesis/msi/licenses"; do
+          if [ -f "$_lic_dir/${pkg_spdx}.txt" ]; then
+            canon_txt="$_lic_dir/${pkg_spdx}.txt"
+            break
+          fi
+        done
+
+        if [ -n "$canon_txt" ] && [ -f "$canon_txt" ]; then
+          cp "$canon_txt" "$pkg_lic_txt"
+        else
+          printf 'Software License Agreement for %s (%s)\n' "$pkg_title" "$pkg_spdx" > "$pkg_lic_txt"
+        fi
+
+        printf '%s\n' "; License Agreement: $pkg_title ($pkg_spdx)"
+        printf '%s\n' "LicenseText \"Please review the license terms for $pkg_title ($pkg_spdx) before continuing:\" \"I Agree\""
+        printf '%s\n' "LicenseData \"$pkg_lic_txt\""
+        printf '%s\n' 'Page license'
+      done
+      printf '%s\n' 'Page instfiles'
+      printf '%s\n' ""
+
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        printf '%s\n' "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install-service $pkg $ver"
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(printf '%s\n' "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        printf '%s\n' "  ExecWait 'cmd.exe $run_params'"
+        pkg_json=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "packaging.json" 2>/dev/null | grep "/$pkg/" | head -n 1 || true)
+        if [ -f "$pkg_json" ]; then
+          # Post-install actions from packaging.json
+          post_cmds=$(jq -r '.post_install[]?.command // empty' "$pkg_json" 2>/dev/null || true)
+          if [ -n "$post_cmds" ]; then
+            printf '%s\n' "$post_cmds" | while IFS= read -r post_cmd; do
+              [ -n "$post_cmd" ] && printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\$post_cmd\"'"
+            done
+          fi
+        fi
+        printf '%s\n' 'SectionEnd'
+
+        if [ -f "$pkg_json" ]; then
+          # Features tree from packaging.json
+          feat_count=$(jq '.features | length' "$pkg_json" 2>/dev/null || printf '0')
+          if [ "$feat_count" -gt 0 ]; then
+            feat_idx=0
+            while [ "$feat_idx" -lt "$feat_count" ]; do
+              fid=$(jq -r ".features[$feat_idx].id" "$pkg_json")
+              feat_title=$(jq -r ".features[$feat_idx].title" "$pkg_json")
+              printf '%s\n' "Section /o \"$feat_title\" SEC_${pkg}_${fid}"
+              printf '%s\n' 'SectionEnd'
+              feat_idx=$((feat_idx + 1))
+            done
+          fi
+
+          # Shortcuts from packaging.json
+          short_count=$(jq '.shortcuts | length' "$pkg_json" 2>/dev/null || printf '0')
+          if [ "$short_count" -gt 0 ]; then
+            printf '%s\n' "Section \"Administrative Shortcuts\" SEC_${pkg}_shortcuts"
+            printf '%s\n' "  CreateDirectory \"\$SMPROGRAMS\\$APP_NAME\""
+            short_idx=0
+            while [ "$short_idx" -lt "$short_count" ]; do
+              short_title=$(jq -r ".shortcuts[$short_idx].title" "$pkg_json")
+              short_target=$(jq -r ".shortcuts[$short_idx].target" "$pkg_json")
+              short_args=$(jq -r ".shortcuts[$short_idx].arguments // \"\"" "$pkg_json")
+              printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\$APP_NAME\\$short_title.lnk\" \"\$INSTDIR\\$short_target\" \"$short_args\""
+              short_idx=$((short_idx + 1))
+            done
+            printf '%s\n' 'SectionEnd'
+          fi
+        fi
+      done
+
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            printf '%s\n' "Function pgCustom_$pkg"
+            printf '%s\n' "  SectionGetFlags \${SEC_$pkg} \$0"
+            printf '%s\n' "  IntOp \$0 \$0 & 1"
+            printf '%s\n' "  IntCmp \$0 1 +2"
+            printf '%s\n' '    Abort'
+            printf '%s\n' '  nsDialogs::Create 1018'
+            printf '%s\n' "  Pop \$Dialog_$pkg"
+
+            y=0
+            printf '%s\n' "$vars_json" | while read -r item; do
+              varname=$(printf '%s\n' "$item" | jq -r '.key')
+              desc=$(printf '%s\n' "$item" | jq -r '.desc')
+              defval=$(printf '%s\n' "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+
+              printf '%s\n' "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              printf '%s\n' "  Pop \$0"
+              y=$((y + 12))
+
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                printf '%s\n' "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                printf '%s\n' "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              printf '%s\n' "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            printf '%s\n' '  nsDialogs::Show'
+            printf '%s\n' 'FunctionEnd'
+
+            printf '%s\n' "Function pgLeave_$pkg"
+            printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
+              printf '%s\n' "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+
+              if case "$varname" in *"_PORT"*) true;; *) false;; esac; then
+                printf '%s\n' "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                printf '%s\n' "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                printf '%s\n' "  Pop \$0"
+                printf '%s\n' "  IntCmp \$0 0 0 +3"
+                printf '%s\n' "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                printf '%s\n' '    Abort'
+              fi
+            done
+            printf '%s\n' 'FunctionEnd'
+          fi
+        fi
+      done
+
+      # Uninstaller
+      printf '%s\n' "Section \"Uninstall\""
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        # Note: Hardcoded stack checks (e.g. openedx) have been removed.
+        # Future implementations will load uninstall actions declaratively from packaging.json
+        printf '%s\n' "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        printf '%s\n' "  purge_$pkg:"
+        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME'"
+        printf '%s\n' "    Goto end_$pkg"
+        printf '%s\n' "  keep_$pkg:"
+        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME'"
+        printf '%s\n' "  end_$pkg:"
+      done
+      printf '%s\n' 'SectionEnd'
+
+      exit 0

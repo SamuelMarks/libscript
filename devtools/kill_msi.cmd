@@ -51,5 +51,5 @@ goto :find_root
 :root_found
 
 cd /d "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
-vagrant ssh -c "powershell -Command \"taskkill /F /IM msiexec.exe /T; Remove-Item C:\libscript\packaging\*.msi -Force -ErrorAction SilentlyContinue; Remove-Item C:\libscript\msi_error.txt -Force -ErrorAction SilentlyContinue\""
+vagrant ssh -c "powershell -Command \"taskkill /F /IM msiexec.exe /T; Remove-Item C:\libscript\synthesis\msi\*.msi -Force -ErrorAction SilentlyContinue; Remove-Item C:\libscript\msi_error.txt -Force -ErrorAction SilentlyContinue\""
 exit /b %ERRORLEVEL%

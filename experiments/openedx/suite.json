@@ -1,5 +1,5 @@
 {
-  "$schema": "../../experiment-suite.schema.json",
+  "$schema": "../../experiments/schemas/experiment-suite.schema.json",
   "id": "openedx",
   "title": "Open edX Multi-OS Vagrant, Native Installer & Guest-UI Verification Suite",
   "protocol_version": "1.0.0",
@@ -11,7 +11,7 @@
     "screenshots_dir": "screenshots"
   },
   "installer_e2e": {
-    "packaging_manifest": "../../_lib/web-apps/openedx/packaging.json",
+    "packaging_manifest": "../../workloads/apps/openedx/packaging.json",
     "vagrant": {
       "bento_prefix": "bento",
       "default_target_os": "windows-11",

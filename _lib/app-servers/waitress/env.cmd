@@ -49,7 +49,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "waitress"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "waitress"
 
 if "%WAITRESS_PORT%"=="" set "WAITRESS_PORT=8000"
 if "%WAITRESS_HOST%"=="" set "WAITRESS_HOST=0.0.0.0"

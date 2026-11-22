@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "containers",
+  "description": "Canonical LXD next-generation system container and virtual machine manager daemon (lxd) and REST CLI client (lxc).",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "name": "lxd",
+  "os_whitelist": ["linux", "macos", "windows"],
+  "ports": [8443],
+  "provides": ["lxd", "lxd-client"],
+  "repository": "https://github.com/canonical/lxd",
+  "tier": "T1",
+  "title": "Canonical LXD System Container & VM Manager"
+}

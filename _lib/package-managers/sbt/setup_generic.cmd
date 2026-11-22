@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%SBT_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%SBT_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%SBT_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%SBT_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/sbt/sbt" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%SBT_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading sbt %SBT_VERSION% to %DOWNLOAD_DIR%\sbt...
     if not exist "%DOWNLOAD_DIR%\sbt" mkdir "%DOWNLOAD_DIR%\sbt"
     if not "%SBT_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SBT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\sbt\sbt-%SBT_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SBT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\sbt\sbt-%SBT_VERSION%.zip"
     ) else (
         echo SBT_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SBT_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends sbt
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends sbt
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\sbt\sbt-%SBT_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SBT_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SBT_DOWNLOAD_URL%" "%TEMP%\sbt.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SBT_DOWNLOAD_URL%" "%TEMP%\sbt.zip"
         tar -xf "%TEMP%\sbt.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for sbt.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "sbt" "%ACTION%" "%SBT_VERSION%" "%SBT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\sbt\%SBT_VERSION%\\bin\\sbt.exe\"" "%LIBSCRIPT_HOME%\sbt\%SBT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "sbt" "%ACTION%" "%SBT_VERSION%" "%SBT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\sbt\%SBT_VERSION%\\bin\\sbt.exe\"" "%LIBSCRIPT_HOME%\sbt\%SBT_VERSION%"
 exit /b !errorlevel!

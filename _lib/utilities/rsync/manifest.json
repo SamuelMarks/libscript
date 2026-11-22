@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rsync",
-  "title": "rsync",
-  "description": "Fast incremental delta-transfer file synchronization and remote backup utility.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["rsync", "file-sync"],
+  "description": "Fast incremental delta-transfer file synchronization and remote backup utility.",
+  "name": "rsync",
   "os_whitelist": ["all"],
+  "provides": ["rsync", "file-sync"],
   "repository": "https://github.com/RsyncProject/rsync",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "rsync"
 }

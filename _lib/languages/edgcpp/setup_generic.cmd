@@ -114,14 +114,14 @@ exit /b 0
 :: ## action_use
 :: Updates the active edgcpp version alias junction.
 :action_use
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_download
 :: Downloads the edgcpp release archive into the local offline cache.
 :action_download
 if not exist "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp" mkdir "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%EDGCPP_ASSET_URL%" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp\%EDGCPP_ASSET_NAME%" "%EDGCPP_ASSET_SHA256%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%EDGCPP_ASSET_URL%" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp\%EDGCPP_ASSET_NAME%" "%EDGCPP_ASSET_SHA256%"
 exit /b 0
 
 :: ## action_install
@@ -141,9 +141,9 @@ if "!_meta_ok!"=="1" (
             if exist "%TARGET_DIR%\edgcpp-release-metadata.json" (
                 if not "%FORCE_REBUILD%"=="1" (
                     echo [INFO] edgcpp %EXACT_VERSION% ^(%EDGCPP_FLAVOR%^) is already installed at %TARGET_DIR%.
-                    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EXACT_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-                    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_FLAVOR%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-                    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EXACT_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_FLAVOR%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
                     exit /b 0
                 )
             )
@@ -160,7 +160,7 @@ if "!_meta_ok!"=="0" (
     if exist "!_dl_zip!" del /f /q "!_dl_zip!" >nul 2>&1
 )
 if not exist "!_dl_zip!" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%EDGCPP_ASSET_URL%" "!_dl_zip!" "%EDGCPP_ASSET_SHA256%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%EDGCPP_ASSET_URL%" "!_dl_zip!" "%EDGCPP_ASSET_SHA256%"
 )
 if exist "!_dl_zip!" (
     tar -xf "!_dl_zip!" --strip-components=1 -C "%TARGET_DIR%" 2>nul
@@ -220,10 +220,10 @@ if not exist "%TARGET_DIR%\include_c99\stddef.h" (
     echo }
 ) > "%TARGET_DIR%\edgcpp-release-metadata.json.tmp"
 move /y "%TARGET_DIR%\edgcpp-release-metadata.json.tmp" "%TARGET_DIR%\edgcpp-release-metadata.json" >nul
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EXACT_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_FLAVOR%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EXACT_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_FLAVOR%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
 exit /b 0
 
 :: ## action_verify_modes

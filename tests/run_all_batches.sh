@@ -61,7 +61,7 @@ cd "$REPO_ROOT" || exit 1
 if [ ! -f "TODO_PLAN.md" ]; then
     echo 'TODO_PLAN.md not found. Generating it...'
     for COMPONENT_DIR in _lib/*/*/; do
-        if [ -d "$COMPONENT_DIR" ] && [ "${COMPONENT_DIR}" != "_lib/_common/_noop/" ]; then
+        if [ -d "$COMPONENT_DIR" ] && [ "${COMPONENT_DIR}" != "engine/common/_noop/" ]; then
             COMPONENT_PATH="${COMPONENT_DIR%/}"
             echo "- [ ] ${COMPONENT_PATH}" >> "TODO_PLAN.md"
         fi

@@ -1,16 +1,17 @@
 {
-  "name": "wpa_supplicant",
-  "title": "WPA Supplicant",
-  "description": "WPA/WPA2/WPA3 wireless security daemon",
-  "provides": ["wpa_supplicant"],
+  "capabilities": ["sysroot-package"],
   "category": "networking",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "WPA/WPA2/WPA3 wireless security daemon",
+  "name": "wpa_supplicant",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["wpa_supplicant"],
+  "tier": "T2",
+  "title": "WPA Supplicant",
+  "versions": ["1.0.0"]
 }

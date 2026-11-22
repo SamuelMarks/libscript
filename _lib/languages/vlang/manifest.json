@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "vlang",
-  "title": "V (Vlang)",
-  "description": "Simple, fast, safe, compiled systems programming language (v) with rapid C/native compilation.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["vlang", "v"],
+  "description": "Simple, fast, safe, compiled systems programming language (v) with rapid C/native compilation.",
+  "name": "vlang",
   "os_whitelist": ["all"],
+  "provides": ["vlang", "v"],
   "repository": "https://github.com/vlang/v",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "V (Vlang)"
 }

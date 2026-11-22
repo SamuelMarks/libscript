@@ -1,17 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "dragonfly",
-  "title": "Dragonfly",
-  "description": "Modern shared-nothing multithreaded in-memory data store compatible with Redis and Memcached protocols.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "caches",
-  "provides": ["dragonfly", "redis-compatible", "kv-store", "cache"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["windows", "sunos"],
-  "ports": [6379],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/dragonflydb/dragonfly",
+  "description": "Modern shared-nothing multithreaded in-memory data store compatible with Redis and Memcached protocols.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -24,9 +18,16 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "dragonfly",
+  "os_blacklist": ["windows", "sunos"],
+  "os_whitelist": ["all"],
+  "ports": [6379],
+  "provides": ["dragonfly", "redis-compatible", "kv-store", "cache"],
+  "repository": "https://github.com/dragonflydb/dragonfly",
+  "stateful": true,
+  "tier": "T1",
+  "title": "Dragonfly"
 }

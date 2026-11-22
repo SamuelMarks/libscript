@@ -45,7 +45,7 @@ isolated by default in `~/.libscript/<component>/<version>` and do not pollute g
 | `OLLAMA_VERIFY_INFERENCE`  | When set to '1', runs a 1-token /api/generate smoke test on pulled models and re-pulls if llama-server crashes.                                                                                | `none`                    |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Platform Support

@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "sh",
-  "title": "Shell Toolchain",
-  "description": "POSIX-compliant shell environment.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["sh", "toolchain"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "POSIX-compliant shell environment.",
+  "name": "sh",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["sh", "toolchain"],
+  "tier": "T1",
+  "title": "Shell Toolchain"
 }

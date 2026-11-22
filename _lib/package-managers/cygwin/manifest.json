@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cygwin",
-  "provides": ["cygwin"],
-  "os_whitelist": ["windows"],
-  "title": "cygwin bootstrap",
-  "description": "Cygwin POSIX environment for Windows.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Cygwin POSIX environment for Windows.",
+  "name": "cygwin",
+  "os_whitelist": ["windows"],
+  "provides": ["cygwin"],
+  "tier": "T1",
+  "title": "cygwin bootstrap"
 }

@@ -1,16 +1,17 @@
 {
-  "name": "nvidia",
-  "title": "NVIDIA Graphics Driver",
-  "description": "Proprietary NVIDIA display driver and libraries",
-  "provides": ["nvidia"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "graphics",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Proprietary NVIDIA display driver and libraries",
+  "name": "nvidia",
   "os_blacklist": ["windows", "sunos", "alpine", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "provides": ["nvidia"],
+  "tier": "T2",
+  "title": "NVIDIA Graphics Driver",
+  "versions": ["1.0.0"]
 }

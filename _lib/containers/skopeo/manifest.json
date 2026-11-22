@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "containers",
+  "description": "Daemonless utility (skopeo) for inspecting, copying, signing, and synchronizing container images and registries.",
+  "name": "skopeo",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "macos", "freebsd", "openbsd", "netbsd"],
+  "provides": ["skopeo"],
+  "repository": "https://github.com/containers/skopeo",
+  "tier": "T1",
+  "title": "Skopeo Container Image Inspector & Copier"
+}

@@ -52,7 +52,7 @@ goto :find_root
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\hooks.cmd" :libscript_exec_hook postgres backup "%~1"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\hooks.cmd" :libscript_exec_hook postgres backup "%~1"
 exit /b %errorlevel%
 
 :: ## help

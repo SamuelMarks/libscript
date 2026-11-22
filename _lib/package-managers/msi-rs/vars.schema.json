@@ -30,7 +30,7 @@
     },
     "MSI_RS_COMPONENTS": {
       "type": "string",
-      "description": "Comma-separated list of Tier 1 components preloaded into live installer media or installed onto the target disk."
+      "description": "Comma-separated list of T1 components preloaded into live installer media or installed onto the target disk."
     }
   }
 }

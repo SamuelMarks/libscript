@@ -144,8 +144,8 @@ printf '%s\n' 'Generating markdown docs...'
 
 modified_tmp=$(mktemp)
 base_vars_tmp=$(mktemp)
-if [ -f "$ROOT_DIR/_lib/_common/base_vars.schema.json" ]; then
-  jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.deprecated_aliases[]?), (.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$ROOT_DIR/_lib/_common/base_vars.schema.json" | sed 's/ |"$/ |/' > "$base_vars_tmp"
+if [ -f "$ROOT_DIR/engine/schemas/base_vars.schema.json" ]; then
+  jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.deprecated_aliases[]?), (.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$ROOT_DIR/engine/schemas/base_vars.schema.json" | sed 's/ |"$/ |/' > "$base_vars_tmp"
 fi
 
 plat_tmp=$(mktemp)
@@ -154,14 +154,14 @@ printf '%s\n' "- macOS" >> "$plat_tmp"
 printf '%s\n' "- Windows" >> "$plat_tmp"
 plat_norm=$(normalize_markdown_section < "$plat_tmp")
 
-# Render core global variables table in _lib/_common/README.md when markers are present
-if [ -f "$ROOT_DIR/_lib/_common/README.md" ] && grep -q "<!-- BEGIN_VARS -->" "$ROOT_DIR/_lib/_common/README.md" && [ -s "$base_vars_tmp" ]; then
+# Render core global variables table in engine/common/README.md when markers are present
+if [ -f "$ROOT_DIR/engine/common/README.md" ] && grep -q "<!-- BEGIN_VARS -->" "$ROOT_DIR/engine/common/README.md" && [ -s "$base_vars_tmp" ]; then
   common_vars_tmp=$(mktemp)
   printf '%s\n' "| Variable | Description | Default | Aliases/Examples |" > "$common_vars_tmp"
   printf '%s\n' "|---|---|---|---|" >> "$common_vars_tmp"
   cat "$base_vars_tmp" >> "$common_vars_tmp"
   common_norm=$(normalize_markdown_section < "$common_vars_tmp")
-  existing_common_norm=$(extract_marker_section "$ROOT_DIR/_lib/_common/README.md" "<!-- BEGIN_VARS -->" "<!-- END_VARS -->" | normalize_markdown_section)
+  existing_common_norm=$(extract_marker_section "$ROOT_DIR/engine/common/README.md" "<!-- BEGIN_VARS -->" "<!-- END_VARS -->" | normalize_markdown_section)
   if [ "$common_norm" != "$existing_common_norm" ]; then
     common_readme_tmp=$(mktemp)
     awk -v vars="$common_vars_tmp" '
@@ -180,9 +180,9 @@ if [ -f "$ROOT_DIR/_lib/_common/README.md" ] && grep -q "<!-- BEGIN_VARS -->" "$
         next
       }
       !in_vars { print }
-    ' "$ROOT_DIR/_lib/_common/README.md" > "$common_readme_tmp"
-    mv "$common_readme_tmp" "$ROOT_DIR/_lib/_common/README.md"
-    printf '%s\n' "$ROOT_DIR/_lib/_common/README.md" >> "$modified_tmp"
+    ' "$ROOT_DIR/engine/common/README.md" > "$common_readme_tmp"
+    mv "$common_readme_tmp" "$ROOT_DIR/engine/common/README.md"
+    printf '%s\n' "$ROOT_DIR/engine/common/README.md" >> "$modified_tmp"
   fi
   rm -f "$common_vars_tmp"
 fi
@@ -190,7 +190,7 @@ fi
 # Process each component README without duplicating base_vars.schema.json across 500+ READMEs
 find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|topologies|payloads)" | while IFS= read -r readme; do
     dir="$(dirname "$readme")"
-    case "$dir" in *"_lib/_common"*) continue ;; esac
+    case "$dir" in *"engine/common"*) continue ;; esac
     
     # Check if vars.schema.json exists
     schema="$dir/vars.schema.json"
@@ -215,7 +215,7 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|topologi
         if case "$dir" in *"_lib/"*) true ;; *) false ;; esac; then
             cat <<'EOF' >> "$vars_tmp"
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`, and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`, and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 EOF
         fi
 

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "aqua",
-  "provides": ["aqua"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "aqua",
-  "description": "Bootstrap module for the `aqua` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `aqua` package manager.",
+  "name": "aqua",
   "os_blacklist": ["freebsd"],
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["aqua"],
   "repository": "https://github.com/aquaproj/aqua",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "aqua"
 }

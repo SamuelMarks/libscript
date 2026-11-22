@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ninja",
-  "title": "Ninja",
-  "description": "A small build system with a focus on speed.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["ninja", "build-system"],
+  "description": "A small build system with a focus on speed.",
+  "name": "ninja",
   "os_whitelist": ["all"],
+  "provides": ["ninja", "build-system"],
   "repository": "https://github.com/ninja-build/ninja",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Ninja"
 }

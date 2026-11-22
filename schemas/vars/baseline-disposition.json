@@ -162,16 +162,16 @@
     "move_component_local": {
       "JETSTREAM_IMAGE": ["_lib/app-servers/jetstream/vars.schema.json"],
       "LIBSCRIPT_AZURE_RESOURCE_GROUP": [
-        "_lib/cloud-providers/azure/vars.schema.json",
-        "_lib/cloud/volume/vars.schema.json"
+        "infrastructure/providers/azure/vars.schema.json",
+        "infrastructure/resources/volume/vars.schema.json"
       ],
       "LIBSCRIPT_BUILD_KERNEL_FROM_SOURCE": ["_lib/kernel/linux/vars.schema.json"],
-      "LIBSCRIPT_DASHBOARD_DIR": ["_lib/cloud/core/vars.schema.json"],
-      "LIBSCRIPT_FETCH_FREEBSD_BASE": ["_lib/freebsd/distro/vars.schema.json"],
-      "LIBSCRIPT_FETCH_ILLUMOS_BASE": ["_lib/illumos/distro/vars.schema.json"],
-      "LIBSCRIPT_FREEBSD_BUILDWORLD": ["_lib/freebsd/distro/vars.schema.json"],
-      "LIBSCRIPT_POD_DAEMONS": ["_lib/orchestration/unikernel_pod/vars.schema.json"],
-      "LIBSCRIPT_VOLUME_NAME": ["_lib/cloud/volume/vars.schema.json"]
+      "LIBSCRIPT_DASHBOARD_DIR": ["infrastructure/resources/core/vars.schema.json"],
+      "LIBSCRIPT_FETCH_FREEBSD_BASE": ["synthesis/distro/freebsd/vars.schema.json"],
+      "LIBSCRIPT_FETCH_ILLUMOS_BASE": ["synthesis/distro/illumos/vars.schema.json"],
+      "LIBSCRIPT_FREEBSD_BUILDWORLD": ["synthesis/distro/freebsd/vars.schema.json"],
+      "LIBSCRIPT_POD_DAEMONS": ["workloads/constellations/unikernel_pod/vars.schema.json"],
+      "LIBSCRIPT_VOLUME_NAME": ["infrastructure/resources/volume/vars.schema.json"]
     }
   }
 }

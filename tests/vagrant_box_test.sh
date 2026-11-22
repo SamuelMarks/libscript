@@ -62,7 +62,7 @@ printf '[TEST] Target Box: %s (Provider: %s, Dry-run: %s)\n' "$BOX_FILE" "$PROVI
 
 if [ ! -f "$BOX_FILE" ]; then
   printf '[INFO] Box file not found; packaging box...\n'
-  "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/vagrant_box.sh" "${LIBSCRIPT_ROOT_DIR}/build/output/lfs-disk.qcow2" "$BOX_FILE" "$PROVIDER"
+  "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/vagrantfile.sh" "${LIBSCRIPT_ROOT_DIR}/build/output/lfs-disk.qcow2" "$BOX_FILE" "$PROVIDER"
 fi
 
 BOX_NAME="test-lfs-lifecycle-$$"

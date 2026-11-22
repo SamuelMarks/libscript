@@ -49,15 +49,15 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\k8s-marathon\cli.cmd" install latest >nul
+call "%LIBSCRIPT_ROOT_DIR%\infrastructure\clusters\k8s-marathon-paas\cli.cmd" install latest >nul
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\k8s-marathon\cli.cmd" start >nul
+call "%LIBSCRIPT_ROOT_DIR%\infrastructure\clusters\k8s-marathon-paas\cli.cmd" start >nul
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\topologies\k8s-marathon-paas\cli.cmd" up >nul
+call "%LIBSCRIPT_ROOT_DIR%\infrastructure\clusters\k8s-marathon-paas\cli.cmd" up >nul
 if errorlevel 1 exit /b 1
 
 for %%V in (compile submit status logs stop destroy) do (
-    call "%LIBSCRIPT_ROOT_DIR%\payloads\schedulers\kubernetes.cmd" %%V "%LIBSCRIPT_ROOT_DIR%\payloads\ai\vllm\payload.json" >nul
+    call "%LIBSCRIPT_ROOT_DIR%\workloads\schedulers\kubernetes.cmd" %%V "%LIBSCRIPT_ROOT_DIR%\workloads\payloads\ai\vllm\payload.json" >nul
     if errorlevel 1 exit /b 1
 )
 echo [PASS] Kubernetes + k8s-marathon PaaS controller live end-to-end suite verified.

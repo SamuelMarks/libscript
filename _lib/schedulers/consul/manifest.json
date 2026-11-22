@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "schedulers",
+  "description": "HashiCorp Consul service mesh, multi-datacenter service discovery, health checking, and distributed key-value store.",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "name": "consul",
+  "os_whitelist": ["all"],
+  "ports": [8500, 8600],
+  "provides": ["consul"],
+  "repository": "https://github.com/hashicorp/consul",
+  "tier": "T1",
+  "title": "HashiCorp Consul"
+}

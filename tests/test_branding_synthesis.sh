@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-SYNTH_SH="${LIBSCRIPT_ROOT_DIR}/packaging/synthesize_branding.sh"
+SYNTH_SH="${LIBSCRIPT_ROOT_DIR}/synthesis/msi/synthesize_branding.sh"
 
 printf '==> Running Universal Branding Synthesis Verification Tests...\n'
 
@@ -37,7 +37,7 @@ TEST_OUT="$(mktemp -d "${TMPDIR:-/tmp}/branding_test_XXXXXX")"
 trap 'rm -rf "$TEST_OUT"' EXIT INT TERM
 
 # Test synthesizing branding for WordPress
-"$SYNTH_SH" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress" --output-dir "$TEST_OUT"
+"$SYNTH_SH" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress" --output-dir "$TEST_OUT"
 
 [ -f "$TEST_OUT/banner_side.bmp" ] || exit 1
 [ -f "$TEST_OUT/banner_top.bmp" ] || exit 1

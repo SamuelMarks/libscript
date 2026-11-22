@@ -52,9 +52,9 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "BASE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\_lib\_common\base_vars.schema.json"
+set "BASE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\engine\schemas\base_vars.schema.json"
 if not exist "!BASE_SCHEMA!" (
-    echo [FAIL] Missing _lib\_common\base_vars.schema.json >&2
+    echo [FAIL] Missing engine\schemas\base_vars.schema.json >&2
     exit /b 1
 )
 
@@ -89,9 +89,9 @@ for %%R in (
     )
 )
 
-findstr /C:"LIBSCRIPT_HOME" "!LIBSCRIPT_ROOT_DIR!\_lib\_common\README.md" >nul 2>&1
+findstr /C:"LIBSCRIPT_HOME" "!LIBSCRIPT_ROOT_DIR!\engine\common\README.md" >nul 2>&1
 if errorlevel 1 (
-    echo [FAIL] _lib\_common\README.md missing LIBSCRIPT_HOME documentation >&2
+    echo [FAIL] engine\common\README.md missing LIBSCRIPT_HOME documentation >&2
     exit /b 1
 )
 findstr /C:"JETSTREAM_IMAGE" "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\jetstream\README.md" >nul 2>&1

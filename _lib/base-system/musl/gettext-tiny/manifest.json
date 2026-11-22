@@ -1,15 +1,16 @@
 {
-  "name": "gettext-tiny",
-  "title": "gettext-tiny",
-  "description": "Lightweight internationalization shim",
-  "provides": ["gettext-tiny"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "description": "Lightweight internationalization shim",
+  "name": "gettext-tiny",
+  "provides": ["gettext-tiny"],
+  "tier": "T2",
+  "title": "gettext-tiny",
+  "versions": ["1.0.0"]
 }

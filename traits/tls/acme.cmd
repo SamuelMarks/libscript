@@ -1,7 +1,7 @@
 @echo off
 :: # acme.cmd
 :: ## Overview
-:: Delegates public ACME TLS certificate acquisition and renewal to _lib\cloud\cert on Windows.
+:: Delegates public ACME TLS certificate acquisition and renewal to _lib\networking\netctl on Windows.
 :: ## Usage
 :: traits\tls\acme.cmd <domain_name> [email]
 

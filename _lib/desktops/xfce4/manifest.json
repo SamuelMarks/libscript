@@ -1,16 +1,17 @@
 {
-  "name": "xfce4",
-  "title": "XFCE Desktop",
-  "description": "Fast and lightweight desktop environment",
-  "provides": ["xfce4"],
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Fast and lightweight desktop environment",
+  "name": "xfce4",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["xfce4"],
+  "tier": "T2",
+  "title": "XFCE Desktop",
+  "versions": ["1.0.0"]
 }

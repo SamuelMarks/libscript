@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "erlang",
-  "title": "Erlang/OTP",
-  "description": "Concurrent, fault-tolerant functional programming language and BEAM runtime environment.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["erlang", "erl", "erlc", "beam"],
+  "description": "Concurrent, fault-tolerant functional programming language and BEAM runtime environment.",
+  "name": "erlang",
   "os_whitelist": ["all"],
+  "provides": ["erlang", "erl", "erlc", "beam"],
   "repository": "https://github.com/erlang/otp",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Erlang/OTP"
 }

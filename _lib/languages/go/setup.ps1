@@ -14,7 +14,7 @@ Execute this script to install and configure go on the local system.
 
 $ErrorActionPreference = "Stop"
 $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+. (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
 
 
 #!/usr/bin/env pwsh
@@ -39,7 +39,7 @@ if ([string]::IsNullOrEmpty($GoVersion)) {
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
-. (Join-Path $LibscriptRootDir "_lib\_common\versioning.ps1")
+. (Join-Path $LibscriptRootDir "engine\common\versioning.ps1")
 
 # ## Resolve-ExactVersion
 # Resolves the requested version identifier to an exact release version string.
@@ -96,7 +96,7 @@ switch ($Action) {
     }
     
     "start" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_go" }
         if (Get-Command Libscript-Service -ErrorAction SilentlyContinue) {
@@ -105,7 +105,7 @@ switch ($Action) {
         break
     }
     "install-service" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_go" }
         if (Get-Command Libscript-InstallService -ErrorAction SilentlyContinue) {
@@ -114,7 +114,7 @@ switch ($Action) {
         break
     }
     "uninstall-service" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_go" }
         if (Get-Command Libscript-UninstallService -ErrorAction SilentlyContinue) {

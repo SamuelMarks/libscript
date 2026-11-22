@@ -137,7 +137,7 @@ for %%O in (ansible buildah cilium consul containerd cri-o helm-controller k3s k
 )
 
 for %%C in (oci ovh) do (
-    if exist "_lib\cloud-providers\%%C\cli.cmd" (
+    if exist "infrastructure\providers\%%C\cli.cmd" (
         call :pass_check "cloud-providers\%%C has Windows cli.cmd companion"
     ) else (
         call :fail_check "cloud-providers\%%C missing Windows cli.cmd companion"
@@ -146,7 +146,7 @@ for %%C in (oci ovh) do (
 
 echo === 2. Verifying Windows Package Mapper Resolution ===
 set "PKG_MGR=winget"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package terraform
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mapper.cmd" :map_package terraform
 if "!MAPPED_PKG!"=="Hashicorp.Terraform" (
     call :pass_check "pkg_mapper.cmd maps terraform -> Hashicorp.Terraform on winget"
 ) else (
@@ -154,7 +154,7 @@ if "!MAPPED_PKG!"=="Hashicorp.Terraform" (
 )
 
 set "PKG_MGR=winget"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package oci
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mapper.cmd" :map_package oci
 if "!MAPPED_PKG!"=="Oracle.OCICLI" (
     call :pass_check "pkg_mapper.cmd maps oci -> Oracle.OCICLI on winget"
 ) else (
@@ -196,7 +196,7 @@ if not errorlevel 1 (
 echo === 4. Verifying OCI ^& OVHcloud DRY_RUN Cloud Drivers ===
 set "DRY_RUN=true"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\oci\cli.cmd" node ip demo-oci-vm > "!TEST_WS!\oci_ip.txt" 2>nul
+call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\oci\cli.cmd" node ip demo-oci-vm > "!TEST_WS!\oci_ip.txt" 2>nul
 findstr /C:"203.0.113.21" "!TEST_WS!\oci_ip.txt" >nul 2>&1
 if not errorlevel 1 (
     call :pass_check "oci\cli.cmd node ip DRY_RUN returned 203.0.113.21"
@@ -205,7 +205,7 @@ if not errorlevel 1 (
 )
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\ovh\cli.cmd" node ip demo-ovh-vm > "!TEST_WS!\ovh_ip.txt" 2>nul
+call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\ovh\cli.cmd" node ip demo-ovh-vm > "!TEST_WS!\ovh_ip.txt" 2>nul
 findstr /C:"203.0.113.22" "!TEST_WS!\ovh_ip.txt" >nul 2>&1
 if not errorlevel 1 (
     call :pass_check "ovh\cli.cmd node ip DRY_RUN returned 203.0.113.22"

@@ -1,10 +1,10 @@
 #!/bin/sh
 # ## Overview
 # End-to-end live integration test for Kubernetes (`kubernetes`, `k0s`, `k8s-thw`) + `k8s-marathon`
-# PaaS controller, `topologies/k8s-marathon-paas`, and `payloads/schedulers/kubernetes.sh`.
+# PaaS controller, `infrastructure/clusters/k8s-marathon-paas`, and `workloads/schedulers/kubernetes.sh`.
 # Verifies live daemon startup, `/ping` = `pong`, `/v2/apps` reconciliation into Kubernetes
 # `Deployment`, `StatefulSet`, `Job`, `Service`, and `Ingress` resources, Marathon-equivalent
-# REST/CLI parity with `payloads/schedulers/mesos.sh`, and 2x idempotency across stateless web,
+# REST/CLI parity with `workloads/schedulers/mesos.sh`, and 2x idempotency across stateless web,
 # stateful DB/cache, AI inference/training, and full web application workloads.
 # ## Usage
 # ./tests/test_k8s_marathon_e2e.sh
@@ -44,21 +44,21 @@ export LIBSCRIPT_TOPOLOGY_STATE_FILE="${E2E_TMP}/k8s-paas.state.json"
 
 # 1. Install and start k8s-marathon controller (2x idempotent)
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/k8s-marathon/cli.sh" install latest >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" install latest >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/k8s-marathon/cli.sh" install latest >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" install latest >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/k8s-marathon/cli.sh" start >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" start >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/k8s-marathon/cli.sh" start >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" start >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/k8s-marathon/cli.sh" status | jq -e '.ping == "pong" and .elected == true' >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" status | jq -e '.ping == "pong" and .elected == true' >/dev/null
 
-# 2. Bring up topologies/k8s-marathon-paas (2x idempotent)
+# 2. Bring up infrastructure/clusters/k8s-marathon-paas (2x idempotent)
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" up >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" up >/dev/null
 unset SCRIPT_NAME || true
-sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" up >/dev/null
+sh "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/k8s-marathon-paas/cli.sh" up >/dev/null
 jq -e '.status == "HEALTHY"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
 
 # 3. Synthesize Stateless Web, Stateful DB, and Full Web App payloads
@@ -99,8 +99,8 @@ cat <<'EOF' > "${E2E_TMP}/webapp-stack.json"
 EOF
 
 # 4. Verify Marathon-equivalent parity between kubernetes.sh and mesos.sh
-K8S_MANIFEST="$(sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" compile "${E2E_TMP}/stateless-web.json")"
-MESOS_MANIFEST="$(sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/mesos.sh" compile "${E2E_TMP}/stateless-web.json")"
+K8S_MANIFEST="$(sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" compile "${E2E_TMP}/stateless-web.json")"
+MESOS_MANIFEST="$(sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/mesos.sh" compile "${E2E_TMP}/stateless-web.json")"
 [ "$(printf '%s
 ' "$K8S_MANIFEST" | jq -r '.marathon_equivalent.id')" = "$(printf '%s
 ' "$MESOS_MANIFEST" | jq -r '.id')" ]
@@ -115,21 +115,21 @@ MESOS_MANIFEST="$(sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/mesos.sh" compil
 ' "$MESOS_MANIFEST" | jq -r '.instances')" ]
 
 # 5. Execute all 6 canonical scheduler verbs across Stateless, Stateful, AI, and WebApp payloads (2x idempotent)
-for PF in "${E2E_TMP}/stateless-web.json" "${E2E_TMP}/stateful-db.json" "${E2E_TMP}/webapp-stack.json" "${LIBSCRIPT_ROOT_DIR}/payloads/ai/vllm/payload.json" "${LIBSCRIPT_ROOT_DIR}/payloads/ai/ollama/payload.json" "${LIBSCRIPT_ROOT_DIR}/payloads/ai/jetstream/payload.json" "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gke-xpk-inference/payload.json" "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gke-xpk-training/payload.json"; do
+for PF in "${E2E_TMP}/stateless-web.json" "${E2E_TMP}/stateful-db.json" "${E2E_TMP}/webapp-stack.json" "${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/vllm/payload.json" "${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/ollama/payload.json" "${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/jetstream/payload.json" "${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/gke-xpk-inference/payload.json" "${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/gke-xpk-training/payload.json"; do
   WID="$(jq -r '.name' "$PF")"
-  OUT1="$(sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" compile "$PF")"
-  OUT2="$(sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" compile "$PF")"
+  OUT1="$(sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" compile "$PF")"
+  OUT2="$(sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" compile "$PF")"
   [ "$OUT1" = "$OUT2" ]
 
-  sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" submit "$PF" | jq -e '.state == "TASK_RUNNING"' >/dev/null
-  sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" submit "$PF" | jq -e '.state == "TASK_RUNNING"' >/dev/null
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" submit "$PF" | jq -e '.state == "TASK_RUNNING"' >/dev/null
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" submit "$PF" | jq -e '.state == "TASK_RUNNING"' >/dev/null
   [ -f "${K8S_MARATHON_STATE_DIR}/v2/apps/${WID}.json" ]
 
-  sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" status "$WID" | jq -e '.state == "TASK_RUNNING"' >/dev/null
-  sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" logs "$WID" | jq -e '.status == "ok"' >/dev/null
-  sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" stop "$WID" | jq -e '.state == "TASK_KILLED"' >/dev/null
-  sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" destroy "$WID" | jq -e '.status == "ok"' >/dev/null
-  sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/kubernetes.sh" destroy "$WID" | jq -e '.status == "ok"' >/dev/null
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" status "$WID" | jq -e '.state == "TASK_RUNNING"' >/dev/null
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" logs "$WID" | jq -e '.status == "ok"' >/dev/null
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" stop "$WID" | jq -e '.state == "TASK_KILLED"' >/dev/null
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" destroy "$WID" | jq -e '.status == "ok"' >/dev/null
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/kubernetes.sh" destroy "$WID" | jq -e '.status == "ok"' >/dev/null
 done
 
 printf '[PASS] Kubernetes + k8s-marathon PaaS controller live end-to-end suite verified.

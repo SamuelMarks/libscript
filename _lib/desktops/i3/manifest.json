@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "i3",
-  "title": "i3 Tiling Window Manager",
-  "description": "Dynamic tiling X11 window manager (i3, i3-msg, i3bar) designed for keyboard-driven workflows.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "provides": ["i3", "i3wm", "i3-msg"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "description": "Dynamic tiling X11 window manager (i3, i3-msg, i3bar) designed for keyboard-driven workflows.",
+  "name": "i3",
   "os_blacklist": ["windows", "macos"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "provides": ["i3", "i3wm", "i3-msg"],
   "repository": "https://github.com/i3/i3",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T2",
+  "title": "i3 Tiling Window Manager"
 }

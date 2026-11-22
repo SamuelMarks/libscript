@@ -27,7 +27,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -z "${UNAME:-}" ] || [ -z "${ARCH:-}" ] || [ -z "${UNAME_LOWER:-}" ] || [ -z "${UNAME_A:-}" ]; then
   _edgw_oi_this="${THIS_FILE}"
   _edgw_oi_dir="${SCRIPT_DIR}"
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}" 2>/dev/null

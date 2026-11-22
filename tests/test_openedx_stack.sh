@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-OPENEDX_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx"
+OPENEDX_DIR="${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx"
 
 printf '==> Testing Open edX CLI Router...\n'
 "${OPENEDX_DIR}/cli.sh" help >/dev/null

@@ -1,0 +1,499 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/engine/schemas/manifest.schema.json",
+  "title": "LibScript Component Manifest",
+  "description": "Static metadata for a LibScript component",
+  "type": "object",
+  "required": ["name", "tier", "provides", "capabilities"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema URI reference validating this component manifest."
+    },
+    "name": {
+      "type": "string",
+      "description": "Unique identifier for the component (e.g. nodejs)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable title (e.g. Node.js)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the component"
+    },
+    "repository": {
+      "type": "string",
+      "description": "Canonical upstream repository URL for the component"
+    },
+    "provides": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Provided capability or alias identifier"
+      },
+      "description": "Capabilities or aliases provided by this component"
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Explicit lifecycle and architectural capability facets implemented by this component.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "userland-package",
+          "service-daemon",
+          "sysroot-package",
+          "sysroot-library",
+          "cross-toolchain",
+          "kernel-image",
+          "bootloader"
+        ],
+        "description": "Canonical component capability identifier."
+      }
+    },
+    "sub_artifacts": {
+      "type": "object",
+      "description": "Optional sub-artifact facets such as cross-compilation target standard libraries or toolchain extensions managed per installed version.",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "description": "Supported cross-compilation target triples installable via target-add.",
+          "items": {
+            "type": "string",
+            "description": "Canonical target triple identifier (e.g. wasm32-unknown-unknown, aarch64-unknown-none)."
+          }
+        },
+        "components": {
+          "type": "array",
+          "description": "Supported optional toolchain sub-components installable via component-add.",
+          "items": {
+            "type": "string",
+            "description": "Toolchain sub-component identifier (e.g. clippy, rustfmt, llvm-tools-preview)."
+          }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Conflicting component identifier"
+      },
+      "description": "Other components that conflict with this one"
+    },
+    "os_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Supported operating system name or 'all'"
+      },
+      "default": ["all"],
+      "description": "List of operating systems supported by this component (or ['all'])"
+    },
+    "os_blacklist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Unsupported operating system name"
+      },
+      "default": [],
+      "description": "List of operating systems explicitly unsupported by this component"
+    },
+    "arch_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Supported CPU architecture name or 'all'"
+      },
+      "default": ["all"],
+      "description": "List of CPU architectures supported by this component (or ['all'])"
+    },
+    "arch_blacklist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Unsupported CPU architecture name"
+      },
+      "default": [],
+      "description": "List of CPU architectures explicitly unsupported by this component"
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Supported version string"
+      },
+      "description": "List of supported versions"
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "description": "TCP/UDP port number"
+      },
+      "description": "Default ports used by the component"
+    },
+    "adapter_only": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indicates whether this component is an adapter/API-only wrapper that does not provide binary install/env lifecycles"
+    },
+    "requires_database": {
+      "type": "object",
+      "description": "Declarative database dependency requirement for the component or stack",
+      "required": ["engine"],
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": ["mysql", "mariadb", "postgres", "mongodb", "redis", "sqlite"],
+          "description": "Required database engine type"
+        },
+        "min_version": {
+          "type": "string",
+          "description": "Minimum semantic version string required"
+        },
+        "allow_shared_instance": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether component can share an active database server with peer stacks"
+        },
+        "default_schema_name": {
+          "type": "string",
+          "description": "Default schema or keyspace name for tenant isolation"
+        },
+        "default_user_name": {
+          "type": "string",
+          "description": "Default database user account identifier"
+        },
+        "default_port": {
+          "type": "integer",
+          "description": "Default listening port for database engine"
+        },
+        "character_set": {
+          "type": "string",
+          "default": "utf8mb4",
+          "description": "Required character encoding"
+        },
+        "collation": {
+          "type": "string",
+          "description": "Required database collation sequence"
+        }
+      }
+    },
+    "requires_databases": {
+      "type": "array",
+      "description": "Array of declarative database dependency requirements for complex multi-engine stacks",
+      "items": {
+        "type": "object",
+        "description": "A single database requirement",
+        "required": ["engine"],
+        "properties": {
+          "engine": {
+            "type": "string",
+            "enum": [
+              "mysql",
+              "mariadb",
+              "postgres",
+              "mongodb",
+              "redis",
+              "sqlite",
+              "meilisearch",
+              "valkey"
+            ],
+            "description": "Required database engine type"
+          },
+          "min_version": {
+            "type": "string",
+            "description": "Minimum semantic version string required"
+          },
+          "allow_shared_instance": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether component can share an active database server with peer stacks"
+          },
+          "default_schema_name": {
+            "type": "string",
+            "description": "Default schema or keyspace name for tenant isolation"
+          },
+          "default_user_name": {
+            "type": "string",
+            "description": "Default database user account identifier"
+          },
+          "default_port": {
+            "type": "integer",
+            "description": "Default listening port for database engine"
+          },
+          "character_set": {
+            "type": "string",
+            "default": "utf8mb4",
+            "description": "Required character encoding"
+          },
+          "collation": {
+            "type": "string",
+            "description": "Required database collation sequence"
+          }
+        }
+      }
+    },
+    "category": {
+      "type": "string",
+      "description": "Component classification group within the LibScript catalog",
+      "enum": [
+        "app-servers",
+        "audio",
+        "base-system",
+        "bootloaders",
+        "caches",
+        "containers",
+        "databases",
+        "desktops",
+        "display-managers",
+        "display-servers",
+        "git-servers",
+        "graphics",
+        "iac",
+        "init-systems",
+        "kernel",
+        "languages",
+        "logging",
+        "message-brokers",
+        "networking",
+        "package-managers",
+        "runtimes",
+        "schedulers",
+        "search",
+        "security",
+        "storage-layers",
+        "toolchains",
+        "unikernels",
+        "utilities",
+        "virtualization",
+        "web-servers"
+      ]
+    },
+    "license": {
+      "type": "string",
+      "description": "Standard SPDX license identifier expression (e.g. 'GPL-2.0-only', 'BSD-3-Clause', 'Apache-2.0', 'MIT', 'SSPL-1.0', 'Python-2.0')"
+    },
+    "license_name": {
+      "type": "string",
+      "description": "Human-readable full name of the software license (e.g. 'GNU General Public License v2.0 only')"
+    },
+    "license_file": {
+      "type": "string",
+      "description": "Relative filesystem path to component's local license or copying terms document"
+    },
+    "license_url": {
+      "type": "string",
+      "description": "Authoritative URI pointing to upstream legal terms or repository license document"
+    },
+    "copyright": {
+      "type": "string",
+      "description": "Authoritative copyright notice stating ownership entities and foundation authors"
+    },
+    "variants": {
+      "type": "object",
+      "description": "Standardized USE flag feature variants and compilation flags supported by this component",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "description": "Configuration specification for a specific USE variant",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Detailed explanation of feature flag"
+            },
+            "default_enabled": {
+              "type": "boolean",
+              "description": "Whether this variant is enabled by default"
+            },
+            "build_args": {
+              "type": "object",
+              "description": "Structured compilation and configuration flags injected when variant is enabled",
+              "properties": {
+                "configure_args": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Autotools ./configure argument string"
+                  },
+                  "description": "Autotools configure arguments"
+                },
+                "meson_args": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Meson build argument string"
+                  },
+                  "description": "Meson setup/configure arguments"
+                },
+                "cmake_args": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "CMake define argument string"
+                  },
+                  "description": "CMake build arguments"
+                },
+                "cflags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "C compiler flag string"
+                  },
+                  "description": "Additional C compiler flags"
+                },
+                "ldflags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Linker flag string"
+                  },
+                  "description": "Additional linker flags"
+                }
+              }
+            },
+            "requires_variants": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Required variant constraint (e.g. package[variant] or variant)"
+              },
+              "description": "Inter-package or intra-package variant dependencies required when this variant is active"
+            },
+            "conflicts_variants": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Incompatible variant name"
+              },
+              "description": "Incompatible or conflicting variant flags"
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Dependency requirements categorized by build lifecycle phase and criticality tier",
+      "properties": {
+        "host_tools": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Component or tool required on host (e.g. bison, meson)"
+          },
+          "description": "Tools needed on build host during bootstrap and compilation"
+        },
+        "build_deps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Component required in target sysroot headers/libs during build"
+          },
+          "description": "Headers and libraries needed in target sysroot during build"
+        },
+        "runtime_deps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Component required at runtime in rootfs"
+          },
+          "description": "Programs or daemons required in target rootfs at runtime"
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["required", "recommended", "optional"],
+          "description": "Criticality tier of this component in standard stacks"
+        }
+      }
+    },
+    "stateful": {
+      "type": "boolean",
+      "description": "Indicates whether this component persists mutable application or database state requiring transactional backup and upgrade hooks"
+    },
+    "multitenant": {
+      "type": "boolean",
+      "description": "Indicates whether this physical component can host multiple isolated logical tenants via provision_tenant and deprovision_tenant hooks"
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Declaration of supported physical instance and logical multi-tenant lifecycle hooks",
+      "properties": {
+        "physical": {
+          "type": "array",
+          "description": "List of physical instance lifecycle hooks implemented by this component",
+          "items": {
+            "type": "string",
+            "enum": [
+              "configure",
+              "probe",
+              "announce",
+              "log_stream",
+              "metrics",
+              "backup",
+              "restore",
+              "upgrade",
+              "rollback",
+              "maintenance"
+            ],
+            "description": "Physical lifecycle hook identifier"
+          }
+        },
+        "logical": {
+          "type": "array",
+          "description": "List of logical multi-tenant lifecycle hooks implemented by this component",
+          "items": {
+            "type": "string",
+            "enum": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+            "description": "Logical multi-tenant hook identifier"
+          }
+        },
+        "probe_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Default timeout in seconds when polling hooks/probe readiness"
+        },
+        "metrics_scrape_path": {
+          "type": "string",
+          "description": "Default HTTP URI path exposed for Prometheus/OpenTelemetry metrics scraping"
+        }
+      }
+    },
+    "process_model": {
+      "type": "string",
+      "enum": ["single-process", "multiprocess-fork", "multi-service-stack", "library"],
+      "description": "Runtime process execution model governing single-address-space unikernel compatibility vs multi-process fork/exec requirements."
+    },
+    "unikernel_support": {
+      "type": "array",
+      "description": "List of unikernel frameworks validated or adaptable for running this component directly or inside a decomposed appliance pod.",
+      "items": {
+        "type": "string",
+        "enum": ["unikraft", "nanos", "osv", "rumprun", "mirageos"],
+        "description": "Supported unikernel framework identifier."
+      }
+    },
+    "rtos_support": {
+      "type": "array",
+      "description": "List of real-time operating systems (Zephyr RTOS, FreeRTOS) capable of linking or hosting this component natively.",
+      "items": {
+        "type": "string",
+        "enum": ["zephyr", "freertos"],
+        "description": "Supported RTOS kernel identifier."
+      }
+    },
+    "memory_footprint_class": {
+      "type": "string",
+      "enum": ["mcu-sram-64k", "mcu-sram-512k", "mmu-less-mb", "mmu-posix"],
+      "description": "Minimum target RAM/MMU capability class required by this component for static RTOS constraint validation."
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["T1", "T2"],
+      "description": "Architectural recipe tier: T1 for unprivileged userland packages and single-engine daemons, or T2 for rootfs, sysroot, kernel, bootloader, and OS-plumbing packages."
+    }
+  }
+}

@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gitea",
-  "provides": ["git-server", "gitea"],
-  "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "ports": ["3000", "2222"],
-  "title": "Gitea",
-  "description": "LibScript component for GITEA",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "git-servers",
+  "conflicts": [],
+  "description": "LibScript component for GITEA",
+  "name": "gitea",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "ports": ["3000", "2222"],
+  "provides": ["git-server", "gitea"],
   "repository": "https://github.com/go-gitea/gitea",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "Gitea"
 }

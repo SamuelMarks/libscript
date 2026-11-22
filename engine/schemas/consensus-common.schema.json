@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/engine/schemas/consensus-common.schema.json",
+  "title": "LibScript T0 Consensus, Lease & Fencing Common Definitions",
+  "description": "Shared T0 quorum, lease-locking, node-pool, and split-brain fencing schema definitions consumed by both T4 cluster substrates and T5 stateful service constellations.",
+  "$defs": {
+    "consensusConfig": {
+      "type": "object",
+      "description": "Distributed quorum, leader-election, and split-brain fencing policy",
+      "required": ["protocol", "quorum_size", "fencing_mode"],
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "raft",
+            "etcd",
+            "patroni",
+            "redis-cluster",
+            "zookeeper",
+            "minio-erasure",
+            "managed-control-plane",
+            "none"
+          ],
+          "description": "Consensus or replication state-machine protocol governing leader election and membership"
+        },
+        "quorum_size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum number of voting nodes required to maintain write quorum"
+        },
+        "lease_ttl_seconds": {
+          "type": "integer",
+          "minimum": 5,
+          "default": 30,
+          "description": "Distributed lock lease time-to-live in seconds before automatic expiration"
+        },
+        "lock_backend": {
+          "type": "string",
+          "enum": ["local", "s3", "gs", "azure", "etcd"],
+          "default": "local",
+          "description": "Storage backend coordinating atomic topology mutation leases"
+        },
+        "fencing_mode": {
+          "type": "string",
+          "enum": [
+            "cloud-api-poweroff",
+            "vpc-nic-detach",
+            "storage-lease-revoke",
+            "ssh-systemd-stop",
+            "none"
+          ],
+          "description": "Split-brain isolation mechanism invoked before promoting a replacement leader"
+        }
+      }
+    },
+    "lifecycleHooks": {
+      "type": "object",
+      "description": "Ordered cluster or constellation choreography command hooks",
+      "properties": {
+        "pre_bootstrap": {
+          "type": "array",
+          "description": "Commands executed on each node prior to cluster formation",
+          "items": {
+            "type": "string",
+            "description": "Shell command or LibScript CLI invocation"
+          }
+        },
+        "leader_init": {
+          "type": "array",
+          "description": "Commands executed on the initial primary/leader node to initialize quorum",
+          "items": {
+            "type": "string",
+            "description": "Shell command or LibScript CLI invocation"
+          }
+        },
+        "follower_join": {
+          "type": "array",
+          "description": "Commands executed on follower/worker nodes to join the initialized leader",
+          "items": {
+            "type": "string",
+            "description": "Shell command or LibScript CLI invocation"
+          }
+        },
+        "post_cluster": {
+          "type": "array",
+          "description": "Verification or readiness commands executed after quorum converges",
+          "items": {
+            "type": "string",
+            "description": "Shell command or LibScript CLI invocation"
+          }
+        },
+        "pre_drain": {
+          "type": "array",
+          "description": "Graceful connection/workload drain commands run before stopping or scaling in a node",
+          "items": {
+            "type": "string",
+            "description": "Shell command or LibScript CLI invocation"
+          }
+        },
+        "post_destroy": {
+          "type": "array",
+          "description": "Cleanup commands executed after cluster/constellation teardown completes",
+          "items": {
+            "type": "string",
+            "description": "Shell command or LibScript CLI invocation"
+          }
+        }
+      }
+    }
+  }
+}

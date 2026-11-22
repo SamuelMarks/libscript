@@ -45,8 +45,8 @@ mkdir -p "$OUT_BASE/apk" "$OUT_BASE/deb" "$OUT_BASE/rpm"
 
 # 1. Debian Round-Trip
 printf '[TEST-ROUNDTRIP] Testing Debian (.deb) package packaging and indexing...\n'
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers/build_deb.sh" "test-deb" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/deb"
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen/deb_index.sh" "$OUT_BASE/deb" "stable" "amd64" "main"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/build_deb.sh" "test-deb" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/deb"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/repogen/deb_index.sh" "$OUT_BASE/deb" "stable" "amd64" "main"
 
 DEB_FILE="$OUT_BASE/deb/pool/main/test-deb_1.0.0_amd64.deb"
 [ -f "$DEB_FILE" ] || DEB_FILE="$OUT_BASE/deb/test-deb_1.0.0_amd64.deb"
@@ -58,8 +58,8 @@ printf '[PASS] Debian package synthesized and verified.\n'
 
 # 2. Alpine Round-Trip
 printf '[TEST-ROUNDTRIP] Testing Alpine (.apk) package packaging and indexing...\n'
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers/build_apk.sh" "test-apk" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/apk"
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen/apk_index.sh" "$OUT_BASE/apk" "x86_64" "main"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/build_apk.sh" "test-apk" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/apk"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/repogen/apk_index.sh" "$OUT_BASE/apk" "x86_64" "main"
 
 APK_FILE="$OUT_BASE/apk/main/x86_64/test-apk-1.0.0.apk"
 [ -f "$APK_FILE" ] || APK_FILE="$OUT_BASE/apk/main/x86_64/test-apk-x86_64-1.0.0-online.apk"
@@ -71,8 +71,8 @@ printf '[PASS] Alpine package synthesized and indexed successfully.\n'
 
 # 3. Red Hat Round-Trip
 printf '[TEST-ROUNDTRIP] Testing Red Hat (.rpm) package packaging and indexing...\n'
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers/build_rpm.sh" "test-rpm" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/rpm"
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen/rpm_index.sh" "$OUT_BASE/rpm"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/build_rpm.sh" "test-rpm" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/rpm"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/repogen/rpm_index.sh" "$OUT_BASE/rpm"
 
 RPM_FILE="$OUT_BASE/rpm/Packages/test-rpm-1.0.0-1.x86_64.rpm"
 [ -f "$RPM_FILE" ] || RPM_FILE="$OUT_BASE/rpm/Packages/test-rpm-x86_64-1.0.0-online.rpm"
@@ -85,9 +85,9 @@ printf '[PASS] Red Hat package synthesized and repodata generated.\n'
 
 # 4. End-to-end Idempotency Test (repeat without mutation)
 printf '[TEST-ROUNDTRIP] Testing repeated execution idempotency...\n'
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers/build_deb.sh" "test-deb" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/deb"
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers/build_apk.sh" "test-apk" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/apk"
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers/build_rpm.sh" "test-rpm" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/rpm"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/build_deb.sh" "test-deb" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/deb"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/build_apk.sh" "test-apk" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/apk"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/build_rpm.sh" "test-rpm" "1.0.0" "$TEST_DIR/stage" "$OUT_BASE/rpm"
 
 rm -rf "$TEST_DIR"
 printf '[OK] Package manager round-trip test completed successfully with 100%% idempotency.\n'

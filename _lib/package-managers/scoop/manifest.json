@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "scoop",
-  "provides": ["scoop"],
-  "os_whitelist": ["windows"],
-  "title": "Scoop (`_bootstrap/scoop`)",
-  "description": "This document describes the **Scoop** bootstrap component within the LibScript ecosystem. Scoop is a command-line installer for Windows that eliminates permission popup windows and hides GUI wizard dialogs.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "This document describes the **Scoop** bootstrap component within the LibScript ecosystem. Scoop is a command-line installer for Windows that eliminates permission popup windows and hides GUI wizard dialogs.",
+  "name": "scoop",
+  "os_whitelist": ["windows"],
+  "provides": ["scoop"],
+  "tier": "T1",
+  "title": "Scoop (`_bootstrap/scoop`)"
 }

@@ -61,7 +61,7 @@ set "LIBSCRIPT_HOME=!_TEST_TMP!\home\.libscript"
 echo {"deps":{"nodejs":"20.11.0","postgres":"17","python":"3.12","uv":"latest"}} > "!_TEST_TMP!\app\libscript.json"
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!_TEST_TMP!\app\libscript.json"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\env_printer.cmd" --hydrate "!_TEST_TMP!\app\libscript.json"
 
 if not "!LIBSCRIPT_VERSION!"=="" (
     echo [FAIL] LIBSCRIPT_VERSION leaked after manifest hydration: !LIBSCRIPT_VERSION! 1>&2

@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh" "_lib/_common/source_builder.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/versioning.sh" "engine/common/source_builder.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -164,10 +164,10 @@ case "$ACTION" in
       libscript_symlink_alias "nginx" "${NGINX_VERSION}" "${EXACT_VERSION}"
 
     fi
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/hw_tune.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/hw_tune.sh"
       # shellcheck disable=SC1090,SC1091
-      . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+      . "${LIBSCRIPT_ROOT_DIR}/engine/common/hw_tune.sh"
       unset SCRIPT_NAME || true
       libscript_apply_hardware_tuning "nginx" || true
     fi

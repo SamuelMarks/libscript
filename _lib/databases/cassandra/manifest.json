@@ -1,16 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cassandra",
-  "title": "Apache Cassandra",
-  "description": "Distributed wide-column NoSQL database designed to handle large amounts of data across commodity servers with high availability.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["cassandra", "wide-column-store", "database"],
-  "os_whitelist": ["all"],
-  "ports": [9042, 7000],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/apache/cassandra",
+  "description": "Distributed wide-column NoSQL database designed to handle large amounts of data across commodity servers with high availability.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +18,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "cassandra",
+  "os_whitelist": ["all"],
+  "ports": [9042, 7000],
+  "provides": ["cassandra", "wide-column-store", "database"],
+  "repository": "https://github.com/apache/cassandra",
+  "stateful": true,
+  "tier": "T1",
+  "title": "Apache Cassandra"
 }

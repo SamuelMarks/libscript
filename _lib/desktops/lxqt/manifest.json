@@ -1,16 +1,17 @@
 {
-  "name": "lxqt",
-  "title": "LXQt Desktop",
-  "description": "Lightweight Qt-based desktop environment",
-  "provides": ["lxqt"],
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Lightweight Qt-based desktop environment",
+  "name": "lxqt",
   "os_blacklist": ["windows", "sunos", "rhel", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["lxqt"],
+  "tier": "T2",
+  "title": "LXQt Desktop",
+  "versions": ["1.0.0"]
 }

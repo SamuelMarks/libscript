@@ -52,7 +52,7 @@ goto :find_root
 if "%PYTHON_VERSION%"=="" set "_PY_VERSION_UNPINNED=1"
 if /i "%PYTHON_VERSION%"=="latest" set "_PY_VERSION_UNPINNED=1"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "python"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "python"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%USERPROFILE%\.libscript"

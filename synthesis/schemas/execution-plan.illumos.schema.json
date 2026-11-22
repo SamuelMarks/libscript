@@ -1,0 +1,325 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/synthesis/schemas/execution-plan.illumos.schema.json",
+  "title": "LibScript Illumos Distribution Profile Specification",
+  "description": "Declarative schema validating custom illumos distribution profiles with selectable init systems, desktop environments, display servers, and ZFS layouts.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile_name",
+    "target",
+    "init_system",
+    "display",
+    "desktop",
+    "storage"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "./execution-plan-common.schema.json#/$defs/semver_string",
+      "description": "Semantic schema version identifier (e.g. 1.0.0)"
+    },
+    "profile_name": {
+      "$ref": "./execution-plan-common.schema.json#/$defs/profile_identifier",
+      "description": "Unique profile identifier for the illumos distribution"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of the profile intent and hardware configuration"
+    },
+    "illumos_version": {
+      "type": "string",
+      "description": "Target release string or userland release (e.g. r151048, hipster-2024, m30)"
+    },
+    "target": {
+      "type": "object",
+      "description": "Processor architecture and operating system runtime environment",
+      "required": ["arch", "os_family"],
+      "properties": {
+        "arch": {
+          "type": "string",
+          "enum": ["amd64", "x86_64"],
+          "description": "Instruction set architecture (illumos is 64-bit x86)"
+        },
+        "os_family": {
+          "type": "string",
+          "enum": ["sunos", "illumos"],
+          "description": "Operating system kernel family"
+        },
+        "flavor": {
+          "type": "string",
+          "enum": ["omnios", "openindiana", "tribblix", "illumos-gate"],
+          "description": "Target illumos distribution flavor or userland upstream"
+        },
+        "libc": {
+          "type": "string",
+          "enum": ["sunos-libc"],
+          "description": "Standard C runtime library implementation"
+        }
+      }
+    },
+    "init_system": {
+      "type": "object",
+      "description": "Init system supervisor and service management configuration",
+      "required": ["provider"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["smf", "runit", "s6", "dinit", "inittab-sysv"],
+          "description": "Service supervisor provider (default: native illumos SMF)"
+        },
+        "milestone": {
+          "type": "string",
+          "description": "Default SMF boot milestone (e.g. svc:/milestone/multi-user:default)"
+        },
+        "services_enabled": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of system services to enable at boot"
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "description": "Display protocol and graphics driver setup",
+      "required": ["protocol"],
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": ["none", "x11", "wayland"],
+          "description": "Display server protocol (none for headless, x11 for Xorg)"
+        },
+        "graphics_driver": {
+          "type": "string",
+          "enum": ["none", "vesa", "modesetting", "cirrus", "virtio"],
+          "description": "Video driver configuration"
+        }
+      }
+    },
+    "desktop": {
+      "type": "object",
+      "description": "Desktop environment and display manager setup",
+      "required": ["environment", "display_manager"],
+      "properties": {
+        "environment": {
+          "type": "string",
+          "enum": ["none", "mate", "xfce4", "cde", "openbox", "fluxbox", "i3", "dwm"],
+          "description": "User desktop session environment or window manager"
+        },
+        "display_manager": {
+          "type": "string",
+          "enum": ["none", "lightdm", "slim", "xdm", "dtlogin"],
+          "description": "Graphical login display manager (or none for console ttymon)"
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "description": "Audio driver and sound server subsystem",
+      "properties": {
+        "subsystem": {
+          "type": "string",
+          "enum": ["none", "boomer", "oss", "pulseaudio", "pipewire"],
+          "description": "Audio architecture (boomer is native Solaris/illumos kernel audio)"
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Root pool storage layout, ZFS datasets, and bootloader",
+      "required": ["filesystem", "bootloader", "pool_name"],
+      "properties": {
+        "filesystem": {
+          "type": "string",
+          "enum": ["zfs"],
+          "description": "Primary filesystem type (ZFS is standard for illumos)"
+        },
+        "pool_name": {
+          "type": "string",
+          "description": "Root ZFS storage pool name (typically rpool)"
+        },
+        "bootloader": {
+          "type": "string",
+          "enum": ["illumos-loader", "grub"],
+          "description": "Bootloader implementation"
+        },
+        "disk_size_gib": {
+          "type": "integer",
+          "minimum": 5,
+          "description": "Default virtual disk size in GiB"
+        },
+        "compression": {
+          "type": "string",
+          "enum": ["on", "off", "lz4", "gzip"],
+          "description": "Root pool ZFS dataset compression algorithm"
+        }
+      }
+    },
+    "package_manager": {
+      "type": "object",
+      "description": "Package manager and repository configuration",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["ips", "pkgin", "zap"],
+          "description": "Package management tool (IPS pkg, pkgsrc pkgin, or Tribblix zap)"
+        },
+        "publisher_url": {
+          "type": "string",
+          "description": "Primary package publisher URI"
+        },
+        "catalog": {
+          "type": "string",
+          "description": "Repository catalog or branch identifier"
+        }
+      }
+    },
+    "users": {
+      "type": "array",
+      "description": "User accounts to provision in the sysroot",
+      "items": {
+        "type": "object",
+        "required": ["username"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Login username"
+          },
+          "shell": {
+            "type": "string",
+            "description": "User login shell path"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Supplementary group memberships"
+          },
+          "rbac_profiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Illumos RBAC execution profile names"
+          },
+          "sudo": {
+            "type": "boolean",
+            "description": "Grant administrative privileges via sudo/doas"
+          },
+          "ssh_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Public SSH keys installed into authorized_keys"
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "Network configuration and interface management",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "System network hostname"
+        },
+        "dhcp": {
+          "type": "boolean",
+          "description": "Enable DHCP client on primary interface"
+        },
+        "interface_strategy": {
+          "type": "string",
+          "enum": ["ipadm", "nwam"],
+          "description": "Network interface configuration mechanism"
+        },
+        "dns_servers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Upstream DNS nameservers for resolv.conf"
+        }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "IPS or pkgin package name"
+      },
+      "description": "Explicit list of IPS or pkgin packages to install"
+    },
+    "traits": {
+      "type": "array",
+      "description": "List of node-level traits pre-baked into the illumos target sysroot",
+      "items": {
+        "type": "string",
+        "description": "Trait identifier (e.g. storage, secrets, firewall, mesh, discovery, tls, ingress, logging, metrics, backup, maintenance)"
+      }
+    },
+    "tenant_provisions": {
+      "type": "array",
+      "description": "Declarative logical multi-tenant provisioning entries executed during illumos image baking",
+      "items": {
+        "type": "object",
+        "description": "Logical multi-tenant provisioning specification",
+        "required": ["tenant_id", "component"],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "description": "Unique logical tenant identifier"
+          },
+          "component": {
+            "type": "string",
+            "description": "Target multitenant _lib component hosting the logical resource"
+          },
+          "db_name": {
+            "type": "string",
+            "description": "Logical database or schema name to provision"
+          },
+          "db_user": {
+            "type": "string",
+            "description": "Database role or user granted access to the tenant schema"
+          },
+          "server_name": {
+            "type": "string",
+            "description": "Virtual host domain name routed via netctl"
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Declarative list of T1 LibScript components ({component0, component1, ...}) staged into the image or installer",
+      "items": {
+        "type": "string",
+        "description": "Canonical LibScript component identifier or capability alias"
+      }
+    },
+    "output_formats": {
+      "type": "array",
+      "description": "Target installer or base-image output formats synthesized from this OS specification",
+      "items": {
+        "type": "string",
+        "description": "Target image or installer packaging format identifier",
+        "enum": [
+          "live-iso",
+          "live-usb",
+          "raw",
+          "qcow2",
+          "vmdk",
+          "vhd",
+          "vhdx",
+          "vagrant-box",
+          "zfs-stream",
+          "rootfs-tar",
+          "oci-image",
+          "direct-kernel"
+        ]
+      }
+    }
+  }
+}

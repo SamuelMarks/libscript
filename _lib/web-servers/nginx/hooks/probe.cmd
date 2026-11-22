@@ -49,5 +49,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_hook_impl.cmd" "nginx" "probe" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_hook_impl.cmd" "nginx" "probe" %*
 exit /b %errorlevel%

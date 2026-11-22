@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "autoconf",
-  "title": "GNU Autoconf",
-  "description": "Extensible M4 macro package producing portable POSIX configure scripts.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["autoconf"],
+  "description": "Extensible M4 macro package producing portable POSIX configure scripts.",
+  "name": "autoconf",
   "os_whitelist": ["all"],
+  "provides": ["autoconf"],
   "repository": "https://savannah.gnu.org/projects/autoconf",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "GNU Autoconf"
 }

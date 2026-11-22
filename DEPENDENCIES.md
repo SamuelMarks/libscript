@@ -7,38 +7,38 @@ LibScript enforces strict reproducibility, air-gapped isolation, and cross-platf
 
 ---
 
-## 🏛️ Dependency Topology & The Five-Tier Model
+## 🏛️ Dependency Topology & The `T0`–`T5` Compositional Model
 
-Dependencies in LibScript are classified across five distinct operational tiers (plus cross-cutting
-traits) to prevent scope creep, cross-layer leakage, and host contamination:
+Dependencies in LibScript flow strictly downward across six ordered compositional tiers
+(`T5 -> T4 -> T3 -> T2 -> T1 -> T0`) plus orthogonal planes (`Plane A: traits/`,
+`Plane B: experiments/`) to prevent scope creep, cross-layer leakage, and host contamination:
 
 ```mermaid
 flowchart TD
-    subgraph Tier35_4[Tier 3.5 & Tier 4: Topologies, Payloads & Multi-Node Schedulers]
-        SchedDeps["Cluster & Workload Schedulers<br/>(Kubernetes, Apache Mesos & Marathon, HashiCorp Nomad, Slurm/Ray, XPK, RTOS/QEMU/Renode)"]
-        HADeps["HA Consensus & Quorum Topologies<br/>(PostgreSQL HA, Redis/Valkey HA, RabbitMQ HA, IoT MQTT Edge Pods, Split-Brain Fencing)"]
+    subgraph T5["T5: Workloads, Stacks & Stateful Constellations (workloads/)"]
+        SchedDeps["Workload Schedulers & Payloads<br/>(Kubernetes, Mesos/Marathon, Nomad, Slurm/Ray, XPK, MicroVM, RTOS)"]
+        HADeps["Stateful HA Constellations & App Stacks<br/>(PostgreSQL HA, Redis/Valkey HA, Open edX, WordPress)"]
     end
 
-    subgraph Tier3[Tier 3: Multicloud Operators & Unified Traits]
-        CloudDeps["Cloud Infrastructure & Node Traits<br/>(AWS VPCs, GCP TPUs, Azure VNets, Proxmox VMs, WireGuard Mesh, Netctl Ingress)"]
+    subgraph T4["T4: Infrastructure & Cluster Substrates (infrastructure/ + Plane A traits/)"]
+        CloudDeps["Cloud IaaS, Cluster Substrates & Node Traits<br/>(AWS, GCP TPUs, Azure, Proxmox, k0s-ha, gke-tpu-cluster, WireGuard Mesh, Netctl)"]
     end
 
-    subgraph Tier2[Tier 2: Synthesizers & Assemblers]
-        OSDeps["Operating System, Unikernel & RTOS Assembly Constraints<br/>(Rootfs FHS, Storage/LUKS2, Unikernels, Zephyr/FreeRTOS/MCUboot, Linux/FreeBSD/illumos/ReactOS, RosBE/RAPPS, UKI, package-as)"]
-        SolverEngine["Constraint Solver: resolve_stack.jq<br/>(Tarjan SCC Cycle Breaking, RTOS Fork Guard, ReactOS PE Bitness Guard & USE Flag Variant Propagation)"]
+    subgraph T3["T3: Image, OS & Artifact Synthesis (synthesis/)"]
+        OSDeps["Operating System, Unikernel, RTOS & Installer Synthesis<br/>(Sysroot FHS, Disk/LUKS2, Unikernels, Zephyr/FreeRTOS/MCUboot, Linux/FreeBSD/illumos/ReactOS, package-as)"]
     end
 
-    subgraph Tier1[Tier 1 & Tier 1.5: Leaf Recipes, Version Managers & Base Userland]
-        HostTools["Host Tools (bison, flex, meson, ninja, python3, m4)"]
-        BuildDeps["Build Sysroot Headers & Libs (glibc, musl, libdrm, wayland, alsa-lib)"]
-        RuntimeDeps["Runtime Rootfs Daemons & Hooks (sshd, seatd, pipewire, backup/restore, upgrade/rollback)"]
-        VersionSandboxes["Native Version Sandboxes (nodejs/22, python/3.12, rust/1.85, postgres/16)"]
+    subgraph T1_T2["T1 & T2: Atomic Recipes (_lib/) + T0 Solver (engine/)"]
+        SolverEngine["T0 Constraint Solver: engine/solver/resolve_stack.jq<br/>(Tarjan SCC Cycle Breaking, RTOS Fork Guard, ReactOS PE Bitness Guard & USE Variants)"]
+        HostTools["T1 Host Tools & Version Sandboxes (bison, meson, ninja, nodejs/22, python/3.12, rust/1.85)"]
+        BuildDeps["T2 Sysroot Headers, Kernels & Libs (glibc, musl, linux, libdrm, wayland, alsa-lib)"]
+        RuntimeDeps["T1/T2 Runtime Daemons & Hooks (sshd, seatd, pipewire, postgres, backup/restore)"]
     end
 
-    Tier35_4 -->|Schedules & Orchestrates| Tier3
-    Tier3 -->|Requires OS Media & Packages| Tier2
-    Tier2 --> SolverEngine
-    SolverEngine -->|Resolves Graph| Tier1
+    T5 -->|Schedules & Deploys Onto| T4
+    T4 -->|Requires OS Media & Packages| T3
+    T3 --> SolverEngine
+    SolverEngine -->|Resolves Graph| T1_T2
     HostTools --> BuildDeps
     BuildDeps --> RuntimeDeps
 ```
@@ -48,7 +48,8 @@ flowchart TD
 ## 📦 The Component Manifest Contract (`manifest.schema.json`)
 
 Every autonomous component in `_lib/` declares its identity, interfaces, capabilities, and
-dependencies via a strictly typed `manifest.json` conforming to `_lib/_common/manifest.schema.json`.
+dependencies via a strictly typed `manifest.json` conforming to
+`engine/schemas/manifest.schema.json`.
 
 ### 1. Dependency Classification & Criticality Tiers
 
@@ -123,7 +124,8 @@ whitelists/blacklists:
 
 ```json
 {
-  "capabilities": ["versioned-artifact"],
+  "tier": "T1",
+  "capabilities": ["userland-package"],
   "replaces_version_managers": ["nvm", "fnm", "volta"],
   "os_whitelist": ["linux", "freebsd", "darwin", "windows"],
   "arch_whitelist": ["x86_64", "aarch64", "riscv64"],
@@ -131,9 +133,10 @@ whitelists/blacklists:
 }
 ```
 
-- **`capabilities`**: Selects required contract surfaces (`"versioned-artifact"`,
-  `"service-daemon"`, `"sysroot-library"`, `"cloud-operator"`, `"os-synthesizer"`). Only
-  `"service-daemon"` components ship `service.{sh,cmd}`.
+- **`tier` & `capabilities`**: Declares the recipe's architectural tier (`"T1"` userland/daemon or
+  `"T2"` sysroot/OS plumbing) and contract surfaces (`"userland-package"`, `"service-daemon"`,
+  `"sysroot-package"`, `"sysroot-library"`, `"cross-toolchain"`, `"kernel-image"`, `"bootloader"`).
+  Only `"service-daemon"` components ship `service.{sh,cmd}`.
 - **`adapter_only`** / **`replaces_version_managers`**: Identifies pure delegation shims and
   declares legacy version managers natively superseded by the recipe.
 
@@ -141,9 +144,8 @@ whitelists/blacklists:
 
 ## 🧮 Automated Constraint Solving & Cycle Resolution (`resolve_stack.jq`)
 
-Dependency resolution is performed by `_lib/orchestration/resolve_stack.jq`, executed via
-cross-platform wrappers `resolve_stack.sh` (POSIX `/bin/sh`) and `resolve_stack.cmd` (Windows
-Batch).
+Dependency resolution is performed by `engine/solver/resolve_stack.jq`, executed via cross-platform
+wrappers `resolve_stack.sh` (POSIX `/bin/sh`) and `resolve_stack.cmd` (Windows Batch).
 
 ### 1. Resolution Workflow
 
@@ -155,7 +157,8 @@ Batch).
    dependencies.
 4. **Variant Propagation**: Evaluates global configuration (e.g., `display_server: wayland`) and
    propagates the `wayland` variant across all graph nodes (Mesa, GTK, Qt, PipeWire, SDL2).
-5. **Topological Ordering**: Emits an ordered execution plan (`execution-plan.schema.json`).
+5. **Topological Ordering**: Emits an ordered execution plan
+   (`synthesis/schemas/execution-plan.schema.json`).
 
 ### 2. Tarjan's Strongly Connected Components (SCC) Cycle Breaking
 
@@ -200,8 +203,9 @@ When an SCC cycle is identified:
 
 ## 🌐 The Standard Context Contract
 
-When Tier 1 leaf recipes are invoked during synthesis, they operate under the standard Context
-Contract. They must consume inputs and install outputs strictly through these environment variables:
+When `T1` and `T2` atomic recipes are invoked during `T3` synthesis, they operate under the standard
+Context Contract. They must consume inputs and install outputs strictly through these environment
+variables:
 
 | Variable                   | Type    | Purpose                                                                                                            | Standard Example                             |
 | :------------------------- | :------ | :----------------------------------------------------------------------------------------------------------------- | :------------------------------------------- |
@@ -214,7 +218,7 @@ Contract. They must consume inputs and install outputs strictly through these en
 | `LIBSCRIPT_TARGET_OS`      | String  | Target kernel and OS family.                                                                                       | `linux`, `freebsd`, `unikraft`               |
 | `LIBSCRIPT_TARGET_TRIPLET` | String  | Resolved target toolchain architecture triplet.                                                                    | `x86_64-libscript-linux-gnu`                 |
 
-### Architecture Triplet Resolution (`_lib/toolchains/triplets.sh`)
+### Architecture Triplet Resolution (`engine/target/triplets.sh`)
 
 Standard triplets are calculated dynamically:
 
@@ -231,14 +235,16 @@ Standard triplets are calculated dynamically:
 The topological output of `resolve_stack.jq` is validated against target-specific execution plan
 schemas:
 
-- **`execution-plan.schema.json`**: Standard Linux system assembly and package execution graph.
-- **`execution-plan.freebsd.schema.json`**: FreeBSD kernel, world, UFS/ZFS, and userland execution
-  plan.
-- **`execution-plan.illumos.schema.json`**: illumos/SunOS kernel, SMF init, ZFS `rpool`, and desktop
-  plan.
-- **`execution-plan.live.schema.json`**: Live multiboot ISO/USB installer execution graph.
-- **`execution-plan.rtos.schema.json`**: Zephyr RTOS, FreeRTOS, MCUboot slot layout, and static
-  ROM/RAM budget execution plan.
+- **`synthesis/schemas/execution-plan.schema.json`**: Standard Linux system assembly and package
+  execution graph.
+- **`synthesis/schemas/execution-plan.freebsd.schema.json`**: FreeBSD kernel, world, UFS/ZFS, and
+  userland execution plan.
+- **`synthesis/schemas/execution-plan.illumos.schema.json`**: illumos/SunOS kernel, SMF init, ZFS
+  `rpool`, and desktop plan.
+- **`synthesis/schemas/execution-plan.live.schema.json`**: Live multiboot ISO/USB installer
+  execution graph.
+- **`synthesis/schemas/execution-plan.rtos.schema.json`**: Zephyr RTOS, FreeRTOS, MCUboot slot
+  layout, and static ROM/RAM budget execution plan.
 
 ---
 
@@ -286,7 +292,7 @@ flowchart TD
 
 ## ⚡ Native Version Manager Dependency Isolation
 
-For developer toolchains managed at Tier 1 (Node.js, Python, Rust, Ruby, Go, Java):
+For developer toolchains managed at `T1` (Node.js, Python, Rust, Ruby, Go, Java):
 
 1. **Non-Destructive Coexistence**: Multiple versions of the same tool coexist under
    `${LIBSCRIPT_HOME}/<tool>/<version>`.
@@ -302,5 +308,5 @@ For developer toolchains managed at Tier 1 (Node.js, Python, Rust, Ruby, Go, Jav
    routes `jq`, `gawk`/`awk`, `busybox`, `toybox`, `dash`/`sh`, and `freebsd-usr-bin` applets
    (`sed`, `grep`, `cut`, `tr`, `sort`, `uniq`, `wc`, `head`, `tail`, `xargs`, `find`, `cmp`,
    `diff`, `patch`, `bmake`) through their `_lib/utilities/*` component-level package managers
-   (`PKG_MGR=libscript` in `_lib/_common/pkg_map.tsv`), selecting `dos32` executables on
+   (`PKG_MGR=libscript` in `engine/common/pkg_map.tsv`), selecting `dos32` executables on
    `TARGET_OS=msdos` and native PE (`X64`/`X86`/`ARM64`) executables on `TARGET_OS=windows`.

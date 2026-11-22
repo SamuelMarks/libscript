@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%OPENRC_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%OPENRC_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%OPENRC_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%OPENRC_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/OpenRC/openrc" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%OPENRC_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading openrc %OPENRC_VERSION% to %DOWNLOAD_DIR%\openrc...
     if not exist "%DOWNLOAD_DIR%\openrc" mkdir "%DOWNLOAD_DIR%\openrc"
     if not "%OPENRC_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OPENRC_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\openrc\openrc-%OPENRC_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%OPENRC_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\openrc\openrc-%OPENRC_VERSION%.zip"
     ) else (
         echo OPENRC_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%OPENRC_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends openrc
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends openrc
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\openrc\openrc-%OPENRC_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%OPENRC_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OPENRC_DOWNLOAD_URL%" "%TEMP%\openrc.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%OPENRC_DOWNLOAD_URL%" "%TEMP%\openrc.zip"
         tar -xf "%TEMP%\openrc.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for openrc.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "openrc" "%ACTION%" "%OPENRC_VERSION%" "%OPENRC_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\openrc\%OPENRC_VERSION%\\bin\\openrc.exe\"" "%LIBSCRIPT_HOME%\openrc\%OPENRC_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "openrc" "%ACTION%" "%OPENRC_VERSION%" "%OPENRC_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\openrc\%OPENRC_VERSION%\\bin\\openrc.exe\"" "%LIBSCRIPT_HOME%\openrc\%OPENRC_VERSION%"
 exit /b !errorlevel!

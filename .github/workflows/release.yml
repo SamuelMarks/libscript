@@ -65,15 +65,15 @@ jobs:
           path: libscript/cache
           key:
             offline-cache-${{ runner.os }}-${{
-            hashFiles('libscript/_lib/web-apps/openedx/offline_bundle.json',
-            'libscript/packaging/hydrate_offline_cache.*') }}
+            hashFiles('libscript/workloads/apps/openedx/offline_bundle.json',
+            'libscript/synthesis/msi/hydrate_offline_cache.*') }}
           restore-keys: |
             offline-cache-${{ runner.os }}-
 
       - name: Hydrate Offline Artifact Cache
         shell: cmd
         run: |
-          call packaging\hydrate_offline_cache.cmd --wheels --codebase
+          call synthesis\msi\hydrate_offline_cache.cmd --wheels --codebase
 
       - name: Save Hydrated Cache
         uses: actions/cache/save@v6
@@ -82,8 +82,8 @@ jobs:
           path: libscript/cache
           key:
             offline-cache-${{ runner.os }}-${{
-            hashFiles('libscript/_lib/web-apps/openedx/offline_bundle.json',
-            'libscript/packaging/hydrate_offline_cache.*') }}
+            hashFiles('libscript/workloads/apps/openedx/offline_bundle.json',
+            'libscript/synthesis/msi/hydrate_offline_cache.*') }}
 
       - name: Upload Hydrated Cache Artifact
         uses: actions/upload-artifact@v7
@@ -107,140 +107,143 @@ jobs:
           - id: mysql
             name: LibScript MySQL Database Server (Online)
             target_dir: _lib/databases/mysql
-            build_cmd: packaging\build_component_msi.cmd --component mysql --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component mysql --variant online
           - id: mysql-offline
             name: LibScript MySQL Database Server (Offline)
             target_dir: _lib/databases/mysql
-            build_cmd: packaging\build_component_msi.cmd --component mysql --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component mysql --variant offline
           - id: redis
             name: LibScript Redis Cache & Datastore (Online)
             target_dir: _lib/caches/redis
-            build_cmd: packaging\build_component_msi.cmd --component redis --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component redis --variant online
           - id: redis-offline
             name: LibScript Redis Cache & Datastore (Offline)
             target_dir: _lib/caches/redis
-            build_cmd: packaging\build_component_msi.cmd --component redis --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component redis --variant offline
           - id: mongodb
             name: LibScript MongoDB Document Database (Online)
             target_dir: _lib/databases/mongodb
-            build_cmd: packaging\build_component_msi.cmd --component mongodb --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component mongodb --variant online
           - id: mongodb-offline
             name: LibScript MongoDB Document Database (Offline)
             target_dir: _lib/databases/mongodb
-            build_cmd: packaging\build_component_msi.cmd --component mongodb --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component mongodb --variant offline
           - id: python
             name: LibScript Python Language Runtime (Online)
             target_dir: _lib/languages/python
-            build_cmd: packaging\build_component_msi.cmd --component python --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component python --variant online
           - id: python-offline
             name: LibScript Python Language Runtime (Offline)
             target_dir: _lib/languages/python
-            build_cmd: packaging\build_component_msi.cmd --component python --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component python --variant offline
           - id: nodejs
             name: LibScript Node.js JavaScript Runtime (Online)
             target_dir: _lib/languages/nodejs
-            build_cmd: packaging\build_component_msi.cmd --component nodejs --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component nodejs --variant online
           - id: nodejs-offline
             name: LibScript Node.js JavaScript Runtime (Offline)
             target_dir: _lib/languages/nodejs
-            build_cmd: packaging\build_component_msi.cmd --component nodejs --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component nodejs --variant offline
           - id: meilisearch
             name: LibScript Meilisearch Search Engine (Online)
             target_dir: _lib/search/meilisearch
-            build_cmd: packaging\build_component_msi.cmd --component meilisearch --variant online
+            build_cmd:
+              synthesis\msi\build_component_msi.cmd --component meilisearch --variant online
           - id: meilisearch-offline
             name: LibScript Meilisearch Search Engine (Offline)
             target_dir: _lib/search/meilisearch
-            build_cmd: packaging\build_component_msi.cmd --component meilisearch --variant offline
+            build_cmd:
+              synthesis\msi\build_component_msi.cmd --component meilisearch --variant offline
           - id: caddy
             name: LibScript Caddy Web Server (Online)
             target_dir: _lib/web-servers/caddy
-            build_cmd: packaging\build_component_msi.cmd --component caddy --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component caddy --variant online
           - id: caddy-offline
             name: LibScript Caddy Web Server (Offline)
             target_dir: _lib/web-servers/caddy
-            build_cmd: packaging\build_component_msi.cmd --component caddy --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component caddy --variant offline
           - id: gunicorn
             name: LibScript Gunicorn WSGI Server (Online)
             target_dir: _lib/app-servers/gunicorn
-            build_cmd: packaging\build_component_msi.cmd --component gunicorn --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component gunicorn --variant online
           - id: gunicorn-offline
             name: LibScript Gunicorn WSGI Server (Offline)
             target_dir: _lib/app-servers/gunicorn
-            build_cmd: packaging\build_component_msi.cmd --component gunicorn --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component gunicorn --variant offline
           - id: exim
             name: LibScript Exim Mail Transfer Agent (Online)
             target_dir: _lib/utilities/exim
-            build_cmd: packaging\build_component_msi.cmd --component exim --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component exim --variant online
           - id: exim-offline
             name: LibScript Exim Mail Transfer Agent (Offline)
             target_dir: _lib/utilities/exim
-            build_cmd: packaging\build_component_msi.cmd --component exim --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component exim --variant offline
           - id: nodeenv
             name: LibScript Nodeenv Virtual Environment (Online)
             target_dir: _lib/package-managers/nodeenv
-            build_cmd: packaging\build_component_msi.cmd --component nodeenv --variant online
+            build_cmd: synthesis\msi\build_component_msi.cmd --component nodeenv --variant online
           - id: nodeenv-offline
             name: LibScript Nodeenv Virtual Environment (Offline)
             target_dir: _lib/package-managers/nodeenv
-            build_cmd: packaging\build_component_msi.cmd --component nodeenv --variant offline
+            build_cmd: synthesis\msi\build_component_msi.cmd --component nodeenv --variant offline
           - id: openedx
             name: Open edX Platform (Online)
-            target_dir: _lib/web-apps/openedx
-            build_cmd: packaging\build_msi.cmd _lib\web-apps\openedx --variant online
+            target_dir: workloads/apps/openedx
+            build_cmd: synthesis\msi\build_msi.cmd workloads\apps\openedx --variant online
           - id: openedx-offline
             name: Open edX Platform (Offline)
-            target_dir: _lib/web-apps/openedx
-            build_cmd: packaging\build_msi.cmd _lib\web-apps\openedx --variant offline
+            target_dir: workloads/apps/openedx
+            build_cmd: synthesis\msi\build_msi.cmd workloads\apps\openedx --variant offline
           - id: wordpress
             name: WordPress Platform (Online)
-            target_dir: _lib/web-apps/wordpress
-            build_cmd: packaging\build_msi.cmd _lib\web-apps\wordpress --variant online
+            target_dir: workloads/apps/wordpress
+            build_cmd: synthesis\msi\build_msi.cmd workloads\apps\wordpress --variant online
           - id: wordpress-offline
             name: WordPress Platform (Offline)
-            target_dir: _lib/web-apps/wordpress
+            target_dir: workloads/apps/wordpress
             build_cmd:
-              packaging\build_msi.cmd _lib\web-apps\wordpress --variant offline --cache-dir
+              synthesis\msi\build_msi.cmd workloads\apps\wordpress --variant offline --cache-dir
               cache\wordpress
           - id: gitea
             name: Gitea Git Service (Online)
             target_dir: _lib/git-servers/gitea
-            build_cmd: packaging\build_msi.cmd _lib\git-servers\gitea --variant online
+            build_cmd: synthesis\msi\build_msi.cmd _lib\git-servers\gitea --variant online
           - id: gitea-offline
             name: Gitea Git Service (Offline)
             target_dir: _lib/git-servers/gitea
             build_cmd:
-              packaging\build_msi.cmd _lib\git-servers\gitea --variant offline --cache-dir
+              synthesis\msi\build_msi.cmd _lib\git-servers\gitea --variant offline --cache-dir
               cache\gitea
           - id: drupal
             name: Drupal CMS Platform (Online)
-            target_dir: _lib/web-apps/drupal
-            build_cmd: packaging\build_msi.cmd _lib\web-apps\drupal --variant online
+            target_dir: workloads/apps/drupal
+            build_cmd: synthesis\msi\build_msi.cmd workloads\apps\drupal --variant online
           - id: drupal-offline
             name: Drupal CMS Platform (Offline)
-            target_dir: _lib/web-apps/drupal
+            target_dir: workloads/apps/drupal
             build_cmd:
-              packaging\build_msi.cmd _lib\web-apps\drupal --variant offline --cache-dir
+              synthesis\msi\build_msi.cmd workloads\apps\drupal --variant offline --cache-dir
               cache\drupal
           - id: nextcloud
             name: Nextcloud Hub Platform (Online)
-            target_dir: _lib/web-apps/nextcloud
-            build_cmd: packaging\build_msi.cmd _lib\web-apps\nextcloud --variant online
+            target_dir: workloads/apps/nextcloud
+            build_cmd: synthesis\msi\build_msi.cmd workloads\apps\nextcloud --variant online
           - id: nextcloud-offline
             name: Nextcloud Hub Platform (Offline)
-            target_dir: _lib/web-apps/nextcloud
+            target_dir: workloads/apps/nextcloud
             build_cmd:
-              packaging\build_msi.cmd _lib\web-apps\nextcloud --variant offline --cache-dir
+              synthesis\msi\build_msi.cmd workloads\apps\nextcloud --variant offline --cache-dir
               cache\nextcloud
           - id: odoo
             name: Odoo ERP Platform (Online)
-            target_dir: _lib/web-apps/odoo
-            build_cmd: packaging\build_msi.cmd _lib\web-apps\odoo --variant online
+            target_dir: workloads/apps/odoo
+            build_cmd: synthesis\msi\build_msi.cmd workloads\apps\odoo --variant online
           - id: odoo-offline
             name: Odoo ERP Platform (Offline)
-            target_dir: _lib/web-apps/odoo
+            target_dir: workloads/apps/odoo
             build_cmd:
-              packaging\build_msi.cmd _lib\web-apps\odoo --variant offline --cache-dir cache\odoo
+              synthesis\msi\build_msi.cmd workloads\apps\odoo --variant offline --cache-dir
+              cache\odoo
     defaults:
       run:
         working-directory: libscript
@@ -265,8 +268,8 @@ jobs:
           path: libscript/cache
           key:
             offline-cache-${{ runner.os }}-${{
-            hashFiles('libscript/_lib/web-apps/openedx/offline_bundle.json',
-            'libscript/packaging/hydrate_offline_cache.*') }}
+            hashFiles('libscript/workloads/apps/openedx/offline_bundle.json',
+            'libscript/synthesis/msi/hydrate_offline_cache.*') }}
           restore-keys: |
             offline-cache-${{ runner.os }}-
 
@@ -338,8 +341,8 @@ jobs:
             if ($json.source_repository -and $json.source_repository.default_branch) {
               $pkgDefaultBranch = "$($json.source_repository.default_branch)".Trim()
             }
-          } elseif (Test-Path "_lib\web-apps\openedx\offline_bundle.json") {
-            $bundle = Get-Content -Raw "_lib\web-apps\openedx\offline_bundle.json" | ConvertFrom-Json
+          } elseif (Test-Path "workloads\apps\openedx\offline_bundle.json") {
+            $bundle = Get-Content -Raw "workloads\apps\openedx\offline_bundle.json" | ConvertFrom-Json
             $compId = ("${{ matrix.package.id }}" -replace '-offline$', '').Trim()
             if ($bundle.databases.$compId.version) { $pkgJsonVer = "$($bundle.databases.$compId.version)".TrimStart("v").Trim() }
             elseif ($bundle.runtimes.$compId.version) { $pkgJsonVer = "$($bundle.runtimes.$compId.version)".TrimStart("v").Trim() }

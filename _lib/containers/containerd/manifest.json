@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "containers",
+  "description": "Industry-standard CNCF graduated core container runtime daemon (containerd, ctr, containerd-shim-runc-v2).",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "name": "containerd",
+  "os_whitelist": ["linux", "windows", "freebsd"],
+  "provides": ["containerd", "ctr"],
+  "repository": "https://github.com/containerd/containerd",
+  "tier": "T1",
+  "title": "containerd Container Runtime"
+}

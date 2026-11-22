@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "virtualization",
+  "description": "KVM-based microVM manager for secure multitenant containers",
+  "name": "firecracker",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux"],
+  "provides": ["firecracker"],
+  "tier": "T1",
+  "title": "Firecracker"
+}

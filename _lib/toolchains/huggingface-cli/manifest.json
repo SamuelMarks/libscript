@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "huggingface_hub",
-  "title": "huggingface_hub",
-  "description": "A fast, scalable, multi-language and extensible build system, installed via huggingface_hubisk.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["build-system", "huggingface_hub", "huggingface_hubisk"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A fast, scalable, multi-language and extensible build system, installed via huggingface_hubisk.",
+  "name": "huggingface_hub",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["build-system", "huggingface_hub", "huggingface_hubisk"],
+  "tier": "T1",
+  "title": "huggingface_hub"
 }

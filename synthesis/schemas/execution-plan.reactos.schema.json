@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/synthesis/schemas/execution-plan.reactos.schema.json",
+  "title": "LibScript ReactOS Distribution Profile Specification",
+  "description": "Declarative schema validating custom ReactOS distribution profiles across i686 and x86_64 targets with selectable NT Service Control Manager daemons, Win32 shell themes, filesystems (FAT32, WinBtrfs, NTFS), FreeLoader configuration, and unattended RAPPS/MSI/LibScript package staging.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile_name",
+    "target",
+    "init_system",
+    "display",
+    "desktop",
+    "storage"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Relative or canonical URI reference to this JSON Schema document"
+    },
+    "schema_version": {
+      "$ref": "./execution-plan-common.schema.json#/$defs/semver_string",
+      "description": "Semantic schema version identifier (e.g. 1.0.0)"
+    },
+    "profile_name": {
+      "$ref": "./execution-plan-common.schema.json#/$defs/profile_identifier",
+      "description": "Unique profile identifier for the ReactOS distribution"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of the ReactOS profile intent and target workload"
+    },
+    "reactos_version": {
+      "type": "string",
+      "description": "Target ReactOS release version or channel identifier (e.g. 0.4.16, nightly)"
+    },
+    "build_mode": {
+      "type": "string",
+      "enum": ["repack", "from-source"],
+      "description": "Synthesis strategy: repack an official BootCD/LiveCD ISO or compile from source via RosBE"
+    },
+    "target": {
+      "type": "object",
+      "description": "Processor architecture, channel, and Win32 runtime target configuration",
+      "required": ["arch", "os_family"],
+      "properties": {
+        "arch": {
+          "type": "string",
+          "enum": ["i686", "x86", "x86_64", "amd64"],
+          "description": "Target instruction set architecture (32-bit i686 or 64-bit x86_64)"
+        },
+        "os_family": {
+          "type": "string",
+          "enum": ["reactos", "windows-nt"],
+          "description": "Operating system kernel family"
+        },
+        "channel": {
+          "type": "string",
+          "enum": ["release", "nightly", "rc"],
+          "description": "Upstream ReactOS release channel"
+        },
+        "image_variant": {
+          "type": "string",
+          "enum": ["bootcd", "livecd"],
+          "description": "Upstream ReactOS ISO media variant used as the synthesis base"
+        },
+        "libc": {
+          "type": "string",
+          "enum": ["msvcrt", "ucrt"],
+          "description": "Win32 C runtime library ABI target"
+        }
+      }
+    },
+    "init_system": {
+      "type": "object",
+      "description": "Windows NT Service Control Manager (SCM) and startup service configuration",
+      "required": ["provider"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["nt-scm"],
+          "description": "Service supervisor provider (native NT Service Control Manager)"
+        },
+        "services_enabled": {
+          "type": "array",
+          "description": "List of NT/ReactOS services configured for automatic boot startup",
+          "items": {
+            "type": "string",
+            "description": "Service short name registered in HKLM\\SYSTEM\\CurrentControlSet\\Services"
+          }
+        },
+        "services_disabled": {
+          "type": "array",
+          "description": "List of NT/ReactOS services explicitly disabled at boot",
+          "items": {
+            "type": "string",
+            "description": "Service short name disabled in the registry"
+          }
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "description": "Win32 GDI display subsystem, video driver, and screen mode settings",
+      "required": ["protocol"],
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": ["none", "win32-gdi"],
+          "description": "Display subsystem protocol (none for headless serial console or win32-gdi)"
+        },
+        "graphics_driver": {
+          "type": "string",
+          "enum": ["none", "vbemp", "vga", "bochs", "vmware", "qxl"],
+          "description": "ReactOS display miniport driver selection"
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Default framebuffer resolution and color depth (e.g. 1024x768x32)"
+        }
+      }
+    },
+    "desktop": {
+      "type": "object",
+      "description": "Win32 desktop shell, visual style theme, and session autologin configuration",
+      "required": ["shell"],
+      "properties": {
+        "shell": {
+          "type": "string",
+          "enum": ["none", "cmd-minimal", "explorer-classic", "custom"],
+          "description": "Primary Winlogon userinit shell environment"
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["classic", "lautus", "lunar", "mizu"],
+          "description": "ReactOS msstyles visual theme or classic Win32 appearance"
+        },
+        "autologin_user": {
+          "type": "string",
+          "description": "Account username configured for automatic Winlogon desktop sign-in"
+        },
+        "custom_shell_path": {
+          "type": "string",
+          "description": "Executable path inside the guest when shell is set to custom"
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "description": "ReactOS kernel audio driver stack configuration",
+      "properties": {
+        "subsystem": {
+          "type": "string",
+          "enum": ["none", "ac97", "hdaudio", "wdmaud", "sb16"],
+          "description": "Audio driver architecture staged for virtual or physical hardware"
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Partition layout, root filesystem, FreeLoader boot mode, and virtual disk sizing",
+      "required": ["filesystem", "bootloader"],
+      "properties": {
+        "filesystem": {
+          "type": "string",
+          "enum": ["fat32", "btrfs", "ntfs"],
+          "description": "Primary system volume filesystem (FASTFAT fat32, WinBtrfs btrfs, or ntfs)"
+        },
+        "bootloader": {
+          "type": "string",
+          "enum": ["freeldr"],
+          "description": "ReactOS bootloader implementation (FreeLoader)"
+        },
+        "partition_table": {
+          "type": "string",
+          "enum": ["mbr", "gpt"],
+          "description": "Disk partition table scheme"
+        },
+        "boot_mode": {
+          "type": "string",
+          "enum": ["bios-legacy", "uefi", "hybrid-uefi-bios"],
+          "description": "Target firmware boot mode"
+        },
+        "disk_size_gib": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Default synthesized virtual disk size in GiB"
+        },
+        "serial_debug": {
+          "type": "boolean",
+          "description": "Enable COM1 115200 8N1 kernel debugger telemetry in freeldr.ini"
+        }
+      }
+    },
+    "package_manager": {
+      "type": "object",
+      "description": "ReactOS Applications Manager (RAPPS) and offline cache configuration",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["rapps", "msiexec", "libscript"],
+          "description": "Primary guest package provisioning backend"
+        },
+        "offline_prefetch": {
+          "type": "boolean",
+          "description": "Pre-stage upstream installers and SHA-1/SHA-256 verified archives into iso_root before offline boot"
+        }
+      }
+    },
+    "unattend": {
+      "type": "object",
+      "description": "Unattended Stage-1 (unattend.inf) and Stage-2 (GuiRunOnce) setup automation parameters",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Generate unattend.inf to bypass interactive setup prompts"
+        },
+        "computer_name": {
+          "type": "string",
+          "description": "NetBIOS/Win32 computer name assigned during Stage-2 setup"
+        },
+        "admin_password": {
+          "type": "string",
+          "description": "Initial Administrator account password (empty string for blank password)"
+        },
+        "locale_id": {
+          "type": "string",
+          "description": "Windows/ReactOS hexadecimal locale identifier (e.g. 00000409 for en-US)"
+        },
+        "time_zone_index": {
+          "type": "integer",
+          "description": "Numeric Windows NT time zone index (e.g. 85 for GMT/UTC)"
+        },
+        "disable_gecko_inst": {
+          "type": "boolean",
+          "description": "Suppress the interactive Wine Gecko HTML engine download prompt during Stage-2 setup"
+        },
+        "gui_run_once": {
+          "type": "array",
+          "description": "Additional batch commands appended to [GuiRunOnce] on first boot",
+          "items": {
+            "type": "string",
+            "description": "Command line executed during first Winlogon session"
+          }
+        }
+      }
+    },
+    "users": {
+      "type": "array",
+      "description": "Local Windows NT/ReactOS user accounts provisioned via net user on first boot",
+      "items": {
+        "type": "object",
+        "description": "Local ReactOS user account specification",
+        "required": ["username"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Account login name"
+          },
+          "password": {
+            "type": "string",
+            "description": "Initial account password provisioned in firstboot.cmd"
+          },
+          "groups": {
+            "type": "array",
+            "description": "Local SAM group memberships (e.g. Administrators, Users)",
+            "items": {
+              "type": "string",
+              "description": "Local SAM group name"
+            }
+          },
+          "admin": {
+            "type": "boolean",
+            "description": "Add account to the local Administrators group"
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "TCP/IP hostname, DHCP, and DNS resolver configuration",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "System network hostname"
+        },
+        "dhcp": {
+          "type": "boolean",
+          "description": "Enable DHCP client configuration on the primary NIC"
+        },
+        "dns_servers": {
+          "type": "array",
+          "description": "Upstream IPv4/IPv6 DNS nameservers",
+          "items": {
+            "type": "string",
+            "description": "DNS server IP address"
+          }
+        }
+      }
+    },
+    "offline": {
+      "type": "object",
+      "description": "Air-gapped offline installation cache configuration inside the ReactOS guest",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Force LIBSCRIPT_OFFLINE=1 inside the synthesized guest environment"
+        },
+        "cache_dir": {
+          "type": "string",
+          "description": "Guest filesystem path containing pre-hydrated LibScript artifacts"
+        }
+      }
+    },
+    "rapps_packages": {
+      "type": "array",
+      "description": "ReactOS Applications Manager (rapps-db) package identifiers prefetched and installed silently",
+      "items": {
+        "type": "string",
+        "description": "RAPPS catalog package identifier (e.g. 7zip, sumatrapdf, notepadpp, vlc)"
+      }
+    },
+    "msi_packages": {
+      "type": "array",
+      "description": "Windows Installer (.msi) packages staged for silent msiexec /i /qn installation on first boot",
+      "items": {
+        "type": "string",
+        "description": "MSI package filename or artifact path"
+      }
+    },
+    "packages": {
+      "type": "array",
+      "description": "Additional guest package identifiers merged with components during assembly",
+      "items": {
+        "type": "string",
+        "description": "Package identifier"
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Declarative list of T1 LibScript Win32 components staged into the ReactOS image with PE bitness verification",
+      "items": {
+        "type": "string",
+        "description": "Canonical LibScript component identifier"
+      }
+    },
+    "traits": {
+      "type": "array",
+      "description": "Optional cross-cutting operational traits applied to the ReactOS node",
+      "items": {
+        "type": "string",
+        "description": "Trait identifier"
+      }
+    },
+    "output_formats": {
+      "type": "array",
+      "description": "Target media or virtual machine disk image formats synthesized from this ReactOS profile",
+      "items": {
+        "type": "string",
+        "description": "Synthesized ReactOS output artifact format",
+        "enum": ["iso", "live-iso", "raw", "qcow2", "vhd", "vhdx", "vmdk", "vagrant-box"]
+      }
+    }
+  }
+}

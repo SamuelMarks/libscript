@@ -14,8 +14,8 @@ if ($Action -eq "install") {
     $Service = Get-Service -Name "hMailServer" -ErrorAction SilentlyContinue
     if ($Service) {
         $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-        . (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
-        . (Join-Path $_ls_root "_lib\_common\service.ps1")
+        . (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
+        . (Join-Path $_ls_root "engine\common\service.ps1")
         Write-Host "hMailServer is already installed."
         if ($Service.Status -ne "Running") { libscript_service -Action "start" -ServiceName "hMailServer" }
         exit 0
@@ -37,7 +37,7 @@ if ($Action -eq "install") {
     exit 0
 } elseif ($Action -eq "uninstall") {
     $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-    . (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+    . (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
     libscript_uninstall_pkg -Packages @("hmailserver")
     exit 0
 }

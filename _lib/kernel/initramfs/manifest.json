@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "initramfs",
-  "title": "Initramfs",
-  "description": "Linux initial ramdisk generation utilities",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "kernel-image"],
   "category": "kernel",
-  "provides": ["initramfs"],
-  "os_whitelist": ["linux"],
+  "description": "Linux initial ramdisk generation utilities",
+  "name": "initramfs",
   "os_blacklist": ["windows"],
-  "capabilities": ["versioned-artifact", "os-synthesizer"]
+  "os_whitelist": ["linux"],
+  "provides": ["initramfs"],
+  "tier": "T2",
+  "title": "Initramfs"
 }

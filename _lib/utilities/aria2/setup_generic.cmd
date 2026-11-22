@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%ARIA2_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%ARIA2_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%ARIA2_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%ARIA2_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -108,8 +108,8 @@ exit /b 0
 :action_use
 if "%ARIA2_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%ARIA2_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/aria2/aria2/releases/latest"`) do set "EXACT_VERSION=%%a"
-) else if "%ARIA2_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/aria2/aria2/releases/latest"`) do set "EXACT_VERSION=%%a"
+if "%ARIA2_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/aria2/aria2/releases/latest"`) do set "EXACT_VERSION=%%a"
+) else if "%ARIA2_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/aria2/aria2/releases/latest"`) do set "EXACT_VERSION=%%a"
 ) else (
     set "EXACT_VERSION=%ARIA2_VERSION%"
 )
@@ -134,7 +134,7 @@ if "%ARIA2_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading aria2 %ARIA2_VERSION% to %DOWNLOAD_DIR%\aria2...
     if not exist "%DOWNLOAD_DIR%\aria2" mkdir "%DOWNLOAD_DIR%\aria2"
     if not "%ARIA2_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ARIA2_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\aria2\aria2-%ARIA2_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ARIA2_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\aria2\aria2-%ARIA2_VERSION%.zip"
     ) else (
         echo ARIA2_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ARIA2_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends aria2
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends aria2
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\aria2\aria2-%ARIA2_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ARIA2_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ARIA2_DOWNLOAD_URL%" "%TEMP%\aria2.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ARIA2_DOWNLOAD_URL%" "%TEMP%\aria2.zip"
         tar -xf "%TEMP%\aria2.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for aria2.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "aria2" "%ACTION%" "%ARIA2_VERSION%" "%ARIA2_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\aria2\%ARIA2_VERSION%\\bin\\aria2.exe\"" "%LIBSCRIPT_HOME%\aria2\%ARIA2_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "aria2" "%ACTION%" "%ARIA2_VERSION%" "%ARIA2_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\aria2\%ARIA2_VERSION%\\bin\\aria2.exe\"" "%LIBSCRIPT_HOME%\aria2\%ARIA2_VERSION%"
 exit /b !errorlevel!

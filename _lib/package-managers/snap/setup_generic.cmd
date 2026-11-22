@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%SNAP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%SNAP_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%SNAP_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%SNAP_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/snap-stanford/snap" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading snap %SNAP_VERSION% to %DOWNLOAD_DIR%\snap...
     if not exist "%DOWNLOAD_DIR%\snap" mkdir "%DOWNLOAD_DIR%\snap"
     if not "%SNAP_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SNAP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\snap\snap-%SNAP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SNAP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\snap\snap-%SNAP_VERSION%.zip"
     ) else (
         echo SNAP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SNAP_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends snap
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends snap
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\snap\snap-%SNAP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SNAP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SNAP_DOWNLOAD_URL%" "%TEMP%\snap.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SNAP_DOWNLOAD_URL%" "%TEMP%\snap.zip"
         tar -xf "%TEMP%\snap.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for snap.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "snap" "%ACTION%" "%SNAP_VERSION%" "%SNAP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%\\bin\\snap.exe\"" "%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "snap" "%ACTION%" "%SNAP_VERSION%" "%SNAP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%\\bin\\snap.exe\"" "%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%"
 exit /b !errorlevel!

@@ -101,7 +101,8 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
         return;
     }
 
-    if (strcmp(method, "GET") == 0 && strcmp(path, "/api/v1/experiments") == 0) {
+    if (strcmp(method, "GET") == 0 &&
+        (strcmp(path, "/v1/experiments") == 0 || strcmp(path, "/api/v1/experiments") == 0)) {
         (void)rest_list_experiments(root_dir, json_out, sizeof(json_out));
         send_json_response(client, 200, "OK", json_out);
         return;
@@ -126,8 +127,9 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
         return;
     }
 
-    if (strcmp(method, "GET") == 0 && strncmp(path, "/api/v1/components/", 19) == 0) {
-        const char *rest = path + 19;
+    if (strcmp(method, "GET") == 0 &&
+        (strncmp(path, "/v1/recipes/", 12) == 0 || strncmp(path, "/api/v1/components/", 19) == 0)) {
+        const char *rest = (strncmp(path, "/v1/recipes/", 12) == 0) ? (path + 12) : (path + 19);
         const char *cap_sfx = strstr(rest, "/capabilities");
         if (cap_sfx != NULL && strcmp(cap_sfx, "/capabilities") == 0) {
             char cname[128];
@@ -146,7 +148,8 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
         }
     }
 
-    if (strcmp(method, "POST") == 0 && strcmp(path, "/api/v1/experiments") == 0) {
+    if (strcmp(method, "POST") == 0 &&
+        (strcmp(path, "/v1/experiments") == 0 || strcmp(path, "/api/v1/experiments") == 0)) {
         char suite[64], step[64], host_arch[64];
         if (rest_json_get_string(body, "suite", suite, sizeof(suite)) != 0 ||
             rest_json_get_string(body, "step", step, sizeof(step)) != 0 ||
@@ -163,7 +166,8 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
         return;
     }
 
-    if (strcmp(method, "POST") == 0 && strcmp(path, "/api/v1/artifacts/generate") == 0) {
+    if (strcmp(method, "POST") == 0 &&
+        (strcmp(path, "/v1/synthesis") == 0 || strcmp(path, "/api/v1/artifacts/generate") == 0)) {
         char kernel[64], fmt[64], comps[256], board[64];
         const char *board_ptr = NULL;
         if (rest_json_get_string(body, "kernel", kernel, sizeof(kernel)) != 0 ||
@@ -185,14 +189,20 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
     }
 
     if (strcmp(method, "POST") == 0 &&
-        (strcmp(path, "/api/v1/topologies") == 0 ||
-         strcmp(path, "/api/v1/payloads") == 0 ||
+        (strcmp(path, "/v1/recipes") == 0 ||
+         strcmp(path, "/v1/infrastructure") == 0 ||
+         strcmp(path, "/v1/workloads") == 0 ||
+         strcmp(path, "/v1/traits") == 0 ||
+         strcmp(path, "/api/v1/infrastructure") == 0 ||
+         strcmp(path, "/api/v1/workloads") == 0 ||
          strcmp(path, "/api/v1/traits") == 0)) {
         char action[64], target[256];
-        const char *subcmd = "topology";
-        if (strcmp(path, "/api/v1/payloads") == 0) {
-            subcmd = "payload";
-        } else if (strcmp(path, "/api/v1/traits") == 0) {
+        const char *subcmd = "workload";
+        if (strcmp(path, "/v1/recipes") == 0) {
+            subcmd = "install";
+        } else if (strcmp(path, "/v1/infrastructure") == 0 || strcmp(path, "/api/v1/infrastructure") == 0) {
+            subcmd = "infrastructure";
+        } else if (strcmp(path, "/v1/traits") == 0 || strcmp(path, "/api/v1/traits") == 0) {
             subcmd = "trait";
         }
         if (rest_json_get_string(body, "action", action, sizeof(action)) != 0 ||
@@ -200,6 +210,9 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
             send_json_response(client, 400, "Bad Request",
                                "{\"error\":\"missing_fields\",\"message\":\"action and target required\"}");
             return;
+        }
+        if (strcmp(path, "/v1/recipes") == 0) {
+            subcmd = action;
         }
         if (rest_dispatch_job(root_dir, subcmd, action, target, 0, json_out, sizeof(json_out)) == 0) {
             send_json_response(client, 202, "Accepted", json_out);

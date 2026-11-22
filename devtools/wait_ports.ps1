@@ -27,7 +27,7 @@ while (-not (Test-NetConnection localhost -Port 8001 -InformationLevel Quiet)) {
 
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 $RootDir = Split-Path -Parent $ScriptDir
-$HealthCmd = Join-Path $RootDir "_lib\web-apps\openedx\healthcheck.cmd"
+$HealthCmd = Join-Path $RootDir "workloads\apps\openedx\healthcheck.cmd"
 if (Test-Path $HealthCmd) {
     & cmd.exe /c "`"$HealthCmd`""
 }

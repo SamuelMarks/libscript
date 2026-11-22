@@ -75,14 +75,14 @@ echo @echo off > "%MOCK_DIR%\mongosh.cmd"
 echo echo MONGOSH CALLED WITH: %%* ^>^> "%%MOCK_MONGOSH_LOG%%" >> "%MOCK_DIR%\mongosh.cmd"
 
 echo [TEST 1] Testing SQLite Provisioning on Windows (Pass 1)...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_schema.cmd" --engine sqlite --schema "%TEST_DB%" --user u --password p
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\provision_schema.cmd" --engine sqlite --schema "%TEST_DB%" --user u --password p
 
 echo [TEST 1] Testing SQLite Provisioning on Windows (Pass 2)...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_schema.cmd" --engine sqlite --schema "%TEST_DB%" --user u --password p
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\provision_schema.cmd" --engine sqlite --schema "%TEST_DB%" --user u --password p
 
 echo [TEST 2] Testing MySQL Provisioning on Windows...
 if exist "%MOCK_MYSQL_LOG%" del "%MOCK_MYSQL_LOG%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_schema.cmd" --engine mysql --schema "testdb" --user "testuser" --password "testpass"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\provision_schema.cmd" --engine mysql --schema "testdb" --user "testuser" --password "testpass"
 findstr /C:"CREATE DATABASE IF NOT EXISTS \`testdb\`" "%MOCK_MYSQL_LOG%" >nul || ( echo Failed mysql db & exit /b 1 )
 findstr /C:"CREATE USER IF NOT EXISTS 'testuser'@'localhost'" "%MOCK_MYSQL_LOG%" >nul || ( echo Failed mysql user & exit /b 1 )
 
@@ -90,7 +90,7 @@ echo [TEST 3] Testing Postgres Provisioning (Pass 1 - Create)...
 if exist "%MOCK_PSQL_LOG%" del "%MOCK_PSQL_LOG%"
 set "PSQL_MOCK_DB_EXISTS=0"
 set "PSQL_MOCK_ROLE_EXISTS=0"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_schema.cmd" --engine postgres --schema "testdb" --user "testuser" --password "testpass"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\provision_schema.cmd" --engine postgres --schema "testdb" --user "testuser" --password "testpass"
 findstr /C:"CREATE DATABASE \"testdb\"" "%MOCK_PSQL_LOG%" >nul || ( echo Failed postgres db & exit /b 1 )
 findstr /C:"CREATE USER \"testuser\"" "%MOCK_PSQL_LOG%" >nul || ( echo Failed postgres user & exit /b 1 )
 
@@ -98,13 +98,13 @@ echo [TEST 3] Testing Postgres Provisioning (Pass 2 - Exists)...
 if exist "%MOCK_PSQL_LOG%" del "%MOCK_PSQL_LOG%"
 set "PSQL_MOCK_DB_EXISTS=1"
 set "PSQL_MOCK_ROLE_EXISTS=1"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_schema.cmd" --engine postgres --schema "testdb" --user "testuser" --password "testpass"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\provision_schema.cmd" --engine postgres --schema "testdb" --user "testuser" --password "testpass"
 findstr /C:"CREATE DATABASE" "%MOCK_PSQL_LOG%" >nul && ( echo Failed idempotency & exit /b 1 )
 findstr /C:"CREATE USER" "%MOCK_PSQL_LOG%" >nul && ( echo Failed idempotency & exit /b 1 )
 
 echo [TEST 4] Testing MongoDB Provisioning on Windows...
 if exist "%MOCK_MONGOSH_LOG%" del "%MOCK_MONGOSH_LOG%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_schema.cmd" --engine mongodb --schema "testdb" --user "testuser" --password "testpass"
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\provision_schema.cmd" --engine mongodb --schema "testdb" --user "testuser" --password "testpass"
 findstr /C:"createUser" "%MOCK_MONGOSH_LOG%" >nul || ( echo Failed mongodb & exit /b 1 )
 
 rmdir /S /Q "%MOCK_DIR%"

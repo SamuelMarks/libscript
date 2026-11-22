@@ -55,16 +55,16 @@ if not defined LIBSCRIPT_ROOT_DIR (
 echo [MATRIX] Starting Multi-Platform Host Build Matrix Verification on Windows...
 
 echo [MATRIX] Checking Glibc Linux target validation...
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --validate="%LIBSCRIPT_ROOT_DIR%\profiles\linux-standard-server-glibc.json"
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --validate="%LIBSCRIPT_ROOT_DIR%\synthesis\profiles\linux\linux-standard-server-glibc.json"
 
 echo [MATRIX] Checking Musl Linux target validation...
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --validate="%LIBSCRIPT_ROOT_DIR%\profiles\linux-minimal-headless-musl.json"
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --validate="%LIBSCRIPT_ROOT_DIR%\synthesis\profiles\linux\linux-minimal-headless-musl.json"
 
 echo [MATRIX] Checking FreeBSD target validation...
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --validate="%LIBSCRIPT_ROOT_DIR%\profiles\freebsd-server-standard.json"
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --validate="%LIBSCRIPT_ROOT_DIR%\synthesis\profiles\freebsd\freebsd-server-standard.json"
 
 echo [MATRIX] Checking Unikernel target validation...
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --validate="%LIBSCRIPT_ROOT_DIR%\profiles\unikraft-nginx-redis.json"
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --validate="%LIBSCRIPT_ROOT_DIR%\synthesis\profiles\unikernel\unikraft-nginx-redis.json"
 
 echo [OK] Multi-platform host build matrix verification passed successfully on Windows.
 exit /b 0

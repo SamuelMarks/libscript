@@ -1,16 +1,17 @@
 {
-  "name": "util-linux",
-  "title": "Util-Linux",
-  "description": "Essential system administration and disk utilities",
-  "provides": ["util-linux"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Essential system administration and disk utilities",
+  "name": "util-linux",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["util-linux"],
+  "tier": "T2",
+  "title": "Util-Linux",
+  "versions": ["1.0.0"]
 }

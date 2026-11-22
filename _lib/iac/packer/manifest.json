@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "iac",
+  "conflicts": [],
+  "description": "HashiCorp Packer multi-platform automated machine image builder.",
+  "name": "packer",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "provides": ["packer", "hashicorp-packer", "image-builder"],
+  "tier": "T1",
+  "title": "Packer"
+}

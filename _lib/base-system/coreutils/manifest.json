@@ -1,16 +1,17 @@
 {
-  "name": "coreutils",
-  "title": "GNU Coreutils",
-  "description": "Basic file, shell and text manipulation utilities",
-  "provides": ["coreutils"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Basic file, shell and text manipulation utilities",
+  "name": "coreutils",
   "os_blacklist": ["windows", "sunos"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["coreutils"],
+  "tier": "T2",
+  "title": "GNU Coreutils",
+  "versions": ["1.0.0"]
 }

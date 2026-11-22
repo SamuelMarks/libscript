@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%GITLAB_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%GITLAB_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%GITLAB_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%GITLAB_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://gitlab.com/gitlab-org/gitlab" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%GITLAB_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gitlab %GITLAB_VERSION% to %DOWNLOAD_DIR%\gitlab...
     if not exist "%DOWNLOAD_DIR%\gitlab" mkdir "%DOWNLOAD_DIR%\gitlab"
     if not "%GITLAB_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GITLAB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gitlab\gitlab-%GITLAB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%GITLAB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gitlab\gitlab-%GITLAB_VERSION%.zip"
     ) else (
         echo GITLAB_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GITLAB_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends gitlab
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends gitlab
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\gitlab\gitlab-%GITLAB_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GITLAB_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GITLAB_DOWNLOAD_URL%" "%TEMP%\gitlab.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%GITLAB_DOWNLOAD_URL%" "%TEMP%\gitlab.zip"
         tar -xf "%TEMP%\gitlab.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gitlab.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "gitlab" "%ACTION%" "%GITLAB_VERSION%" "%GITLAB_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\gitlab\%GITLAB_VERSION%\\bin\\gitlab.exe\"" "%LIBSCRIPT_HOME%\gitlab\%GITLAB_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "gitlab" "%ACTION%" "%GITLAB_VERSION%" "%GITLAB_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\gitlab\%GITLAB_VERSION%\\bin\\gitlab.exe\"" "%LIBSCRIPT_HOME%\gitlab\%GITLAB_VERSION%"
 exit /b !errorlevel!

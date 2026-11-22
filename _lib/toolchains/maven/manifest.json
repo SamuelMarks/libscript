@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "maven",
-  "title": "Maven",
-  "description": "A software project management and comprehension tool, primarily for Java.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["maven", "mvn", "build-system"],
-  "os_whitelist": ["all"],
+  "description": "A software project management and comprehension tool, primarily for Java.",
+  "name": "maven",
   "os_blacklist": ["sunos"],
-  "capabilities": ["versioned-artifact"]
+  "os_whitelist": ["all"],
+  "provides": ["maven", "mvn", "build-system"],
+  "tier": "T1",
+  "title": "Maven"
 }

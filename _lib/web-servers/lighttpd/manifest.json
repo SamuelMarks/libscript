@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "lighttpd",
-  "title": "Lighttpd",
-  "description": "A secure, fast, compliant, and very flexible web-server that has been optimized for high-performance environments.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "web-servers",
-  "provides": ["web-server", "lighttpd"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A secure, fast, compliant, and very flexible web-server that has been optimized for high-performance environments.",
+  "name": "lighttpd",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": ["80", "443", "8080"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["web-server", "lighttpd"],
+  "tier": "T1",
+  "title": "Lighttpd"
 }

@@ -1,15 +1,16 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "exim",
-  "title": "Exim",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "utilities",
+  "conflicts": [],
+  "description": "Exim mail transfer agent and local SMTP relay daemon.",
   "license": "GPL-2.0-or-later",
   "license_name": "GNU General Public License v2.0 or later",
-  "description": "Exim mail transfer agent and local SMTP relay daemon.",
-  "category": "utilities",
-  "provides": ["mail", "smtp", "exim"],
-  "conflicts": [],
-  "os_whitelist": ["all"],
+  "name": "exim",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [25, 587],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["mail", "smtp", "exim"],
+  "tier": "T1",
+  "title": "Exim"
 }

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "utm",
-  "title": "UTM Virtual Machines for macOS",
-  "description": "UTM (utmctl) QEMU and Apple Virtualization.framework virtual machine frontend and CLI controller for macOS.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "virtualization",
-  "provides": ["utm", "utmctl"],
+  "description": "UTM (utmctl) QEMU and Apple Virtualization.framework virtual machine frontend and CLI controller for macOS.",
+  "name": "utm",
   "os_whitelist": ["macos", "darwin"],
+  "provides": ["utm", "utmctl"],
   "repository": "https://github.com/utmapp/UTM",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "UTM Virtual Machines for macOS"
 }

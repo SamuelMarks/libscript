@@ -7,11 +7,11 @@ maintain strict functional parity across `./libscript.sh` (POSIX `/bin/sh`) and 
 
 ---
 
-## 1. Native Toolchain Version Management (Tier 1)
+## 1. Native Toolchain Version Management (`T1`)
 
 LibScript natively replaces external version managers like `nvm`, `fnm`, `volta`, `pyenv`, `uv`,
 `rustup`, `rvm`, and `sdkman`. It provides universal capability-typed lifecycle operations across
-all 360+ Tier 1 recipes, 547+ documented components, and 580+ subsystems.
+all `492` atomic `T1`/`T2` recipes and `T3`–`T5` synthesis, infrastructure, and workload subsystems.
 
 ### The Universal Lifecycle Verbs
 
@@ -112,9 +112,9 @@ FORMAT=json ./libscript.sh env postgres 16
 
 ### Scaffolding New Component-Package-Managers (`scaffold` / `new-component`)
 
-Create a new Tier 1 component-package-manager directory under `_lib/<category>/<component>/` with
-capability-typed POSIX `.sh`, Windows `.cmd`, schema, and documentation files (`service.{sh,cmd}`
-generated strictly when `service-daemon` is included in `--capabilities`):
+Create a new `T1` or `T2` component-package-manager directory under `_lib/<category>/<component>/`
+with capability-typed POSIX `.sh`, Windows `.cmd`, schema, and documentation files
+(`service.{sh,cmd}` generated strictly when `service-daemon` is included in `--capabilities`):
 
 ```sh
 # 1. Interactive prompter wizard (optionally exporting answers to a reusable JSON spec)
@@ -130,7 +130,7 @@ libscript.cmd scaffold --from-json=my-tool.scaffold.json
   --non-interactive \
   --name=zoxide \
   --category=utilities \
-  --capabilities=versioned-artifact \
+  --capabilities=userland-package \
   --description="A smarter cd command inspired by z and autojump." \
   --github-repo=ajeetdsouza/zoxide \
   --version-scheme=github-release \
@@ -139,10 +139,10 @@ libscript.cmd scaffold --from-json=my-tool.scaffold.json
 
 ---
 
-## 2. Declarative OS Configuration & TUI Engine (Tier 2)
+## 2. Declarative OS Configuration & TUI Engine (`T3`)
 
 LibScript can synthesize customized, bootable operating system images from declarative
-specifications conforming to `os-config.schema.json`.
+specifications conforming to `synthesis/schemas/os-config.schema.json`.
 
 ### Interactive Terminal Configurator (`libscript config os`)
 
@@ -159,13 +159,13 @@ libscript.cmd config os
 
 ### Working with Curated Profiles
 
-Pre-configured profiles are available in `profiles/`:
+Pre-configured profiles are available in `synthesis/profiles/`:
 
 ```sh
 # Load a curated profile in the configurator
 ./libscript.sh config os --profile=linux-desktop-sway-wayland
 
-# Validate an existing configuration against os-config.schema.json
+# Validate an existing configuration against synthesis/schemas/os-config.schema.json
 ./libscript.sh config os --validate=my-os.json
 
 # Export the active configuration to a portable JSON file
@@ -174,35 +174,38 @@ Pre-configured profiles are available in `profiles/`:
 
 Available curated profiles include:
 
-- **Minimal & Enterprise Servers**: `linux-minimal-headless-musl.json`,
-  `linux-standard-server-glibc.json`, `freebsd-server-standard.json`
-- **Modern Desktops & Compositors**: `linux-desktop-sway-wayland.json`,
-  `linux-desktop-hyprland.json`, `linux-desktop-kde-plasma.json`, `linux-desktop-xfce-x11.json`,
-  `freebsd-desktop-xfce.json`
-- **Linux From Scratch (LFS) Workstations**: `lfs-minimal-headless.json`,
-  `lfs-openrc-wayland-sway.json`, `lfs-runit-wayland-hyprland.json`, `lfs-s6-wayland-labwc.json`,
-  `lfs-systemd-wayland-plasma6.json`, `lfs-systemd-wayland-gnome.json`,
+- **Minimal & Enterprise Servers (`synthesis/profiles/{linux,freebsd}/`)**:
+  `linux-minimal-headless-musl.json`, `linux-standard-server-glibc.json`,
+  `freebsd-server-standard.json`
+- **Modern Desktops & Compositors (`synthesis/profiles/{linux,freebsd}/`)**:
+  `linux-desktop-sway-wayland.json`, `linux-desktop-hyprland.json`, `linux-desktop-kde-plasma.json`,
+  `linux-desktop-xfce-x11.json`, `freebsd-desktop-xfce.json`
+- **Linux From Scratch (LFS) Workstations (`synthesis/profiles/lfs/`)**:
+  `lfs-minimal-headless.json`, `lfs-openrc-wayland-sway.json`, `lfs-runit-wayland-hyprland.json`,
+  `lfs-s6-wayland-labwc.json`, `lfs-systemd-wayland-plasma6.json`, `lfs-systemd-wayland-gnome.json`,
   `lfs-sysvinit-x11-openbox.json`, `lfs-dinit-musl-minimal.json`
-- **Distribution-Style Stacks**: `linux-alpine-style-minimal.json`,
+- **Distribution-Style Stacks (`synthesis/profiles/linux/`)**: `linux-alpine-style-minimal.json`,
   `linux-alpine-style-standard.json`, `linux-debian-style-minimal.json`,
   `linux-debian-style-server.json`, `linux-redhat-style-minimal.json`,
   `linux-redhat-style-server.json`
-- **illumos & SunOS Syntheses (`profiles/illumos/`)**: `minimal-server.json`, `cde-retro-x11.json`,
-  `desktop-mate-x11.json`, `desktop-xfce-x11.json`, `hardened-runit.json`, `pkgsrc-developer.json`,
-  `zfs-cloud.json`
-- **ReactOS Win32 NT Syntheses (`profiles/reactos/`)**: `minimal-headless-i686.json`,
+- **illumos & SunOS Syntheses (`synthesis/profiles/illumos/`)**: `minimal-server.json`,
+  `cde-retro-x11.json`, `desktop-mate-x11.json`, `desktop-xfce-x11.json`, `hardened-runit.json`,
+  `pkgsrc-developer.json`, `zfs-cloud.json`
+- **ReactOS Win32 NT Syntheses (`synthesis/profiles/reactos/`)**: `minimal-headless-i686.json`,
   `desktop-classic-i686.json`, `developer-win32-i686.json`, `btrfs-appliance-i686.json`,
   `nightly-x86_64.json`
-- **Cloud, MicroVM & Open edX Unikernel Constellation Appliances**: `cloud-aws-ami-base.json`,
+- **Cloud, MicroVM & Open edX Unikernel Constellation Appliances
+  (`synthesis/profiles/{cloud,hypervisor,unikernel}/`)**: `cloud-aws-ami-base.json`,
   `cloud-azure-vhd-base.json`, `cloud-gcp-gce-base.json`, `hypervisor-vmware-esxi.json`,
   `hypervisor-proxmox-template.json`, `firecracker-microvm-appliance.json`,
   `unikraft-nginx-redis.json`, `osv-cloud-runtime.json`, and the 8-profile
-  `profiles/openedx-unikernel/{lms-nanos,cms-nanos,celery-nanos,caddy-mfe-unikraft,mysql-osv,ferretdb-osv,valkey-unikraft,meilisearch-osv}.json`
+  `synthesis/profiles/unikernel/openedx/{lms-nanos,cms-nanos,celery-nanos,caddy-mfe-unikraft,mysql-osv,ferretdb-osv,valkey-unikraft,meilisearch-osv}.json`
   suite
-- **RTOS & Embedded Microcontroller Profiles**: `zephyr-qemu-x86_64-minimal.json`,
-  `zephyr-cortex-m3-mcuboot-signed.json`, `zephyr-riscv64-mqtt-sqlite.json`,
-  `zephyr-wamr-edge-appliance.json`, `freertos-cortex-m3-mps2-minimal.json`,
-  `freertos-mqtt-littlefs-sensor.json`, `freertos-native-sim-ci.json`
+- **RTOS & Embedded Microcontroller Profiles (`synthesis/profiles/rtos/`)**:
+  `zephyr-qemu-x86_64-minimal.json`, `zephyr-cortex-m3-mcuboot-signed.json`,
+  `zephyr-riscv64-mqtt-sqlite.json`, `zephyr-wamr-edge-appliance.json`,
+  `freertos-cortex-m3-mps2-minimal.json`, `freertos-mqtt-littlefs-sensor.json`,
+  `freertos-native-sim-ci.json`
 - **Multi-Compiler Linux Kernel Profiles**: `linux-kernel-gcc-tiny.json`,
   `linux-kernel-clang-tiny.json`, `linux-kernel-tcc-tiny.json`, `linux-kernel-edgcpp-tiny.json`,
   `linux-kernel-custom-cc-tiny.json`, `linux-kernel-gcc-defconfig.json`,
@@ -350,7 +353,7 @@ Define multi-tier services, databases, and ingress in a `libscript.json` file:
 
 ---
 
-## 6. Multicloud & AI Cluster Deployment (Tier 3)
+## 6. Multicloud & AI Cluster Deployment (`T4`)
 
 Deploy stacks and custom synthesized OS images across public clouds, hypervisors, and AI hardware.
 
@@ -375,28 +378,28 @@ Deploy stacks and custom synthesized OS images across public clouds, hypervisors
 Stage UEFI/GPT & Hyper-V Gen2 VHD unikernel constellations, audit compliance (EULA, zero leaked
 secrets, no public admin/datastore ports, SPDX 2.3 SBOM), and emit AWS Marketplace Catalog
 `StartChangeSet` payloads, Azure Managed Application ARM packages, and GCP Producer Portal Terraform
-Blueprints (`schemas/marketplace-offer.schema.json`):
+Blueprints (`infrastructure/marketplace/marketplace-offer.schema.json`):
 
 ```sh
 # Stage and validate the 8-appliance Open edX unikernel marketplace offer across AWS, Azure, and GCP
-./libscript.sh publish-marketplace marketplace/openedx-unikernel/offer.json --clouds=aws,azure,gcp --stage-only
+./libscript.sh publish-marketplace infrastructure/marketplace/openedx-unikernel/offer.json --clouds=aws,azure,gcp --stage-only
 
 # Windows Batch equivalent
-libscript.cmd publish-marketplace marketplace\openedx-unikernel\offer.json --clouds=aws,azure,gcp --stage-only
+libscript.cmd publish-marketplace infrastructure\marketplace\openedx-unikernel\offer.json --clouds=aws,azure,gcp --stage-only
 ```
 
 ### Hardware-Accelerated AI & TPU Workloads
 
 ```sh
 # Provision a Google Cloud TPU VM or GPU VM with GCS FUSE and TensorBoard telemetry
-./payloads/ai/gcp-tpu-vm/deploy.sh
-./payloads/ai/gcp-gpu-vm/deploy.sh
+./workloads/payloads/ai/gcp-tpu-vm/deploy.sh
+./workloads/payloads/ai/gcp-gpu-vm/deploy.sh
 
 # Launch distributed training or serving across TPU Pod slices via GKE/XPK or direct TPU VM lockstep
-./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler xpk
-./libscript.sh payload submit payloads/ai/gcp-tpu-vm/payload.json --scheduler tpu_vm
-./libscript.sh payload submit payloads/ai/gke-xpk-inference/payload.json --scheduler xpk
-./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler kubernetes
+./libscript.sh payload submit workloads/payloads/ai/gke-xpk-training/payload.json --scheduler xpk
+./libscript.sh payload submit workloads/payloads/ai/gcp-tpu-vm/payload.json --scheduler tpu_vm
+./libscript.sh payload submit workloads/payloads/ai/gke-xpk-inference/payload.json --scheduler xpk
+./libscript.sh payload submit workloads/payloads/ai/vllm/payload.json --scheduler kubernetes
 ```
 
 ### Reverse Proxy & Ingress Management (`netctl`)
@@ -431,66 +434,70 @@ curl -X POST http://127.0.0.1:8080/api/v1/installations \
 
 ---
 
-## 7. Multi-Node Cluster Schedulers & Declarative Payloads (Tier 4)
+## 7. Multi-Node Cluster Schedulers & Declarative Workloads (`T5`)
 
-Compile and submit declarative workloads (`payloads/payload.schema.json`)—including stateless web
-APIs, stateful services, distributed ML training, search-engine reindexing, and unikernels—to
-**Kubernetes**, **Apache Mesos / Marathon**, **HashiCorp Nomad**, **Slurm / Ray**, **Google XPK**,
-**MicroVMs**, or **8+ Native OS Init Supervisors**:
+Compile and submit declarative workloads (`workloads/schemas/payload.schema.json`)—including
+stateless web APIs, stateful services, distributed ML training, search-engine reindexing, and
+unikernels—to **Kubernetes**, **Apache Mesos / Marathon**, **HashiCorp Nomad**, **Slurm / Ray**,
+**Google XPK**, **MicroVMs**, or **8+ Native OS Init Supervisors**:
 
 ```sh
 # Compile a workload definition into a target scheduler manifest (YAML/JSON/HCL/systemd)
-./libscript.sh payload compile payloads/web/openedx/payload.json --scheduler kubernetes
-./libscript.sh payload compile payloads/web/openedx/payload.json --scheduler mesos
-./libscript.sh payload compile payloads/web/openedx/payload.json --scheduler nomad
+./libscript.sh workload compile workloads/payloads/web/openedx/payload.json --scheduler kubernetes
+./libscript.sh workload compile workloads/payloads/web/openedx/payload.json --scheduler mesos
+./libscript.sh workload compile workloads/payloads/web/openedx/payload.json --scheduler nomad
 
 # Submit workloads across multi-node schedulers
-./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler kubernetes
-./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler mesos
-./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler nomad
-./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler nomad
-./libscript.sh payload submit payloads/ai/ollama/payload.json --scheduler microvm
+./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler kubernetes
+./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler mesos
+./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler nomad
+./libscript.sh workload submit workloads/payloads/ai/vllm/payload.json --scheduler nomad
+./libscript.sh workload submit workloads/payloads/ai/ollama/payload.json --scheduler microvm
 
 # Inspect workload status, tail logs, or stop/destroy deployments
-./libscript.sh payload status openedx --scheduler kubernetes
-./libscript.sh payload logs openedx --scheduler nomad
-./libscript.sh payload stop openedx --scheduler mesos
-./libscript.sh payload destroy openedx --scheduler kubernetes
+./libscript.sh workload status openedx --scheduler kubernetes
+./libscript.sh workload logs openedx --scheduler nomad
+./libscript.sh workload stop openedx --scheduler mesos
+./libscript.sh workload destroy openedx --scheduler kubernetes
 ```
 
 ---
 
-## 8. High-Availability (HA) Topologies & Consensus Choreography (Tier 3.5)
+## 8. Cluster Substrates (`T4`) & Stateful HA Constellations (`T5`)
 
-Orchestrate multi-node stateful clusters with distributed lease locking, WireGuard mesh overlays,
-and automated split-brain fencing (`topologies/`):
+Orchestrate `T4` multi-node cluster substrates (`infrastructure/clusters/`) and `T5` stateful HA
+service constellations (`workloads/constellations/`) backed by `T0` distributed lease locking and
+split-brain fencing (`engine/consensus/`):
 
 ```sh
-# Bootstrap multi-node High-Availability clusters
-./libscript.sh topology up topologies/postgres-ha/topology.json
-./libscript.sh topology up topologies/redis-cluster/topology.json
-./libscript.sh topology up topologies/valkey-cluster/topology.json
-./libscript.sh topology up topologies/openedx-ha/topology.json
-./libscript.sh topology up topologies/mesos-marathon-ha/topology.json
-./libscript.sh topology up topologies/k8s-marathon-paas/topology.json
-./libscript.sh topology up topologies/k0s-ha/topology.json
-./libscript.sh topology up topologies/minio-distributed/topology.json
-./libscript.sh topology up topologies/openedx-unikernel-pod/topology.json
-./libscript.sh topology up topologies/iot-mqtt-edge-pod/topology.json
+# Bootstrap T4 cluster-forming substrates
+./libscript.sh cluster up infrastructure/clusters/mesos-marathon-ha/topology.json
+./libscript.sh cluster up infrastructure/clusters/k8s-marathon-paas/topology.json
+./libscript.sh cluster up infrastructure/clusters/k0s-ha/topology.json
+./libscript.sh cluster up infrastructure/clusters/gke-tpu-cluster/topology.json
 
-# Inspect cluster quorum and node state (.topology_state.json)
-./libscript.sh topology status topologies/postgres-ha/topology.json
+# Bootstrap T5 multi-node stateful High-Availability constellations
+./libscript.sh constellation up workloads/constellations/postgres-ha/topology.json
+./libscript.sh constellation up workloads/constellations/redis-cluster/topology.json
+./libscript.sh constellation up workloads/constellations/valkey-cluster/topology.json
+./libscript.sh constellation up workloads/constellations/openedx-ha/topology.json
+./libscript.sh constellation up workloads/constellations/minio-distributed/topology.json
+./libscript.sh constellation up workloads/constellations/openedx-unikernel-pod/topology.json
+./libscript.sh constellation up workloads/constellations/iot-mqtt-edge-pod/topology.json
+
+# Inspect quorum and node state (.topology_state.json)
+./libscript.sh constellation status workloads/constellations/postgres-ha/topology.json
 
 # Scale worker/replica pools, drain nodes, or trigger fenced leader failover
-./libscript.sh topology scale topologies/postgres-ha/topology.json pg-replicas=4
-./libscript.sh topology drain topologies/postgres-ha/topology.json pg-replicas-2
-./libscript.sh topology failover topologies/postgres-ha/topology.json pg-replicas-1
+./libscript.sh constellation scale workloads/constellations/postgres-ha/topology.json pg-replicas=4
+./libscript.sh constellation drain workloads/constellations/postgres-ha/topology.json pg-replicas-2
+./libscript.sh constellation failover workloads/constellations/postgres-ha/topology.json pg-replicas-1
 
-# Perform a zero-downtime rolling upgrade across the topology
-./libscript.sh topology upgrade topologies/postgres-ha/topology.json 16.4
+# Perform a zero-downtime rolling upgrade across the constellation
+./libscript.sh constellation upgrade workloads/constellations/postgres-ha/topology.json 16.4
 
-# Destroy topology and release cloud resources
-./libscript.sh topology destroy topologies/postgres-ha/topology.json
+# Destroy constellation and release cloud resources
+./libscript.sh constellation destroy workloads/constellations/postgres-ha/topology.json
 ```
 
 ---
@@ -516,23 +523,23 @@ Apply composable host and sysroot capabilities in deterministic priority order (
 ./libscript.sh trait teardown ingress
 ```
 
-### Stateful Component Hooks: Backup, Restore, Upgrade & Rollback (`_lib/_common/hooks.sh`)
+### Stateful Component Hooks: Backup, Restore, Upgrade & Rollback (`engine/common/hooks.sh`)
 
 ```sh
 # Physical & multi-tenant backups and point-in-time restores
-./_lib/_common/hooks.sh --exec postgres backup /var/backups/postgres
-./_lib/_common/hooks.sh --exec postgres restore /var/backups/postgres
-./_lib/_common/hooks.sh --exec postgres backup_tenant --tenant acme_corp
-./_lib/_common/hooks.sh --exec postgres restore_tenant --tenant acme_corp
+./engine/common/hooks.sh --exec postgres backup /var/backups/postgres
+./engine/common/hooks.sh --exec postgres restore /var/backups/postgres
+./engine/common/hooks.sh --exec postgres backup_tenant --tenant acme_corp
+./engine/common/hooks.sh --exec postgres restore_tenant --tenant acme_corp
 
 # Stateful application/database version upgrade and atomic downgrade/rollback
-./_lib/_common/hooks.sh --exec postgres upgrade 15 16
-./_lib/_common/hooks.sh --exec postgres rollback 15 16
+./engine/common/hooks.sh --exec postgres upgrade 15 16
+./engine/common/hooks.sh --exec postgres rollback 15 16
 
 # Health probes, endpoint announcement, and periodic maintenance
-./_lib/_common/hooks.sh --exec postgres probe readiness
-./_lib/_common/hooks.sh --exec postgres announce
-./_lib/_common/hooks.sh --exec postgres maintenance
+./engine/common/hooks.sh --exec postgres probe readiness
+./engine/common/hooks.sh --exec postgres announce
+./engine/common/hooks.sh --exec postgres maintenance
 ```
 
 ---
@@ -573,7 +580,7 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 The unified `experiment` runner (`./libscript.sh experiment` / `libscript.cmd experiment`) combines
 the Open/Closed `experiments/<suite-id>/` plugin engine (`experiments/engine.{sh,cmd}`) with cloud
 instance provisioning and the Bento (`SamuelMarks/bento` @ `multi-os-qemu-aarch64`) Vagrant test
-matrix across all 360+ Tier 1 recipes, 547+ documented components, and 580+ subsystems.
+matrix across all `492` atomic `T1`/`T2` recipes and `T3`–`T5` subsystems.
 
 ### Open/Closed Experiment Plugin Verbs (`experiments/<suite-id>/`)
 
@@ -598,7 +605,7 @@ matrix across all 360+ Tier 1 recipes, 547+ documented components, and 580+ subs
 - **`b_use_bento_fork`** _(alias `0`)_: Clones/checks out `https://github.com/SamuelMarks/bento.git`
   at branch `multi-os-qemu-aarch64`.
 - **`c_install_virtualization_stack`** _(alias `1`)_: Installs Vagrant, Packer, Ruby, QEMU,
-  VirtualBox, and ISO tools via `_lib/virtualization/bento-builder`.
+  VirtualBox, and ISO tools via `synthesis/distro/bento`.
 - **`d_deploy_vagrant_box`** _(alias `2`)_: Registers Bento `.box` images and boots
   `vagrant/<target_os>`.
 - **`e_snapshot_vagrant_box`** _(alias `3`)_: Saves a clean baseline `vanilla` snapshot of the

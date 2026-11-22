@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "deno",
-  "title": "Deno Runtime",
-  "description": "A secure runtime for JavaScript and TypeScript.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["runtime", "javascript", "typescript", "deno"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A secure runtime for JavaScript and TypeScript.",
+  "name": "deno",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["runtime", "javascript", "typescript", "deno"],
   "repository": "https://github.com/denoland/deno",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Deno Runtime"
 }

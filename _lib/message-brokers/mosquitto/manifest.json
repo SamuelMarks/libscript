@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mosquitto",
-  "title": "Mosquitto",
-  "description": "An open source message broker that implements the MQTT protocol versions 5.0, 3.1.1 and 3.1.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "message-brokers",
-  "provides": ["mqtt", "mosquitto", "message-broker"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "An open source message broker that implements the MQTT protocol versions 5.0, 3.1.1 and 3.1.",
+  "name": "mosquitto",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": ["1883", "8883"],
+  "provides": ["mqtt", "mosquitto", "message-broker"],
   "repository": "https://github.com/eclipse-mosquitto/mosquitto",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "Mosquitto"
 }

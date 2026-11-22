@@ -82,7 +82,7 @@ exit /b 0
 set "RELEASES_URL=%OPENRESTY_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/openresty/openresty/tags"
 echo [ls-remote] Fetching available openresty versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -95,8 +95,8 @@ if not exist "!TARGET_DIR!" (
     set "ACTION=install"
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openresty" "%OPENRESTY_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openresty" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openresty" "%OPENRESTY_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openresty" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -112,7 +112,7 @@ set "DL_DIR=!DL_DIR!\openresty"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading openresty %OPENRESTY_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -124,23 +124,23 @@ if /i "%OPENRESTY_INSTALL_METHOD%"=="from-source" (
     set "SRC_URL=%OPENRESTY_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://openresty.org/download/openresty-{VERSION}.tar.gz"
     call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "openresty" "!EXACT_VERSION!" "openresty" "c" "autotools" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "openresty" "!EXACT_VERSION!" "openresty" "c" "autotools" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if "%OPENRESTY_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends openresty
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends openresty
     exit /b !errorlevel!
 )
 if /i "%OPENRESTY_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget openresty
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget openresty
     exit /b !errorlevel!
 )
 if /i "%OPENRESTY_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco openresty
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco openresty
     exit /b !errorlevel!
 )
 if /i "%OPENRESTY_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop openresty
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop openresty
     exit /b !errorlevel!
 )
 call :resolve_version
@@ -152,8 +152,8 @@ if exist "!TARGET_DIR!\bin\openresty.bat" set "_BIN_FOUND=1"
 if "!_BIN_FOUND!"=="1" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] openresty !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openresty" "%OPENRESTY_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openresty" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openresty" "%OPENRESTY_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openresty" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -161,7 +161,7 @@ set "URL=%OPENRESTY_DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=https://openresty.org/download/openresty-{VERSION}-win64.zip"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends openresty
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends openresty
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -174,7 +174,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\openresty-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 set "_IS_ARCHIVE=0"
@@ -226,8 +226,8 @@ if not "!_IS_ARCHIVE!"=="0" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\openresty.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openresty" "%OPENRESTY_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "openresty" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openresty" "%OPENRESTY_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "openresty" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -244,7 +244,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "openresty/openresty" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/openresty/openresty/releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/openresty/openresty/releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -257,5 +257,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "openresty" "%ACTION%" "%OPENRESTY_VERSION%" "%OPENRESTY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\openresty\%OPENRESTY_VERSION%\\bin\\openresty.exe\"" "%LIBSCRIPT_HOME%\openresty\%OPENRESTY_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "openresty" "%ACTION%" "%OPENRESTY_VERSION%" "%OPENRESTY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\openresty\%OPENRESTY_VERSION%\\bin\\openresty.exe\"" "%LIBSCRIPT_HOME%\openresty\%OPENRESTY_VERSION%"
 exit /b !errorlevel!

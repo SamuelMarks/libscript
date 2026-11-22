@@ -1,15 +1,16 @@
 {
-  "name": "mdevd",
-  "title": "Mdevd",
-  "description": "Compatible daemonized mdev device manager",
-  "provides": ["mdevd"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "capabilities": ["versioned-artifact"]
+  "description": "Compatible daemonized mdev device manager",
+  "name": "mdevd",
+  "provides": ["mdevd"],
+  "tier": "T2",
+  "title": "Mdevd",
+  "versions": ["1.0.0"]
 }

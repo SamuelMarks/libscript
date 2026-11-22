@@ -67,14 +67,14 @@ for _fmt in deb rpm apk txz pkg dmg; do
   fi
 done
 
-_deb_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_deb.sh" --app-name Demo --app-version 2.0.0 jq 1.7.1)
-if printf '%s\n' "$_deb_out" | grep -q 'dpkg-deb --root-owner-group --build' && grep -q 'dpkg-deb --root-owner-group --build' "${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_deb.cmd"; then
+_deb_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/deb.sh" --app-name Demo --app-version 2.0.0 jq 1.7.1)
+if printf '%s\n' "$_deb_out" | grep -q 'dpkg-deb --root-owner-group --build' && grep -q 'dpkg-deb --root-owner-group --build' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/deb.cmd"; then
   pass_check "pkg_deb.sh and pkg_deb.cmd both emit dpkg-deb build pipelines"
 else
   fail_check "pkg_deb.sh / pkg_deb.cmd dpkg-deb parity check failed"
 fi
 
-if grep -q 'envsubst_safe.cmd' "${LIBSCRIPT_ROOT_DIR}/_lib/_common/envsubst_safe_exec.cmd"; then
+if grep -q 'envsubst_safe.cmd' "${LIBSCRIPT_ROOT_DIR}/engine/common/envsubst_safe_exec.cmd"; then
   pass_check "envsubst_safe_exec.cmd delegates to envsubst_safe.cmd"
 else
   fail_check "envsubst_safe_exec.cmd does not delegate to envsubst_safe.cmd"
@@ -82,7 +82,7 @@ fi
 
 _es_in="${TEST_TMP}/es_in.txt"
 printf 'val=%s%sFOO_TOKEN}:%s%sUNSET_KEEP}\n' "$" "{" "$" "{" > "$_es_in"
-_es_out=$(FOO_TOKEN="hello_world" STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/_common/envsubst_safe_exec.sh" < "$_es_in")
+_es_out=$(FOO_TOKEN="hello_world" STACK="" "${LIBSCRIPT_ROOT_DIR}/engine/common/envsubst_safe_exec.sh" < "$_es_in")
 _es_expected=$(printf 'val=hello_world:%s%sUNSET_KEEP}' "$" "{")
 if [ "$_es_out" = "$_es_expected" ]; then
   pass_check "envsubst_safe_exec.sh interpolates defined vars while preserving undefined tokens"
@@ -93,7 +93,7 @@ fi
 printf '=== 2. Verifying Option A Exit-86 Proforma & Spliced Guard Linter ===\n'
 _opt_a_bad=0
 set +f
-for _oa in "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/kubernetes-thw/alpine-systemctl.cmd" \
+for _oa in "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/kubernetes-thw/alpine-systemctl.cmd" \
            "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_debian.cmd \
            "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_alpine.cmd \
            "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_freebsd.cmd \
@@ -112,7 +112,7 @@ fi
 
 _opt_a_ps1_bad=0
 set +f
-for _oa_ps1 in "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/kubernetes-thw/alpine-systemctl.ps1" \
+for _oa_ps1 in "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/kubernetes-thw/alpine-systemctl.ps1" \
                "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_debian.ps1 \
                "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_alpine.ps1 \
                "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_freebsd.ps1 \
@@ -169,24 +169,24 @@ else
 fi
 
 printf '=== 3. Verifying THIS_FILE Resolution From Arbitrary Working Directory ===\n'
-_tui_out=$(cd "$TEST_TMP" && STACK="" "${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_tui.sh" jq 1.7.1)
+_tui_out=$(cd "$TEST_TMP" && STACK="" "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/tui.sh" jq 1.7.1)
 if printf '%s\n' "$_tui_out" | grep -q 'LIBSCRIPT_ROOT_DIR' && ! printf '%s\n' "$_tui_out" | grep -q '\./libscript\.sh'; then
   pass_check "pkg_tui.sh resolves LIBSCRIPT_ROOT_DIR without CWD-relative ./libscript.sh"
 else
   fail_check "pkg_tui.sh emitted CWD-relative ./libscript.sh"
 fi
 
-if grep -q '_lib\\web-apps\\openedx\\cli.cmd' "${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_tui.cmd" && \
-   ! grep -q 'stacks\\cms\\openedx' "${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_tui.cmd"; then
-  pass_check "pkg_tui.cmd routes to canonical _lib\\web-apps\\openedx\\cli.cmd"
+if grep -q 'workloads\\apps\\openedx\\cli.cmd' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/tui.cmd" && \
+   ! grep -q 'stacks\\cms\\openedx' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/tui.cmd"; then
+  pass_check "pkg_tui.cmd routes to canonical workloads\\apps\\openedx\\cli.cmd"
 else
   fail_check "pkg_tui.cmd still references legacy stacks\\cms\\openedx path"
 fi
 
 printf '=== 4. Verifying 2x Directory-Symlink Idempotency ===\n'
 _fhs_root="${TEST_TMP}/fhs_sysroot"
-STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/create_fhs_layout.sh" "$_fhs_root" >/dev/null 2>&1
-STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/create_fhs_layout.sh" "$_fhs_root" >/dev/null 2>&1
+STACK="" "${LIBSCRIPT_ROOT_DIR}/synthesis/vfs/create_fhs_layout.sh" "$_fhs_root" >/dev/null 2>&1
+STACK="" "${LIBSCRIPT_ROOT_DIR}/synthesis/vfs/create_fhs_layout.sh" "$_fhs_root" >/dev/null 2>&1
 if [ ! -e "${_fhs_root}/var/run/run" ]; then
   pass_check "create_fhs_layout.sh 2x rerun produces zero nested var/run/run symlink"
 else
@@ -197,8 +197,8 @@ _mnt_ws="${TEST_TMP}/openedx_mnt"
 _host_repo="${TEST_TMP}/edx-platform"
 mkdir -p "$_mnt_ws" "$_host_repo"
 touch "${_host_repo}/manage.py"
-OPENEDX_DATA_DIR="$_mnt_ws" OPENEDX_INSTALL_DIR="$_mnt_ws" STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/mounts.sh" add "$_host_repo" >/dev/null 2>&1
-OPENEDX_DATA_DIR="$_mnt_ws" OPENEDX_INSTALL_DIR="$_mnt_ws" STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/mounts.sh" add "$_host_repo" >/dev/null 2>&1
+OPENEDX_DATA_DIR="$_mnt_ws" OPENEDX_INSTALL_DIR="$_mnt_ws" STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx/mounts.sh" add "$_host_repo" >/dev/null 2>&1
+OPENEDX_DATA_DIR="$_mnt_ws" OPENEDX_INSTALL_DIR="$_mnt_ws" STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx/mounts.sh" add "$_host_repo" >/dev/null 2>&1
 if [ ! -e "${_host_repo}/edx-platform" ] && [ -L "${_mnt_ws}/codebase_mount" ]; then
   pass_check "openedx/mounts.sh 2x rerun preserves host repo without nested self-symlink"
 else
@@ -225,8 +225,8 @@ if command -v cc >/dev/null 2>&1; then
 fi
 
 printf '=== 6. Verifying Pass 2 Generated Shims, os_info.cmd Tunneling & Zero Thin Companions ===\n'
-if grep -q 'endlocal' "${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.cmd" && \
-   grep -q 'set "INIT_SYS=%INIT_SYS%"' "${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.cmd"; then
+if grep -q 'endlocal' "${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.cmd" && \
+   grep -q 'set "INIT_SYS=%INIT_SYS%"' "${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.cmd"; then
   pass_check "os_info.cmd tunnels TARGET_OS, INIT_SYS, ARCH, and PKG_MGR across endlocal"
 else
   fail_check "os_info.cmd missing endlocal variable tunneling"
@@ -248,7 +248,7 @@ if [ "$_raw_d0" -eq 0 ]; then
 fi
 
 if grep -q 'rmdir /s /q "%target%"' "${LIBSCRIPT_ROOT_DIR}/_lib/git-servers/utils/git.cmd" && \
-   grep -q 'rmdir /s /q "!WORK_DIR!"' "${LIBSCRIPT_ROOT_DIR}/cli/commands/cloud/deploy.cmd"; then
+   grep -q 'rmdir /s /q "!WORK_DIR!"' "${LIBSCRIPT_ROOT_DIR}/workloads/services/deploy.cmd"; then
   pass_check "git.cmd and cloud/deploy.cmd clean pre-existing partial directories before git clone"
 else
   fail_check "git.cmd or cloud/deploy.cmd missing partial-directory cleanup before git clone"

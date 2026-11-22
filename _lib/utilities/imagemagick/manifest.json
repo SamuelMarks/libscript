@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "imagemagick",
-  "title": "ImageMagick",
-  "description": "Raster and vector digital image creation, editing, composition, and conversion CLI suite (magick).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["imagemagick", "magick", "image-converter"],
+  "description": "Raster and vector digital image creation, editing, composition, and conversion CLI suite (magick).",
+  "name": "imagemagick",
   "os_whitelist": ["all"],
+  "provides": ["imagemagick", "magick", "image-converter"],
   "repository": "https://github.com/ImageMagick/ImageMagick",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "ImageMagick"
 }

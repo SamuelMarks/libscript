@@ -1,7 +1,7 @@
 @echo off
 :: # test_experiment_harness.cmd
 :: ## Overview
-:: Windows unit test suite for `_lib\toolchains\_common\experiment_harness.cmd` verifying SIGPLAN `RULE-1` through `RULE-7`.
+:: Windows unit test suite for `experiments\_common\harness.cmd` verifying SIGPLAN `RULE-1` through `RULE-7`.
 :: ## Usage
 :: tests\test_experiment_harness.cmd
 
@@ -43,23 +43,23 @@ if not exist "!_W!" mkdir "!_W!"
     echo 10
     echo 50
 ) > "!_W!\s.txt"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_compute_stats "!_W!\s.txt" "!_W!\stats.json"
+call "%LIBSCRIPT_ROOT_DIR%\experiments\_common\harness.cmd" :libscript_exp_compute_stats "!_W!\s.txt" "!_W!\stats.json"
 if errorlevel 1 exit /b 1
 findstr /C:"\"median_p50_ns\": 50" "!_W!\stats.json" >nul 2>&1
 if errorlevel 1 exit /b 1
 set "LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA=1"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_assert_native_isa
+call "%LIBSCRIPT_ROOT_DIR%\experiments\_common\harness.cmd" :libscript_exp_assert_native_isa
 if not errorlevel 1 exit /b 1
 set "LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA=0"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_assert_native_isa
+call "%LIBSCRIPT_ROOT_DIR%\experiments\_common\harness.cmd" :libscript_exp_assert_native_isa
 if errorlevel 1 exit /b 1
 echo   DLL Name: KERNEL32.dll> "!_W!\pe.txt"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_audit_pe_dependents "--from-text" "!_W!\pe.txt" "!_W!\pe.json" || exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\experiments\_common\harness.cmd" :libscript_exp_audit_pe_dependents "--from-text" "!_W!\pe.txt" "!_W!\pe.json" || exit /b 1
 findstr /C:"\"pure_win32_subsystem\": true" "!_W!\pe.json" >nul 2>&1 || exit /b 1
 echo   DLL Name: KERNEL32.dll> "!_W!\pe.txt"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_audit_pe_dependents "--from-text" "!_W!\pe.txt" "!_W!\pe.json" || exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\experiments\_common\harness.cmd" :libscript_exp_audit_pe_dependents "--from-text" "!_W!\pe.txt" "!_W!\pe.json" || exit /b 1
 findstr /C:"\"pure_win32_subsystem\": true" "!_W!\pe.json" >nul 2>&1 || exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_compute_median_stddev "!_W!\s.txt" "!_W!\bad_opt.json" "50" "-O0" "-O2" >nul 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\experiments\_common\harness.cmd" :libscript_exp_compute_median_stddev "!_W!\s.txt" "!_W!\bad_opt.json" "50" "-O0" "-O2" >nul 2>&1
 if not errorlevel 1 exit /b 1
 rmdir /s /q "!_W!" >nul 2>&1
 echo [PASS] Windows SIGPLAN RULE-1..RULE-7 harness tests succeeded^^!

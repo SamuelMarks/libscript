@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "apk",
-  "provides": ["apk"],
-  "os_whitelist": ["linux"],
-  "title": "apk (`_bootstrap/apk`)",
-  "description": "This document describes the **apk** (Alpine Package Keeper) bootstrap component for the LibScript ecosystem. It handles the integration and management of the Alpine Linux package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "This document describes the **apk** (Alpine Package Keeper) bootstrap component for the LibScript ecosystem. It handles the integration and management of the Alpine Linux package manager.",
+  "name": "apk",
   "os_blacklist": ["freebsd", "windows"],
+  "os_whitelist": ["linux"],
+  "provides": ["apk"],
   "repository": "https://gitlab.alpinelinux.org/alpine/apk-tools",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "apk (`_bootstrap/apk`)"
 }

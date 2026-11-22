@@ -50,6 +50,6 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=zookeeper"
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_generic.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_generic.cmd" %*
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\uninstall_generic.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\uninstall_generic.cmd" %*
 )

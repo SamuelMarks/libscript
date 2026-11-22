@@ -1,0 +1,17 @@
+# ## Overview
+# PowerShell script for test.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the component '_noop' stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for _noop.
+#>
+
+$ErrorActionPreference = "Stop"
+
+Write-Output "./engine/common/_noop test skipped"

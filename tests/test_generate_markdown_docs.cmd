@@ -68,7 +68,7 @@ exit /b 0
 echo === LibScript Markdown Docs Generator Regression Suite (Win32) ===
 
 set "TMP_WS=%TEMP%\libscript_md_docs_test_%RANDOM%"
-if not exist "%TMP_WS%\_lib\_common" mkdir "%TMP_WS%\_lib\_common"
+if not exist "%TMP_WS%\engine\common" mkdir "%TMP_WS%\engine\common"
 if exist "%LIBSCRIPT_ROOT_DIR%\.prettierrc" copy /y "%LIBSCRIPT_ROOT_DIR%\.prettierrc" "%TMP_WS%\.prettierrc" >nul
 if exist "%LIBSCRIPT_ROOT_DIR%\.editorconfig" copy /y "%LIBSCRIPT_ROOT_DIR%\.editorconfig" "%TMP_WS%\.editorconfig" >nul
 
@@ -86,7 +86,7 @@ echo       "default": "system"
 echo     }
 echo   }
 echo }
-) > "%TMP_WS%\_lib\_common\base_vars.schema.json"
+) > "%TMP_WS%\engine\schemas\base_vars.schema.json"
 
 for /L %%I in (1,1,55) do (
     if not exist "%TMP_WS%\_lib\mock-cat\comp_%%I" mkdir "%TMP_WS%\_lib\mock-cat\comp_%%I"

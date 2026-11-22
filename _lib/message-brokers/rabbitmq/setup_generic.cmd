@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%RABBITMQ_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%RABBITMQ_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%RABBITMQ_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%RABBITMQ_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/wch/r-sourceabbitmq" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%RABBITMQ_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading rabbitmq %RABBITMQ_VERSION% to %DOWNLOAD_DIR%\rabbitmq...
     if not exist "%DOWNLOAD_DIR%\rabbitmq" mkdir "%DOWNLOAD_DIR%\rabbitmq"
     if not "%RABBITMQ_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RABBITMQ_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rabbitmq\rabbitmq-%RABBITMQ_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%RABBITMQ_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rabbitmq\rabbitmq-%RABBITMQ_VERSION%.zip"
     ) else (
         echo RABBITMQ_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%RABBITMQ_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends rabbitmq
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends rabbitmq
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\rabbitmq\rabbitmq-%RABBITMQ_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%RABBITMQ_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RABBITMQ_DOWNLOAD_URL%" "%TEMP%\rabbitmq.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%RABBITMQ_DOWNLOAD_URL%" "%TEMP%\rabbitmq.zip"
         tar -xf "%TEMP%\rabbitmq.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rabbitmq.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "rabbitmq" "%ACTION%" "%RABBITMQ_VERSION%" "%RABBITMQ_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\rabbitmq\%RABBITMQ_VERSION%\\bin\\rabbitmq-server.bat\"" "%LIBSCRIPT_HOME%\rabbitmq\%RABBITMQ_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "rabbitmq" "%ACTION%" "%RABBITMQ_VERSION%" "%RABBITMQ_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\rabbitmq\%RABBITMQ_VERSION%\\bin\\rabbitmq-server.bat\"" "%LIBSCRIPT_HOME%\rabbitmq\%RABBITMQ_VERSION%"
 exit /b !errorlevel!

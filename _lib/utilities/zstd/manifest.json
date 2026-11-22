@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "zstd",
-  "title": "Zstandard",
-  "description": "Fast real-time lossless compression algorithm and zstd CLI offering high compression ratios.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["zstd", "compressor"],
+  "description": "Fast real-time lossless compression algorithm and zstd CLI offering high compression ratios.",
+  "name": "zstd",
   "os_whitelist": ["all"],
+  "provides": ["zstd", "compressor"],
   "repository": "https://github.com/facebook/zstd",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Zstandard"
 }

@@ -105,7 +105,7 @@ if "%VFOX_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list comman
 if "%VFOX_INSTALL_METHOD%"=="vfox" ( vfox ls all vfox & exit /b 0 )
 if "%VFOX_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%VFOX_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%VFOX_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%VFOX_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/version-fox/vfox" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -146,7 +146,7 @@ if "%VFOX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading vfox %VFOX_VERSION% to %DOWNLOAD_DIR%\vfox...
     if not exist "%DOWNLOAD_DIR%\vfox" mkdir "%DOWNLOAD_DIR%\vfox"
     if not "%VFOX_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VFOX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vfox\vfox-%VFOX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%VFOX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vfox\vfox-%VFOX_VERSION%.zip"
     ) else (
         echo VFOX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -157,7 +157,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%VFOX_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends vfox
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends vfox
     exit /b !errorlevel!
 )
 if "%VFOX_INSTALL_METHOD%"=="mise" ( mise install "vfox@%VFOX_VERSION%" & exit /b 0 )
@@ -177,11 +177,11 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\vfox\vfox-%VFOX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%VFOX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VFOX_DOWNLOAD_URL%" "%TEMP%\vfox.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%VFOX_DOWNLOAD_URL%" "%TEMP%\vfox.zip"
         tar -xf "%TEMP%\vfox.zip" -C "%TARGET_DIR%"
     ) else (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/version-fox/vfox/releases/download/v0.6.1/vfox_0.6.1_windows_x86_64.zip" "%TEMP%\vfox.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/version-fox/vfox/releases/download/v0.6.1/vfox_0.6.1_windows_x86_64.zip" "%TEMP%\vfox.zip"
         if exist "%TEMP%\vfox.zip" (
             tar -xf "%TEMP%\vfox.zip" -C "%TARGET_DIR%\bin" 2>nul
         )
@@ -215,5 +215,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "vfox" "%ACTION%" "%VFOX_VERSION%" "%VFOX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\vfox\%VFOX_VERSION%\\bin\\vfox.exe\"" "%LIBSCRIPT_HOME%\vfox\%VFOX_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "vfox" "%ACTION%" "%VFOX_VERSION%" "%VFOX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\vfox\%VFOX_VERSION%\\bin\\vfox.exe\"" "%LIBSCRIPT_HOME%\vfox\%VFOX_VERSION%"
 exit /b !errorlevel!

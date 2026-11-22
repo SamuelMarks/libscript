@@ -190,48 +190,49 @@ on-demand ecosystem package manager delegation (`--pkg-mgr=<pm>`), and source co
 
 ---
 
-## 🏛️ The Five-Tier Architecture
+## 🏛️ The Six-Tier (`T0`–`T5`) & Orthogonal-Plane Architecture
 
-LibScript organizes systems into five strictly decoupled, composable architectural tiers (plus
-cross-cutting traits) to prevent cross-layer pollution while enabling seamless escalation from a
-single CLI tool to a multi-node high-availability cloud cluster.
+LibScript organizes systems into six strictly ordered compositional tiers (`T0`–`T5`) and two
+orthogonal planes (`Plane A: Traits`, `Plane B: Verification & Control Plane`) to prevent
+cross-layer pollution while enabling seamless escalation from a single CLI tool to a multi-node
+high-availability cloud cluster.
 
 ```mermaid
 flowchart TD
-    subgraph Tier1["Tier 1 & 1.5: Leaf Recipes, Toolchains, Version Managers & Base OS Userland"]
-        T1_VM["0. Universal Version Managers<br/>(Node.js, Python, Rust, Ruby, Go, Java, PostgreSQL, Redis, RabbitMQ)"]
-        T1_Hooks["Dual-Layer Lifecycle Hooks<br/>(7. backup/restore, 8. upgrade/rollback, provision_tenant, probe)"]
-        T1_Base["Base Catalogs, Init Systems & Desktops<br/>(Glibc, Musl, systemd, OpenRC, Wayland, Sway, KDE Plasma, PipeWire)"]
+    subgraph T0_T2["T0 Engine & T1/T2 Atomic Recipes (engine/, _lib/)"]
+        T0_Core["T0 Core Engine & Solver<br/>(POSIX/Batch Stdlib, Tarjan SCC Solver, Consensus Locks & Fencing)"]
+        T1_VM["T1 Userland & Daemon Recipes<br/>(Node.js, Python, Rust, Go, PostgreSQL, Redis, Nginx, kubectl)"]
+        T2_Base["T2 OS, Kernel & System Plumbing<br/>(Glibc, Musl, Linux/Zephyr, systemd/OpenRC, Wayland, Sway, PipeWire)"]
     end
 
-    subgraph Tier2["Tier 2: OS Synthesizers, Kernels, Unikernels & Image Builders"]
-        T2_Pkg["1. Installer & Container Exporters<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, Dockerfile, Docker Compose)"]
-        T2_Disk["2. VM & Disk Image Factory<br/>(qcow2, raw-img, vmdk, vdi, iso, vagrant-box, bsd-img)"]
-        T2_Kernel["3. Kernel & Unikernel Bakery<br/>(Unikernels: OSv & MirageOS; Linux UKI; FreeBSD World; illumos IPS)"]
+    subgraph T3["T3: Image, OS & Artifact Synthesis (synthesis/)"]
+        T3_Pkg["1. Installer & Container Exporters<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, Dockerfile, Docker Compose)"]
+        T3_Disk["2. VM & Disk Image Factory<br/>(qcow2, raw-img, vmdk, vdi, iso, vagrantfile, bsd-img)"]
+        T3_Kernel["3. Kernel, Unikernel & RTOS Bakery<br/>(OSv, MirageOS, Unikraft, Linux UKI, FreeBSD, illumos, ReactOS)"]
     end
 
-    subgraph Tier3["Tier 3: Multicloud Operators & Hypervisors"]
-        T3_Cloud["4. Public Clouds & Bare Metal<br/>(Google Cloud, AWS, Azure, Hetzner, Proxmox, QEMU, Firecracker)"]
-        T3_Traits["Unified Node Traits<br/>(storage, secrets, WireGuard mesh, firewall, discovery, tls, ingress, backup, maintenance)"]
+    subgraph T4["T4: Infrastructure Providers & Cluster Substrates (infrastructure/ + Plane A traits/)"]
+        T4_Cloud["4. Public Clouds, Bare Metal & Cluster Substrates<br/>(GCP, AWS, Azure, Hetzner, Proxmox, k0s-ha, gke-tpu-cluster)"]
+        PlaneA_Traits["Plane A: Unified Node Traits<br/>(storage, secrets, WireGuard mesh, firewall, discovery, tls, ingress, backup)"]
     end
 
-    subgraph Tier35_4["Tier 3.5 & Tier 4: Multi-Node Schedulers, Jobs & HA Topologies"]
-        T4_Sched["5. Multi-Node Cluster Schedulers<br/>(Kubernetes, Apache Mesos & Marathon, HashiCorp Nomad, Slurm/Ray, XPK)"]
-        T4_Jobs["6. Declarative Payloads & Batch Jobs<br/>(ML Training on TPU/GPU, Search-Engine Reindexing, vLLM Serving)"]
-        T35_HA["9. High-Availability Topologies & Consensus<br/>(PostgreSQL HA, Redis/Valkey HA, RabbitMQ HA, Split-Brain Fencing)"]
+    subgraph T5["T5: Workloads, Application Stacks & Stateful Constellations (workloads/)"]
+        T5_Sched["5. Multi-Node Workload Schedulers<br/>(Kubernetes, Apache Mesos & Marathon, HashiCorp Nomad, Slurm/Ray, XPK)"]
+        T5_Jobs["6. Declarative Workloads & Application Stacks<br/>(Open edX, WordPress, ML Training on TPU/GPU, vLLM Serving)"]
+        T5_HA["9. Stateful HA Service Constellations<br/>(postgres-ha, redis-cluster, valkey-cluster, minio-distributed, openedx-ha)"]
     end
 
-    Tier1 -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| Tier2
-    Tier2 -->|Deploys Baked Images Onto| Tier3
-    Tier3 -->|Bootstraps & Connects Multi-Node Fleets| Tier35_4
+    T0_T2 -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| T3
+    T3 -->|Deploys Baked Images Onto| T4
+    T4 -->|Schedules & Converges Onto| T5
 ```
 
 ---
 
-### Tier 1 & 1.5: Leaf Recipes, Cross-Toolchains & Base Userland
+### `T1` & `T2`: Atomic Userland, Cross-Toolchains & OS System Plumbing (`_lib/`)
 
-Tier 1 components are modular, autonomous recipes located in `_lib/`. They adhere to a strict
-**Context Contract**:
+`T1` and `T2` components are modular, single-software-unit recipes located in `_lib/`. They adhere
+to a strict **Context Contract**:
 
 - **Target Sysroot Isolation (`LIBSCRIPT_TARGET_SYSROOT`)**: All builds and staging occur under an
   isolated root prefix without polluting the host.
@@ -257,10 +258,10 @@ Tier 1 components are modular, autonomous recipes located in `_lib/`. They adher
 
 ---
 
-### Tier 2: Package Exporters, Disk Images & Kernel/Unikernel Baking (Stages 1, 2 & 3)
+### `T3`: Image, OS & Artifact Synthesis (`synthesis/`, Stages 1, 2 & 3)
 
-Tier 2 elevates LibScript from software provisioning to universal artifact packaging and full
-operating system synthesis. Instead of relying on pre-baked generic cloud images, Tier 2 exports
+`T3` elevates LibScript from software provisioning to universal artifact packaging and full
+operating system synthesis. Instead of relying on pre-baked generic cloud images, `T3` exports
 native packages, virtual disk images, and custom kernels or unikernels from the ground up.
 
 ```mermaid
@@ -328,7 +329,7 @@ system verification via `SamuelMarks/msi-rs` (`./devtools/capture_msi_vagrant_ma
 ./libscript.sh package-as reactos-distro   # Modular ReactOS (i686 / x86_64) Win32 NT distribution image
 ```
 
-Automates virtual disk provisioning (`_lib/storage/`) with UEFI (GPT + ESP) or Hybrid BIOS/UEFI
+Automates virtual disk provisioning (`synthesis/disk/`) with UEFI (GPT + ESP) or Hybrid BIOS/UEFI
 partitioning, **LUKS2** full-disk encryption (`argon2id`), and **Ext4**, **Btrfs** (`@`, `@home`,
 `@snapshots`), **XFS**, **FAT32/NTFS**, or **ZFS** filesystems.
 
@@ -340,43 +341,44 @@ operating system kernels:
 - **Unikernels (`OSv`, `MirageOS`, `Unikraft`, `Solo5`, `NanoVMs`) & RTOS (`Zephyr`, `FreeRTOS`)**:
   - Compiles single-address-space unikernel images (`./libscript.sh package-as unikernel`), UEFI/GPT
     & Hyper-V Gen2 VHD cloud-boot disks (`--cloud-boot=uefi-gpt|azure-vhd`), Solo5 tenders
-    (`_lib/orchestration/solo5/`), and MCUboot-signed microcontroller firmware
+    (`_lib/unikernels/solo5/`), and MCUboot-signed microcontroller firmware
     (`./libscript.sh package-as firmware`).
-  - Ships curated profiles including `profiles/osv-cloud-runtime.json`,
-    `profiles/unikraft-nginx-redis.json`, `profiles/firecracker-microvm-appliance.json`, the
-    8-appliance `profiles/openedx-unikernel/*.json` constellation, and
-    `profiles/{zephyr,freertos}-*.json`.
+  - Ships curated profiles including `synthesis/profiles/unikernel/osv-cloud-runtime.json`,
+    `synthesis/profiles/unikernel/unikraft-nginx-redis.json`,
+    `synthesis/profiles/hypervisor/firecracker-microvm-appliance.json`, the 8-appliance
+    `synthesis/profiles/unikernel/openedx/*.json` constellation, and
+    `synthesis/profiles/rtos/{zephyr,freertos}-*.json`.
 - **Linux Kernel Engine (`_lib/kernel/linux/` & `_lib/kernel/initramfs/`)**:
   - Cryptographically verifies kernel sources, merges modular `.cfg` fragments (`virtio.cfg`,
     `wayland_drm.cfg`, `sound.cfg`, `zfs.cfg`), compiles `bzImage` + `dtbs` across selectable
-    compilers (`profiles/linux-kernel-{gcc,clang,tcc,edgcpp,custom-cc}-*.json`), packs a `zstd -19`
-    initramfs, and signs single-file `.efi` Unified Kernel Images (UKI) with GRUB2, `systemd-boot`,
-    or Limine.
-- **FreeBSD Kernel & World Engine (`_lib/freebsd/`)**:
+    compilers (`synthesis/profiles/linux/linux-kernel-{gcc,clang,tcc,edgcpp,custom-cc}-*.json`),
+    packs a `zstd -19` initramfs, and signs single-file `.efi` Unified Kernel Images (UKI) with
+    GRUB2, `systemd-boot`, or Limine.
+- **FreeBSD Kernel & World Engine (`synthesis/distro/freebsd/`)**:
   - Automates FreeBSD source checkout, isolated `buildworld` and `buildkernel`, and ZFS/UFS image
     generation (`./libscript.sh package-as bsd-img`).
-- **illumos Kernel & Distro Engine (`_lib/illumos/distro/`)**:
+- **illumos Kernel & Distro Engine (`synthesis/distro/illumos/`)**:
   - Synthesizes bootable OpenIndiana and OmniOS kernel/userland images with IPS repositories, ZFS
     boot environments, and SMF services (`./libscript.sh package-as illumos-distro`).
-- **ReactOS Kernel & Distro Engine (`_lib/reactos/distro/`, `rapps`, `rosbe`)**:
+- **ReactOS Kernel & Distro Engine (`synthesis/distro/reactos/`, `rapps`, `rosbe`)**:
   - Synthesizes unattended 32-bit (`i686`) and 64-bit (`x86_64`) Win32 NT images
-    (`profiles/reactos/*.json`, `execution-plan.reactos.schema.json`) via upstream ISO repacking or
-    RosBE source compilation with strict PE header bitness verification
-    (`./libscript.sh package-as reactos-distro`).
+    (`synthesis/profiles/reactos/*.json`, `synthesis/schemas/execution-plan.reactos.schema.json`)
+    via upstream ISO repacking or RosBE source compilation with strict PE header bitness
+    verification (`./libscript.sh package-as reactos-distro`).
 
 ```sh
 # Configure OS profiles interactively or declaratively
 ./libscript.sh config os --profile=osv-cloud-runtime --export=unikernel-os.json
 ./libscript.sh config os --profile=linux-minimal-headless-musl --export=linux-os.json
 ./libscript.sh config os --profile=freebsd-server-standard --export=freebsd-os.json
-./libscript.sh config os --profile=profiles/reactos/desktop-classic-i686.json --export=reactos-os.json
+./libscript.sh config os --profile=synthesis/profiles/reactos/desktop-classic-i686.json --export=reactos-os.json
 ```
 
 ---
 
-### Tier 3: Multicloud Deployment: Google Cloud, AWS & Azure (Stage 4)
+### `T4`: Multicloud Infrastructure & Cluster Substrates (`infrastructure/`, Stage 4)
 
-Tier 3 deploys synthesized OS images, unikernels, containers, and application stacks directly onto
+`T4` deploys synthesized OS images, unikernels, containers, and cluster substrates directly onto
 **Google Cloud (GCP)**, **Amazon Web Services (AWS)**, **Microsoft Azure**, as well as **Hetzner
 Cloud**, **Proxmox VE**, and local hypervisors.
 
@@ -396,7 +398,7 @@ Cloud**, **Proxmox VE**, and local hypervisors.
 # Git-driven deployment, Marketplace offer publishing & multi-app remote host deployment
 ./libscript.sh deploy ./
 ./libscript.sh deploy-remote deploy@prod.example.com ./
-./libscript.sh publish-marketplace marketplace/openedx-unikernel/offer.json --clouds=aws,azure,gcp --stage-only
+./libscript.sh publish-marketplace workloads/constellations/openedx-unikernel-pod/marketplace/offer.json --clouds=aws,azure,gcp --stage-only
 
 # Clean multicloud teardown
 ./libscript.sh deprovision aws prod-cluster vpc-main us-east-1
@@ -404,7 +406,7 @@ Cloud**, **Proxmox VE**, and local hypervisors.
 
 ---
 
-### Tier 3.5 & Tier 4: Multi-Node Schedulers, Jobs, Lifecycle & High Availability (Stages 5–9)
+### T4 & T5: Multi-Node Schedulers, Jobs, Lifecycle & High Availability (Stages 5–9)
 
 Once images are running on cloud or bare-metal nodes, LibScript coordinates multi-node clusters,
 batch jobs, stateful lifecycle operations, and high-availability consensus topologies.
@@ -436,35 +438,35 @@ flowchart LR
 
 #### 5. Multi-Node Cluster Orchestration: Kubernetes, Mesos & Nomad (Stage 5)
 
-Run multiple synthesized images side-by-side across multi-node clusters using first-class Tier 1/3
-cluster managers and the Tier 4 declarative payload compiler (`payloads/engine.sh`):
+Run multiple synthesized images side-by-side across multi-node clusters using first-class `T1`/`T4`
+cluster substrates and the `T5` declarative workload compiler (`workloads/engine.sh`):
 
-- **Kubernetes (`kubernetes`, `kubernetes-k0s`, `kubernetes-thw`, `k8s-marathon`)**: Full upstream
-  Kubernetes, zero-friction `k0s`, Kubernetes The Hard Way (`k8s-thw`), and the Marathon-equivalent
-  PaaS controller (`k8s-marathon`) translating `payload.json` into `Deployment`, `StatefulSet`,
-  `Job`, `Service`, and `Ingress` manifests.
+- **Kubernetes (`kubectl`, `kubernetes-k0s`, `kubernetes-thw`, `k8s-marathon-paas`)**: Upstream
+  Kubernetes CLI, zero-friction `k0s`, Kubernetes The Hard Way (`kubernetes-thw`), and the
+  Marathon-equivalent PaaS controller (`k8s-marathon-paas`) translating `payload.json` into
+  `Deployment`, `StatefulSet`, `Job`, `Service`, and `Ingress` manifests.
 - **Apache Mesos & Marathon (`mesos`, `marathon`)**: Two-level distributed systems kernel with
-  ZooKeeper quorum leader election (`topologies/mesos-marathon-ha/topology.json`), supporting both
-  `DOCKER` and `MESOS` Universal Containerizer / native LibScript sandboxes.
+  ZooKeeper quorum leader election (`infrastructure/clusters/mesos-marathon-ha/topology.json`),
+  supporting both `DOCKER` and `MESOS` Universal Containerizer / native LibScript sandboxes.
 - **HashiCorp Nomad (`nomad`)**: Unified multi-node orchestrator scheduling containerized (`docker`)
   and isolated native (`raw_exec`) service and batch allocations across Linux, macOS, FreeBSD, and
   Windows.
 
 ```sh
-# Provision multi-node schedulers side-by-side via native version managers or HA topologies
-./libscript.sh install kubernetes latest
+# Provision multi-node schedulers side-by-side via native version managers
+./libscript.sh install kubectl latest
 ./libscript.sh install mesos 1.11.0
 ./libscript.sh install nomad 1.9.0
 
-# Bring up multi-node Mesos+Marathon or Kubernetes HA clusters
-./libscript.sh topology up topologies/mesos-marathon-ha/topology.json
-./libscript.sh topology up topologies/k8s-marathon-paas/topology.json
-./libscript.sh topology up topologies/k0s-ha/topology.json
+# Bring up T4 multi-node Mesos+Marathon or Kubernetes HA cluster substrates
+./libscript.sh cluster up infrastructure/clusters/mesos-marathon-ha/topology.json
+./libscript.sh cluster up infrastructure/clusters/k8s-marathon-paas/topology.json
+./libscript.sh cluster up infrastructure/clusters/k0s-ha/topology.json
 
 # Compile and submit the exact same workload payload to Kubernetes, Mesos, or Nomad
-./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler kubernetes
-./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler mesos
-./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler nomad
+./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler kubernetes
+./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler mesos
+./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler nomad
 ```
 
 #### 6. Deploying Distributed Jobs: ML Training & Search-Engine Reindexing (Stage 6)
@@ -475,8 +477,8 @@ Google Cloud TPU Pods (`xpk`):
 
 - **Distributed ML Training & Inference**:
   - Orchestrates multi-slice TPU Pod and multi-worker lockstep training (`v4-128`, `v5p-2048`) via
-    GKE + `xpk` and `tpu_vm` (`payloads/ai/gke-xpk-training/payload.json`,
-    `_lib/ml-training/tpu-trainer/`, `_lib/ai-serving/inference-router/`).
+    GKE + `xpk` and `tpu_vm` (`workloads/payloads/ai/gke-xpk-training/payload.json`,
+    `workloads/ai/tpu-trainer/`, `workloads/ai/inference-router/`).
   - Pre-wires 4-role regional GCS ML buckets (`traits/storage/gcs_ml.{sh,cmd}`),
     [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse) dataset streaming,
     [TensorBoard](https://www.tensorflow.org/tensorboard) telemetry, and high-throughput serving via
@@ -485,18 +487,18 @@ Google Cloud TPU Pods (`xpk`):
 - **Search-Engine Reindexing & Full-Stack Web Payloads**:
   - Provisions and manages **Elasticsearch** (`_lib/search/elasticsearch`) and **Meilisearch**
     (`_lib/search/meilisearch`), executing zero-downtime index rebuilds, alias swaps, and multi-tier
-    application workloads (`payloads/web/openedx/payload.json`, `payloads/ai/vllm/payload.json`)
-    across Kubernetes, Nomad, or Mesos.
+    application workloads (`workloads/payloads/web/openedx/payload.json`,
+    `workloads/payloads/ai/vllm/payload.json`) across Kubernetes, Nomad, or Mesos.
 
 ```sh
 # Submit a distributed ML training job to GKE TPU slices (XPK), Slurm/Ray, or Nomad
-./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler xpk
-./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler slurm_ray
+./libscript.sh workload submit workloads/payloads/ai/gke-xpk-training/payload.json --scheduler xpk
+./libscript.sh workload submit workloads/payloads/ai/gke-xpk-training/payload.json --scheduler slurm_ray
 
 # Submit AI inference & web application payloads to Nomad, Kubernetes, or Mesos
-./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler nomad
-./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler kubernetes
-./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler mesos
+./libscript.sh workload submit workloads/payloads/ai/vllm/payload.json --scheduler nomad
+./libscript.sh workload submit workloads/payloads/ai/vllm/payload.json --scheduler kubernetes
+./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler mesos
 
 # Run declarative ML training, evaluation, and inference directly via the unified ML CLI
 ./libscript.sh train libscript.json --target gke-xpk
@@ -509,7 +511,7 @@ Google Cloud TPU Pods (`xpk`):
 
 LibScript unifies physical instance snapshots, logical multi-tenant backups, Copy-on-Write (CoW)
 filesystem snapshots, and encrypted off-site object storage replication (`traits/backup/` &
-`_lib/_common/hooks.sh`):
+`engine/common/hooks.sh`):
 
 - **Physical & Multi-Tenant Hooks**: Every stateful component (`postgres`, `redis`, `valkey`,
   `mariadb`, `mysql`, `mongodb`, `sqlite`, `etcd`, `openbao`) implements `hooks/backup`,
@@ -522,15 +524,15 @@ filesystem snapshots, and encrypted off-site object storage replication (`traits
 
 ```sh
 # Execute a physical or tenant-scoped backup with SHA-256 manifest verification
-./_lib/_common/hooks.sh --exec postgres backup /var/backups/postgres
-./_lib/_common/hooks.sh --exec postgres backup_tenant --tenant acme_corp
+./engine/common/hooks.sh --exec postgres backup /var/backups/postgres
+./engine/common/hooks.sh --exec postgres backup_tenant --tenant acme_corp
 
 # Take an atomic ZFS/Btrfs CoW snapshot and ship encrypted backups to S3 / GCS / Azure
 ./libscript.sh trait apply backup
 ./traits/backup/orchestrate.sh postgres /var/backups/postgres s3://my-enterprise-backups/pg
 
 # Verify manifest checksums and restore state
-./_lib/_common/hooks.sh --exec postgres restore /var/backups/postgres
+./engine/common/hooks.sh --exec postgres restore /var/backups/postgres
 ```
 
 #### 8. Application Upgrade & Downgrade / Rollback (Stage 8)
@@ -541,59 +543,59 @@ strategies and deterministic rollback hooks:
 - **Stateful Upgrade & Downgrade (`hooks/upgrade` & `hooks/rollback`)**: Executes automated data
   directory and schema migrations when moving forward (`upgrade`), and atomic state reversion when
   downgrading or recovering from a failed deployment (`rollback`).
-- **Cluster-Wide Rolling Upgrades (`topologies/engine.sh upgrade`)**: Orchestrates epoch-tracked
-  rolling upgrades across multi-node topologies with `RollingUpdate`, `BlueGreen`, or `Recreate`
-  strategies and health-probe gating (`hooks/probe readiness`).
+- **Cluster-Wide Rolling Upgrades (`workloads/constellations/engine.sh upgrade`)**: Orchestrates
+  epoch-tracked rolling upgrades across multi-node topologies with `RollingUpdate`, `BlueGreen`, or
+  `Recreate` strategies and health-probe gating (`hooks/probe readiness`).
 - **Instant Side-by-Side Version Switching**: Switch active runtime versions instantly via
   `./libscript.sh use <component> <version>`.
 
 ```sh
 # Upgrade a stateful component across versions (with automatic data/schema migration)
-./_lib/_common/hooks.sh --exec postgres upgrade 15 16
+./engine/common/hooks.sh --exec postgres upgrade 15 16
 
 # Atomically downgrade / roll back to the previous version if a deployment check fails
-./_lib/_common/hooks.sh --exec postgres rollback 15 16
+./engine/common/hooks.sh --exec postgres rollback 15 16
 
 # Perform a zero-downtime rolling upgrade across an entire multi-node HA cluster topology
-./libscript.sh topology upgrade topologies/postgres-ha/topology.json 16.4
+./libscript.sh constellation upgrade workloads/constellations/postgres-ha/topology.json 16.4
 ```
 
-#### 9. High-Availability (HA) Topologies: PostgreSQL HA, Redis HA & RabbitMQ HA (Stage 9)
+#### 9. High-Availability (HA) Constellations: PostgreSQL HA, Redis HA & RabbitMQ HA (Stage 9)
 
-Tier 3.5 (`topologies/`) orchestrates multi-node consensus clusters with distributed lease locking
-(`topologies/lock.sh`), encrypted **WireGuard** mesh overlays (`traits/mesh/`), automated
-split-brain fencing (`cloud-api-poweroff`, `cloud-api-detach-nic`, `firewall-isolate`,
-`watchdog-reset` in `topologies/fence.sh`), and VIP/DNS ingress routing (`netctl`):
+`T5` (`workloads/constellations/`) orchestrates multi-node stateful service constellations with
+distributed lease locking (`engine/consensus/lock.sh`), encrypted **WireGuard** mesh overlays
+(`traits/mesh/`), automated split-brain fencing (`cloud-api-poweroff`, `vpc-nic-detach`,
+`storage-lease-revoke` in `engine/consensus/fence.sh`), and VIP/DNS ingress routing (`netctl`):
 
-- **PostgreSQL HA (`topologies/postgres-ha/`)**: Multi-node primary/replica streaming replication
-  orchestrated with **Patroni**, **etcd** Raft quorum, **PgBouncer** connection pooling, and
-  automated leader failover.
-- **Redis HA & Valkey HA (`topologies/redis-cluster/`, `topologies/valkey-cluster/`)**: Distributed
-  in-memory caching with **Redis Sentinel** quorum failover and 16384-hash-slot cluster sharding
-  over encrypted WireGuard peering.
-- **RabbitMQ HA (`_lib/message-brokers/rabbitmq/` + HA Topologies)**: Multi-node Erlang cookie
+- **PostgreSQL HA (`workloads/constellations/postgres-ha/`)**: Multi-node primary/replica streaming
+  replication orchestrated with **Patroni**, **etcd** Raft quorum, **PgBouncer** connection pooling,
+  and automated leader failover.
+- **Redis HA & Valkey HA (`workloads/constellations/redis-cluster/`,
+  `workloads/constellations/valkey-cluster/`)**: Distributed in-memory caching with **Redis
+  Sentinel** quorum failover and 16384-hash-slot cluster sharding over encrypted WireGuard peering.
+- **RabbitMQ HA (`_lib/message-brokers/rabbitmq/` + HA Constellations)**: Multi-node Erlang cookie
   clustering, Raft-backed **Quorum Queues**, mirrored exchanges, and `netctl` AMQP load balancing.
-- **Distributed Storage, Enterprise Web & Compute Topologies**: Turnkey blueprints for `openedx-ha`
-  (multi-node Open edX LMS/CMS + Celery + MariaDB/MongoDB/Redis/Meilisearch HA),
-  `openedx-unikernel-pod` (8-appliance NanoVMs/OSv/Unikraft constellation), `iot-mqtt-edge-pod`,
-  `minio-distributed` (erasure-coded object storage), `mesos-marathon-ha`, `k8s-marathon-paas`,
-  `k0s-ha`, and `gke-tpu-cluster`.
+- **Distributed Storage, Enterprise Web & Edge Constellations**: Turnkey `T5` constellations for
+  `openedx-ha` (multi-node Open edX LMS/CMS + Celery + MariaDB/MongoDB/Redis/Meilisearch HA),
+  `openedx-unikernel-pod` (8-appliance NanoVMs/OSv/Unikraft constellation), `iot-mqtt-edge-pod`, and
+  `minio-distributed` (erasure-coded object storage), scheduling onto `T4` cluster substrates
+  (`mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `gke-tpu-cluster`).
 
 ```sh
-# Provision High-Availability PostgreSQL, Redis, Valkey, and Open edX clusters
-./libscript.sh topology up topologies/postgres-ha/topology.json
-./libscript.sh topology up topologies/redis-cluster/topology.json
-./libscript.sh topology up topologies/valkey-cluster/topology.json
-./libscript.sh topology up topologies/openedx-ha/topology.json
+# Provision High-Availability PostgreSQL, Redis, Valkey, and Open edX constellations
+./libscript.sh constellation up workloads/constellations/postgres-ha/topology.json
+./libscript.sh constellation up workloads/constellations/redis-cluster/topology.json
+./libscript.sh constellation up workloads/constellations/valkey-cluster/topology.json
+./libscript.sh constellation up workloads/constellations/openedx-ha/topology.json
 
 # Provision and cluster RabbitMQ HA nodes
 ./libscript.sh install rabbitmq latest
 ./libscript.sh start rabbitmq
 
 # Inspect quorum health, scale worker pools, or trigger fenced leader failover
-./libscript.sh topology status topologies/postgres-ha/topology.json
-./libscript.sh topology scale topologies/postgres-ha/topology.json pg-replicas=4
-./libscript.sh topology failover topologies/postgres-ha/topology.json pg-replicas-1
+./libscript.sh constellation status workloads/constellations/postgres-ha/topology.json
+./libscript.sh constellation scale workloads/constellations/postgres-ha/topology.json pg-replicas=4
+./libscript.sh constellation failover workloads/constellations/postgres-ha/topology.json pg-replicas-1
 ```
 
 #### 🌐 Built-in PaaS, Universal Routing (`netctl`) & REST API (`libscript-rest-api`)
@@ -713,8 +715,8 @@ cd libscript
 ./libscript.sh package-as qcow2
 
 # 5. Deploy workloads across Kubernetes, Mesos, or Nomad and bring up HA topologies
-./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler nomad
-./libscript.sh topology up topologies/postgres-ha/topology.json
+./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler nomad
+./libscript.sh constellation up workloads/constellations/postgres-ha/topology.json
 
 # 6. Run automated QEMU headless verification
 ./tests/os_boot_test.sh build/disk.qcow2 60
@@ -724,8 +726,8 @@ cd libscript
 
 ## 📖 Documentation & Architecture Guides
 
-- [ARCHITECTURE.md](ARCHITECTURE.md): Comprehensive 5-tier architectural breakdown and design
-  principles.
+- [ARCHITECTURE.md](ARCHITECTURE.md): Comprehensive 6-tier (T0-T5) + orthogonal-plane architectural
+  breakdown and design principles.
 - [WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md](WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md):
   Specification for native toolchain version isolation.
 - [cli/commands/scaffold/README.md](cli/commands/scaffold/README.md) &
@@ -733,12 +735,13 @@ cd libscript
   non-interactive JSON specification generator (`./libscript.sh scaffold`) for creating new
   component-package-managers.
 - [USAGE.md](USAGE.md): Full CLI command reference, flags, and execution modes.
-- [topologies/README.md](topologies/README.md): Tier 3.5 multi-node HA consensus topologies, lease
-  locking, and split-brain fencing.
-- [payloads/README.md](payloads/README.md): Tier 4 declarative workload payloads and scheduler
-  drivers (Kubernetes, Mesos/Marathon, Nomad, Slurm/Ray, XPK, MicroVM).
-- [traits/README.md](traits/README.md): Cross-cutting node traits (`storage`, `secrets`, `mesh`,
-  `firewall`, `discovery`, `tls`, `ingress`, `logging`, `metrics`, `backup`, `maintenance`).
+- [infrastructure/README.md](infrastructure/README.md) &
+  [workloads/constellations/README.md](workloads/constellations/README.md): `T4` cluster substrates
+  and `T5` multi-node stateful HA constellations, lease locking, and split-brain fencing.
+- [workloads/README.md](workloads/README.md): `T5` declarative workload payloads, application
+  stacks, and scheduler drivers (Kubernetes, Mesos/Marathon, Nomad, Slurm/Ray, XPK, MicroVM).
+- [traits/README.md](traits/README.md): `Plane A` cross-cutting node traits (`storage`, `secrets`,
+  `mesh`, `firewall`, `discovery`, `tls`, `ingress`, `logging`, `metrics`, `backup`, `maintenance`).
 - [libscript-rest-api/README.md](libscript-rest-api/README.md): Native C HTTP REST API server daemon
   for programmatic LibScript orchestration.
 - [PACKAGING_BRANDING_GUIDE.md](PACKAGING_BRANDING_GUIDE.md): Cross-platform installer branding,
@@ -759,10 +762,10 @@ cd libscript
 - [ROADMAP.md](ROADMAP.md), [DOCS_ROADMAP.md](DOCS_ROADMAP.md), [CHANGELOG.md](CHANGELOG.md) &
   [IDEAS.md](IDEAS.md): Master development/documentation roadmaps, release history, and future
   research directions.
-- [packaging/README.md](packaging/README.md),
-  [packaging/ARCHITECTURE_LOGICAL_PROVISIONING.md](packaging/ARCHITECTURE_LOGICAL_PROVISIONING.md) &
-  [packaging/ARCHITECTURE_MODULAR_MSI.md](packaging/ARCHITECTURE_MODULAR_MSI.md): Multi-format
-  installer compilation, logical multi-tenant provisioning, and modular MSI chaining.
+- [synthesis/msi/README.md](synthesis/msi/README.md),
+  [synthesis/msi/ARCHITECTURE_LOGICAL_PROVISIONING.md](synthesis/msi/ARCHITECTURE_LOGICAL_PROVISIONING.md)
+  & [synthesis/msi/ARCHITECTURE_MODULAR_MSI.md](synthesis/msi/ARCHITECTURE_MODULAR_MSI.md):
+  Multi-format installer compilation, logical multi-tenant provisioning, and modular MSI chaining.
 - [WHY.md](WHY.md), [DEVELOPING.md](DEVELOPING.md) & [AGENTS.md](AGENTS.md): Project philosophy,
   contributor guidelines, and agent engineering standards.
 
@@ -782,413 +785,444 @@ at your option.
 
 ## Supported Components
 
-Components are organized into LibScript's 5 architectural tiers (see
-[`ARCHITECTURE.md`](ARCHITECTURE.md)).
+Components are organized into LibScript's 6 strict compositional tiers (`T0`–`T5`) and orthogonal
+cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 
-### Tier 1: Leaf Recipes, Toolchains & Native Version Managers
+### T1: Atomic Userland & Daemon Recipes
 
-| Component                             | Category           | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
-| ------------------------------------- | ------------------ | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
-| `7zip`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `activemq`                            | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `android-sdk`                         | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `ansible-galaxy`                      | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `apache`                              | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `apk`                                 | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `apt`                                 | `package-managers` | -           | ✅          | -           | -       | -     | -       | -     |
-| `aqua`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `aria2`                               | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `arm-none-eabi-gcc`                   | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `asdf`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `auto-win-msvc`                       | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `autoconf`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `automake`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `awscli`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `azure-cli`                           | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `bazel`                               | `toolchains`       | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `bear`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `bootstrap`                           | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `brew`                                | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
-| `buck2`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `bun`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `bun-pm`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `bundler`                             | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `busybox`                             | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `c`                                   | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cabal`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `caddy`                               | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `cargo`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cargo-binstall`                      | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `cargo-llvm-cov`                      | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `cassandra`                           | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `catch2`                              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `cc`                                  | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `ccache`                              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `cdd-c`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `celery`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `ceph`                                | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
-| `certbot`                             | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `cgit`                                | `git-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `choco`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
-| `clang`                               | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `clickhouse`                          | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `clojure`                             | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `cmake`                               | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cockroachdb`                         | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `composer`                            | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `conan`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `conda`                               | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | ✅    |
-| `coremqtt`                            | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `couchdb`                             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `coursier`                            | `toolchains`       | -           | ✅          | ✅          | -       | -     | -       | ✅    |
-| `cpanm`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cpp`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `crowdsec`                            | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `crystal`                             | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `csharp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `csmith`                              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `curl`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `custom-cc`                           | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cygwin`                              | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
-| `dart`                                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `dash`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `deno`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `deno-pm`                             | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `dnf`                                 | `package-managers` | -           | -           | ✅          | -       | -     | -       | -     |
-| `doxygen`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `dragonfly`                           | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `drupal`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `dtc`                                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `duckdb`                              | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `edgcpp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `edgcpp-backends-suite`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `elasticsearch`                       | `search`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `elixir`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `emerge`                              | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
-| `emscripten`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `envoy`                               | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `eopkg`                               | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
-| `erlang`                              | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `etcd`                                | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `exim`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `fail2ban`                            | `security`         | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `fd`                                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `ferretdb`                            | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `ffmpeg`                              | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `firebird`                            | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `firecrawl`                           | `web-apps`         | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
-| `flatpak`                             | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `fluentbit`                           | `logging`          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `fmt`                                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `fnm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `forgejo`                             | `git-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `fortran`                             | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `freebsd-usr-bin`                     | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `fzf`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `garage`                              | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gawk`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gcc`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `gcc-torture`                         | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gcsfuse`                             | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `gem`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gemma-tpu-suite`                     | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gettext`                             | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `ghcup`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `git`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gitea`                               | `git-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gitlab`                              | `git-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
-| `glassfish`                           | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gleam`                               | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `glusterfs`                           | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
-| `go`                                  | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `go-pm`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `google-cloud-sdk`                    | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gradle`                              | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `grafana`                             | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `graphviz`                            | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `groovy`                              | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `guix`                                | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `gunicorn`                            | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `haproxy`                             | `web-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `haskell`                             | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `hatch`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `hazelcast`                           | `caches`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `helm`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `hmailserver`                         | `utilities`        | -           | -           | -           | ✅      | -     | -       | -     |
-| `htop`                                | `utilities`        | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `httpd`                               | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `huggingface-cli`                     | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `hyperfine`                           | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `iis`                                 | `web-servers`      | -           | -           | -           | ✅      | -     | -       | -     |
-| `imagemagick`                         | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `influxdb`                            | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `java`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `jboss`                               | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `jetstream`                           | `app-servers`      | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `jetty`                               | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `joomla`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `jq`                                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `juicefs`                             | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `julia`                               | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `jupyterhub`                          | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `just`                                | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `kafka`                               | `message-brokers`  | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `keycloak`                            | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `keydb`                               | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `kotlin`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `krew`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `lcov`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `lfs-toolchain`                       | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `libarchive`                          | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `libtool`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `libtpu`                              | `runtimes`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `libtpu-rs`                           | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `lighttpd`                            | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `littlefs`                            | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `llvm`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `lmdb`                                | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `loki`                                | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `lua`                                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `luarocks`                            | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `lynx`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `lz4`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `macports`                            | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
-| `magento`                             | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `make`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `mamba`                               | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `mariadb`                             | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `mas`                                 | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
-| `maven`                               | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `maven-wrapper`                       | `package-managers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `meilisearch`                         | `search`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `memcached`                           | `caches`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `memtier-benchmark`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `meson`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `micropython`                         | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `minio`                               | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `mise`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `mix`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `mongodb`                             | `databases`        | -           | ✅          | ✅          | -       | -     | -       | ✅    |
-| `mosquitto`                           | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `msbuild`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `msi-rs`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `msitools`                            | `toolchains`       | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `mssql`                               | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `msvc`                                | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
-| `msys2`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
-| `mysql`                               | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nasm`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `nats`                                | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `neo4j`                               | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `nextcloud`                           | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nginx`                               | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nim`                                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `nimble`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `ninja`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `nix`                                 | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `nodeenv`                             | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `nodejs`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nodejs-server`                       | `app-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `npm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nuget`                               | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `nvm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `ocaml`                               | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `odin`                                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `odoo`                                | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `ollama`                              | `app-servers`      | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `opam`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `openbao`                             | `security`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `openedx`                             | `web-apps`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `openocd`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `openresty`                           | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `opensearch`                          | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `openssl`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `openwatcom`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `otel-collector`                      | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `pacman`                              | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
-| `pandoc`                              | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `paru`                                | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
-| `passenger`                           | `app-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `payara`                              | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `pdm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `perl`                                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `php`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `php-fpm`                             | `app-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `phpbb`                               | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `pip`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `pipx`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `pkg`                                 | `package-managers` | -           | -           | -           | -       | -     | ✅      | -     |
-| `pkgconfig`                           | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `pkgsrc`                              | `package-managers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `pkgx`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `pm2`                                 | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `pnpm`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `poetry`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `porg`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `port`                                | `package-managers` | -           | -           | -           | -       | -     | ❓      | ❓    |
-| `postgres`                            | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `powershell`                          | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `prestashop`                          | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `prolog`                              | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `prometheus`                          | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `protobuf`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `psmux`                               | `utilities`        | -           | -           | -           | ✅      | -     | -       | -     |
-| `pub`                                 | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `pulsar`                              | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `puma`                                | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `pyenv`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `python`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `python-server`                       | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `qmake`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `questdb`                             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `r`                                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `rabbitmq`                            | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `racket`                              | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `rapps`                               | `package-managers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `rbenv`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rebar3`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `redis`                               | `caches`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `redpanda`                            | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `rethinkdb`                           | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `ripgrep`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `riscv-none-elf-gcc`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `rocksdb`                             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `rosbe`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `rsync`                               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `ruby`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `runtimes/provision_isolated_runtime` | `runtimes`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rust`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rust-server`                         | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rustup`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rvm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `rye`                                 | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `sbt`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `scala`                               | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `sccache`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `scheme`                              | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `scons`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `scoop`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
-| `scylladb`                            | `databases`        | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
-| `sdkman`                              | `package-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
-| `seaweedfs`                           | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `serve-actix-diesel-auth-scaffold`    | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `sh`                                  | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `shellcheck`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `snap`                                | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `solr`                                | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `sonic`                               | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `spack`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `sqlite`                              | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `sqlite-tools`                        | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `stack`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `step-ca`                             | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `surrealdb`                           | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `swift`                               | `languages`        | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `swig`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `swupd`                               | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
-| `tar`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `tcc`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `tcl`                                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `tensorboard`                         | `logging`          | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `texlive`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `tidb`                                | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `timescaledb`                         | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `tmux`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `tokei`                               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `tomcat`                              | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `toybox`                              | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `traefik`                             | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `tree`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `triton`                              | `app-servers`      | ❓          | ❓          | ❓          | ❓      | -     | -       | -     |
-| `typesense`                           | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `unicorn`                             | `app-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `unzip`                               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `utils`                               | `git-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `uv`                                  | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `uvicorn`                             | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `uwsgi`                               | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `vala`                                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `valkey`                              | `caches`           | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
-| `varnish`                             | `caches`           | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `vault`                               | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `vcpkg`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `vcpkg-tool`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `vcredist`                            | `utilities`        | -           | -           | -           | ✅      | -     | -       | -     |
-| `vector`                              | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `vfox`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `vim`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `vlang`                               | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `vllm`                                | `app-servers`      | -           | -           | -           | -       | -     | -       | -     |
-| `wait4x`                              | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `waitress`                            | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `wamr`                                | `runtimes`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `wasmtime`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `west`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `wget`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `wildfly`                             | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `win-cmd-rs`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `win-port-suite`                      | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `winget`                              | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
-| `wireguard`                           | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `wix`                                 | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
-| `woocommerce`                         | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `wordpress`                           | `web-apps`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `xbps`                                | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
-| `xmake`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `xorriso`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `xpk`                                 | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `xz`                                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `yarn`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `yarpgen`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `yasm`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `yay`                                 | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
-| `yq`                                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `yum`                                 | `package-managers` | ❓          | ❓          | ❓          | -       | -     | -       | -     |
-| `zephyr-sdk`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `zeromq`                              | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `zfs`                                 | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `zig`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `zip`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `zlib`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `zookeeper`                           | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `zstd`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `zypper`                              | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
+| Component               | Category           | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+| ----------------------- | ------------------ | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
+| `7zip`                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `activemq`              | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `android-sdk`           | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `ansible`               | `iac`              | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `ansible-galaxy`        | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `apache`                | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `apk`                   | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `apt`                   | `package-managers` | -           | ✅          | -           | -       | -     | -       | -     |
+| `aqua`                  | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `aria2`                 | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `arm-none-eabi-gcc`     | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `asdf`                  | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `auto-win-msvc`         | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `autoconf`              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `automake`              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `awscli`                | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `azure-cli`             | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `bazel`                 | `toolchains`       | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `bear`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `bind9`                 | `networking`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `bootstrap`             | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `brew`                  | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
+| `buck2`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `buildah`               | `containers`       | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
+| `bun`                   | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `bun-pm`                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `bundler`               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `busybox`               | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `c`                     | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `cabal`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `caddy`                 | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `cargo`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `cargo-binstall`        | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `cargo-llvm-cov`        | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `cassandra`             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `catch2`                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `cc`                    | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `ccache`                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `cdd-c`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `ceph`                  | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
+| `certbot`               | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `cgit`                  | `git-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `choco`                 | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
+| `chrony`                | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
+| `cilium`                | `schedulers`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `clang`                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `clickhouse`            | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `clojure`               | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `cloud-hypervisor`      | `virtualization`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `cmake`                 | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `cockroachdb`           | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `composer`              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `conan`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `conda`                 | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | ✅    |
+| `consul`                | `schedulers`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `containerd`            | `containers`       | ❓          | ❓          | ❓          | ❓      | -     | ❓      | -     |
+| `coredns`               | `networking`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `coremqtt`              | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `couchdb`               | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `coursier`              | `toolchains`       | -           | ✅          | ✅          | -       | -     | -       | ✅    |
+| `cpanm`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `cpp`                   | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `cri-o`                 | `containers`       | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
+| `crowdsec`              | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `crystal`               | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `csharp`                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `csmith`                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `curl`                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `custom-cc`             | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `cygwin`                | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
+| `dart`                  | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `dash`                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `deno`                  | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `deno-pm`               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `dhcpcd`                | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `dnf`                   | `package-managers` | -           | -           | ✅          | -       | -     | -       | -     |
+| `dnsmasq`               | `networking`       | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `docker`                | `containers`       | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `doxygen`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `dragonfly`             | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `dtc`                   | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `duckdb`                | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `edgcpp`                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `elasticsearch`         | `search`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `elixir`                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `emerge`                | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
+| `emscripten`            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `envoy`                 | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `eopkg`                 | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
+| `erlang`                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `etcd`                  | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `exim`                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `fail2ban`              | `security`         | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `fd`                    | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `ferretdb`              | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `ffmpeg`                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `firebird`              | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `firecracker`           | `virtualization`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `firewalld`             | `networking`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `flatpak`               | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `fluentbit`             | `logging`          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `fmt`                   | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `fnm`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `forgejo`               | `git-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `fortran`               | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `freebsd-usr-bin`       | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `freertos-plus-tcp`     | `networking`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `frr`                   | `networking`       | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
+| `fzf`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `garage`                | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `gawk`                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `gcc`                   | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `gcc-torture`           | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `gcp-cli`               | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `gcsfuse`               | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `gem`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `gettext`               | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `ghcup`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `git`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `gitea`                 | `git-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `gitlab`                | `git-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
+| `glassfish`             | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `gleam`                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `glusterfs`             | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
+| `go`                    | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `go-pm`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `google-cloud-sdk`      | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `gradle`                | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `grafana`               | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `graphviz`              | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `groovy`                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `guix`                  | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | -     |
+| `gunicorn`              | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `haproxy`               | `web-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `haskell`               | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `hatch`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `hazelcast`             | `caches`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `helm`                  | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `helm-controller`       | `schedulers`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `hmailserver`           | `utilities`        | -           | -           | -           | ✅      | -     | -       | -     |
+| `htop`                  | `utilities`        | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `httpd`                 | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `huggingface-cli`       | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `hyperfine`             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `iis`                   | `web-servers`      | -           | -           | -           | ✅      | -     | -       | -     |
+| `imagemagick`           | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `influxdb`              | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `iptables`              | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `iwd`                   | `networking`       | ✅          | ✅          | -           | -       | -     | -       | -     |
+| `java`                  | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `jboss`                 | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `jetstream`             | `app-servers`      | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `jetty`                 | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `jq`                    | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `juicefs`               | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `julia`                 | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `just`                  | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `k3s`                   | `schedulers`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `kafka`                 | `message-brokers`  | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `keepalived`            | `networking`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `keycloak`              | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `keydb`                 | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `kotlin`                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `krew`                  | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `kubeadm`               | `schedulers`       | ❓          | ❓          | ❓          | ❓      | -     | -       | -     |
+| `kubectl`               | `schedulers`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `kubernetes-k0s`        | `schedulers`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `lcov`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `lfs-toolchain`         | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `libarchive`            | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `libtool`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `libtpu`                | `runtimes`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `libtpu-rs`             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `libvirt`               | `virtualization`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `lighttpd`              | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `lima`                  | `virtualization`   | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `llvm`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `lmdb`                  | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `loki`                  | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `lua`                   | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `luarocks`              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `lxc`                   | `containers`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `lxd`                   | `containers`       | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
+| `lynx`                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `lz4`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `macports`              | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
+| `make`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `mamba`                 | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `marathon`              | `schedulers`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `mariadb`               | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `mas`                   | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
+| `maven`                 | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `maven-wrapper`         | `package-managers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `meilisearch`           | `search`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `memcached`             | `caches`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `memtier-benchmark`     | `utilities`        | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `meson`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `mesos`                 | `schedulers`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `micropython`           | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `minio`                 | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `mise`                  | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `mix`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `mongodb`               | `databases`        | -           | ✅          | ✅          | -       | -     | -       | ✅    |
+| `mosquitto`             | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `msbuild`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `msi-rs`                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `msitools`              | `toolchains`       | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `mssql`                 | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `msvc`                  | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
+| `msys2`                 | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
+| `multipass`             | `virtualization`   | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
+| `mysql`                 | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `nasm`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `nats`                  | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `neo4j`                 | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `networkmanager`        | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `nftables`              | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `nginx`                 | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `nim`                   | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `nimble`                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `ninja`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `nix`                   | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | -     |
+| `nodeenv`               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `nodejs`                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `nodejs-server`         | `app-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `nomad`                 | `schedulers`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `npm`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `nuget`                 | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `nvm`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `ocaml`                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `odin`                  | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `ollama`                | `app-servers`      | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `opam`                  | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `openbao`               | `security`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `openocd`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `openresty`             | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `opensearch`            | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `opensearch-dashboards` | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `openssh`               | `networking`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `openssl`               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `openvpn`               | `networking`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
+| `openwatcom`            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `otel-collector`        | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `packer`                | `iac`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `pacman`                | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
+| `pandoc`                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `paru`                  | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
+| `passenger`             | `app-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `payara`                | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `pdm`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `perl`                  | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `pf`                    | `networking`       | -           | -           | -           | -       | -     | ✅      | ✅    |
+| `php`                   | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `php-fpm`               | `app-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `pip`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `pipx`                  | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `pkg`                   | `package-managers` | -           | -           | -           | -       | -     | ✅      | -     |
+| `pkgconfig`             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `pkgsrc`                | `package-managers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `pkgx`                  | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `pm2`                   | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `pnpm`                  | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `podman`                | `containers`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `poetry`                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `porg`                  | `package-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `port`                  | `package-managers` | -           | -           | -           | -       | -     | ❓      | ❓    |
+| `postgres`              | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `powershell`            | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `prolog`                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `prometheus`            | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `protobuf`              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `psmux`                 | `utilities`        | -           | -           | -           | ✅      | -     | -       | -     |
+| `pub`                   | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `pulsar`                | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `pulumi`                | `iac`              | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `puma`                  | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `pyenv`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `python`                | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `python-server`         | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `qemu`                  | `virtualization`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `qmake`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `questdb`               | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `r`                     | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `rabbitmq`              | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `racket`                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rancher`               | `schedulers`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rapps`                 | `package-managers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rbenv`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `rebar3`                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `redis`                 | `caches`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `redpanda`              | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `renode`                | `virtualization`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rethinkdb`             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `ripgrep`               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `riscv-none-elf-gcc`    | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rocksdb`               | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rosbe`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rsync`                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `ruby`                  | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `rust`                  | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `rust-server`           | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `rustup`                | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `rvm`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `rye`                   | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `sbt`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `scala`                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `sccache`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `scheme`                | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `scons`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `scoop`                 | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
+| `scylladb`              | `databases`        | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
+| `sdkman`                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
+| `seaweedfs`             | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `sh`                    | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `shellcheck`            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `skopeo`                | `containers`       | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `slurm`                 | `schedulers`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `snap`                  | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | -     |
+| `solr`                  | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `sonic`                 | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `spack`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `sqlite`                | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `sqlite-tools`          | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `stack`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `step-ca`               | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `surrealdb`             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `swift`                 | `languages`        | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `swig`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `swupd`                 | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
+| `systemd-networkd`      | `networking`       | -           | ✅          | ✅          | -       | -     | -       | -     |
+| `tar`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `tcc`                   | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `tcl`                   | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `tensorboard`           | `logging`          | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `terraform`             | `iac`              | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `texlive`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `tidb`                  | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `timescaledb`           | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `tmux`                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `tofu`                  | `iac`              | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `tokei`                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `tomcat`                | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `toybox`                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `traefik`               | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `tree`                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `triton`                | `app-servers`      | ❓          | ❓          | ❓          | ❓      | -     | -       | -     |
+| `typesense`             | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `ufw`                   | `networking`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `unicorn`               | `app-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `unzip`                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `utils`                 | `git-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `utm`                   | `virtualization`   | -           | -           | -           | -       | -     | -       | ❓    |
+| `uv`                    | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `uvicorn`               | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `uwsgi`                 | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `vagrant`               | `iac`              | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `vala`                  | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `valkey`                | `caches`           | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
+| `varnish`               | `caches`           | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `vault`                 | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `vcpkg`                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `vcpkg-tool`            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `vcredist`              | `utilities`        | -           | -           | -           | ✅      | -     | -       | -     |
+| `vector`                | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `vfox`                  | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `vim`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `virtualbox`            | `virtualization`   | -           | -           | -           | ✅      | -     | -       | -     |
+| `vlang`                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `vllm`                  | `app-servers`      | -           | -           | -           | -       | -     | -       | -     |
+| `wait4x`                | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `waitress`              | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `wamr`                  | `runtimes`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `wasmtime`              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `west`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `wget`                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `wildfly`               | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `win-cmd-rs`            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `wine`                  | `virtualization`   | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `winget`                | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
+| `wireguard`             | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `wix`                   | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
+| `wpa_supplicant`        | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `wsl`                   | `virtualization`   | -           | -           | -           | ❓      | -     | -       | -     |
+| `xbps`                  | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
+| `xmake`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `xorriso`               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `xpk`                   | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `xz`                    | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `yarn`                  | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `yarpgen`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `yasm`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `yay`                   | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
+| `yq`                    | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `yum`                   | `package-managers` | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `zephyr-sdk`            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `zeromq`                | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `zfs`                   | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `zig`                   | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `zip`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `zlib`                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `zookeeper`             | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `zstd`                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `zypper`                | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
 
-### Tier 1.5: Base OS Userland, Init Systems, Networking, Audio, Graphics & Desktops
+### T2: OS, Kernel & System Plumbing Recipes
 
 | Component            | Category           | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 | -------------------- | ------------------ | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
 | `alsa-lib`           | `audio`            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `alsa-ucm-conf`      | `audio`            | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `alsa-utils`         | `audio`            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `bind9`              | `networking`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `btrfs-progs`        | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `chrony`             | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
-| `coredns`            | `networking`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `coreutils`          | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
 | `dbus`               | `base-system`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `dhcpcd`             | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `dinit`              | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `dnsmasq`            | `networking`       | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `doas`               | `base-system`      | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `dosfstools`         | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `e2fsprogs`          | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `eudev`              | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `firewalld`          | `networking`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
-| `freertos-plus-tcp`  | `networking`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `frr`                | `networking`       | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
+| `freertos`           | `kernel`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `gdm`                | `display-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `glibc`              | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `gnome`              | `desktops`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `greetd`             | `display-managers` | ✅          | ✅          | -           | -       | -     | -       | -     |
+| `grub`               | `bootloaders`      | ✅          | ❓          | ❓          | -       | ❓    | ❓      | -     |
 | `hyprland`           | `desktops`         | ✅          | -           | -           | -       | -     | ✅      | -     |
 | `i3`                 | `desktops`         | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
+| `initramfs`          | `kernel`           | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `intel-media-driver` | `graphics`         | -           | -           | -           | -       | -     | -       | -     |
-| `iptables`           | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `iwd`                | `networking`       | ✅          | ✅          | -           | -       | -     | -       | -     |
 | `jack`               | `audio`            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `kde-plasma-6`       | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
-| `keepalived`         | `networking`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
 | `kmod`               | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `labwc`              | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `launchd`            | `init-systems`     | -           | -           | -           | -       | -     | -       | ❓    |
@@ -1200,26 +1234,30 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `libvdpau`           | `graphics`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `libxkbcommon`       | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `lightdm`            | `display-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `limine`             | `bootloaders`      | ✅          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `linux`              | `kernel`           | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `littlefs`           | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `locales`            | `base-system`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `lxqt`               | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `ly`                 | `display-managers` | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
 | `mate`               | `desktops`         | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
+| `mcuboot`            | `bootloaders`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `mesa`               | `graphics`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `mirage`             | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `musl`               | `base-system`      | ✅          | ✅          | -           | -       | -     | -       | -     |
+| `nanos`              | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `netctl`             | `networking`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `networkmanager`     | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `nftables`           | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `nssm`               | `init-systems`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `ntp`                | `base-system`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `nvidia`             | `graphics`         | -           | ✅          | ✅          | -       | -     | -       | -     |
 | `openbox`            | `desktops`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `openrc`             | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `openssh`            | `networking`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `openvpn`            | `networking`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
+| `osv`                | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `pam`                | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `pf`                 | `networking`       | -           | -           | -           | -       | -     | ✅      | ✅    |
 | `pipewire`           | `audio`            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `pulseaudio`         | `audio`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `refind`             | `bootloaders`      | ✅          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `rumprun`            | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `runit`              | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
 | `s6`                 | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `sddm`               | `display-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
@@ -1227,16 +1265,17 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `shadow`             | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `smf`                | `init-systems`     | -           | -           | -           | -       | ❓    | -       | -     |
 | `sndio`              | `audio`            | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
+| `solo5`              | `unikernels`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `sudo`               | `base-system`      | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
 | `supervisord`        | `init-systems`     | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `sway`               | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `sysctl`             | `base-system`      | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `systemd`            | `init-systems`     | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `systemd-networkd`   | `networking`       | -           | ✅          | ✅          | -       | -     | -       | -     |
+| `systemd-boot`       | `bootloaders`      | ✅          | ❓          | ❓          | -       | -     | -       | -     |
 | `sysvinit`           | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `tailscale`          | `networking`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tzdata`             | `base-system`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `ufw`                | `networking`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `unikraft`           | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `util-linux`         | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `vulkan-loader`      | `graphics`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
 | `wayland`            | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
@@ -1245,148 +1284,106 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `windows-scm`        | `init-systems`     | -           | -           | -           | ❓      | -     | -       | -     |
 | `wireplumber`        | `audio`            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `wlroots`            | `display-servers`  | ✅          | ✅          | -           | -       | -     | ✅      | -     |
-| `wpa_supplicant`     | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `xfce4`              | `desktops`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `xfsprogs`           | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `xorg-server`        | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `xwayland`           | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `zephyr`             | `kernel`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 
-### Tier 2: OS Synthesizers, Kernels, Bootloaders, Storage & Image Builders
+### T3: Image, OS & Artifact Synthesis
 
-| Component                | Category         | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
-| ------------------------ | ---------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
-| `bento-builder`          | `virtualization` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `bootloaders/setup`      | `bootloaders`    | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
-| `distro`                 | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `freebsd/distro`         | `freebsd`        | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `freertos`               | `kernel`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `grub`                   | `bootloaders`    | ✅          | ❓          | ❓          | -       | ❓    | ❓      | -     |
-| `illumos/distro`         | `illumos`        | ✅          | ✅          | ✅          | -       | ✅    | ✅      | -     |
-| `initramfs`              | `kernel`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `lima`                   | `virtualization` | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `limine`                 | `bootloaders`    | ✅          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
-| `linux`                  | `kernel`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `mcuboot`                | `bootloaders`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `multipass`              | `virtualization` | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
-| `packagers`              | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `reactos/distro`         | `reactos`        | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `refind`                 | `bootloaders`    | ✅          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `repogen`                | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `runner`                 | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `solo5`                  | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `storage/provision_disk` | `storage`        | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
-| `systemd-boot`           | `bootloaders`    | ✅          | ❓          | ❓          | -       | -     | -       | -     |
-| `utm`                    | `virtualization` | -           | -           | -           | -       | -     | -       | ❓    |
-| `vfs`                    | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `wine`                   | `virtualization` | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `wsl`                    | `virtualization` | -           | -           | -           | ❓      | -     | -       | -     |
-| `zephyr`                 | `kernel`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| Component                       | Category  | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+| ------------------------------- | --------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
+| `synthesis/disk/provision_disk` | `disk`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `synthesis/distro/bento`        | `distro`  | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `synthesis/distro/freebsd`      | `distro`  | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
+| `synthesis/distro/illumos`      | `distro`  | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
+| `synthesis/distro/linux`        | `distro`  | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `synthesis/distro/reactos`      | `distro`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `synthesis/repogen`             | `repogen` | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `synthesis/vfs/runner`          | `vfs`     | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `synthesis/vfs/sysroot`         | `vfs`     | ❓          | ❓          | ❓          | -       | -     | -       | -     |
 
-### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners
+### T4: Infrastructure Providers & Cluster Substrates
 
-| Component               | Category          | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
-| ----------------------- | ----------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
-| `ansible`               | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `aws`                   | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `azure`                 | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `buildah`               | `orchestration`   | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
-| `cdn`                   | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cert`                  | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cilium`                | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `cloud`                 | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `cloud-hypervisor`      | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `cloudinit`             | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `consul`                | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `containerd`            | `orchestration`   | ❓          | ❓          | ❓          | ❓      | -     | ❓      | -     |
-| `core`                  | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cri-o`                 | `orchestration`   | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
-| `digitalocean`          | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `docker`                | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `firecracker`           | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `gcp`                   | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `gcp-cli`               | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `gcp-filestore`         | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `gcp-gke-tpu-cluster`   | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `gcp-gpu-vm`            | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `gcp-tpu-vm`            | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `helm-controller`       | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `hetzner`               | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `image-import`          | `cloud`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `k3s`                   | `orchestration`   | ❓          | ❓          | ❓          | -       | -     | -       | -     |
-| `k8s-marathon`          | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `kubeadm`               | `orchestration`   | ❓          | ❓          | ❓          | ❓      | -     | -       | -     |
-| `kubectl`               | `orchestration`   | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `kubernetes`            | `orchestration`   | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `kubernetes-k0s`        | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `kubernetes-thw`        | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `libvirt`               | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `linode`                | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `lxc`                   | `orchestration`   | ❓          | ❓          | ❓          | -       | -     | -       | -     |
-| `lxd`                   | `orchestration`   | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
-| `marathon`              | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `mesos`                 | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `mirage`                | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `nanos`                 | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `nomad`                 | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `oci`                   | `cloud-providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `opensearch-dashboards` | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `osv`                   | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `ovh`                   | `cloud-providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `packer`                | `orchestration`   | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `podman`                | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `proxmox`               | `cloud-providers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `pulumi`                | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `qemu`                  | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rancher`               | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `renode`                | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `rumprun`               | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `skopeo`                | `orchestration`   | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `slurm`                 | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `storage`               | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `terraform`             | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `tofu`                  | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `unikernel_pod`         | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `unikraft`              | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `vagrant`               | `orchestration`   | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `virtualbox`            | `orchestration`   | -           | -           | -           | ✅      | -     | -       | -     |
-| `volume`                | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `vultr`                 | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| Component                                   | Category    | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+| ------------------------------------------- | ----------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
+| `infrastructure/clusters/gke-tpu-cluster`   | `clusters`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/clusters/k0s-ha`            | `clusters`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/clusters/k8s-marathon-paas` | `clusters`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/clusters/kubernetes-thw`    | `clusters`  | ❓          | ❓          | ❓          | -       | -     | -       | ❓    |
+| `infrastructure/clusters/mesos-marathon-ha` | `clusters`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/aws`              | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/azure`            | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/digitalocean`     | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/gcp`              | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/gcp-filestore`    | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/gcp-gpu-vm`       | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/gcp-tpu-vm`       | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/hetzner`          | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/linode`           | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/oci`              | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/ovh`              | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/proxmox`          | `providers` | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `infrastructure/providers/vultr`            | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/resources/cdn`              | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/resources/cert`             | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/resources/cloudinit`        | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/resources/core`             | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/resources/image-import`     | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/resources/storage`          | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/resources/volume`           | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 
-### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits
+### T5: Declarative Workloads, Application Stacks & Stateful Constellations
 
-| Component                           | Category      | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
-| ----------------------------------- | ------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
-| `gke-xpk-inference`                 | `ai-serving`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `inference-router`                  | `ai-serving`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `payloads/schedulers/kubernetes`    | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/mesos`         | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/microvm`       | `payloads`    | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
-| `payloads/schedulers/native`        | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/nomad`         | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/rtos_firmware` | `payloads`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `payloads/schedulers/slurm_ray`     | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/tpu_vm`        | `payloads`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `payloads/schedulers/xpk`           | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/gke-tpu-cluster`        | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/iot-mqtt-edge-pod`      | `topologies`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `topologies/k0s-ha`                 | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/k8s-marathon-paas`      | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/mesos-marathon-ha`      | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/minio-distributed`      | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/openedx-ha`             | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/openedx-unikernel-pod`  | `topologies`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `topologies/postgres-ha`            | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/redis-cluster`          | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/valkey-cluster`         | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `tpu-trainer`                       | `ml-training` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `traits/backup`                     | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/discovery`                  | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/firewall`                   | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/ingress`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/logging`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/maintenance`                | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/mesh`                       | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/metrics`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/secrets`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/storage`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/tls`                        | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| Component                                         | Category         | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+| ------------------------------------------------- | ---------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
+| `workloads/ai/inference-router`                   | `ai`             | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/ai/tpu-trainer`                        | `ai`             | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/apps/celery`                           | `apps`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/apps/drupal`                           | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/firecrawl`                        | `apps`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `workloads/apps/joomla`                           | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/jupyterhub`                       | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/magento`                          | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/nextcloud`                        | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/odoo`                             | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/openedx`                          | `apps`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/apps/phpbb`                            | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/prestashop`                       | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/serve-actix-diesel-auth-scaffold` | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/woocommerce`                      | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
+| `workloads/apps/wordpress`                        | `apps`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/constellations/iot-mqtt-edge-pod`      | `constellations` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/constellations/minio-distributed`      | `constellations` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/constellations/openedx-ha`             | `constellations` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/constellations/openedx-unikernel-pod`  | `constellations` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/constellations/postgres-ha`            | `constellations` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/constellations/redis-cluster`          | `constellations` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/constellations/unikernel_pod`          | `constellations` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/constellations/valkey-cluster`         | `constellations` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/schedulers/kubernetes`                 | `schedulers`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/schedulers/mesos`                      | `schedulers`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/schedulers/microvm`                    | `schedulers`     | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
+| `workloads/schedulers/native`                     | `schedulers`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/schedulers/nomad`                      | `schedulers`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/schedulers/rtos_firmware`              | `schedulers`     | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/schedulers/slurm_ray`                  | `schedulers`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/schedulers/tpu_vm`                     | `schedulers`     | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/schedulers/xpk`                        | `schedulers`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+
+### Plane A (Traits): Unified Cross-Cutting Node Traits
+
+| Component            | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+| -------------------- | -------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
+| `traits/backup`      | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/discovery`   | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/firewall`    | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/ingress`     | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/logging`     | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/maintenance` | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/mesh`        | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/metrics`     | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/secrets`     | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/storage`     | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/tls`         | `traits` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |

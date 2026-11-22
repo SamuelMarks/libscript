@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "azure",
+  "provides": ["azure"],
+  "os_whitelist": ["all"],
+  "category": "cloud-providers",
+  "title": "Azure",
+  "description": "LibScript component for AZURE",
+  "capabilities": ["versioned-artifact", "cloud-operator"]
+}

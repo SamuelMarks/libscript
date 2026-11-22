@@ -137,7 +137,7 @@ exit /b 0
 :action_ls_remote
 if "%OLLAMA_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%OLLAMA_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%OLLAMA_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%OLLAMA_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/ollama/ollama" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -181,7 +181,7 @@ if "%OLLAMA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading ollama %OLLAMA_VERSION% to %DOWNLOAD_DIR%\ollama...
     if not exist "%DOWNLOAD_DIR%\ollama" mkdir "%DOWNLOAD_DIR%\ollama"
     if not "%OLLAMA_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OLLAMA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ollama\ollama-%OLLAMA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%OLLAMA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ollama\ollama-%OLLAMA_VERSION%.zip"
     ) else (
         echo OLLAMA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -200,7 +200,7 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if "%OLLAMA_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends ollama
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends ollama
     set "_SYS_RC=!errorlevel!"
     call :configure_cpu_amx_and_verify_gemma
     exit /b !_SYS_RC!
@@ -218,7 +218,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\ollama\ollama-%OLLAMA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%OLLAMA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OLLAMA_DOWNLOAD_URL%" "%TEMP%\ollama.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%OLLAMA_DOWNLOAD_URL%" "%TEMP%\ollama.zip"
         tar -xf "%TEMP%\ollama.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ollama.
@@ -256,5 +256,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "ollama" "%ACTION%" "%OLLAMA_VERSION%" "%OLLAMA_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%\\bin\\ollama.exe\"" "%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "ollama" "%ACTION%" "%OLLAMA_VERSION%" "%OLLAMA_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%\\bin\\ollama.exe\"" "%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%"
 exit /b !errorlevel!

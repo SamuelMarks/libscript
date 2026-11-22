@@ -527,8 +527,8 @@ function Audit-File {
         }
     }
 
-    if ($normPath -match '^_lib/[^/]+/[^/]+-suite/' -and $normPath -notmatch '^_lib/toolchains/(edgcpp-backends-suite|gemma-tpu-suite|win-port-suite)/') {
-        Log-Violation -File $FilePath -Rule "EXP_IN_LIB" -Details "New empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
+    if ($normPath -match '^_lib/[^/]+/[^/]+-suite/' -or $normPath -match '^_lib/[^/]+/[^/]+/suites/') {
+        Log-Violation -File $FilePath -Rule "EXP_IN_LIB" -Details "Empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
     }
 
     # 8g. Raw Network Fetch & Raw Package Manager Audit
@@ -544,59 +544,59 @@ function Audit-File {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends)."
                 }
             }
-            if ($normPath -notmatch '(_lib/(_common/(service|service_install|logs_service|os_info)\.sh|init-systems/)|payloads/schedulers/|\.tpl$)') {
+            if ($normPath -notmatch '(_lib/(_common/(service|service_install|logs_service|os_info)\.sh|init-systems/)|workloads/schedulers/|\.tpl$)') {
                 if ($rawDaemonLines.Count -gt 0) {
-                    Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw init/daemon manager usage found (delegate to _lib/_common/service.sh or service_install.sh)."
+                    Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw init/daemon manager usage found (delegate to engine/common/service.sh or service_install.sh)."
                 }
             }
-            if ($normPath -notmatch '(_lib/_common/remote_sync\.sh|_lib/utilities/(rsync|openssh)/|packaging/|vagrant/)') {
+            if ($normPath -notmatch '(engine/common/remote_sync\.sh|_lib/utilities/(rsync|openssh)/|synthesis/msi/|vagrant/)') {
                 if ($rawSyncLines.Count -gt 0) {
-                    Log-Violation -File $FilePath -Rule "RAW_REMOTE_SYNC" -Details "Raw rsync/scp call found (delegate to _lib/_common/remote_sync.sh)."
+                    Log-Violation -File $FilePath -Rule "RAW_REMOTE_SYNC" -Details "Raw rsync/scp call found (delegate to engine/common/remote_sync.sh)."
                 }
             }
-            if ($normPath -notmatch '_lib/_common/python_env\.sh$') {
+            if ($normPath -notmatch 'engine/common/python_env\.sh$') {
                 if ($rawVenvLines.Count -gt 0) {
-                    Log-Violation -File $FilePath -Rule "RAW_PYTHON_VENV" -Details "Explicit Python venv creation found (delegate to _lib/_common/python_env.sh)."
+                    Log-Violation -File $FilePath -Rule "RAW_PYTHON_VENV" -Details "Explicit Python venv creation found (delegate to engine/common/python_env.sh)."
                 }
             }
-            if ($normPath -notmatch '(_lib/_common/priv\.sh|_lib/base-system/sudo/|vagrant/|packaging/|^cli/)') {
+            if ($normPath -notmatch '(engine/common/priv\.sh|_lib/base-system/sudo/|vagrant/|synthesis/msi/|^cli/)') {
                 if ($rawPrivLines.Count -gt 0) {
-                    Log-Violation -File $FilePath -Rule "RAW_PRIV_ESCALATION" -Details "Raw sudo invocation found (delegate to priv / priv_as from _lib/_common/priv.sh)."
+                    Log-Violation -File $FilePath -Rule "RAW_PRIV_ESCALATION" -Details "Raw sudo invocation found (delegate to priv / priv_as from engine/common/priv.sh)."
                 }
             }
-            if ($normPath -notmatch '_lib/_common/envsubst_safe\.sh$') {
+            if ($normPath -notmatch 'engine/common/envsubst_safe\.sh$') {
                 if ($rawEnvsubstLines.Count -gt 0) {
-                    Log-Violation -File $FilePath -Rule "RAW_ENVSUBST" -Details "Raw envsubst invocation found (delegate to envsubst_safe from _lib/_common/envsubst_safe.sh)."
+                    Log-Violation -File $FilePath -Rule "RAW_ENVSUBST" -Details "Raw envsubst invocation found (delegate to envsubst_safe from engine/common/envsubst_safe.sh)."
                 }
             }
-            if ($normPath -notmatch '_lib/_common/uuid_gen\.sh$') {
+            if ($normPath -notmatch 'engine/common/uuid_gen\.sh$') {
                 if ($rawUuidLines.Count -gt 0) {
-                    Log-Violation -File $FilePath -Rule "RAW_UUID_GEN" -Details "Non-deterministic UUID generation found (delegate to _lib/_common/uuid_gen.sh)."
+                    Log-Violation -File $FilePath -Rule "RAW_UUID_GEN" -Details "Non-deterministic UUID generation found (delegate to engine/common/uuid_gen.sh)."
                 }
             }
-            if ($normPath -notmatch '(_lib/_common/(hw_tune|source_builder)\.sh|packaging/)') {
+            if ($normPath -notmatch '(engine/common/(hw_tune|source_builder)\.sh|synthesis/msi/)') {
                 if ($rawHwLines.Count -gt 0) {
-                    Log-Violation -File $FilePath -Rule "RAW_HW_DETECT" -Details "Raw hardware core/RAM query found (delegate to _lib/_common/hw_tune.sh)."
+                    Log-Violation -File $FilePath -Rule "RAW_HW_DETECT" -Details "Raw hardware core/RAM query found (delegate to engine/common/hw_tune.sh)."
                 }
             }
-            if ($normPath -notmatch '(_lib/_common/versioning\.sh|_lib/package-managers/|_lib/languages/rust/)') {
+            if ($normPath -notmatch '(engine/common/versioning\.sh|_lib/package-managers/|_lib/languages/rust/)') {
                 if ($extVmLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "EXTERNAL_VERSION_MANAGER" -Details "Direct third-party version manager invocation found (delegate to LibScript native components)."
                 }
             }
-            if ($normPath -notmatch '(_lib/_common/os_info\.sh|vagrant/)') {
+            if ($normPath -notmatch '(engine/common/os_info\.sh|vagrant/)') {
                 if ($rawUnameLines.Count -gt 0) {
-                    Log-Violation -File $FilePath -Rule "RAW_UNAME" -Details "Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh)."
+                    Log-Violation -File $FilePath -Rule "RAW_UNAME" -Details "Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from engine/common/os_info.sh)."
                 }
             }
-            if ($normPath -notmatch '(_lib/cloud-providers/gcp|_lib/cloud/core/tags\.sh$|_lib/ml-training/_common/tfrc_guard\.sh$)') {
+            if ($normPath -notmatch '(infrastructure/providers/gcp|infrastructure/resources/core/tags\.sh$|engine/common/tfrc_guard\.sh$)') {
                 $rawTpuSh = Select-String -Path $FilePath -Pattern '^\s*[^#]*gcloud\s+compute\s+tpus\s+tpu-vm' | Where-Object { $_.Line -notmatch '(echo\s|printf\s|libscript-allow-raw-tpu)' }
                 if ($rawTpuSh) {
-                    Log-Violation -File $FilePath -Rule "RAW_GCLOUD_TPU" -Details "Ad-hoc gcloud compute tpus tpu-vm call found (delegate to _lib/cloud-providers/gcp-tpu-vm)."
+                    Log-Violation -File $FilePath -Rule "RAW_GCLOUD_TPU" -Details "Ad-hoc gcloud compute tpus tpu-vm call found (delegate to infrastructure/providers/gcp-tpu-vm)."
                 }
             }
         } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
-            if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test)|cli/commands/packaging/formats/pkg_docker_compose)\.cmd$') {
+            if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test)|synthesis/formats/docker_compose)\.cmd$') {
                 $rawFetchCmd = Select-String -Path $FilePath -Pattern '(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl(\.exe)?\s+(--(silent|location|fail|output)|-[a-zA-Z0-9]*[sSfLOo]))' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-(fetch|curl))' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-(fetch|curl)') }
                 if ($rawFetchCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw network call in batch script (delegate to pkg_mgr.cmd)."
@@ -608,32 +608,32 @@ function Audit-File {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
-            if ($normPath -notmatch '(_lib/(_common/(service|service_install)\.cmd|init-systems/)|payloads/schedulers/)') {
+            if ($normPath -notmatch '(_lib/(_common/(service|service_install)\.cmd|init-systems/)|workloads/schedulers/)') {
                 $rawDaemonCmd = Select-String -Path $FilePath -Pattern '(^|[\s&(|])(sc\.exe\s+(start|stop|create|delete|config|query|description)|sc\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop)\s+|systemctl\s+(start|stop|restart|reload|daemon-reload|enable|disable|status|is-active)|rc-service\s+|service\s+[A-Za-z0-9_$"''-]+\s+(start|stop|restart|reload|status))(\s|$)' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-daemon' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-daemon') }
                 if ($rawDaemonCmd) {
-                    Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw service/daemon manager call in batch script (delegate to _lib\_common\service.cmd or service_install.cmd)."
+                    Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw service/daemon manager call in batch script (delegate to engine\common\service.cmd or service_install.cmd)."
                 }
             }
-            if ($normPath -notmatch '(_lib/_common/remote_sync\.cmd|_lib/utilities/(rsync|openssh)/|packaging/|vagrant/)') {
+            if ($normPath -notmatch '(engine/common/remote_sync\.cmd|_lib/utilities/(rsync|openssh)/|synthesis/msi/|vagrant/)') {
                 $rawSyncCmd = Select-String -Path $FilePath -Pattern '(^|[\s&(|])(rsync\s+-[A-Za-z0-9-]+.*:|scp\s+(-[A-Za-z0-9]+\s+)*[^\s|&]+)\s+' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(gcloud\s+(compute|storage)|vagrant\s+rsync|cli\.(sh|cmd)[\s"]*scp|:log_error|--version|libscript-allow-raw-sync)' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-sync') }
                 if ($rawSyncCmd) {
-                    Log-Violation -File $FilePath -Rule "RAW_REMOTE_SYNC" -Details "Raw rsync/scp call in batch script (delegate to _lib\_common\remote_sync.cmd)."
+                    Log-Violation -File $FilePath -Rule "RAW_REMOTE_SYNC" -Details "Raw rsync/scp call in batch script (delegate to engine\common\remote_sync.cmd)."
                 }
             }
-            if ($normPath -notmatch '_lib/_common/python_env\.cmd$') {
+            if ($normPath -notmatch 'engine/common/python_env\.cmd$') {
                 $rawVenvCmd = Select-String -Path $FilePath -Pattern '(^|[\s&(|])([A-Za-z0-9_$"%!\\/.:-]*python[0-9.]*(\.exe)?["!]?\s+-m\s+venv|uv(\.exe)?\s+venv|virtualenv\s+)' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-venv' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-venv') }
                 if ($rawVenvCmd) {
-                    Log-Violation -File $FilePath -Rule "RAW_PYTHON_VENV" -Details "Explicit Python venv creation in batch script (delegate to _lib\_common\python_env.cmd)."
+                    Log-Violation -File $FilePath -Rule "RAW_PYTHON_VENV" -Details "Explicit Python venv creation in batch script (delegate to engine\common\python_env.cmd)."
                 }
             }
-            if ($normPath -notmatch '_lib/_common/uuid_gen\.cmd$') {
+            if ($normPath -notmatch 'engine/common/uuid_gen\.cmd$') {
                 $rawUuidCmd = Select-String -Path $FilePath -Pattern 'Guid\]::NewGuid\s*\(' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s)' -and $_.Line -notmatch 'libscript-allow-raw-uuid' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-uuid') }
                 if ($rawUuidCmd) {
-                    Log-Violation -File $FilePath -Rule "RAW_UUID_GEN" -Details "Non-deterministic Guid::NewGuid() in batch script (delegate to _lib\_common\uuid_gen.cmd)."
+                    Log-Violation -File $FilePath -Rule "RAW_UUID_GEN" -Details "Non-deterministic Guid::NewGuid() in batch script (delegate to engine\common\uuid_gen.cmd)."
                 }
             }
         } elseif ($ext -eq "ps1") {
-            if ($normPath -notmatch '_lib/_common/pkg_mgr\.ps1$') {
+            if ($normPath -notmatch 'engine/common/pkg_mgr\.ps1$') {
                 $rawFetchPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|Start-BitsTransfer|Net\.WebClient)' -Context 1,0 | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|libscript-allow-raw-(fetch|curl))' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-(fetch|curl)') }
                 if ($rawFetchPs1) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw Invoke-WebRequest/Invoke-RestMethod found (delegate to pkg_mgr.ps1)."

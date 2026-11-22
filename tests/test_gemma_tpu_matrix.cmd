@@ -74,13 +74,13 @@ jq -e "(.backends | length) == 7" "!_WDIR!\out\gemma_tpu\comparison_summary.json
 
 :: 2. 2x --resume idempotency produces identical comparison_summary.json
 copy /y "!_WDIR!\out\gemma_tpu\comparison_summary.json" "!_WDIR!\summary_pass1.json" >nul
-call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\gemma-tpu-suite\benchmark_experiments.cmd" --local-exec --resume "--tfrc-config=!_POL!" "--repo-dir=!_WDIR!\repo" "--results-dir=!_WDIR!\out\gemma_tpu" "--backends=all" "--subsuites=E0,E1,E2,E3,E4"
+call "!LIBSCRIPT_ROOT_DIR!\experiments\gemma-tpu\benchmark_experiments.cmd" --local-exec --resume "--tfrc-config=!_POL!" "--repo-dir=!_WDIR!\repo" "--results-dir=!_WDIR!\out\gemma_tpu" "--backends=all" "--subsuites=E0,E1,E2,E3,E4"
 if errorlevel 1 goto :fail
 fc /b "!_WDIR!\summary_pass1.json" "!_WDIR!\out\gemma_tpu\comparison_summary.json" >nul || goto :fail
 
 :: 3. /dev/shm watermark eviction preserves cache\hf\model.safetensors
 set "TPU_MOCK_SHM_FREE_KB=1024"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tpu_matrix.cmd" :libscript_tpu_evict_shm_if_needed "jax-native" "!_WDIR!\shm" "32"
+call "!LIBSCRIPT_ROOT_DIR!\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_evict_shm_if_needed "jax-native" "!_WDIR!\shm" "32"
 if errorlevel 1 goto :fail
 if not exist "!_WDIR!\shm\cache\hf\model.safetensors" goto :fail
 if exist "!_WDIR!\shm\venvs\maxtext" goto :fail
@@ -90,7 +90,7 @@ set "TPU_MOCK_SHM_FREE_KB=67108864"
 :: 4. Stage B fail-fast CPU-fallback detection (peak_tpu_hbm_bytes == 0 -> status == failed_cpu_fallback, exit 65)
 set "TPU_MOCK_PEAK_HBM_BYTES=0"
 set "TPU_MOCK_ACCEL_FD_OPENED=false"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\gemma-tpu-suite\benchmark_experiments.cmd" --local-exec --no-resume "--tfrc-config=!_POL!" "--repo-dir=!_WDIR!\repo" "--results-dir=!_WDIR!\out_fb" "--backends=jax_native" "--subsuites=E1" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\experiments\gemma-tpu\benchmark_experiments.cmd" --local-exec --no-resume "--tfrc-config=!_POL!" "--repo-dir=!_WDIR!\repo" "--results-dir=!_WDIR!\out_fb" "--backends=jax_native" "--subsuites=E1" >nul 2>&1
 if not "!ERRORLEVEL!"=="65" goto :fail
 jq -e ".status == \"failed_cpu_fallback\"" "!_WDIR!\out_fb\raw\e1_inference_jax_native.json" >nul || goto :fail
 

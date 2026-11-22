@@ -1,15 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "dnsmasq",
-  "title": "Dnsmasq DNS/DHCP/TFTP Server",
-  "description": "Lightweight DNS forwarder, DHCPv4/v6 server, router advertisement, and PXE/TFTP network boot server.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "networking",
-  "provides": ["dnsmasq"],
-  "os_whitelist": ["linux", "macos", "freebsd", "openbsd", "netbsd", "sunos"],
-  "os_blacklist": ["windows"],
-  "ports": [53, 67, 69],
-  "repository": "https://thekelleys.org.uk/gitweb/?p=dnsmasq.git",
+  "description": "Lightweight DNS forwarder, DHCPv4/v6 server, router advertisement, and PXE/TFTP network boot server.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -22,9 +18,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "dnsmasq",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "macos", "freebsd", "openbsd", "netbsd", "sunos"],
+  "ports": [53, 67, 69],
+  "provides": ["dnsmasq"],
+  "repository": "https://thekelleys.org.uk/gitweb/?p=dnsmasq.git",
+  "tier": "T1",
+  "title": "Dnsmasq DNS/DHCP/TFTP Server"
 }

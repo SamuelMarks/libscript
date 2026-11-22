@@ -70,7 +70,7 @@ for %%P in ("C:\Program Files\Go\bin" "%LIBSCRIPT_BASE_DIR%\go\default\bin" "%GO
 echo ";!PATH!;" | findstr /I /C:";%GOROOT%\bin;" >nul 2>&1
 if errorlevel 1 set "PATH=%GOROOT%\bin;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "go" "%GO_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "go" "%GO_VERSION%"
 
 endlocal & (
     set "GO_VERSION=%GO_VERSION%"

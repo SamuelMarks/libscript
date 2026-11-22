@@ -81,7 +81,7 @@ if not exist "%TEST_TMP%\home\.libscript\duckdb\latest\bin" mkdir "%TEST_TMP%\ho
 
 set "LIBSCRIPT_HOME=%TEST_TMP%\home\.libscript"
 set "STACK="
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_printer.cmd" --hydrate "%TEST_TMP%\libscript.json"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_printer.cmd" --hydrate "%TEST_TMP%\libscript.json"
 set "PATH_PASS_1=!PATH!"
 
 for %%S in (
@@ -116,7 +116,7 @@ if "!NODEJS_VERSION!"=="" (
 )
 
 set "STACK="
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_printer.cmd" --hydrate "%TEST_TMP%\libscript.json"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_printer.cmd" --hydrate "%TEST_TMP%\libscript.json"
 set "PATH_PASS_2=!PATH!"
 
 if not "!PATH_PASS_1!"=="!PATH_PASS_2!" (
@@ -126,7 +126,7 @@ if not "!PATH_PASS_1!"=="!PATH_PASS_2!" (
 )
 
 set "STACK="
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_printer.cmd" --manifest "%TEST_TMP%\libscript.json" dotenv > "%TEST_TMP%\dotenv_out.txt"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_printer.cmd" --manifest "%TEST_TMP%\libscript.json" dotenv > "%TEST_TMP%\dotenv_out.txt"
 findstr /B /C:"SERVICE_PATH=" "%TEST_TMP%\dotenv_out.txt" >nul 2>&1
 if errorlevel 1 (
     echo [FAIL] SERVICE_PATH missing from dotenv manifest output^^! >&2
@@ -137,7 +137,7 @@ if errorlevel 1 (
 set "T1D_DB_PATH=/mnt/data/t1d_analytics.duckdb"
 set "TEST_SEED_CMD=python -c \"import duckdb; conn=duckdb.connect('${T1D_DB_PATH:-/mnt/data/t1d.duckdb}', read_only=True); print('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN (\x27information_schema\x27, \x27pg_catalog\x27)')\" && (cd t1d-analytics-backend && uv sync --python 3.12)"
 set "STACK="
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_printer.cmd" --expand TEST_SEED_CMD
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_printer.cmd" --expand TEST_SEED_CMD
 echo "!TEST_SEED_CMD!" | findstr /C:"/mnt/data/t1d_analytics.duckdb" >nul 2>&1
 if errorlevel 1 (
     echo [FAIL] --expand did not expand T1D_DB_PATH in TEST_SEED_CMD^^! >&2

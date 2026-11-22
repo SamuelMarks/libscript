@@ -63,10 +63,10 @@ running the setup script.
 | `MSI_RS_REPO_URL`       | Upstream source Git repository URL for msi-rs.                                                                                                         | `https://github.com/SamuelMarks/msi-rs` |                  |
 | `MSI_RS_DOWNLOAD_URL`   | Direct download URL for prebuilt binary archive if available.                                                                                          | `none`                                  |                  |
 | `MSI_RS_RELEASES_URL`   | Override URL for querying msi-rs available remote releases.                                                                                            | `none`                                  |                  |
-| `MSI_RS_COMPONENTS`     | Comma-separated list of Tier 1 components preloaded into live installer media or installed onto the target disk.                                       | `none`                                  |                  |
+| `MSI_RS_COMPONENTS`     | Comma-separated list of T1 components preloaded into live installer media or installed onto the target disk.                                           | `none`                                  |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Platform Support

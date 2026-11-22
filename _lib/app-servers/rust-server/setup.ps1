@@ -50,7 +50,7 @@ if ($Action -eq "download") {
 
 if ($Action -match "^(start|stop|restart|status|health|logs|up|down)$") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_rust-server" }
         if (Get-Command libscript_service -ErrorAction SilentlyContinue) {
@@ -68,7 +68,7 @@ if ($Action -match "^(start|stop|restart|status|health|logs|up|down)$") {
 
 if ($Action -eq "install-service") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_rust-server" }
         if (Get-Command libscript_install_service -ErrorAction SilentlyContinue) {
@@ -86,7 +86,7 @@ if ($Action -eq "install-service") {
 
 if ($Action -eq "uninstall-service") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_rust-server" }
         if (Get-Command libscript_uninstall_service -ErrorAction SilentlyContinue) {

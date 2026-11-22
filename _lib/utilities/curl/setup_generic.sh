@@ -28,13 +28,13 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd -- "$(dirname "$THIS_FILE")/../../.." && pwd)}/_lib/_common/pkg_mgr.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd -- "$(dirname "$THIS_FILE")/../../.." && pwd)}/engine/common/pkg_mgr.sh"
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/versioning.sh"
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/source_builder.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/source_builder.sh"
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
@@ -115,12 +115,12 @@ case "$ACTION" in
         _cached_dos="${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}}/curl/curl-${EXACT_VERSION}-dos32.exe"
         if [ -s "${_cached_dos}" ]; then
           cp -f "${_cached_dos}" "${TARGET_DIR}/bin/curl.exe"
-        elif ! "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-watt-curl --target=dos32 --out="${TARGET_DIR}/bin/curl.exe" >/dev/null 2>&1; then
-          "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-watt-curl --target=host --out="${TARGET_DIR}/bin/curl.exe" >/dev/null
+        elif ! "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/build_dos32.sh" ls-watt-curl --target=dos32 --out="${TARGET_DIR}/bin/curl.exe" >/dev/null 2>&1; then
+          "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/build_dos32.sh" ls-watt-curl --target=host --out="${TARGET_DIR}/bin/curl.exe" >/dev/null
         fi
       fi
-      if [ "${LIBSCRIPT_OFFLINE:-0}" != '1' ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh" >/dev/null
+      if [ "${LIBSCRIPT_OFFLINE:-0}" != '1' ] && [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/wattcp_cfg.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/wattcp_cfg.sh" >/dev/null
       fi
       libscript_symlink_alias 'curl' "${VERSION:-latest}" "${EXACT_VERSION}"
       libscript_symlink_alias 'curl' 'default' "${EXACT_VERSION}"

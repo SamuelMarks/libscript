@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gettext",
-  "title": "GNU gettext",
-  "description": "Internationalization and localization utilities (msgfmt, xgettext, msginit, msgmerge) used by Open edX translation compilation.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["gettext", "msgfmt", "xgettext"],
+  "description": "Internationalization and localization utilities (msgfmt, xgettext, msginit, msgmerge) used by Open edX translation compilation.",
+  "name": "gettext",
   "os_whitelist": ["all"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["gettext", "msgfmt", "xgettext"],
+  "tier": "T1",
+  "title": "GNU gettext"
 }

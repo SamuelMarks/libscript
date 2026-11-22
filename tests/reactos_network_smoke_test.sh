@@ -35,8 +35,8 @@ export LIBSCRIPT_ALLOW_STUB=1
 
 TARGET="${1:-${TMP_DIR}/net-sysroot}"
 if [ ! -d "${TARGET}/iso_root" ]; then
-  STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/reactos/distro/assemble.sh" \
-    "${LIBSCRIPT_ROOT_DIR}/profiles/reactos/developer-win32-i686.json" "$TARGET" >/dev/null
+  STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/reactos/assemble.sh" \
+    "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/reactos/developer-win32-i686.json" "$TARGET" >/dev/null
 fi
 
 grep -q 'dhcp' "${TARGET}/iso_root/libscript/nt_scm_services.conf"

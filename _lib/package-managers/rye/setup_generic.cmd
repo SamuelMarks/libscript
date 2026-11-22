@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%RYE_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%RYE_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%RYE_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%RYE_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/wch/r-sourceye" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%RYE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading rye %RYE_VERSION% to %DOWNLOAD_DIR%\rye...
     if not exist "%DOWNLOAD_DIR%\rye" mkdir "%DOWNLOAD_DIR%\rye"
     if not "%RYE_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RYE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rye\rye-%RYE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%RYE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rye\rye-%RYE_VERSION%.zip"
     ) else (
         echo RYE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%RYE_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends rye
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends rye
     exit /b !errorlevel!
 )
 
@@ -161,11 +161,11 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\rye\rye-%RYE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%RYE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RYE_DOWNLOAD_URL%" "%TEMP%\rye.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%RYE_DOWNLOAD_URL%" "%TEMP%\rye.zip"
         tar -xf "%TEMP%\rye.zip" -C "%TARGET_DIR%"
     ) else (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/astral-sh/rye/releases/download/0.44.0/rye-x86_64-pc-windows-msvc.exe" "%TARGET_DIR%\bin\rye.exe"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/astral-sh/rye/releases/download/0.44.0/rye-x86_64-pc-windows-msvc.exe" "%TARGET_DIR%\bin\rye.exe"
         if exist "%TARGET_DIR%\bin\rye.exe" (
             REM wincheck disable=CMD2003
             for %%F in ("%TARGET_DIR%\bin\rye.exe") do if %%~zF lss 100000 del /f /q "%TARGET_DIR%\bin\rye.exe" >nul 2>&1
@@ -200,5 +200,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "rye" "%ACTION%" "%RYE_VERSION%" "%RYE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\rye\%RYE_VERSION%\\bin\\rye.exe\"" "%LIBSCRIPT_HOME%\rye\%RYE_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "rye" "%ACTION%" "%RYE_VERSION%" "%RYE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\rye\%RYE_VERSION%\\bin\\rye.exe\"" "%LIBSCRIPT_HOME%\rye\%RYE_VERSION%"
 exit /b !errorlevel!

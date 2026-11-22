@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "runit",
-  "title": "runit",
-  "description": "Cross-platform Unix init scheme with service supervision.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "init-systems",
-  "provides": ["runit", "init-system"],
   "conflicts": [],
-  "versions": ["latest", "2.1.2"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "darwin"],
+  "description": "Cross-platform Unix init scheme with service supervision.",
+  "name": "runit",
   "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "darwin"],
   "ports": [],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["runit", "init-system"],
+  "tier": "T2",
+  "title": "runit",
+  "versions": ["latest", "2.1.2"]
 }

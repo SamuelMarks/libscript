@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ccache",
-  "title": "ccache",
-  "description": "A fast C and C++ compiler cache.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["ccache", "compiler-cache"],
+  "description": "A fast C and C++ compiler cache.",
+  "name": "ccache",
   "os_whitelist": ["all"],
+  "provides": ["ccache", "compiler-cache"],
   "repository": "https://github.com/ccache/ccache",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "ccache"
 }

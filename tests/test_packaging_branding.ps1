@@ -52,11 +52,11 @@ function Test-BrandingGeneration {
 
     # 1. Inno
     $innoFile = Join-Path $TestTmpDir "BrandApp.iss"
-    $innoCmd = Join-Path $LibscriptRootDir "packaging\template_inno.cmd"
+    $innoCmd = Join-Path $LibscriptRootDir "synthesis\msi\template_inno.cmd"
     if (Test-Path $innoCmd) {
         & cmd.exe /c "call `"$innoCmd`"" > $innoFile
     } else {
-        $innoSh = Join-Path $LibscriptRootDir "packaging/template_inno.sh"
+        $innoSh = Join-Path $LibscriptRootDir "synthesis/msi/template_inno.sh"
         & /bin/sh "$innoSh" > $innoFile
     }
     if (Test-Path $innoFile) {
@@ -68,11 +68,11 @@ function Test-BrandingGeneration {
 
     # 2. NSIS
     $nsiFile = Join-Path $TestTmpDir "BrandApp.nsi"
-    $nsisCmd = Join-Path $LibscriptRootDir "packaging\template_nsis.cmd"
+    $nsisCmd = Join-Path $LibscriptRootDir "synthesis\msi\template_nsis.cmd"
     if (Test-Path $nsisCmd) {
         & cmd.exe /c "call `"$nsisCmd`"" > $nsiFile
     } else {
-        $nsisSh = Join-Path $LibscriptRootDir "packaging/template_nsis.sh"
+        $nsisSh = Join-Path $LibscriptRootDir "synthesis/msi/template_nsis.sh"
         & /bin/sh "$nsisSh" > $nsiFile
     }
     if (Test-Path $nsiFile) {
@@ -83,11 +83,11 @@ function Test-BrandingGeneration {
     }
 
     # 3. WiX MSI
-    $templateMsiCmd = Join-Path $LibscriptRootDir "packaging\template_msi.cmd"
+    $templateMsiCmd = Join-Path $LibscriptRootDir "synthesis\msi\template_msi.cmd"
     if (Test-Path $templateMsiCmd) {
         & cmd.exe /c "call `"$templateMsiCmd`""
     } else {
-        $templateMsiSh = Join-Path $LibscriptRootDir "packaging/template_msi.sh"
+        $templateMsiSh = Join-Path $LibscriptRootDir "synthesis/msi/template_msi.sh"
         & /bin/sh "$templateMsiSh"
     }
     $wxsFile = Join-Path $TestTmpDir "BrandApp.wxs"

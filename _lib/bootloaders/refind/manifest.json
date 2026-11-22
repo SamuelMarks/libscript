@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "refind",
-  "title": "rEFInd UEFI Boot Manager",
-  "description": "Graphical UEFI boot manager and automatic EFI OS/kernel discovery tool (refind-install).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "bootloader"],
   "category": "bootloaders",
-  "provides": ["refind", "refind-install"],
-  "os_whitelist": ["linux", "freebsd", "macos"],
+  "description": "Graphical UEFI boot manager and automatic EFI OS/kernel discovery tool (refind-install).",
+  "name": "refind",
   "os_blacklist": ["windows", "sunos"],
+  "os_whitelist": ["linux", "freebsd", "macos"],
+  "provides": ["refind", "refind-install"],
   "repository": "https://sourceforge.net/projects/refind/",
-  "capabilities": ["versioned-artifact", "os-synthesizer"]
+  "tier": "T2",
+  "title": "rEFInd UEFI Boot Manager"
 }

@@ -82,7 +82,7 @@ exit /b 0
 set "RELEASES_URL=%GROOVY_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/apache/groovy/tags"
 echo [ls-remote] Fetching available groovy versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -113,7 +113,7 @@ set "DL_DIR=!DL_DIR!\groovy"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading groovy %GROOVY_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -124,23 +124,23 @@ if /i "%GROOVY_INSTALL_METHOD%"=="from-source" (
     set "TARGET_DIR=%LIBSCRIPT_HOME%\groovy\!EXACT_VERSION!"
     set "SRC_URL=%GROOVY_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-src-{VERSION}.zip"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "groovy" "!EXACT_VERSION!" "groovy" "c"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "groovy" "!EXACT_VERSION!" "groovy" "c"
     exit /b !errorlevel!
 )
 if "%GROOVY_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends groovy
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends groovy
     exit /b !errorlevel!
 )
 if /i "%GROOVY_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget groovy
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget groovy
     exit /b !errorlevel!
 )
 if /i "%GROOVY_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco groovy
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco groovy
     exit /b !errorlevel!
 )
 if /i "%GROOVY_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop groovy
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop groovy
     exit /b !errorlevel!
 )
 call :resolve_version
@@ -152,8 +152,8 @@ if exist "!TARGET_DIR!\bin\groovy.bat" set "_BIN_FOUND=1"
 if "!_BIN_FOUND!"=="1" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] groovy !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "groovy" "%GROOVY_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "groovy" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "groovy" "%GROOVY_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "groovy" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -161,7 +161,7 @@ set "URL=%GROOVY_DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-{VERSION}.zip"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends groovy
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends groovy
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -174,7 +174,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\groovy-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 if /i "!URL:~-4!"==".zip" (
@@ -214,8 +214,8 @@ if /i "!URL:~-4!"==".zip" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\groovy.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "groovy" "%GROOVY_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "groovy" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "groovy" "%GROOVY_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "groovy" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -232,7 +232,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos//releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos//releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -245,5 +245,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "groovy" "%ACTION%" "%GROOVY_VERSION%" "%GROOVY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\groovy\%GROOVY_VERSION%\\bin\\groovy.exe\"" "%LIBSCRIPT_HOME%\groovy\%GROOVY_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "groovy" "%ACTION%" "%GROOVY_VERSION%" "%GROOVY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\groovy\%GROOVY_VERSION%\\bin\\groovy.exe\"" "%LIBSCRIPT_HOME%\groovy\%GROOVY_VERSION%"
 exit /b !errorlevel!

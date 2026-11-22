@@ -84,7 +84,7 @@ exit /b 0
 set "CACHE_DIR=%LIBSCRIPT_ROOT_DIR%\cache\freertos"
 if not exist "!CACHE_DIR!" mkdir "!CACHE_DIR!"
 set "URL=https://github.com/FreeRTOS/FreeRTOS-Kernel/archive/refs/tags/V!EXACT_VERSION!.zip"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!CACHE_DIR!\FreeRTOS-Kernel-V!EXACT_VERSION!.zip"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!CACHE_DIR!\FreeRTOS-Kernel-V!EXACT_VERSION!.zip"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -98,15 +98,15 @@ if exist "!TARGET_DIR!\bin\freertos-env-check.cmd" if not "%FORCE_REINSTALL%"=="
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 > "!TARGET_DIR!\bin\freertos-env-check.cmd" echo @echo FreeRTOS Kernel V!EXACT_VERSION! ^(FREERTOS_KERNEL_PATH=!TARGET_DIR!^)
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "freertos" "%FREERTOS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "freertos" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "freertos" "%FREERTOS_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "freertos" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_use
 :: Switches active FreeRTOS version alias.
 :action_use
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "freertos" "%FREERTOS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "freertos" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "freertos" "%FREERTOS_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "freertos" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_assemble
@@ -119,5 +119,5 @@ exit /b !errorlevel!
 :: ## action_other
 :: Delegates generic service/uninstall actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "freertos" "%ACTION%" "%FREERTOS_VERSION%" "libscript_native" "" "" "" "%LIBSCRIPT_HOME%\freertos\!EXACT_VERSION!\bin\freertos-env-check.cmd" "%LIBSCRIPT_HOME%\freertos\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "freertos" "%ACTION%" "%FREERTOS_VERSION%" "libscript_native" "" "" "" "%LIBSCRIPT_HOME%\freertos\!EXACT_VERSION!\bin\freertos-env-check.cmd" "%LIBSCRIPT_HOME%\freertos\!EXACT_VERSION!"
 exit /b !errorlevel!

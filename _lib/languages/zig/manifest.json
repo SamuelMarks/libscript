@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "zig",
-  "title": "Zig Toolchain",
-  "description": "A general-purpose programming language and toolchain for maintaining robust, optimal, and reusable software.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "cross-toolchain"],
   "category": "languages",
-  "provides": ["zig", "toolchain"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A general-purpose programming language and toolchain for maintaining robust, optimal, and reusable software.",
+  "name": "zig",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["zig", "toolchain"],
   "repository": "https://github.com/ziglang/zig",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Zig Toolchain"
 }

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "west",
-  "title": "Zephyr West Meta-Tool",
-  "description": "Zephyr RTOS multi-repository manifest, build, flash, and debug meta-tool isolated in a component-managed virtual environment.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["west"],
+  "description": "Zephyr RTOS multi-repository manifest, build, flash, and debug meta-tool isolated in a component-managed virtual environment.",
+  "name": "west",
   "os_whitelist": ["all"],
+  "provides": ["west"],
   "repository": "https://github.com/zephyrproject-rtos/west",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Zephyr West Meta-Tool"
 }

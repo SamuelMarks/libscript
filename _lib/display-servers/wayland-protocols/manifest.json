@@ -1,16 +1,17 @@
 {
-  "name": "wayland-protocols",
-  "title": "Wayland Protocols",
-  "description": "Official protocol extensions for Wayland",
-  "provides": ["wayland-protocols"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-servers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Official protocol extensions for Wayland",
+  "name": "wayland-protocols",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["wayland-protocols"],
+  "tier": "T2",
+  "title": "Wayland Protocols",
+  "versions": ["1.0.0"]
 }

@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%NVM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%NVM_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%NVM_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%NVM_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/nvm-sh/nvm" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%NVM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nvm %NVM_VERSION% to %DOWNLOAD_DIR%\nvm...
     if not exist "%DOWNLOAD_DIR%\nvm" mkdir "%DOWNLOAD_DIR%\nvm"
     if not "%NVM_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NVM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nvm\nvm-%NVM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NVM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nvm\nvm-%NVM_VERSION%.zip"
     ) else (
         echo NVM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NVM_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nvm
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends nvm
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\nvm\nvm-%NVM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NVM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NVM_DOWNLOAD_URL%" "%TEMP%\nvm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%NVM_DOWNLOAD_URL%" "%TEMP%\nvm.zip"
         tar -xf "%TEMP%\nvm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nvm.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "nvm" "%ACTION%" "%NVM_VERSION%" "%NVM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nvm\%NVM_VERSION%\\bin\\nvm.exe\"" "%LIBSCRIPT_HOME%\nvm\%NVM_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "nvm" "%ACTION%" "%NVM_VERSION%" "%NVM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\nvm\%NVM_VERSION%\\bin\\nvm.exe\"" "%LIBSCRIPT_HOME%\nvm\%NVM_VERSION%"
 exit /b !errorlevel!

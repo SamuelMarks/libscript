@@ -1,5 +1,5 @@
 {
-  "$schema": "../../experiment-suite.schema.json",
+  "$schema": "../../experiments/schemas/experiment-suite.schema.json",
   "id": "gemma-tpu",
   "title": "Gemma 4 7-Backend Cloud TPU & TFRC Zero-Cost Evaluation Suite",
   "protocol_version": "1.0.0",
@@ -7,31 +7,31 @@
     {
       "id": "E0",
       "name": "TFRC Policy, Topology, Wheel Lock & Stage A TPU Probe Provenance",
-      "script": "_lib/toolchains/gemma-tpu-suite/suites/e0_tfrc_provenance.sh",
+      "script": "experiments/gemma-tpu/suites/e0_tfrc_provenance.sh",
       "outputs": ["raw/e0_provenance.json"]
     },
     {
       "id": "E1",
       "name": "7-Backend Gemma 4 Inference Prefill & Decode Throughput",
-      "script": "_lib/toolchains/gemma-tpu-suite/suites/e1_inference_throughput.sh",
+      "script": "experiments/gemma-tpu/suites/e1_inference_throughput.sh",
       "outputs": ["raw/e1_inference_*.json"]
     },
     {
       "id": "E2",
       "name": "7-Backend Text-to-SQL DuckDB/SQLite Execution Accuracy & Latency",
-      "script": "_lib/toolchains/gemma-tpu-suite/suites/e2_sql_evaluation.sh",
+      "script": "experiments/gemma-tpu/suites/e2_sql_evaluation.sh",
       "outputs": ["raw/e2_sql_eval_*.json"]
     },
     {
       "id": "E3",
       "name": "7-Backend SFT, LoRA (PEFT), and DPO Training Throughput",
-      "script": "_lib/toolchains/gemma-tpu-suite/suites/e3_training_finetuning.sh",
+      "script": "experiments/gemma-tpu/suites/e3_training_finetuning.sh",
       "outputs": ["raw/e3_training_*.json"]
     },
     {
       "id": "E4",
       "name": "Custom Command Matrix & 7-Backend Cross-Framework Synthesis",
-      "script": "_lib/toolchains/gemma-tpu-suite/suites/e4_custom_matrix_and_synthesis.sh",
+      "script": "experiments/gemma-tpu/suites/e4_custom_matrix_and_synthesis.sh",
       "outputs": [
         "comparison_summary.json",
         "comparison_summary.csv",

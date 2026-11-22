@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "vala",
-  "title": "Vala",
-  "description": "Object-oriented programming language with a self-hosting compiler (valac) generating C code for GObject.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["vala", "valac"],
+  "description": "Object-oriented programming language with a self-hosting compiler (valac) generating C code for GObject.",
+  "name": "vala",
   "os_whitelist": ["all"],
+  "provides": ["vala", "valac"],
   "repository": "https://gitlab.gnome.org/GNOME/vala",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Vala"
 }

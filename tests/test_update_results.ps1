@@ -28,10 +28,10 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/virtualization/apple_vm") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/utilities/no_darwin") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/init-systems/illumos_init") -Force | Out-Null
-    New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/reactos/distro") -Force | Out-Null
-    New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/ml-training/tpu-trainer") -Force | Out-Null
-    New-Item -ItemType Directory -Path (Join-Path $testTmp "topologies/compS") -Force | Out-Null
-    New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/_common/helper") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "synthesis/distro/reactos") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "workloads/ai/tpu-trainer") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "workloads/constellations/compS") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "engine/common/helper") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "tests_tmp") -Force | Out-Null
 
     New-Item -ItemType File -Path (Join-Path $testTmp "libscript.sh") | Out-Null
@@ -91,9 +91,9 @@ MIT
         throw "Error: compB failure status not found in README.md"
     }
 
-    # Verification 2b: topologies/compS from topologies directory has debian success mark
-    if ($updatedReadme -notmatch "\|\s*``topologies/compS``\s*\|\s*``topologies``\s*\|\s*$symQuest\s*\|\s*$symCheck\s*\|\s*$symQuest\s*\|") {
-        throw "Error: topologies/compS component not discovered or status not updated in README.md"
+    # Verification 2b: workloads/constellations/compS from topologies directory has debian success mark
+    if ($updatedReadme -notmatch "\|\s*``workloads/constellations/compS``\s*\|\s*``constellations``\s*\|\s*$symQuest\s*\|\s*$symCheck\s*\|\s*$symQuest\s*\|") {
+        throw "Error: workloads/constellations/compS component not discovered or status not updated in README.md"
     }
 
     # Verification 3: _common / helper must NOT be in the table

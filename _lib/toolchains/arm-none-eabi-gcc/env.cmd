@@ -63,7 +63,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\arm-none-eabi-gcc\%ARM_NONE_EABI_GCC_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "arm-none-eabi-gcc" "%ARM_NONE_EABI_GCC_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "arm-none-eabi-gcc" "%ARM_NONE_EABI_GCC_VERSION%"
 
 endlocal & (
     set "ARM_NONE_EABI_GCC_VERSION=%ARM_NONE_EABI_GCC_VERSION%"

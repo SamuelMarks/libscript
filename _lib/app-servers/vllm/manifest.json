@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "vllm",
-  "title": "vLLM",
-  "description": "High-throughput and memory-efficient LLM inference server",
-  "category": "app-servers",
-  "provides": ["app-server", "vllm"],
-  "conflicts": [],
-  "os_whitelist": ["linux"],
-  "os_blacklist": ["windows", "freebsd", "sunos", "alpine", "darwin"],
+  "$schema": "../../../engine/schemas/manifest.schema.json",
   "arch_blacklist": ["aarch64", "arm64"],
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "app-servers",
+  "conflicts": [],
+  "description": "High-throughput and memory-efficient LLM inference server",
+  "name": "vllm",
+  "os_blacklist": ["windows", "freebsd", "sunos", "alpine", "darwin"],
+  "os_whitelist": ["linux"],
   "ports": [],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["app-server", "vllm"],
+  "tier": "T1",
+  "title": "vLLM"
 }

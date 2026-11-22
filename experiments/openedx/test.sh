@@ -66,11 +66,11 @@ jq -e '.vagrant.target_os == "macos-14-arm64" and .artifact.format == "pkg" and 
 mkdir -p "${TMP_TST}/suites"
 STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment scaffold wordpress \
   --template=installer-e2e \
-  --packaging-manifest="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/packaging.json" \
+  --packaging-manifest="${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress/packaging.json" \
   --out-root="${TMP_TST}/suites" >/dev/null
 STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment scaffold odoo \
   --template=installer-e2e \
-  --packaging-manifest="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/odoo/packaging.json" \
+  --packaging-manifest="${LIBSCRIPT_ROOT_DIR}/workloads/apps/odoo/packaging.json" \
   --out-root="${TMP_TST}/suites" >/dev/null
 
 STACK='' sh "${TMP_TST}/suites/wordpress/run.sh" --dry-run=1 --results-dir="${TMP_TST}/wp_out" >/dev/null

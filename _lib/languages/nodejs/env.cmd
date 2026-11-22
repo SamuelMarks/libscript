@@ -54,7 +54,7 @@ if "%LIBSCRIPT_HOME%"=="" (
 )
 set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "nodejs" "%NODEJS_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "nodejs" "%NODEJS_VERSION%"
 
 set "_NODE_VER_CLEAN=%NODEJS_VERSION%"
 if /i "!_NODE_VER_CLEAN:~0,1!"=="v" set "_NODE_VER_CLEAN=!_NODE_VER_CLEAN:~1!"

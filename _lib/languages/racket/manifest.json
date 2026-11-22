@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "racket",
-  "title": "Racket",
-  "description": "General-purpose, multi-paradigm Lisp/Scheme language platform for language-oriented programming.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["racket", "raco"],
+  "description": "General-purpose, multi-paradigm Lisp/Scheme language platform for language-oriented programming.",
+  "name": "racket",
   "os_whitelist": ["all"],
+  "provides": ["racket", "raco"],
   "repository": "https://github.com/racket/racket",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Racket"
 }

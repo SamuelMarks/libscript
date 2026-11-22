@@ -132,26 +132,25 @@ function Check-ManifestSupport {
     return $true
 }
 
-# ## Get-ComponentTier
-# Maps a component category and name to its architectural tier key (1, 1.5, 2, 3, or 4).
-function Get-ComponentTier {
+# ## Read-ManifestTier
+# Reads the explicit "tier" property ("T1" or "T2") from manifest.json, falling back to category family when absent in synthetic fixtures.
+function Read-ManifestTier {
     param(
-        [string]$Category,
-        [string]$Component
+        [string]$ManifestPath,
+        [string]$Category
     )
-    switch ($Category) {
-        { $_ -in 'languages','toolchains','package-managers','utilities','databases','caches','search','security','message-brokers','web-servers','app-servers','logging','storage-layers','git-servers','web-apps','runtimes' } { return '1' }
-        { $_ -in 'base-system','init-systems','networking','audio','graphics','display-servers','display-managers','desktops' } { return '1.5' }
-        { $_ -in 'kernel','bootloaders','storage','freebsd','illumos','reactos','virtualization' } { return '2' }
-        'orchestration' {
-            if ($Component -in 'distro','vfs','runner','packagers','repogen','solo5') { return '2' }
-            if ($Component -eq 'gke-xpk-training') { return '4' }
-            return '3'
-        }
-        { $_ -in 'cloud','cloud-providers' } { return '3' }
-        { $_ -in 'ai-serving','ml-training','topologies','payloads','traits' } { return '4' }
-        default { return '1' }
+    if ($ManifestPath -and (Test-Path -LiteralPath $ManifestPath)) {
+        try {
+            $m = Get-Content -LiteralPath $ManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($m.tier -in @('T1', 'T2')) {
+                return [string]$m.tier
+            }
+        } catch {}
     }
+    if ($Category -in @('base-system','kernel','bootloaders','init-systems','unikernels','graphics','audio','display-servers','display-managers','desktops')) {
+        return 'T2'
+    }
+    return 'T1'
 }
 
 # ## Test-AnyFilePattern
@@ -208,56 +207,77 @@ function Update-SupportedComponents {
     foreach ($cat in $cats) {
         $comps = Get-ChildItem -LiteralPath $cat.FullName -Directory -ErrorAction SilentlyContinue | Where-Object { -not $_.Name.StartsWith("_") }
         foreach ($comp in $comps) {
-            $displayComp = $comp.Name
-            if ($cat.Name -eq "freebsd" -and $comp.Name -eq "distro") { $displayComp = "freebsd/distro" }
-            elseif ($cat.Name -eq "illumos" -and $comp.Name -eq "distro") { $displayComp = "illumos/distro" }
-            elseif ($cat.Name -eq "reactos" -and $comp.Name -eq "distro") { $displayComp = "reactos/distro" }
-            $tier = Get-ComponentTier -Category $cat.Name -Component $comp.Name
             $mCandidate = Join-Path $comp.FullName "manifest.json"
             $mPath = if (Test-Path -LiteralPath $mCandidate) { $mCandidate } else { "" }
+            $tier = Read-ManifestTier -ManifestPath $mPath -Category $cat.Name
             $entries += [PSCustomObject]@{
                 Tier     = $tier
                 Category = $cat.Name
-                Comp     = $displayComp
+                Comp     = $comp.Name
                 Short    = $comp.Name
                 Manifest = $mPath
             }
         }
     }
 
-    if (Test-Path -LiteralPath (Join-Path $libPath "bootloaders")) {
-        if (Test-Path -LiteralPath (Join-Path (Join-Path $libPath "bootloaders") "setup.sh")) {
-            $entries += [PSCustomObject]@{ Tier = '2'; Category = 'bootloaders'; Comp = 'bootloaders/setup'; Short = 'setup'; Manifest = '' }
+    $distroDir = Join-Path (Join-Path $RootPath "synthesis") "distro"
+    if (Test-Path -LiteralPath $distroDir) {
+        Get-ChildItem -LiteralPath $distroDir -Directory -ErrorAction SilentlyContinue | Where-Object { -not $_.Name.StartsWith("_") -and -not $_.Name.EndsWith("-base") } | ForEach-Object {
+            $mc = Join-Path $_.FullName "manifest.json"
+            $mp = if (Test-Path -LiteralPath $mc) { $mc } else { "" }
+            $entries += [PSCustomObject]@{ Tier = 'T3'; Category = 'distro'; Comp = "synthesis/distro/$($_.Name)"; Short = $_.Name; Manifest = $mp }
         }
-        foreach ($bl in @('grub','limine','refind','systemd-boot')) {
-            if (-not (Test-Path -LiteralPath (Join-Path (Join-Path $libPath "bootloaders") $bl))) {
-                $entries += [PSCustomObject]@{ Tier = '2'; Category = 'bootloaders'; Comp = "bootloaders/$bl"; Short = $bl; Manifest = '' }
+    }
+    $repogenDir = Join-Path (Join-Path $RootPath "synthesis") "repogen"
+    if (Test-Path -LiteralPath $repogenDir) {
+        $mc = Join-Path $repogenDir "manifest.json"
+        $mp = if (Test-Path -LiteralPath $mc) { $mc } else { "" }
+        $entries += [PSCustomObject]@{ Tier = 'T3'; Category = 'repogen'; Comp = 'synthesis/repogen'; Short = 'repogen'; Manifest = $mp }
+    }
+    $vfsDir = Join-Path (Join-Path $RootPath "synthesis") "vfs"
+    if (Test-Path -LiteralPath $vfsDir) {
+        Get-ChildItem -LiteralPath $vfsDir -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+            $mc = Join-Path $_.FullName "manifest.json"
+            $mp = if (Test-Path -LiteralPath $mc) { $mc } else { "" }
+            $entries += [PSCustomObject]@{ Tier = 'T3'; Category = 'vfs'; Comp = "synthesis/vfs/$($_.Name)"; Short = $_.Name; Manifest = $mp }
+        }
+    }
+    if (Test-Path -LiteralPath (Join-Path (Join-Path (Join-Path $RootPath "synthesis") "disk") "provision_disk.sh")) {
+        $entries += [PSCustomObject]@{ Tier = 'T3'; Category = 'disk'; Comp = 'synthesis/disk/provision_disk'; Short = 'provision_disk'; Manifest = '' }
+    }
+
+    foreach ($infraSub in @('providers','resources','clusters')) {
+        $infraDir = Join-Path (Join-Path $RootPath "infrastructure") $infraSub
+        if (Test-Path -LiteralPath $infraDir) {
+            Get-ChildItem -LiteralPath $infraDir -Directory -ErrorAction SilentlyContinue | Where-Object { -not $_.Name.StartsWith("_") } | ForEach-Object {
+                $mc = Join-Path $_.FullName "manifest.json"
+                $mp = if (Test-Path -LiteralPath $mc) { $mc } else { "" }
+                $entries += [PSCustomObject]@{ Tier = 'T4'; Category = $infraSub; Comp = "infrastructure/$infraSub/$($_.Name)"; Short = $_.Name; Manifest = $mp }
             }
         }
     }
-    if (Test-Path -LiteralPath (Join-Path $libPath "storage")) {
-        $entries += [PSCustomObject]@{ Tier = '2'; Category = 'storage'; Comp = 'storage/provision_disk'; Short = 'provision_disk'; Manifest = '' }
-    }
-    if (Test-Path -LiteralPath (Join-Path $libPath "runtimes")) {
-        $entries += [PSCustomObject]@{ Tier = '1'; Category = 'runtimes'; Comp = 'runtimes/provision_isolated_runtime'; Short = 'provision_isolated_runtime'; Manifest = '' }
-    }
-    $topoDir = Join-Path $RootPath "topologies"
-    if (Test-Path -LiteralPath $topoDir) {
-        Get-ChildItem -LiteralPath $topoDir -Directory -ErrorAction SilentlyContinue | Where-Object { -not $_.Name.StartsWith("_") } | ForEach-Object {
-            $entries += [PSCustomObject]@{ Tier = '4'; Category = 'topologies'; Comp = "topologies/$($_.Name)"; Short = $_.Name; Manifest = '' }
+
+    foreach ($workSub in @('apps','ai','constellations')) {
+        $wdir = Join-Path (Join-Path $RootPath "workloads") $workSub
+        if (Test-Path -LiteralPath $wdir) {
+            Get-ChildItem -LiteralPath $wdir -Directory -ErrorAction SilentlyContinue | Where-Object { -not $_.Name.StartsWith("_") } | ForEach-Object {
+                $mc = Join-Path $_.FullName "manifest.json"
+                $mp = if (Test-Path -LiteralPath $mc) { $mc } else { "" }
+                $entries += [PSCustomObject]@{ Tier = 'T5'; Category = $workSub; Comp = "workloads/$workSub/$($_.Name)"; Short = $_.Name; Manifest = $mp }
+            }
         }
     }
-    $schedDir = Join-Path (Join-Path $RootPath "payloads") "schedulers"
+    $schedDir = Join-Path (Join-Path $RootPath "workloads") "schedulers"
     if (Test-Path -LiteralPath $schedDir) {
         Get-ChildItem -LiteralPath $schedDir -Filter "*.sh" -File -ErrorAction SilentlyContinue | ForEach-Object {
             $sn = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
-            $entries += [PSCustomObject]@{ Tier = '4'; Category = 'payloads'; Comp = "payloads/schedulers/$sn"; Short = $sn; Manifest = '' }
+            $entries += [PSCustomObject]@{ Tier = 'T5'; Category = 'schedulers'; Comp = "workloads/schedulers/$sn"; Short = $sn; Manifest = '' }
         }
     }
     $traitsDir = Join-Path $RootPath "traits"
     if (Test-Path -LiteralPath $traitsDir) {
         Get-ChildItem -LiteralPath $traitsDir -Directory -ErrorAction SilentlyContinue | Where-Object { -not $_.Name.StartsWith("_") } | ForEach-Object {
-            $entries += [PSCustomObject]@{ Tier = '4'; Category = 'traits'; Comp = "traits/$($_.Name)"; Short = $_.Name; Manifest = '' }
+            $entries += [PSCustomObject]@{ Tier = 'PlaneA'; Category = 'traits'; Comp = "traits/$($_.Name)"; Short = $_.Name; Manifest = '' }
         }
     }
 
@@ -362,7 +382,7 @@ function Update-SupportedComponents {
             elseif ($comp -eq "illumos/distro") { $markerComp = "illumos-distro" }
             elseif ($comp -eq "reactos/distro") { $markerComp = "reactos-distro" }
             elseif ($comp.StartsWith("bootloaders/")) { $markerComp = "bootloaders-$shortComp" }
-            elseif ($comp.StartsWith("payloads/schedulers/")) { $markerComp = "scheduler-$shortComp" }
+            elseif ($comp.StartsWith("workloads/schedulers/")) { $markerComp = "scheduler-$shortComp" }
             elseif ($comp.StartsWith("traits/")) { $markerComp = "trait-$shortComp" }
 
             if ((Test-AnyFilePattern $testsTmpDir "$markerComp.idempotent.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.idempotent.success")) { $idempotent = $true }
@@ -424,17 +444,18 @@ function Update-SupportedComponents {
     }
 
     $tierMeta = @(
-        @{ Key = '1';   Title = '### Tier 1: Leaf Recipes, Toolchains & Native Version Managers' },
-        @{ Key = '1.5'; Title = '### Tier 1.5: Base OS Userland, Init Systems, Networking, Audio, Graphics & Desktops' },
-        @{ Key = '2';   Title = '### Tier 2: OS Synthesizers, Kernels, Bootloaders, Storage & Image Builders' },
-        @{ Key = '3';   Title = '### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners' },
-        @{ Key = '4';   Title = '### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits' }
+        @{ Key = 'T1';     Title = '### T1: Atomic Userland & Daemon Recipes' },
+        @{ Key = 'T2';     Title = '### T2: OS, Kernel & System Plumbing Recipes' },
+        @{ Key = 'T3';     Title = '### T3: Image, OS & Artifact Synthesis' },
+        @{ Key = 'T4';     Title = '### T4: Infrastructure Providers & Cluster Substrates' },
+        @{ Key = 'T5';     Title = '### T5: Declarative Workloads, Application Stacks & Stateful Constellations' },
+        @{ Key = 'PlaneA'; Title = '### Plane A (Traits): Unified Cross-Cutting Node Traits' }
     )
 
     $tableLines = @(
         "## Supported Components",
         "",
-        'Components are organized into LibScript''s 5 architectural tiers (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).'
+        'Components are organized into LibScript''s 6 strict compositional tiers (`T0`–`T5`) and orthogonal cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).'
     )
     foreach ($tm in $tierMeta) {
         $tableLines += ""
@@ -575,7 +596,7 @@ function Update-TodoPlan {
                 if ($compKey -eq "freebsd/distro") { $markerComp = "freebsd-distro" }
                 elseif ($compKey -eq "illumos/distro") { $markerComp = "illumos-distro" }
                 elseif ($compKey.StartsWith("bootloaders/")) { $markerComp = "bootloaders-$compShort" }
-                elseif ($compKey.StartsWith("payloads/schedulers/")) { $markerComp = "scheduler-$compShort" }
+                elseif ($compKey.StartsWith("workloads/schedulers/")) { $markerComp = "scheduler-$compShort" }
                 elseif ($compKey.StartsWith("traits/")) { $markerComp = "trait-$compShort" }
                 $item = $line.Substring(6)
                 $symCross = [string][char]0x274C
@@ -643,10 +664,10 @@ function Update-TodoPlan {
                 $compShort = (Split-Path -Leaf $compRef) -replace '[` ]', ''
                 $readmeKey = $compShort
                 if ($compRef -like "_lib/bootloaders/*") { $readmeKey = "bootloaders/$compShort" }
-                elseif ($compRef -eq "_lib/freebsd/distro") { $readmeKey = "freebsd/distro" }
-                elseif ($compRef -eq "_lib/illumos/distro") { $readmeKey = "illumos/distro" }
-                elseif ($compRef -eq "_lib/storage") { $readmeKey = "storage/provision_disk" }
-                elseif ($compRef -eq "_lib/runtimes/provision_isolated_runtime") { $readmeKey = "runtimes/provision_isolated_runtime" }
+                elseif ($compRef -eq "synthesis/distro/freebsd") { $readmeKey = "freebsd/distro" }
+                elseif ($compRef -eq "synthesis/distro/illumos") { $readmeKey = "illumos/distro" }
+                elseif ($compRef -eq "synthesis/disk") { $readmeKey = "storage/provision_disk" }
+                elseif ($compRef -eq "synthesis/vfs/provision_isolated_runtime") { $readmeKey = "runtimes/provision_isolated_runtime" }
                 elseif (($compRef -like "topologies/*") -or ($compRef -like "payloads/*") -or ($compRef -like "traits/*")) { $readmeKey = $compRef }
 
                 $rEntry = $null

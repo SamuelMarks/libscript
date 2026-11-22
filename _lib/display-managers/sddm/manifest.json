@@ -1,16 +1,17 @@
 {
-  "name": "sddm",
-  "title": "SDDM",
-  "description": "QML-based modern display manager",
-  "provides": ["sddm"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-managers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "QML-based modern display manager",
+  "name": "sddm",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["sddm"],
+  "tier": "T2",
+  "title": "SDDM",
+  "versions": ["1.0.0"]
 }

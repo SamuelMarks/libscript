@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "iac",
+  "description": "Pulumi open-source Infrastructure-as-Code SDK and CLI supporting TypeScript, Python, Go, C#, Java, and YAML.",
+  "name": "pulumi",
+  "os_whitelist": ["all"],
+  "provides": ["pulumi"],
+  "repository": "https://github.com/pulumi/pulumi",
+  "tier": "T1",
+  "title": "Pulumi Infrastructure as Code CLI"
+}

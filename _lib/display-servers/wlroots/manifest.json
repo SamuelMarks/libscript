@@ -1,16 +1,17 @@
 {
-  "name": "wlroots",
-  "title": "wlroots",
-  "description": "Modular Wayland compositor library",
-  "provides": ["wlroots"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-servers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Modular Wayland compositor library",
+  "name": "wlroots",
   "os_blacklist": ["windows", "sunos", "rhel", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["wlroots"],
+  "tier": "T2",
+  "title": "wlroots",
+  "versions": ["1.0.0"]
 }

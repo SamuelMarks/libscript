@@ -92,7 +92,7 @@ if [ "${INPUT_DIRECTORY-}" ]; then
   cd -- "${INPUT_DIRECTORY}"
 fi
 
-awk 'NR==1,/^fi$/' "${DIR}"'/../_lib/_common/prelude.sh' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
+awk 'NR==1,/^fi$/' "${DIR}"'/../engine/common/prelude.sh' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
 chmod +x "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}"
 
 # ## collect_when_pattern

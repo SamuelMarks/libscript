@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "zip",
-  "title": "Info-ZIP Zip",
-  "description": "Portable Info-ZIP compression and file packaging utility producing standard .zip archives.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["zip", "zip-archiver"],
+  "description": "Portable Info-ZIP compression and file packaging utility producing standard .zip archives.",
+  "name": "zip",
   "os_whitelist": ["all"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["zip", "zip-archiver"],
+  "tier": "T1",
+  "title": "Info-ZIP Zip"
 }

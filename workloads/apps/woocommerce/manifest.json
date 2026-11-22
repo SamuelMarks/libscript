@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "woocommerce",
+  "category": "web-apps",
+  "title": "woocommerce",
+  "description": "woocommerce stack",
+  "provides": ["woocommerce"],
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["mysql", "nginx", "php", "unzip"]
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
+}

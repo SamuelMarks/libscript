@@ -56,8 +56,8 @@ if not defined LIBSCRIPT_ROOT_DIR (
 
 set "DIR=!SCRIPT_DIR!"
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\environ.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\environ.cmd"
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\environ.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\environ.cmd"
 )
 
 exit /b 0

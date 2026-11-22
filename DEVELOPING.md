@@ -15,24 +15,24 @@ under its relevant functional category (e.g., `_lib/languages/`, `_lib/databases
 
 ### Standard Component Directory Layout
 
-When creating or modifying a component in `_lib/<category>/<component>/`, provide the
-capability-typed entry points matching its declared `"capabilities"` in `manifest.json`
-(`"versioned-artifact"`, `"service-daemon"`, `"sysroot-library"`, `"cloud-operator"`,
-`"os-synthesizer"`):
+When creating or modifying an atomic component in `_lib/<category>/<component>/`, declare its
+`"tier"` (`"T1"` or `"T2"`) and `"capabilities"` in `manifest.json` (`"userland-package"`,
+`"service-daemon"`, `"sysroot-package"`, `"sysroot-library"`, `"cross-toolchain"`, `"kernel-image"`,
+`"bootloader"`), and provide matching entry points:
 
 ```text
 _lib/<category>/<component>/
-├── manifest.json            # Capability-typed metadata (manifest.schema.json)
+├── manifest.json            # Tier ("T1"|"T2") & capability-typed metadata (manifest.schema.json)
 ├── vars.schema.json         # Component configuration variable schema
 ├── README.md                # Component documentation and auto-generated tables
 ├── cli.sh                   # POSIX entry point implementing capability verbs
 ├── cli.cmd                  # Windows batch entry point with matching verbs
-├── setup.sh                 # POSIX installation/build logic ("versioned-artifact")
-├── setup.cmd                # Windows batch installation logic ("versioned-artifact")
-├── uninstall.sh             # POSIX uninstallation & active-bin pruning ("versioned-artifact")
-├── uninstall.cmd            # Windows uninstallation & active-bin pruning ("versioned-artifact")
-├── env.sh                   # POSIX environment activation ("versioned-artifact")
-├── env.cmd                  # Windows environment activation ("versioned-artifact")
+├── setup.sh                 # POSIX installation/build logic ("userland-package" / "sysroot-package")
+├── setup.cmd                # Windows batch installation logic ("userland-package" / "sysroot-package")
+├── uninstall.sh             # POSIX uninstallation & active-bin pruning ("userland-package" / "sysroot-package")
+├── uninstall.cmd            # Windows uninstallation & active-bin pruning ("userland-package" / "sysroot-package")
+├── env.sh                   # POSIX environment activation ("userland-package" / "sysroot-package")
+├── env.cmd                  # Windows environment activation ("userland-package" / "sysroot-package")
 ├── service.sh               # POSIX daemon management (strictly when "service-daemon" is declared)
 ├── service.cmd              # Windows service management (strictly when "service-daemon" is declared)
 ├── test.sh                  # POSIX health and smoke test script
@@ -69,7 +69,7 @@ flowchart TD
 Rather than creating all required capability-typed POSIX `.sh`, Windows `.cmd`, JSON schema, and
 documentation files by hand, maintainers and automated workflows can use the built-in component
 scaffolder (`cli/commands/scaffold/scaffold.{sh,cmd}`, supporting
-`--capabilities=versioned-artifact[,service-daemon,...]`):
+`--capabilities=userland-package[,service-daemon,...]`):
 
 1. **Interactive Prompter Mode (`--interactive` / default)**: Walks a human maintainer step-by-step
    through component name, category, description, capabilities, installation method, upstream
@@ -111,7 +111,7 @@ All installations must be isolated inside `${LIBSCRIPT_HOME}/<component>/<exact_
 
 ### 2. Mandatory Lifecycle Verbs
 
-Every `"versioned-artifact"` toolchain component's `cli.sh` and `cli.cmd` must implement:
+Every `T1` `"userland-package"` toolchain component's `cli.sh` and `cli.cmd` must implement:
 
 - **`ls-remote`**: Queries the official upstream release index or API and prints available versions.
 - **`install <version>`**:
@@ -154,8 +154,8 @@ sequenceDiagram
 
 ## 🌐 The Context Contract for Synthesis Recipes
 
-When Tier 1 leaf recipes are invoked during full operating system synthesis (Tier 2), they must
-respect the Standard Context Contract:
+When `T1` and `T2` atomic recipes are invoked during full operating system synthesis (`T3`
+`synthesis/`), they must respect the Standard Context Contract:
 
 1. **Install Destination**: Install all headers, libraries, and binaries strictly into
    `${LIBSCRIPT_TARGET_SYSROOT}` (never directly into `/usr` or `/usr/local` on the host).

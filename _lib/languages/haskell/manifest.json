@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "haskell",
-  "title": "GHC Haskell",
-  "description": "Glasgow Haskell Compiler (ghc) purely functional programming language toolchain.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["haskell", "ghc", "ghci", "runghc"],
+  "description": "Glasgow Haskell Compiler (ghc) purely functional programming language toolchain.",
+  "name": "haskell",
   "os_whitelist": ["all"],
+  "provides": ["haskell", "ghc", "ghci", "runghc"],
   "repository": "https://gitlab.haskell.org/ghc/ghc",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "GHC Haskell"
 }

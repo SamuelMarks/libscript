@@ -1,16 +1,17 @@
 {
-  "name": "libseat",
-  "title": "libseat",
-  "description": "Universal seat management client library",
-  "provides": ["libseat"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-servers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Universal seat management client library",
+  "name": "libseat",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["libseat"],
+  "tier": "T2",
+  "title": "libseat",
+  "versions": ["1.0.0"]
 }

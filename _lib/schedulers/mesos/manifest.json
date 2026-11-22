@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "schedulers",
+  "conflicts": [],
+  "dependencies": {
+    "runtime_deps": ["zookeeper"],
+    "tier": "recommended"
+  },
+  "description": "Distributed systems kernel abstracting CPU, memory, storage, and compute resources across machines.",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics/snapshot",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "multitenant": true,
+  "name": "mesos",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [5050, 5051],
+  "provides": ["mesos", "mesos-master", "mesos-agent", "mesos-local"],
+  "stateful": true,
+  "tier": "T1",
+  "title": "Apache Mesos",
+  "versions": ["1.11.0", "1.10.1", "latest"]
+}

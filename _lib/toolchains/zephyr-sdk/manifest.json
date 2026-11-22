@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "zephyr-sdk",
-  "title": "Zephyr SDK",
-  "description": "Official Zephyr RTOS cross-compilation SDK bundling bare-metal GCC/LLVM toolchains and host utilities across Linux, macOS, and Windows.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "cross-toolchain"],
   "category": "toolchains",
-  "provides": ["zephyr-sdk", "zephyr-toolchain"],
+  "description": "Official Zephyr RTOS cross-compilation SDK bundling bare-metal GCC/LLVM toolchains and host utilities across Linux, macOS, and Windows.",
+  "name": "zephyr-sdk",
   "os_whitelist": ["all"],
+  "provides": ["zephyr-sdk", "zephyr-toolchain"],
   "repository": "https://github.com/zephyrproject-rtos/sdk-ng",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Zephyr SDK"
 }

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "asdf",
-  "provides": ["version-manager", "package-manager", "asdf"],
-  "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": ["windows"],
-  "title": "asdf",
-  "description": "Bootstrap module for the `asdf` universal version manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `asdf` universal version manager.",
+  "name": "asdf",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "darwin"],
+  "provides": ["version-manager", "package-manager", "asdf"],
   "repository": "https://github.com/asdf-vm/asdf",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "asdf"
 }

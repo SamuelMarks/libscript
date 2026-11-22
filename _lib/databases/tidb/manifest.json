@@ -1,16 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "tidb",
-  "title": "TiDB",
-  "description": "Open-source distributed Hybrid Transactional and Analytical Processing (HTAP) SQL database compatible with MySQL.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["tidb", "distributed-sql", "mysql-compatible", "database"],
-  "os_whitelist": ["all"],
-  "ports": [4000, 10080],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/pingcap/tidb",
+  "description": "Open-source distributed Hybrid Transactional and Analytical Processing (HTAP) SQL database compatible with MySQL.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +18,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "tidb",
+  "os_whitelist": ["all"],
+  "ports": [4000, 10080],
+  "provides": ["tidb", "distributed-sql", "mysql-compatible", "database"],
+  "repository": "https://github.com/pingcap/tidb",
+  "stateful": true,
+  "tier": "T1",
+  "title": "TiDB"
 }

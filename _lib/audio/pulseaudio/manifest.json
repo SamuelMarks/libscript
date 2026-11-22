@@ -1,16 +1,17 @@
 {
-  "name": "pulseaudio",
-  "title": "PulseAudio",
-  "description": "Networked sound server daemon",
-  "provides": ["pulseaudio"],
+  "capabilities": ["sysroot-package"],
   "category": "audio",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Networked sound server daemon",
+  "name": "pulseaudio",
   "os_blacklist": ["sunos"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["pulseaudio"],
+  "tier": "T2",
+  "title": "PulseAudio",
+  "versions": ["1.0.0"]
 }

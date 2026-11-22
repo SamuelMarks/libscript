@@ -7,9 +7,10 @@ idempotency** results across **all 7 target operating system families** (`alpine
 
 The runner invokes `tests/update_results.{sh,cmd}` to inspect `.success` / `.failure` markers in
 `tests_tmp/` alongside architectural metadata across `_lib/<category>/<component>/`, emits a
-provenance-stamped `matrix_results.json` conforming to `schemas/os-matrix-results.schema.json`
-(`generated_at` UTC ISO-8601 timestamp + `git_commit` SHA), and deterministically regenerates the
-5-tier **Supported Components** tables in `README.md`.
+provenance-stamped `matrix_results.json` conforming to
+`experiments/schemas/os-matrix-results.schema.json` (`generated_at` UTC ISO-8601 timestamp +
+`git_commit` SHA), and deterministically regenerates the 5-tier **Supported Components** tables in
+`README.md`.
 
 ---
 
@@ -33,7 +34,7 @@ flowchart LR
     end
 
     subgraph Artifacts["Deterministic Outputs"]
-        JSON["matrix_results.json<br/>(schemas/os-matrix-results.schema.json)"]
+        JSON["matrix_results.json<br/>(experiments/schemas/os-matrix-results.schema.json)"]
         MD["Root README.md<br/>(5-Tier, 7-OS Markdown Tables)"]
     end
 
@@ -45,7 +46,7 @@ flowchart LR
 
 ## Evaluated 7-OS Matrix & Architectural Tiers
 
-### 7 Target Operating System Columns (`schemas/os-matrix-results.schema.json`)
+### 7 Target Operating System Columns (`experiments/schemas/os-matrix-results.schema.json`)
 
 | `suite.json` OS ID | JSON Field | `README.md` Column | Primary Package / Script Substrate                            |
 | :----------------- | :--------- | :----------------- | :------------------------------------------------------------ |
@@ -158,7 +159,7 @@ synthesizing `matrix_results.json`:
 ### 1. Console Output
 
 ```text
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [CONTINUE] processing "./experiments/os-component-matrix/run.sh"
 [CONTINUE] processing "./tests/update_results.sh"
@@ -177,7 +178,7 @@ build/experiments/os-component-matrix/
 
 Plus updated Supported Components tables inside `--readme-out` (default `./README.md`).
 
-### 3. Sample `matrix_results.json` (`schemas/os-matrix-results.schema.json`)
+### 3. Sample `matrix_results.json` (`experiments/schemas/os-matrix-results.schema.json`)
 
 ```json
 {

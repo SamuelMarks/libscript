@@ -62,20 +62,20 @@ set "DATA_DIR=%LIBSCRIPT_HOME%\mysql\data"
 
 if /i "%ACTION%"=="start" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active mysql >nul 2>&1 && exit /b 0
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active mysql >nul 2>&1 && exit /b 0
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start mysql >nul 2>&1 && exit /b 0
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" start mysql >nul 2>&1 && exit /b 0
     if exist "%MYSQL_DIR%\bin\mysqld.exe" (
         for %%D in ("C:\Windows\System32\Microsoft-Edge-WebView" "C:\Windows\System32\HealthAttestationClient") do (
             if exist "%%~fD\msvcp140.dll" copy /y "%%~fD\*.dll" "%MYSQL_DIR%\bin\" >nul 2>&1
         )
-        powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\_common\daemon_launcher.ps1" -Port 3306 -DataDir "%DATA_DIR%" 2>nul
+        powershell -NoProfile -ExecutionPolicy Bypass -File "!LIBSCRIPT_ROOT_DIR!\engine\common\daemon_launcher.ps1" -Port 3306 -DataDir "%DATA_DIR%" 2>nul
     )
     exit /b 0
 )
 if /i "%ACTION%"=="stop" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop mysql >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" stop mysql >nul 2>&1
     taskkill /F /IM mysqld.exe >nul 2>&1
     exit /b 0
 )
@@ -86,7 +86,7 @@ if /i "%ACTION%"=="restart" (
 )
 if /i "%ACTION%"=="status" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active mysql >nul 2>&1 && (echo [RUNNING] mysql & exit /b 0)
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active mysql >nul 2>&1 && (echo [RUNNING] mysql & exit /b 0)
     tasklist /FI "IMAGENAME eq mysqld.exe" 2>nul | findstr /I "mysqld.exe" >nul 2>&1 && (echo [RUNNING] mysqld.exe & exit /b 0)
     echo [STOPPED] mysql
     exit /b 1

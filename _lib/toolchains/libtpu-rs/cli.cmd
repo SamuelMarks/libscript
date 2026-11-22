@@ -1,9 +1,9 @@
 @echo off
 :: # cli.cmd
 :: ## Overview
-:: Command-line interface entrypoint for the `libtpu-rs` component on Windows, routing `experiments` and `cloud-experiments` as well as standard Version Manager verbs.
+:: Command-line interface entrypoint for the `libtpu-rs` component on Windows, delegating standard Version Manager verbs to `component_core.cmd`.
 :: ## Usage
-:: _lib\toolchains\libtpu-rs\cli.cmd [install|use|ls|experiments|cloud-experiments|...] [args]
+:: _lib\toolchains\libtpu-rs\cli.cmd [install|use|ls|ls-remote|uninstall|...] [args]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,24 +49,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if /i "%~1"=="experiments" (
-    call "!SCRIPT_DIR!\benchmark_experiments.cmd" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b !errorlevel!
-)
-if /i "%~1"=="bench" (
-    call "!SCRIPT_DIR!\benchmark_experiments.cmd" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b !errorlevel!
-)
-if /i "%~1"=="cloud-experiments" (
-    if "%CORE_EXPERIMENT_SUITE%"=="" set "CORE_EXPERIMENT_SUITE=libtpu"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\experiment_cloud.cmd" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b !errorlevel!
-)
-if /i "%~1"=="rapid-experiment" (
-    if "%CORE_EXPERIMENT_SUITE%"=="" set "CORE_EXPERIMENT_SUITE=libtpu"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\experiment_cloud.cmd" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b !errorlevel!
-)
-
 set "PACKAGE_NAME=libtpu-rs"
-call "%~dp0..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*

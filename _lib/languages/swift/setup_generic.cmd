@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%SWIFT_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%SWIFT_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%SWIFT_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%SWIFT_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/swiftlang/swift" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%SWIFT_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading swift %SWIFT_VERSION% to %DOWNLOAD_DIR%\swift...
     if not exist "%DOWNLOAD_DIR%\swift" mkdir "%DOWNLOAD_DIR%\swift"
     if not "%SWIFT_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWIFT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\swift\swift-%SWIFT_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SWIFT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\swift\swift-%SWIFT_VERSION%.zip"
     ) else (
         echo SWIFT_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SWIFT_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends swift
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends swift
     exit /b !errorlevel!
 )
 
@@ -161,11 +161,11 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\swift\swift-%SWIFT_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SWIFT_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWIFT_DOWNLOAD_URL%" "%TEMP%\swift.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SWIFT_DOWNLOAD_URL%" "%TEMP%\swift.zip"
         tar -xf "%TEMP%\swift.zip" -C "%TARGET_DIR%"
     ) else (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "Swift.Toolchain"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends "Swift.Toolchain"
         where swift >nul 2>&1
         if errorlevel 1 (
             (
@@ -200,5 +200,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "swift" "%ACTION%" "%SWIFT_VERSION%" "%SWIFT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\swift\%SWIFT_VERSION%\\bin\\swift.exe\"" "%LIBSCRIPT_HOME%\swift\%SWIFT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "swift" "%ACTION%" "%SWIFT_VERSION%" "%SWIFT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\swift\%SWIFT_VERSION%\\bin\\swift.exe\"" "%LIBSCRIPT_HOME%\swift\%SWIFT_VERSION%"
 exit /b !errorlevel!

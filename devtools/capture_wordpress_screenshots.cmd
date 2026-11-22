@@ -66,5 +66,5 @@ exit /b 0
 :: ## main
 :: Delegates WordPress screenshot capture to capture_running_system.cmd.
 :main
-call "!SCRIPT_DIR!\capture_running_system.cmd" --target _lib/web-apps/wordpress %*
+call "!SCRIPT_DIR!\capture_running_system.cmd" --target workloads/apps/wordpress %*
 exit /b !ERRORLEVEL!

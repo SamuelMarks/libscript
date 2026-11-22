@@ -47,7 +47,7 @@ touch "$TEST_TMP_DIR/test_banner_top.bmp"
 touch "$TEST_TMP_DIR/test_banner_side.bmp"
 
 WXS_FILE="${TEST_TMP_DIR}/TestPackage.wxs"
-"${LIBSCRIPT_ROOT_DIR}/packaging/template_msi.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress" --out "$WXS_FILE"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/msi/template_msi.sh" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress" --out "$WXS_FILE"
 
 if [ ! -f "$WXS_FILE" ]; then
   printf '[FAIL] Expected .wxs file was not generated\n' >&2

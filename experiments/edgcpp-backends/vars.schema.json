@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/toolchains/edgcpp-backends-suite/vars.schema.json",
+  "$id": "/experiments/edgcpp-backends/vars.schema.json",
   "title": "edgcpp-backends-suite variables",
   "description": "Configuration variables for edgcpp-backends-suite",
   "type": "object",

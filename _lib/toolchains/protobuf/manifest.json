@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "protobuf",
-  "title": "Protocol Buffers",
-  "description": "Protocol Buffers data interchange compiler (protoc) and schema toolchain.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["protobuf", "protoc"],
+  "description": "Protocol Buffers data interchange compiler (protoc) and schema toolchain.",
+  "name": "protobuf",
   "os_whitelist": ["all"],
+  "provides": ["protobuf", "protoc"],
   "repository": "https://github.com/protocolbuffers/protobuf",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Protocol Buffers"
 }

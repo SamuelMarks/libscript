@@ -264,14 +264,14 @@ done
 
 printf '=== 4. Verifying Cloud Provider DRY_RUN Drivers (OCI & OVHcloud) & Tag Formatting ===\n'
 
-_oci_ip=$(env -u STACK DRY_RUN='true' "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/oci/cli.sh" node ip test-oci-vm 2>/dev/null)
+_oci_ip=$(env -u STACK DRY_RUN='true' "${LIBSCRIPT_ROOT_DIR}/infrastructure/providers/oci/cli.sh" node ip test-oci-vm 2>/dev/null)
 if [ "$_oci_ip" = '203.0.113.21' ]; then
   pass_check 'oci node ip DRY_RUN returned simulated public IP 203.0.113.21'
 else
   fail_check "oci node ip DRY_RUN mismatch: ${_oci_ip}"
 fi
 
-_ovh_ip=$(env -u STACK DRY_RUN='true' "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/ovh/cli.sh" node ip test-ovh-vm 2>/dev/null)
+_ovh_ip=$(env -u STACK DRY_RUN='true' "${LIBSCRIPT_ROOT_DIR}/infrastructure/providers/ovh/cli.sh" node ip test-ovh-vm 2>/dev/null)
 if [ "$_ovh_ip" = '203.0.113.22' ]; then
   pass_check 'ovh node ip DRY_RUN returned simulated public IP 203.0.113.22'
 else
@@ -286,7 +286,7 @@ for _cloud_act in \
   'node sync demo-vm' \
   'node scp-from demo-vm /tmp/remote /tmp/local'; do
   # shellcheck disable=SC2086
-  if env -u STACK DRY_RUN='true' "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/oci/cli.sh" $_cloud_act >/dev/null 2>&1; then
+  if env -u STACK DRY_RUN='true' "${LIBSCRIPT_ROOT_DIR}/infrastructure/providers/oci/cli.sh" $_cloud_act >/dev/null 2>&1; then
     pass_check "oci DRY_RUN passed: ${_cloud_act}"
   else
     fail_check "oci DRY_RUN failed: ${_cloud_act}"
@@ -301,7 +301,7 @@ for _ovh_act in \
   'node sync demo-vm' \
   'node scp-from demo-vm /tmp/remote /tmp/local'; do
   # shellcheck disable=SC2086
-  if env -u STACK DRY_RUN='true' "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/ovh/cli.sh" $_ovh_act >/dev/null 2>&1; then
+  if env -u STACK DRY_RUN='true' "${LIBSCRIPT_ROOT_DIR}/infrastructure/providers/ovh/cli.sh" $_ovh_act >/dev/null 2>&1; then
     pass_check "ovh DRY_RUN passed: ${_ovh_act}"
   else
     fail_check "ovh DRY_RUN failed: ${_ovh_act}"
@@ -309,7 +309,7 @@ for _ovh_act in \
 done
 
 _tag_check=$(
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/infrastructure/resources/core/tags.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -335,7 +335,7 @@ else
 fi
 
 if (
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mapper.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mapper.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

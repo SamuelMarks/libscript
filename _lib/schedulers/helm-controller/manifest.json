@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "schedulers",
+  "description": "Kubernetes HelmChart custom resource operator (helm-controller) for declarative Helm release lifecycle management.",
+  "name": "helm-controller",
+  "os_whitelist": ["all"],
+  "provides": ["helm-controller"],
+  "repository": "https://github.com/k3s-io/helm-controller",
+  "tier": "T1",
+  "title": "Helm Controller Operator"
+}

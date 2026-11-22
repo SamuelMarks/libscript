@@ -57,7 +57,7 @@ for %%T in (valkey-cluster postgres-ha redis-cluster k0s-ha minio-distributed me
     call "%LIBSCRIPT_ROOT_DIR%\topologies\%%T\cli.cmd" down >nul
     if errorlevel 1 exit /b 1
 )
-call "%LIBSCRIPT_ROOT_DIR%\topologies\gke-tpu-cluster\cli.cmd" --help >nul
+call "%LIBSCRIPT_ROOT_DIR%\infrastructure\clusters\gke-tpu-cluster\cli.cmd" --help >nul
 if errorlevel 1 exit /b 1
 echo [PASS] Topology state machine checkpointing, locking, and fencing verified across all 8 topologies.
 exit /b 0

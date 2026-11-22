@@ -1,15 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "frr",
-  "title": "FRRouting (FRR) Routing Suite",
-  "description": "FRRouting IP routing protocol suite implementing BGP, OSPF, RIP, IS-IS, PIM, LDP, BFD, Babel, and EVPN (vtysh, zebra, bgpd, ospfd).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "networking",
-  "provides": ["frr", "frrouting", "vtysh", "bgpd", "ospfd"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
-  "os_blacklist": ["windows"],
-  "ports": [179, 2601],
-  "repository": "https://github.com/FRRouting/frr",
+  "description": "FRRouting IP routing protocol suite implementing BGP, OSPF, RIP, IS-IS, PIM, LDP, BFD, Babel, and EVPN (vtysh, zebra, bgpd, ospfd).",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -22,9 +18,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "frr",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
+  "ports": [179, 2601],
+  "provides": ["frr", "frrouting", "vtysh", "bgpd", "ospfd"],
+  "repository": "https://github.com/FRRouting/frr",
+  "tier": "T1",
+  "title": "FRRouting (FRR) Routing Suite"
 }

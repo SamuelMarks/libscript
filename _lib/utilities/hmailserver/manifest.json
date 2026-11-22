@@ -1,15 +1,16 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "hmailserver",
-  "title": "hMailServer",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "utilities",
+  "conflicts": [],
+  "description": "Free, open-source e-mail server for Microsoft Windows with SMTP relay support.",
   "license": "AGPL-3.0-only",
   "license_name": "GNU Affero General Public License v3.0 only",
-  "description": "Free, open-source e-mail server for Microsoft Windows with SMTP relay support.",
-  "category": "utilities",
-  "provides": ["mail", "smtp", "hmailserver"],
-  "conflicts": [],
-  "os_whitelist": ["windows"],
+  "name": "hmailserver",
   "os_blacklist": ["sunos", "freebsd", "bsd", "linux", "darwin"],
+  "os_whitelist": ["windows"],
   "ports": [25, 110, 143, 587],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["mail", "smtp", "hmailserver"],
+  "tier": "T1",
+  "title": "hMailServer"
 }

@@ -89,7 +89,7 @@ if /i "!ACTION!"=="ls-remote" (
 )
 if /i "!ACTION!"=="download" (
     if not exist "!LIBSCRIPT_ROOT_DIR!\cache\downloads\linux" mkdir "!LIBSCRIPT_ROOT_DIR!\cache\downloads\linux"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://cdn.kernel.org/pub/linux/kernel/!LINUX_MAJOR_DIR!/linux-!LINUX_VERSION!.tar.xz" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\linux\linux-!LINUX_VERSION!.tar.xz" "!LINUX_DEFAULT_SHA256!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://cdn.kernel.org/pub/linux/kernel/!LINUX_MAJOR_DIR!/linux-!LINUX_VERSION!.tar.xz" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\linux\linux-!LINUX_VERSION!.tar.xz" "!LINUX_DEFAULT_SHA256!"
     exit /b !errorlevel!
 )
 
@@ -254,7 +254,7 @@ set "LIBSCRIPT_BUILD_TARGET_DIR=%KERNEL_BUILD_DIR%"
 set "LIBSCRIPT_RESOLVED_CC_ID=!COMPILER_ID!"
 set "LIBSCRIPT_RESOLVED_CC_BIN=!COMPILER_ID!"
 set "LIBSCRIPT_LAST_COMPILE_TIME_MS=50"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_emit_build_metrics "linux-kernel" "%LINUX_VERSION%" "%KERNEL_BUILD_DIR%\vmlinux" "%LINUX_STD_FLAG% -O2" ""
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_emit_build_metrics "linux-kernel" "%LINUX_VERSION%" "%KERNEL_BUILD_DIR%\vmlinux" "%LINUX_STD_FLAG% -O2" ""
 
 echo ok > "%STAMP_FILE%.tmp"
 move /y "%STAMP_FILE%.tmp" "%STAMP_FILE%" >nul

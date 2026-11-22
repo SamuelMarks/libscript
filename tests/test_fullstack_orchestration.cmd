@@ -53,7 +53,7 @@ set "TEST_TMP=%TEMP%\libscript_fullstack_%RANDOM%"
 if not exist "!TEST_TMP!" mkdir "!TEST_TMP!"
 
 echo {"deps": {"postgresql": "16", "node": "20"}} > "!TEST_TMP!\deps_flat.json"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!TEST_TMP!\deps_flat.json" "!TEST_TMP!\resolved.json"
+call "!LIBSCRIPT_ROOT_DIR!\engine\solver\resolve_stack.cmd" "!TEST_TMP!\deps_flat.json" "!TEST_TMP!\resolved.json"
 findstr /C:"postgres" "!TEST_TMP!\resolved.json" >nul 2>&1
 if errorlevel 1 (
     echo [FAIL] resolve_stack.cmd flat .deps failed >&2
@@ -82,7 +82,7 @@ if errorlevel 1 (
 echo [PASS] libscript.cmd train --dry-run
 
 echo {"infrastructure": {"hooks": {"db_migrate": [{"name": "bad_hook", "command": "exit /b 42"}]}}} > "!TEST_TMP!\bad_hook.json"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!TEST_TMP!\bad_hook.json" "db_migrate" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\run_hooks.cmd" "!TEST_TMP!\bad_hook.json" "db_migrate" >nul 2>&1
 if not errorlevel 1 (
     echo [FAIL] run_hooks.cmd should fail on non-zero hook exit >&2
     rmdir /s /q "!TEST_TMP!" >nul 2>&1
@@ -123,7 +123,7 @@ if errorlevel 1 (
 echo [PASS] Multi-app shared-node provision, deprovision, backup, and restore dry-run orchestration
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" compute-hash "!TEST_TMP!\app_a" > "!TEST_TMP!\hash.out"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" compute-hash "!TEST_TMP!\app_a" > "!TEST_TMP!\hash.out"
 if errorlevel 1 (
     echo [FAIL] remote_sync.cmd compute-hash failed >&2
     rmdir /s /q "!TEST_TMP!" >nul 2>&1
@@ -134,7 +134,7 @@ echo [PASS] remote_sync.cmd compute-hash
 :: 9. Test remote_sync.cmd ssh-opts generates short ControlPath under 65 bytes even when TMPDIR is 90+ chars
 set "STACK="
 set "TMPDIR=/var/folders/w5/21g61wls7ksd3z8cxrj41s1c0000gn/T/very_long_nested_subdir_for_testing_90chars/"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" ssh-opts > "!TEST_TMP!\ssh_opts.out"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" ssh-opts > "!TEST_TMP!\ssh_opts.out"
 set "TMPDIR="
 findstr /C:"ControlPath=/tmp/ls_mux/" "!TEST_TMP!\ssh_opts.out" >nul 2>&1
 if errorlevel 1 (
@@ -149,14 +149,14 @@ if not exist "!TEST_TMP!\fe_sub\src" mkdir "!TEST_TMP!\fe_sub\src"
 echo {"name": "fe-sub", "version": "1.0.0"} > "!TEST_TMP!\fe_sub\package.json"
 echo console.log("hi"); > "!TEST_TMP!\fe_sub\src\main.ts"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" --compute-pkg-hash "!TEST_TMP!\fe_sub" > "!TEST_TMP!\pkg_hash1.out"
+call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\app-servers\provision_frontend.cmd" --compute-pkg-hash "!TEST_TMP!\fe_sub" > "!TEST_TMP!\pkg_hash1.out"
 if errorlevel 1 (
     echo [FAIL] provision_frontend.cmd --compute-pkg-hash failed >&2
     rmdir /s /q "!TEST_TMP!" >nul 2>&1
     exit /b 1
 )
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" --compute-src-hash "!TEST_TMP!\fe_sub" > "!TEST_TMP!\src_hash1.out"
+call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\app-servers\provision_frontend.cmd" --compute-src-hash "!TEST_TMP!\fe_sub" > "!TEST_TMP!\src_hash1.out"
 if errorlevel 1 (
     echo [FAIL] provision_frontend.cmd --compute-src-hash failed >&2
     rmdir /s /q "!TEST_TMP!" >nul 2>&1
@@ -252,7 +252,7 @@ echo }
 ) > "!TEST_TMP!\ing_timeout\libscript.json"
 set "NETCTL_PROXY_READ_TIMEOUT="
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" --synchronize-ingress "!TEST_TMP!\ing_timeout\libscript.json" --format nginx --out "!TEST_TMP!\ing_timeout\nginx.conf"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" --synchronize-ingress "!TEST_TMP!\ing_timeout\libscript.json" --format nginx --out "!TEST_TMP!\ing_timeout\nginx.conf"
 if not "!NETCTL_PROXY_READ_TIMEOUT!"=="600s" (
     echo [FAIL] libscript_Synchronize_Ingress did not set NETCTL_PROXY_READ_TIMEOUT=600s ^(!NETCTL_PROXY_READ_TIMEOUT!^) >&2
     rmdir /s /q "!TEST_TMP!" >nul 2>&1

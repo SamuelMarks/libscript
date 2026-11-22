@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "sbt",
-  "provides": ["sbt"],
-  "os_whitelist": ["all"],
-  "title": "sbt",
-  "description": "Bootstrap module for the `sbt` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `sbt` package manager.",
+  "name": "sbt",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["sbt"],
   "repository": "https://github.com/sbt/sbt",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "sbt"
 }

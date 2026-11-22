@@ -1,0 +1,71 @@
+@echo off
+:: # logs_service.cmd
+::
+:: ## Overview
+:: Abstracts reading logs for a given service on Windows.
+::
+:: ## Usage
+:: call "!LIBSCRIPT_ROOT_DIR!\engine\common\logs_service.cmd" "%*" "postgresql" "C:\path\to\log.txt"
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
+set "ACTION=%~1"
+set "SVC_NAME=%~2"
+set "LOG_FILES=%~3"
+
+if not "%LOG_FILES%"=="" (
+    if exist "%LOG_FILES%" (
+        type "%LOG_FILES%"
+        exit /b 0
+    )
+)
+
+rem Fallback to Windows Event Logs or service data log
+set "_DATA_BASE=%TEMP%\data"
+if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
+if exist "!_DATA_BASE!\%SVC_NAME%\service.log" (
+    type "!_DATA_BASE!\%SVC_NAME%\service.log"
+    exit /b 0
+)
+
+exit /b 0

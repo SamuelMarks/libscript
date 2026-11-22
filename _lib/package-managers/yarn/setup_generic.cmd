@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%YARN_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%YARN_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%YARN_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%YARN_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/yarnpkg/berry" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%YARN_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading yarn %YARN_VERSION% to %DOWNLOAD_DIR%\yarn...
     if not exist "%DOWNLOAD_DIR%\yarn" mkdir "%DOWNLOAD_DIR%\yarn"
     if not "%YARN_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%YARN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\yarn\yarn-%YARN_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%YARN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\yarn\yarn-%YARN_VERSION%.zip"
     ) else (
         echo YARN_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%YARN_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends yarn
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends yarn
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\yarn\yarn-%YARN_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%YARN_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%YARN_DOWNLOAD_URL%" "%TEMP%\yarn.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%YARN_DOWNLOAD_URL%" "%TEMP%\yarn.zip"
         tar -xf "%TEMP%\yarn.zip" -C "%TARGET_DIR%"
     ) else (
         if not exist "%USERPROFILE%\.libscript\nodejs\latest\node_modules\corepack\shims\yarn.cmd" (
@@ -197,5 +197,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "yarn" "%ACTION%" "%YARN_VERSION%" "%YARN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\yarn\%YARN_VERSION%\\bin\\yarn.exe\"" "%LIBSCRIPT_HOME%\yarn\%YARN_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "yarn" "%ACTION%" "%YARN_VERSION%" "%YARN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\yarn\%YARN_VERSION%\\bin\\yarn.exe\"" "%LIBSCRIPT_HOME%\yarn\%YARN_VERSION%"
 exit /b !errorlevel!

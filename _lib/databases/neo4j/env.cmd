@@ -63,7 +63,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\neo4j\%NEO4J_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "neo4j" "%NEO4J_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "neo4j" "%NEO4J_VERSION%"
 
 endlocal & (
     set "NEO4J_VERSION=%NEO4J_VERSION%"

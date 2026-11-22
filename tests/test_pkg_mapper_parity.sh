@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Verifies declarative _lib/_common/pkg_map.tsv lookup accuracy, dynamic probes, __UNSUPPORTED__ /
+# Verifies declarative engine/common/pkg_map.tsv lookup accuracy, dynamic probes, __UNSUPPORTED__ /
 # __NONE__ sentinels, line-count bounds, and parity between pkg_mapper.sh and pkg_mapper.cmd.
 # ## Usage
 # ./tests/test_pkg_mapper_parity.sh
@@ -32,13 +32,13 @@ fail_test() {
   exit 1
 }
 
-SH_LINES=$(wc -l < "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mapper.sh" | tr -d ' ')
-CMD_LINES=$(wc -l < "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mapper.cmd" | tr -d ' ')
+SH_LINES=$(wc -l < "${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mapper.sh" | tr -d ' ')
+CMD_LINES=$(wc -l < "${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mapper.cmd" | tr -d ' ')
 [ "$SH_LINES" -le 200 ] || fail_test "pkg_mapper.sh regressed into a monolith (${SH_LINES} lines > 200)"
 [ "$CMD_LINES" -le 150 ] || fail_test "pkg_mapper.cmd regressed into a monolith (${CMD_LINES} lines > 150)"
-[ -s "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_map.tsv" ] || fail_test 'Missing _lib/_common/pkg_map.tsv'
+[ -s "${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_map.tsv" ] || fail_test 'Missing engine/common/pkg_map.tsv'
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mapper.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mapper.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

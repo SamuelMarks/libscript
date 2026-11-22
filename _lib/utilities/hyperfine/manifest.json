@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "hyperfine",
-  "title": "hyperfine CLI Benchmarker",
-  "description": "Command-line statistical benchmarking tool supporting warmup runs, prepare hooks, and JSON sample export.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["hyperfine"],
+  "description": "Command-line statistical benchmarking tool supporting warmup runs, prepare hooks, and JSON sample export.",
+  "name": "hyperfine",
   "os_whitelist": ["all"],
+  "provides": ["hyperfine"],
   "repository": "https://github.com/sharkdp/hyperfine",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "hyperfine CLI Benchmarker"
 }

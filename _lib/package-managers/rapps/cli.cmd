@@ -67,7 +67,7 @@ if /i "%~1"=="search" (
 )
 
 set "PACKAGE_NAME=rapps"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*
 exit /b !errorlevel!
 
 :: ## parse_ini
@@ -220,7 +220,7 @@ echo.!_R_SILENT!> "!_PF_DEST!\!_PF_ID!.flags"
 if not "%LIBSCRIPT_OFFLINE%"=="1" if not "!_R_URL!"=="" (
     set "_SHA_CHK=!_R_SHA!"
     if "!_SHA_CHK!"=="" set "_SHA_CHK=SKIP"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_R_URL!" "!_PF_DEST!\!_PF_ID!.exe" "!_SHA_CHK!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!_R_URL!" "!_PF_DEST!\!_PF_ID!.exe" "!_SHA_CHK!"
 )
 echo prefetched> "!_PF_STAMP!"
 copy /y "!_PF_STAMP!" "!_PF_DEST!\!_PF_ID!.stamp" >nul 2>&1

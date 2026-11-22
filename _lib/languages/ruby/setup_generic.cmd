@@ -116,7 +116,7 @@ exit /b 0
 :action_ls_remote
 if "%RUBY_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%RUBY_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%RUBY_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%RUBY_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/wch/r-sourceuby" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -153,7 +153,7 @@ if "%RUBY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading ruby %RUBY_VERSION% to %DOWNLOAD_DIR%\ruby...
     if not exist "%DOWNLOAD_DIR%\ruby" mkdir "%DOWNLOAD_DIR%\ruby"
     if not "%RUBY_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RUBY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ruby\ruby-%RUBY_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%RUBY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ruby\ruby-%RUBY_VERSION%.zip"
     ) else (
         echo RUBY_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -164,7 +164,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%RUBY_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends ruby
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends ruby
     exit /b !errorlevel!
 )
 
@@ -180,7 +180,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\ruby\ruby-%RUBY_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%RUBY_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RUBY_DOWNLOAD_URL%" "%TEMP%\ruby.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%RUBY_DOWNLOAD_URL%" "%TEMP%\ruby.zip"
         tar -xf "%TEMP%\ruby.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ruby.
@@ -211,5 +211,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "ruby" "%ACTION%" "%RUBY_VERSION%" "%RUBY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\ruby\%RUBY_VERSION%\\bin\\ruby.exe\"" "%LIBSCRIPT_HOME%\ruby\%RUBY_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "ruby" "%ACTION%" "%RUBY_VERSION%" "%RUBY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\ruby\%RUBY_VERSION%\\bin\\ruby.exe\"" "%LIBSCRIPT_HOME%\ruby\%RUBY_VERSION%"
 exit /b !errorlevel!

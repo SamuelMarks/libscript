@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "uvicorn",
-  "title": "Uvicorn",
-  "description": "An ASGI web server implementation for Python with native Windows support.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["app-server", "asgi", "wsgi", "uvicorn"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "An ASGI web server implementation for Python with native Windows support.",
+  "name": "uvicorn",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [8000],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["app-server", "asgi", "wsgi", "uvicorn"],
+  "tier": "T1",
+  "title": "Uvicorn"
 }

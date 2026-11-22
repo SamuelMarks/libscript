@@ -47,7 +47,7 @@ if /i "!VERB!"=="-h" goto :help
 if /i "!VERB!"=="scaffold" (
     set "FWD_ARGS="
     call :collect_after_first %*
-    call "!LIBSCRIPT_ROOT_DIR!\cli\commands\experiment\scaffold.cmd" !FWD_ARGS!
+    call "!LIBSCRIPT_ROOT_DIR!\experiments\cli\scaffold.cmd" !FWD_ARGS!
     exit /b !errorlevel!
 )
 if /i "!VERB!"=="update-readme" (
@@ -161,10 +161,13 @@ for /f "tokens=1* delims==" %%K in ("!_vsv_arg:~2!") do (
     set "_raw_k=%%K"
     set "_raw_v=%%L"
 )
-for %%W in (results-dir paper-dir repo-dir subsuites tfrc-config backends model output json suite-dir phase) do (
-    if /i "!_raw_k!"=="%%W" exit /b 0
-)
 for /f "usebackq delims=" %%U in (`jq -rn --arg k "!_raw_k!" "$k | ascii_upcase | gsub(\"-\"; \"_\")"`) do set "_env_k=%%U"
+for %%W in (results-dir out-dir paper-dir repo-dir repo ecosystem-dir subsuites warmup trials host-arch cargo-profile tfrc-config backends model output json suite-dir phase) do (
+    if /i "!_raw_k!"=="%%W" (
+        set "!_env_k!=!_raw_v!"
+        exit /b 0
+    )
+)
 for %%C in (target-os bento-prefix bento-dir provider pkg-format pkg-source release-repo release-tag install-modes force-rebuild dry-run) do (
     if /i "!_raw_k!"=="%%C" (
         set "!_env_k!=!_raw_v!"
@@ -216,9 +219,9 @@ if /i "!VERB!"=="provision" (
     )
     for /f "usebackq delims=" %%S in (`jq -r ".substrate // \"local-native\"" "!SUITE_JSON!"`) do set "_SUB=%%S"
     if /i "!_SUB!"=="installer-e2e" (
-        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment\pkg_ui_runner.cmd" (
+        if exist "!LIBSCRIPT_ROOT_DIR!\experiments\_common\pkg_ui_runner.cmd" (
             set "STACK="
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment\pkg_ui_runner.cmd" "--suite-dir=!SUITE_DIR!" "--phase=provision" !FWD_ARGS!
+            call "!LIBSCRIPT_ROOT_DIR!\experiments\_common\pkg_ui_runner.cmd" "--suite-dir=!SUITE_DIR!" "--phase=provision" !FWD_ARGS!
             exit /b !errorlevel!
         )
     )
@@ -251,9 +254,9 @@ if exist "!SUITE_DIR!\!VERB!.cmd" (
 )
 for /f "usebackq delims=" %%S in (`jq -r ".substrate // \"local-native\"" "!SUITE_JSON!"`) do set "_SUB=%%S"
 if /i "!_SUB!"=="installer-e2e" (
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment\pkg_ui_runner.cmd" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\experiments\_common\pkg_ui_runner.cmd" (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment\pkg_ui_runner.cmd" "--suite-dir=!SUITE_DIR!" "--phase=!VERB!" !FWD_ARGS!
+        call "!LIBSCRIPT_ROOT_DIR!\experiments\_common\pkg_ui_runner.cmd" "--suite-dir=!SUITE_DIR!" "--phase=!VERB!" !FWD_ARGS!
         exit /b !errorlevel!
     )
 )

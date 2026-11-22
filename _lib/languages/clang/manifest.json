@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "clang",
-  "title": "LLVM Clang C/C++ Compiler",
-  "description": "Standalone version manager and source builder for LLVM Clang.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "cross-toolchain"],
   "category": "languages",
-  "provides": ["compiler", "c", "clang", "llvm"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Standalone version manager and source builder for LLVM Clang.",
+  "name": "clang",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["compiler", "c", "clang", "llvm"],
+  "tier": "T1",
+  "title": "LLVM Clang C/C++ Compiler"
 }

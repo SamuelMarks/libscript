@@ -1,17 +1,18 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "xpk",
-  "title": "Google Cloud Accelerated Processing Kit (XPK)",
-  "description": "Google Cloud Accelerated Processing Kit (xpk) for provisioning GKE TPU/GPU clusters and scheduling distributed AI/ML training and inference workloads.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["xpk"],
   "conflicts": [],
-  "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": [],
-  "ports": [],
   "dependencies": {
     "runtime_deps": ["python", "google-cloud-sdk"],
     "tier": "optional"
   },
-  "capabilities": ["versioned-artifact"]
+  "description": "Google Cloud Accelerated Processing Kit (xpk) for provisioning GKE TPU/GPU clusters and scheduling distributed AI/ML training and inference workloads.",
+  "name": "xpk",
+  "os_blacklist": [],
+  "os_whitelist": ["linux", "darwin"],
+  "ports": [],
+  "provides": ["xpk"],
+  "tier": "T1",
+  "title": "Google Cloud Accelerated Processing Kit (XPK)"
 }

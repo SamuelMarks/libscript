@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "coursier",
-  "title": "Coursier",
-  "description": "A Scala artifact fetcher and tool launcher.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["scala", "java", "coursier", "cs"],
   "conflicts": [],
-  "os_whitelist": ["linux", "darwin"],
+  "description": "A Scala artifact fetcher and tool launcher.",
+  "name": "coursier",
   "os_blacklist": ["alpine"],
+  "os_whitelist": ["linux", "darwin"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["scala", "java", "coursier", "cs"],
+  "tier": "T1",
+  "title": "Coursier"
 }

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mate",
-  "title": "MATE Desktop Environment",
-  "description": "MATE Desktop Environment session manager, panel, and traditional GTK desktop suite (mate-session).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "provides": ["mate", "mate-desktop", "mate-session"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "description": "MATE Desktop Environment session manager, panel, and traditional GTK desktop suite (mate-session).",
+  "name": "mate",
   "os_blacklist": ["windows", "macos"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "provides": ["mate", "mate-desktop", "mate-session"],
   "repository": "https://github.com/mate-desktop/mate-session-manager",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T2",
+  "title": "MATE Desktop Environment"
 }

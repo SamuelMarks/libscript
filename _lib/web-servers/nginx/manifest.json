@@ -1,17 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nginx",
-  "title": "Nginx",
-  "description": "A high-performance HTTP and reverse proxy server, as well as a mail proxy server.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "web-servers",
-  "provides": ["web-server", "reverse-proxy", "nginx"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "ports": [80, 443],
-  "stateful": false,
-  "multitenant": true,
+  "description": "A high-performance HTTP and reverse proxy server, as well as a mail proxy server.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -24,9 +19,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "nginx",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "ports": [80, 443],
+  "provides": ["web-server", "reverse-proxy", "nginx"],
+  "stateful": false,
+  "tier": "T1",
+  "title": "Nginx"
 }

@@ -49,7 +49,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "SCHEMA_FILE=!LIBSCRIPT_ROOT_DIR!\os-config.schema.json"
+set "SCHEMA_FILE=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/os-config.schema.json"
 set "TARGET_PROFILE="
 set "EXPORT_FILE="
 set "VALIDATE_FILE="
@@ -159,8 +159,8 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
 )
 where jq >nul 2>&1
 if not errorlevel 1 exit /b 0
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :depends jq >nul 2>&1
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :depends jq >nul 2>&1
 )
 where jq >nul 2>&1
 exit /b !errorlevel!
@@ -179,13 +179,13 @@ if errorlevel 1 (
 )
 set "ACTIVE_SCHEMA=!SCHEMA_FILE!"
 jq -e ".plan_version != null and (.target.os == \"zephyr\" or .target.os == \"freertos\")" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\execution-plan.rtos.schema.json"
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.rtos.schema.json"
 jq -e ".freebsd_version != null or (.target.os_family == \"freebsd\" and .init_system != null and .kernel == null)" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\execution-plan.freebsd.schema.json"
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.freebsd.schema.json"
 jq -e ".illumos_version != null or ((.target.os_family == \"illumos\" or .target.os_family == \"sunos\") and .kernel == null)" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\execution-plan.illumos.schema.json"
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.illumos.schema.json"
 jq -e ".reactos_version != null or (.target.os_family == \"reactos\" and .kernel == null)" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\execution-plan.reactos.schema.json"
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.reactos.schema.json"
 
 set "_MISSING_FIELDS="
 for /f "usebackq delims=" %%M in (`jq -r --slurpfile schema "!ACTIVE_SCHEMA!" "$schema[0].required - keys | .[]" "!VALIDATE_FILE!" 2^>nul`) do (

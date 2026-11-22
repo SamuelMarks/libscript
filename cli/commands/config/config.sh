@@ -41,7 +41,7 @@ unset SCRIPT_NAME || true
 [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
-SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/os-config.schema.json"
+SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/os-config.schema.json"
 
 TARGET_PROFILE=""
 EXPORT_FILE=""
@@ -113,7 +113,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# Mode 1: Validate file against os-config.schema.json or OS-specific execution plan schema
+# Mode 1: Validate file against synthesis/schemas/os-config.schema.json or OS-specific execution plan schema
 if [ -n "$VALIDATE_FILE" ]; then
   if [ ! -f "$VALIDATE_FILE" ]; then
     printf '[ERROR] File to validate not found: %s\n' "$VALIDATE_FILE" >&2
@@ -122,13 +122,13 @@ if [ -n "$VALIDATE_FILE" ]; then
   if command -v jq >/dev/null 2>&1; then
     active_schema="$SCHEMA_FILE"
     if jq -e '.plan_version != null and (.target.os == "zephyr" or .target.os == "freertos")' "$VALIDATE_FILE" >/dev/null 2>&1; then
-      active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.rtos.schema.json"
+      active_schema="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.rtos.schema.json"
     elif jq -e '.freebsd_version != null or (.target.os_family == "freebsd" and .init_system != null and .kernel == null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
-      active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.freebsd.schema.json"
+      active_schema="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.freebsd.schema.json"
     elif jq -e '.illumos_version != null or ((.target.os_family == "illumos" or .target.os_family == "sunos") and .kernel == null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
-      active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.illumos.schema.json"
+      active_schema="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.illumos.schema.json"
     elif jq -e '.reactos_version != null or (.target.os_family == "reactos" and .kernel == null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
-      active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.reactos.schema.json"
+      active_schema="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.reactos.schema.json"
     fi
     # Check top-level required fields
     missing_fields=$(jq -r --slurpfile schema "$active_schema" '

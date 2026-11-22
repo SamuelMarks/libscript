@@ -34,7 +34,7 @@ if ([string]::IsNullOrEmpty($BazelVersion)) {
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
-. (Join-Path $LibscriptRootDir "_lib\_common\versioning.ps1")
+. (Join-Path $LibscriptRootDir "engine\common\versioning.ps1")
 
 # ## Resolve-ExactVersion
 # Resolves the requested version identifier to an exact release version string.
@@ -78,7 +78,7 @@ switch ($Action) {
     }
     
     "start" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_bazel" }
         if (Get-Command Libscript-Service -ErrorAction SilentlyContinue) {
@@ -87,7 +87,7 @@ switch ($Action) {
         break
     }
     "stop" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_bazel" }
         if (Get-Command Libscript-Service -ErrorAction SilentlyContinue) {
@@ -96,7 +96,7 @@ switch ($Action) {
         break
     }
     "install-service" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_bazel" }
         if (Get-Command Libscript-InstallService -ErrorAction SilentlyContinue) {
@@ -105,7 +105,7 @@ switch ($Action) {
         break
     }
     "uninstall-service" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_bazel" }
         if (Get-Command Libscript-UninstallService -ErrorAction SilentlyContinue) {
@@ -143,7 +143,7 @@ switch ($Action) {
     default {
         # download and install
         if ($InstallMethod -eq "system") {
-            & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_depends bazel
+            & (Join-Path $LibscriptRootDir "engine\common\pkg_mgr.cmd") :libscript_depends bazel
         } else {
             $ExactVersion = Resolve-ExactVersion
             $BazelDir = Get-LibscriptVersionDir -Component "bazel" -Version $ExactVersion
@@ -167,7 +167,7 @@ switch ($Action) {
             }
 
             Write-Host "Downloading $DownloadUrl"
-            & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_download $DownloadUrl $BazelExe
+            & (Join-Path $LibscriptRootDir "engine\common\pkg_mgr.cmd") :libscript_download $DownloadUrl $BazelExe
 
             Set-LibscriptAlias -Component "bazel" -AliasName $BazelVersion -ExactVersion $ExactVersion
         }

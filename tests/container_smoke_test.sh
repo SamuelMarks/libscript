@@ -46,7 +46,7 @@ chmod 755 "$STAGE_ROOTFS/bin/sh"
 OUT_ARCHIVE="$TEST_DIR/test_container.tar"
 
 # 1. Synthesize container base archive
-"${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/container_base.sh" "$STAGE_ROOTFS" "$OUT_ARCHIVE" "libscript-test:v1.0.0"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/container_base.sh" "$STAGE_ROOTFS" "$OUT_ARCHIVE" "libscript-test:v1.0.0"
 
 # 2. Assert archive existence
 if [ ! -f "$OUT_ARCHIVE" ]; then

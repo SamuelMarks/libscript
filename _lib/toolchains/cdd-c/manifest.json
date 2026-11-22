@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cdd-c",
-  "title": "cdd-c C89 CST Transformer",
-  "description": "Lossless C89 Concrete Syntax Tree (CST) parser and 4-pass lowering transformer (cdd-c-transform).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["cdd-c", "cdd-c-transform"],
+  "description": "Lossless C89 Concrete Syntax Tree (CST) parser and 4-pass lowering transformer (cdd-c-transform).",
+  "name": "cdd-c",
   "os_whitelist": ["all"],
+  "provides": ["cdd-c", "cdd-c-transform"],
   "repository": "https://github.com/offscale/cdd-c",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "cdd-c C89 CST Transformer"
 }

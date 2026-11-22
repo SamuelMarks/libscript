@@ -103,7 +103,7 @@ exit /b 0
 :: Lists upstream release versions available for download.
 :action_ls_remote
 if not "%MSI_RS_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MSI_RS_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MSI_RS_RELEASES_URL%"
 ) else (
     git ls-remote --tags "%MSI_RS_REPO_URL%" 2>nul | findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
     if errorlevel 1 echo 0.0.1
@@ -143,13 +143,13 @@ set "CACHE_DIR=%DOWNLOAD_DIR%\msi-rs"
 if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
 echo Downloading msi-rs %MSI_RS_VERSION% artifacts to %CACHE_DIR%...
 if not "%MSI_RS_DOWNLOAD_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
 ) else if /i "%MSI_RS_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_REPO_URL%/archive/refs/tags/%EXACT_VERSION%.zip" "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MSI_RS_REPO_URL%/archive/refs/tags/%EXACT_VERSION%.zip" "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
 ) else (
     set "WIN_ARCH=x86_64"
     if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "WIN_ARCH=aarch64"
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-tools-%EXACT_VERSION%-!WIN_ARCH!-pc-windows-msvc.zip" "%CACHE_DIR%\msi-tools-%EXACT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-tools-%EXACT_VERSION%-!WIN_ARCH!-pc-windows-msvc.zip" "%CACHE_DIR%\msi-tools-%EXACT_VERSION%.zip"
 )
 exit /b 0
 
@@ -179,9 +179,9 @@ set "WIN_ARCH=x86_64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "WIN_ARCH=aarch64"
 set "RELEASE_URL=%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-tools-%EXACT_VERSION%-%WIN_ARCH%-pc-windows-msvc.zip"
 echo [INFO] Attempting to download pre-compiled binary release: %RELEASE_URL%
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RELEASE_URL%" "%TEMP%\msi_rs_prebuilt.zip"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%RELEASE_URL%" "%TEMP%\msi_rs_prebuilt.zip"
 if errorlevel 1 (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RELEASE_URL%" "%TEMP%\msi_rs_prebuilt.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%RELEASE_URL%" "%TEMP%\msi_rs_prebuilt.zip"
 )
 if not errorlevel 1 (
     echo Extracting pre-compiled binary release...
@@ -197,7 +197,7 @@ if not errorlevel 1 (
     call :install_binaries "%TARGET_DIR%\bin"
     if /i "%WIN_ARCH%"=="x86_64" (
         set "SDK_URL=%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc.zip"
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!SDK_URL!" "%TEMP%\msi_rs_sdk.zip" >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!SDK_URL!" "%TEMP%\msi_rs_sdk.zip" >nul 2>&1
         if not errorlevel 1 if exist "%TEMP%\msi_rs_sdk.zip" (
             if exist "%TEMP%\msi_rs_sdk_ext" rmdir /s /q "%TEMP%\msi_rs_sdk_ext" >nul 2>&1
             powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\msi_rs_sdk.zip' -DestinationPath '%TEMP%\msi_rs_sdk_ext' -Force" >nul 2>&1
@@ -213,7 +213,7 @@ if not errorlevel 1 (
     if /i not "%MSI_RS_INSTALL_METHOD%"=="from-source" (
         if not "%MSI_RS_DOWNLOAD_URL%"=="" (
             echo Downloading prebuilt msi-rs binary archive...
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%TEMP%\msi_rs_prebuilt.zip"
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%TEMP%\msi_rs_prebuilt.zip"
             tar -xf "%TEMP%\msi_rs_prebuilt.zip" -C "%TARGET_DIR%"
             del "%TEMP%\msi_rs_prebuilt.zip" >nul 2>&1
             goto link_aliases
@@ -268,7 +268,7 @@ if exist "%CACHE_ZIP%" (
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 ) else if not "%MSI_RS_DOWNLOAD_URL%"=="" (
     echo Downloading prebuilt msi-rs binary archive...
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%TEMP%\msi_rs_prebuilt.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%TEMP%\msi_rs_prebuilt.zip"
     tar -xf "%TEMP%\msi_rs_prebuilt.zip" -C "%TARGET_DIR%"
     del "%TEMP%\msi_rs_prebuilt.zip" >nul 2>&1
 ) else (
@@ -323,8 +323,8 @@ exit /b 0
 :action_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" "%ACTION%" "%SVC_NAME%"
 )
 exit /b 0
 
@@ -333,8 +333,8 @@ exit /b 0
 :action_install_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\service_install.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service_install.cmd" install "%SVC_NAME%"
 )
 exit /b 0
 
@@ -343,8 +343,8 @@ exit /b 0
 :action_uninstall_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\service_install.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service_install.cmd" uninstall "%SVC_NAME%"
 )
 exit /b 0
 

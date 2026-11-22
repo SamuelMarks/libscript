@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Validates declarative Linux From Scratch (LFS) profile specifications against
-# os-config.schema.json, checking modular init, display, desktop, and bootloader
+# synthesis/schemas/os-config.schema.json, checking modular init, display, desktop, and bootloader
 # combinations and resolving subsystem dependencies.
 # ## Usage
 # ./cli/commands/config/validate_lfs_profile.sh <path_to_profile.json>
@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/os-config.schema.json"
+SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/os-config.schema.json"
 
 if [ $# -lt 1 ]; then
   printf 'Usage: %s <profile.json>\n' "$0" >&2
@@ -56,7 +56,7 @@ printf '[INFO] Validating profile: %s\n' "$PROFILE_FILE"
 # Top-level required keys check
 if command -v jq >/dev/null 2>&1; then
   if jq -e '.reactos_version != null or (.target.os_family == "reactos" and .kernel == null)' "$PROFILE_FILE" >/dev/null 2>&1; then
-    SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/execution-plan.reactos.schema.json"
+    SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.reactos.schema.json"
   fi
   # Check top-level required fields per schema
   missing_fields=$(jq -r --slurpfile schema "$SCHEMA_FILE" '

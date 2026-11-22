@@ -1,16 +1,17 @@
 {
-  "name": "libva",
-  "title": "LibVA",
-  "description": "Video Acceleration API library",
-  "provides": ["libva"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "graphics",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Video Acceleration API library",
+  "name": "libva",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "provides": ["libva"],
+  "tier": "T2",
+  "title": "LibVA",
+  "versions": ["1.0.0"]
 }

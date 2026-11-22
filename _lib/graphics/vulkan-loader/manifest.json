@@ -1,16 +1,17 @@
 {
-  "name": "vulkan-loader",
-  "title": "Vulkan Loader",
-  "description": "Khronos Vulkan ICD loader and headers",
-  "provides": ["vulkan-loader"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "graphics",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Khronos Vulkan ICD loader and headers",
+  "name": "vulkan-loader",
   "os_blacklist": ["sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "provides": ["vulkan-loader"],
+  "tier": "T2",
+  "title": "Vulkan Loader",
+  "versions": ["1.0.0"]
 }

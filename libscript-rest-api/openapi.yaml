@@ -1454,7 +1454,8 @@ paths:
             schema:
               type: object
               description:
-                Declarative topology specification conforming to topologies/topology.schema.json
+                Declarative topology specification conforming to
+                workloads/constellations/constellation.schema.json
       responses:
         "202":
           description: Async topology deployment job started
@@ -1558,7 +1559,8 @@ paths:
             schema:
               type: object
               description:
-                Declarative workload specification conforming to payloads/payload.schema.json
+                Declarative workload specification conforming to
+                workloads/schemas/payload.schema.json
       responses:
         "202":
           description: Workload submission job started
@@ -1768,6 +1770,184 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /v1/recipes:
+    post:
+      tags:
+        - Installations
+      summary: Dispatch T1/T2 atomic recipe action (install, uninstall, test)
+      operationId: dispatchRecipeAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, target]
+              properties:
+                action:
+                  type: string
+                target:
+                  type: string
+      responses:
+        "202":
+          description: Recipe action dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+
+  /v1/recipes/{name}/capabilities:
+    get:
+      tags:
+        - Catalog
+      summary: Query T1/T2 tier and capabilities for an atomic recipe
+      operationId: getRecipeCapabilities
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recipe tier and capabilities
+
+  /v1/synthesis:
+    post:
+      tags:
+        - Artifacts
+      summary: Dispatch T3 OS image, unikernel, firmware, or installer synthesis
+      operationId: dispatchSynthesis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kernel, format, components]
+              properties:
+                kernel:
+                  type: string
+                format:
+                  type: string
+                components:
+                  type: string
+                board:
+                  type: string
+      responses:
+        "202":
+          description: Synthesis job dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+
+  /v1/infrastructure:
+    post:
+      tags:
+        - Resources
+      summary: Dispatch T4 cloud IaaS, marketplace, or cluster substrate action
+      operationId: dispatchInfrastructure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, target]
+              properties:
+                action:
+                  type: string
+                target:
+                  type: string
+      responses:
+        "202":
+          description: Infrastructure job dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+
+  /v1/workloads:
+    post:
+      tags:
+        - Stack
+      summary: Dispatch T5 workload payload, multi-service stack, or HA constellation action
+      operationId: dispatchWorkloads
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, target]
+              properties:
+                action:
+                  type: string
+                target:
+                  type: string
+      responses:
+        "202":
+          description: Workload job dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+
+  /v1/traits:
+    post:
+      tags:
+        - System
+      summary: Dispatch Plane A cross-cutting node trait action
+      operationId: dispatchTraits
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, target]
+              properties:
+                action:
+                  type: string
+                target:
+                  type: string
+      responses:
+        "202":
+          description: Trait job dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+
+  /v1/experiments:
+    get:
+      tags:
+        - System
+      summary: List Plane B auto-discovered experiment suites
+      operationId: listExperimentsV1
+      responses:
+        "200":
+          description: Discovered experiment plugin identifiers
+    post:
+      tags:
+        - System
+      summary: Dispatch Plane B empirical experiment suite campaign
+      operationId: dispatchExperimentsV1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExperimentRunRequest"
+      responses:
+        "202":
+          description: Experiment job dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
 
 components:
   securitySchemes:
@@ -2113,12 +2293,16 @@ components:
 
     ComponentInfo:
       type: object
-      required: [id, name, description, versions]
+      required: [id, name, tier, description, versions]
       properties:
         id:
           type: string
         name:
           type: string
+        tier:
+          type: string
+          enum: [T1, T2]
+          description: Architectural recipe tier (T1 userland/daemon or T2 sysroot/OS plumbing)
         description:
           type: string
         manifest_path:
@@ -2128,7 +2312,15 @@ components:
           items:
             type: string
             enum:
-              [versioned-artifact, service-daemon, sysroot-library, cloud-operator, os-synthesizer]
+              [
+                userland-package,
+                service-daemon,
+                sysroot-package,
+                sysroot-library,
+                cross-toolchain,
+                kernel-image,
+                bootloader,
+              ]
           description: Lifecycle capabilities declared in manifest.json
         versions:
           type: array

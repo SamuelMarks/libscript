@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Verifies that _lib/orchestration/resolve_stack.sh resolves multi-component stacks
+# Verifies that engine/solver/resolve_stack.sh resolves multi-component stacks
 # across all 300+ component manifests without command-line argument overflow.
 #
 # ## Usage
@@ -42,7 +42,7 @@ cat > "${_TMP_DIR}/libscript.json" << 'JSON_EOF'
 }
 JSON_EOF
 
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.sh" "${_TMP_DIR}/libscript.json" "${_TMP_DIR}/plan.json"
+"${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" "${_TMP_DIR}/libscript.json" "${_TMP_DIR}/plan.json"
 
 for _pkg in nodejs postgres python; do
   if ! jq -e --arg p "$_pkg" '.selected[] | select(.name == $p)' "${_TMP_DIR}/plan.json" >/dev/null 2>&1; then

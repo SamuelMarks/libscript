@@ -1,9 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Command-line interface entrypoint for the `libtpu-rs` component. Routes `experiments` and `cloud-experiments` (`rapid-experiment`) to the empirical evaluation harness and delegates standard Version Manager Contract verbs to `component_core.sh`.
+# Command-line interface entrypoint for the `libtpu-rs` component, delegating standard Version Manager Contract verbs to `component_core.sh`.
 #
 # ## Usage
-# ./_lib/toolchains/libtpu-rs/cli.sh [install|use|ls|ls-remote|experiments|cloud-experiments|...] [args]
+# ./_lib/toolchains/libtpu-rs/cli.sh [install|use|ls|ls-remote|uninstall|...] [args]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -28,26 +28,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-case "${1:-}" in
-  experiments|bench)
-    shift
-    unset SCRIPT_NAME || true
-    STACK="${STACK%"${THIS_FILE}":}"
-    export STACK
-    exec "${SCRIPT_DIR}/benchmark_experiments.sh" "$@"
-    ;;
-  cloud-experiments|rapid-experiment)
-    shift
-    unset SCRIPT_NAME || true
-    STACK="${STACK%"${THIS_FILE}":}"
-    export STACK
-    export CORE_EXPERIMENT_SUITE="${CORE_EXPERIMENT_SUITE:-libtpu}"
-    exec "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/experiment_cloud.sh" "$@"
-    ;;
-esac
-
 export PACKAGE_NAME='libtpu-rs'
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

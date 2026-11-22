@@ -61,7 +61,7 @@ EOF_MANIFEST
 
 export LIBSCRIPT_HOME="${TEST_TMP}/home/.libscript"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

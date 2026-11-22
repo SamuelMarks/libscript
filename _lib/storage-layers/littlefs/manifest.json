@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "littlefs",
-  "title": "ARM littlefs Fail-Safe Flash Filesystem",
-  "description": "Power-loss resilient wear-leveling NOR/NAND flash filesystem C library for Zephyr and FreeRTOS appliances.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "storage-layers",
-  "provides": ["littlefs", "lfs-flash-fs"],
+  "description": "Power-loss resilient wear-leveling NOR/NAND flash filesystem C library for Zephyr and FreeRTOS appliances.",
+  "memory_footprint_class": "mcu-sram-64k",
+  "name": "littlefs",
   "os_whitelist": ["all"],
+  "provides": ["littlefs", "lfs-flash-fs"],
   "repository": "https://github.com/littlefs-project/littlefs",
   "rtos_support": ["zephyr", "freertos"],
-  "memory_footprint_class": "mcu-sram-64k",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T2",
+  "title": "ARM littlefs Fail-Safe Flash Filesystem"
 }

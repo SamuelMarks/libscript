@@ -1,0 +1,379 @@
+@echo off
+:: # deploy_remote.cmd
+:: ## Overview
+:: Backend orchestrator for the deploy-remote command on Windows.
+:: ## Usage
+:: Internally invoked via infrastructure CLI.cmd.
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
+for %%A in (%*) do (
+    set "_dra=%%~A"
+    if /i "!_dra!"=="--provider" (
+        call "!LIBSCRIPT_ROOT_DIR!\infrastructure\resources\core\deploy_cloud.cmd" %*
+        exit /b !ERRORLEVEL!
+    )
+    if /i "!_dra:~0,11!"=="--provider=" (
+        call "!LIBSCRIPT_ROOT_DIR!\infrastructure\resources\core\deploy_cloud.cmd" %*
+        exit /b !ERRORLEVEL!
+    )
+)
+
+if "%~1"=="" (
+    echo [ERROR] Usage: deploy_remote.cmd ^<user@host^> [--app ^<path^>@^<domain^>]... [--shared-db ^<engine^>]
+    exit /b 1
+)
+
+set "TARGET_HOST=%~1"
+shift
+
+set "APPS_PATHS="
+set "APPS_DOMAINS="
+set "SHARED_DB="
+if "%FORCE_REINSTALL%"=="" set "FORCE_REINSTALL=0"
+if "%FORCE_REBUILD%"=="" set "FORCE_REBUILD=0"
+if "%DRY_RUN_MODE%"=="" set "DRY_RUN_MODE=0"
+goto :parse_args
+
+:: ## parse_args
+:: Parses command-line arguments and populates configuration variables.
+:parse_args
+if "%~1"=="" goto parse_done
+if "%~1"=="--app" (
+    if "%~2"=="" (
+        echo [ERROR] --app requires an argument
+        exit /b 1
+    )
+    for /f "tokens=1,2 delims=@" %%A in ("%~2") do (
+        set "APPS_PATHS=!APPS_PATHS!%%A|"
+        set "APPS_DOMAINS=!APPS_DOMAINS!%%B|"
+    )
+    shift
+    shift
+    goto parse_args
+)
+if "%~1"=="--shared-db" (
+    if "%~2"=="" (
+        echo [ERROR] --shared-db requires an argument
+        exit /b 1
+    )
+    set "SHARED_DB=%~2"
+    shift
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--skip-infra" (shift & goto parse_args)
+if /i "%~1"=="--skip-prepare" (shift & goto parse_args)
+if /i "%~1"=="--skip-verify" (shift & goto parse_args)
+if /i "%~1"=="--force-reinstall" (set "FORCE_REINSTALL=1" & shift & goto parse_args)
+if /i "%~1"=="--force-rebuild" (set "FORCE_REBUILD=1" & shift & goto parse_args)
+if /i "%~1"=="--dry-run" (set "DRY_RUN_MODE=1" & shift & goto parse_args)
+if /i "%~1"=="-n" (set "DRY_RUN_MODE=1" & shift & goto parse_args)
+echo [ERROR] Unknown argument: %~1
+exit /b 1
+
+:: ## parse_done
+:: Completes command-line flag parsing and validates required parameters.
+:parse_done
+
+call :provision_shared_db
+
+:: Iterate over apps
+set "REMAINING_PATHS=!APPS_PATHS!"
+set "REMAINING_DOMAINS=!APPS_DOMAINS!"
+set "HEALTH_APPS="
+set "REPORT_COUNT=0"
+goto :loop_apps
+
+:: ## loop_apps
+:: Iterates over all application definitions in the deployment topology.
+:loop_apps
+if "!REMAINING_PATHS!"=="" goto done
+
+for /f "tokens=1* delims=|" %%A in ("!REMAINING_PATHS!") do (
+    set "APP_PATH=%%A"
+    set "REMAINING_PATHS=%%B"
+)
+for /f "tokens=1* delims=|" %%C in ("!REMAINING_DOMAINS!") do (
+    set "APP_DOMAIN=%%C"
+    set "REMAINING_DOMAINS=%%D"
+)
+
+:: Get App Name
+for %%F in ("!APP_PATH!") do set "APP_NAME=%%~nxF"
+
+call :calculate_checksum "!APP_PATH!" LOCAL_SUM
+
+:: Fetch remote sum via ssh
+set "REMOTE_SUM="
+for /f "delims=" %%R in ('ssh "!TARGET_HOST!" "cat $HOME/.libscript/deploy_state_!APP_NAME! 2>nul" 2^>nul') do (
+    set "REMOTE_SUM=%%R"
+)
+
+set "_SYNC_STATE=SYNCED"
+set "_DO_SKIP_SYNC=0"
+if "!FORCE_REINSTALL!"=="0" (
+    if "!FORCE_REBUILD!"=="0" (
+        if "!LOCAL_SUM!"=="!REMOTE_SUM!" (
+            set "_DR_MK_CMD=true"
+            if exist "!APP_PATH!\libscript.json" (
+                for /f "delims=" %%F in ('jq -r "([ (.frontends | if type == \"array\" then .[] elif type == \"object\" then .[] else empty end | (.source_dir // .working_dir // .cwd // \".\")) ] | map(select(. != null and . != \"\")) | unique)[]?" "!APP_PATH!\libscript.json" 2^>nul') do (
+                    set "_DR_FE_REL=%%F"
+                    if "!_DR_FE_REL!"=="." (
+                        set "_DR_FE_PFX=$HOME/apps/!APP_NAME!"
+                    ) else (
+                        set "_DR_FE_PFX=$HOME/apps/!APP_NAME!/!_DR_FE_REL!"
+                    )
+                    set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f !_DR_FE_PFX!/node_modules/.libscript_pkg_hash ] && [ -f !_DR_FE_PFX!/.libscript_build.sha256 ]"
+                )
+            ) else if exist "!APP_PATH!\package.json" (
+                set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f $HOME/apps/!APP_NAME!/node_modules/.libscript_pkg_hash ]"
+            )
+            if exist "!APP_PATH!\pyproject.toml" (
+                set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f $HOME/apps/!APP_NAME!/.venv/.libscript_lock_hash ]"
+            ) else if exist "!APP_PATH!\uv.lock" (
+                set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f $HOME/apps/!APP_NAME!/.venv/.libscript_lock_hash ]"
+            ) else if exist "!APP_PATH!\requirements.txt" (
+                set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f $HOME/apps/!APP_NAME!/.venv/.libscript_lock_hash ]"
+            )
+            ssh "!TARGET_HOST!" "!_DR_MK_CMD!" >nul 2>&1
+            if not errorlevel 1 set "_DO_SKIP_SYNC=1"
+        )
+    )
+)
+if "!_DO_SKIP_SYNC!"=="1" (
+    echo [INFO] [SKIPPED] !APP_NAME! -^> https://!APP_DOMAIN! is live and up-to-date.
+    set "_SYNC_STATE=UP-TO-DATE"
+) else (
+    echo [INFO] [SYNCING] !APP_NAME! -^> https://!APP_DOMAIN! ^(local: !LOCAL_SUM!, remote: !REMOTE_SUM!^)
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\remote_sync.cmd" :libscript_sync_app_to_remote "!APP_PATH!" "!TARGET_HOST!" "apps/!APP_NAME!"
+    
+    ssh "!TARGET_HOST!" "mkdir -p $HOME/.libscript && echo !LOCAL_SUM! > $HOME/.libscript/deploy_state_!APP_NAME!"
+    
+    set "NEEDS_DB=0"
+    if exist "!APP_PATH!\libscript.json" (
+        if not "!SHARED_DB!"=="" (
+            jq -e ".dependencies[\"!SHARED_DB!\"]" "!APP_PATH!\libscript.json" >nul 2>nul
+            if not errorlevel 1 (
+                set "NEEDS_DB=1"
+            ) else (
+                findstr /C:"\"!SHARED_DB!\"" "!APP_PATH!\libscript.json" >nul 2>nul
+                if not errorlevel 1 set "NEEDS_DB=1"
+            )
+        )
+    )
+    
+    call :setup_app_db "!APP_NAME!" "!NEEDS_DB!"
+    call :execute_lifecycle_hooks "apps/!APP_NAME!" "!APP_NAME!"
+    call :configure_routing "!APP_NAME!" "!APP_DOMAIN!" "apps/!APP_NAME!" "!APP_PATH!"
+)
+
+set "_HC_STATE=STATIC"
+if exist "!APP_PATH!\libscript.json" (
+    set "HEALTH_APPS=!HEALTH_APPS! !APP_NAME!"
+    ssh "!TARGET_HOST!" "cd $HOME/apps/!APP_NAME! && LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json"
+    if not errorlevel 1 (
+        set "_HC_STATE=PASS (200 OK)"
+    ) else (
+        set "_HC_STATE=FAIL"
+    )
+)
+set /a REPORT_COUNT+=1
+set "REPORT_ROW_!REPORT_COUNT!=| !APP_NAME! | https://!APP_DOMAIN! | !_SYNC_STATE! | !_HC_STATE! |"
+goto loop_apps
+
+:: ## done
+:: Completes loop iteration and continues post-processing.
+:done
+call :print_remote_deployment_report
+echo [INFO] Deployment remote complete.
+exit /b 0
+
+:: ## print_remote_deployment_report
+:: Outputs an ASCII summary table of deployed applications, DNS domains, and healthcheck results.
+:print_remote_deployment_report
+echo +----------------------------------------------------------------------------------------------------+
+echo ^| LIBSCRIPT REMOTE DEPLOYMENT REPORT ^(Host: !TARGET_HOST!^)
+echo +----------------------------+--------------------------------+-------------------+------------------+
+echo ^| Application                ^| DNS / Public Endpoint          ^| Sync Status       ^| Healthcheck      ^|
+echo +----------------------------+--------------------------------+-------------------+------------------+
+for /L %%I in (1,1,!REPORT_COUNT!) do (
+    echo.!REPORT_ROW_%%I!
+)
+echo +----------------------------+--------------------------------+-------------------+------------------+
+exit /b 0
+
+:: ## provision_shared_db
+:: Provisions shared database clusters required by the deployment topology.
+:provision_shared_db
+if not "!SHARED_DB!"=="" (
+    echo [INFO] Provisioning shared DB ^(!SHARED_DB!^) on !TARGET_HOST! ^(if missing^)...
+    if "!SHARED_DB!"=="postgres" (
+        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/_lib/databases/postgres/env.sh . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; command -v psql >/dev/null 2>&1 || $HOME/libscript/libscript.sh install !SHARED_DB! latest; if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/_lib/databases/postgres/env.sh . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; pg_isready >/dev/null 2>&1 || $HOME/libscript/libscript.sh start !SHARED_DB!"
+    ) else (
+        ssh "!TARGET_HOST!" "$HOME/libscript/libscript.sh install !SHARED_DB! latest && $HOME/libscript/libscript.sh start !SHARED_DB!"
+    )
+)
+exit /b 0
+
+:: ## calculate_checksum
+:: Computes a deterministic digest of an application repository including git HEAD, dirty diff, untracked files, and env files.
+:calculate_checksum
+set "tgt_dir=%~1"
+set "_calc_hash="
+if exist "!tgt_dir!\.git" (
+    set "_dr_git=nogit"
+    for /f %%H in ('git -C "!tgt_dir!" rev-parse HEAD 2^>nul') do set "_dr_git=%%H"
+    set "_dr_tmp=%TEMP%\libscript_dr_chk_!RANDOM!.txt"
+    git -C "!tgt_dir!" status --porcelain > "!_dr_tmp!" 2>nul
+    git -C "!tgt_dir!" diff HEAD >> "!_dr_tmp!" 2>nul
+    for /f "delims=" %%u in ('git -C "!tgt_dir!" ls-files --others --exclude-standard 2^>nul') do (
+        if exist "!tgt_dir!\%%u" (
+            for %%z in ("!tgt_dir!\%%u") do echo %%u:%%~zz:%%~tz>> "!_dr_tmp!"
+        )
+    )
+    if exist "!tgt_dir!\libscript.json" type "!tgt_dir!\libscript.json" >> "!_dr_tmp!" 2>nul
+    if exist "!tgt_dir!\.env" type "!tgt_dir!\.env" >> "!_dr_tmp!" 2>nul
+    if exist "!tgt_dir!\.env.secrets" type "!tgt_dir!\.env.secrets" >> "!_dr_tmp!" 2>nul
+    for %%L in ("!tgt_dir!\package.json" "!tgt_dir!\package-lock.json" "!tgt_dir!\pyproject.toml" "!tgt_dir!\uv.lock" "!tgt_dir!\requirements*.txt" "!tgt_dir!\angular.json" "!tgt_dir!\vite.config.*") do (
+        if exist "%%~fL" type "%%~fL" >> "!_dr_tmp!" 2>nul
+    )
+    for /d %%S in ("!tgt_dir!\*") do (
+        for %%M in ("%%~fS\package.json" "%%~fS\package-lock.json" "%%~fS\pyproject.toml" "%%~fS\uv.lock" "%%~fS\requirements*.txt" "%%~fS\angular.json" "%%~fS\vite.config.*") do (
+            if exist "%%~fM" type "%%~fM" >> "!_dr_tmp!" 2>nul
+        )
+    )
+    set "_dr_dirty=0"
+    for /f "skip=1 tokens=1" %%D in ('certutil -hashfile "!_dr_tmp!" SHA256 2^>nul') do (
+        if "!_dr_dirty!"=="0" set "_dr_dirty=%%D"
+    )
+    del /f /q "!_dr_tmp!" >nul 2>&1
+    set "_calc_hash=!_dr_git!_!_dr_dirty!"
+)
+if "!_calc_hash!"=="" (
+    if exist "!tgt_dir!\libscript.json" (
+        for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!tgt_dir!\libscript.json" SHA256 2^>nul') do (
+            if "!_calc_hash!"=="" set "_calc_hash=%%H"
+        )
+    )
+)
+if "!_calc_hash!"=="" (
+    set /a "_dir_bytes=0"
+    for %%F in ("!tgt_dir!\*") do (
+        set "_f_sz=%%~zF"
+        if not "!_f_sz!"=="" set /a "_dir_bytes+=_f_sz" 2>nul
+    )
+    set "_calc_hash=dir-size-!_dir_bytes!"
+)
+set "%~2=!_calc_hash!"
+exit /b 0
+
+:: ## setup_app_db
+:: Provisions logical databases and schemas for an individual application.
+:setup_app_db
+set "aname=%~1"
+set "needs_db=%~2"
+ssh "!TARGET_HOST!" "cd \"$HOME/apps/!aname!\" && if [ -f libscript.json ]; then if [ -f $HOME/libscript/engine/common/env_printer.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/engine/common/env_printer.sh . $HOME/libscript/engine/common/env_printer.sh && libscript_hydrate_manifest_env libscript.json || true; fi; REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/engine/hooks/databases/provision_db.sh libscript.json; fi"
+if "!needs_db!"=="1" (
+    if "!SHARED_DB!"=="postgres" (
+        set "safe_db_name=!aname:-=_!"
+        echo [INFO] Ensuring DB !safe_db_name! exists on !TARGET_HOST!...
+        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/_lib/databases/postgres/env.sh . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; $HOME/libscript/engine/hooks/databases/provision_schema.sh --engine postgres --host 127.0.0.1 --port 5432 --admin-user postgres --schema !safe_db_name! --user postgres --password postgres >/dev/null 2>&1 || createdb !safe_db_name! 2>/dev/null || true"
+        ssh "!TARGET_HOST!" "touch $HOME/apps/!aname!/.env && grep -v '^DATABASE_URL=' $HOME/apps/!aname!/.env > $HOME/apps/!aname!/.env.tmp 2>/dev/null || true; printf 'DATABASE_URL=postgres://localhost:5432/%%s\n' '!safe_db_name!' >> $HOME/apps/!aname!/.env.tmp && mv $HOME/apps/!aname!/.env.tmp $HOME/apps/!aname!/.env"
+    )
+)
+exit /b 0
+
+:: ## execute_lifecycle_hooks
+:: Runs pre-start and post-deploy migration and lifecycle hooks for the application.
+:execute_lifecycle_hooks
+set "rdir=%~1"
+set "aname=%~2"
+set "_DR_FLAGS="
+if "!FORCE_REINSTALL!"=="1" set "_DR_FLAGS=!_DR_FLAGS! --force-reinstall"
+if "!FORCE_REBUILD!"=="1" set "_DR_FLAGS=!_DR_FLAGS! --force-rebuild"
+echo [INFO] Executing lifecycle hooks for !aname!...
+ssh "!TARGET_HOST!" "export PATH=\"$HOME/.local/bin:/usr/local/bin:$PATH\"; cd \"!rdir!\" && if [ -f libscript.json ]; then REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_DR_FLAGS! && REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh start libscript.json; fi"
+exit /b 0
+
+:: ## configure_routing
+:: Configures reverse-proxy virtual hosts and upstream routing for deployed applications.
+:configure_routing
+set "aname=%~1"
+set "adomain=%~2"
+set "rdir=%~3"
+set "apath=%~4"
+echo [INFO] Configuring routing for !aname! -^> !adomain!...
+
+set "is_static=0"
+if not exist "!apath!\libscript.json" (
+    if exist "!apath!\index.html" (
+        set "is_static=1"
+    ) else (
+        echo [INFO] Warning: No libscript.json or index.html found in !apath!. Assuming static routing.
+        set "is_static=1"
+    )
+)
+
+if "!is_static!"=="1" (
+    ssh "!TARGET_HOST!" "$HOME/libscript/_lib/networking/netctl/cli.sh --domain \"!adomain!\" --listen 80 --static / \"$HOME/!rdir!\" --emit nginx"
+) else (
+    set "has_ingress=0"
+    if exist "!apath!\libscript.json" (
+        jq -e ".ingress != null" "!apath!\libscript.json" >nul 2>nul
+        if not errorlevel 1 set "has_ingress=1"
+    )
+    if "!has_ingress!"=="1" (
+        ssh "!TARGET_HOST!" "cd \"$HOME/!rdir!\" && $HOME/libscript/_lib/networking/netctl/cli.sh apply libscript.json --reload"
+    ) else (
+        set "remote_port=3000"
+        for /f "delims=" %%P in ('jq -r ".port // empty" "!apath!\libscript.json" 2^>nul') do (
+            if not "%%P"=="" if not "%%P"=="null" set "remote_port=%%P"
+        )
+        ssh "!TARGET_HOST!" "$HOME/libscript/_lib/networking/netctl/cli.sh --domain \"!adomain!\" --listen 80 --proxy / \"http://127.0.0.1:!remote_port!\" --emit nginx"
+    )
+)
+exit /b 0

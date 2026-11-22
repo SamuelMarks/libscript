@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "tcc",
-  "title": "Tiny C Compiler (TCC)",
-  "description": "Standalone version manager and fast source builder for Fabrice Bellard's Tiny C Compiler (TCC).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["compiler", "c", "tcc"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Standalone version manager and fast source builder for Fabrice Bellard's Tiny C Compiler (TCC).",
+  "name": "tcc",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["compiler", "c", "tcc"],
+  "tier": "T1",
+  "title": "Tiny C Compiler (TCC)"
 }

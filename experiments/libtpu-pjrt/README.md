@@ -177,27 +177,27 @@ call .\libscript.cmd experiment run libtpu-pjrt --synthetic-fixtures "--results-
 ### 1. Console Output (`E0`–`E8` Execution)
 
 ```text
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [CONTINUE] processing "./experiments/libtpu-pjrt/run.sh"
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/benchmark_experiments.sh"
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e0_provenance.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/benchmark_experiments.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e0_provenance.sh"
 [INFO] [E0] Completed E0 provenance, environment, and TCB audit in './build/libtpu_synthetic'.
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e1_forensics.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e1_forensics.sh"
 [INFO] [E1] Completed E1 binary forensics and ABI parity in './build/libtpu_synthetic'.
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e2_footprint_startup.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e2_footprint_startup.sh"
 [INFO] [E2] Completed E2 footprint, C11 cold/warm startup, RSS, and pod scaling in './build/libtpu_synthetic'.
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e3_jax_e2e.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e3_jax_e2e.sh"
 [INFO] [E3] Completed E3 stock JAX single-chip and SPMD validation in './build/libtpu_synthetic'.
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e4_compiler_aot.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e4_compiler_aot.sh"
 [INFO] [E4] Completed E4 5-stage breakdown and AOT comparison in './build/libtpu_synthetic'.
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e5_memory_studies.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e5_memory_studies.sh"
 [INFO] [E5] Completed E5 2D VMEM packing and register spill sweep in './build/libtpu_synthetic'.
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e6_vliw_ablations.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e6_vliw_ablations.sh"
 [INFO] [E6] Completed E6 VLIW modulo speedup and pass ablations in './build/libtpu_synthetic'.
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e7_numerics_sparsecore.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e7_numerics_sparsecore.sh"
 [INFO] [E7] Completed E7 29-dtype numerics and 18-optimizer SparseCore suite in './build/libtpu_synthetic'.
-[CONTINUE] processing "./_lib/toolchains/libtpu-rs/suites/e8_latex.sh"
+[CONTINUE] processing "./experiments/libtpu-pjrt/suites/e8_latex.sh"
 [INFO] [E8] Emitted verified LaTeX metrics to './build/libtpu_synthetic/generated_metrics.tex' (18 provenance-checked JSON files).
 [INFO] Completed libtpu empirical suites (E0,E1,E2,E3,E4,E5,E6,E7,E8) -> ./build/libtpu_synthetic/campaign_summary.json
 ```

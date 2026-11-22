@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nats",
-  "title": "NATS",
-  "description": "A simple, secure and performant communications system for digital systems, services and devices.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "message-brokers",
-  "provides": ["message-broker", "nats", "nats-server"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A simple, secure and performant communications system for digital systems, services and devices.",
+  "name": "nats",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": ["4222", "6222", "8222"],
+  "provides": ["message-broker", "nats", "nats-server"],
   "repository": "https://github.com/nats-io/nats-server",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "NATS"
 }

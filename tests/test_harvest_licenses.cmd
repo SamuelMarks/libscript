@@ -65,7 +65,7 @@ exit /b 0
 :: ## main
 :: Executes the license harvester unit and integration test suite on Windows.
 :main
-set "HARVESTER=!LIBSCRIPT_ROOT_DIR!\packaging\harvest_licenses.cmd"
+set "HARVESTER=!LIBSCRIPT_ROOT_DIR!\synthesis\msi\harvest_licenses.cmd"
 set "TMP_BASE=%TEMP%\test_harvest_licenses_%RANDOM%"
 if not exist "!TMP_BASE!" mkdir "!TMP_BASE!"
 
@@ -89,7 +89,7 @@ for %%F in ("!OUT_SQLITE!\licenses_manifest.json" "!OUT_SQLITE!\combined_license
 
 echo === Test 2: Composite Stack License Harvesting (WordPress) ===
 set "OUT_WP=!TMP_BASE!\wordpress_licenses"
-call "!HARVESTER!" "_lib\web-apps\wordpress" --out-dir "!OUT_WP!" --force
+call "!HARVESTER!" "workloads\apps\wordpress" --out-dir "!OUT_WP!" --force
 if errorlevel 1 (
     echo [FAIL] harvest_licenses.cmd failed for wordpress >&2
     rmdir /s /q "!TMP_BASE!" >nul 2>&1
@@ -112,7 +112,7 @@ for %%C in (wordpress php mariadb caddy) do (
 
 echo === Test 3: Composite Stack License Harvesting (Open edX) ===
 set "OUT_EDX=!TMP_BASE!\openedx_licenses"
-call "!HARVESTER!" "_lib\web-apps\openedx" --out-dir "!OUT_EDX!" --force
+call "!HARVESTER!" "workloads\apps\openedx" --out-dir "!OUT_EDX!" --force
 if errorlevel 1 (
     echo [FAIL] harvest_licenses.cmd failed for openedx >&2
     rmdir /s /q "!TMP_BASE!" >nul 2>&1

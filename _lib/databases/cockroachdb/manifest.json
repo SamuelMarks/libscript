@@ -1,16 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cockroachdb",
-  "title": "CockroachDB",
-  "description": "Cloud-native distributed SQL database built for transactional consistency, horizontal scalability, and survivability.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["cockroachdb", "distributed-sql", "database"],
-  "os_whitelist": ["all"],
-  "ports": [26257, 8080],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/cockroachdb/cockroach",
+  "description": "Cloud-native distributed SQL database built for transactional consistency, horizontal scalability, and survivability.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +18,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "cockroachdb",
+  "os_whitelist": ["all"],
+  "ports": [26257, 8080],
+  "provides": ["cockroachdb", "distributed-sql", "database"],
+  "repository": "https://github.com/cockroachdb/cockroach",
+  "stateful": true,
+  "tier": "T1",
+  "title": "CockroachDB"
 }

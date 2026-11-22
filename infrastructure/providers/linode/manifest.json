@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "linode",
+  "provides": ["linode", "linode-cli"],
+  "os_whitelist": ["all"],
+  "category": "cloud-providers",
+  "title": "Linode",
+  "description": "LibScript component for Akamai Connected Cloud (Linode) provider and linode-cli",
+  "capabilities": ["versioned-artifact", "cloud-operator"]
+}

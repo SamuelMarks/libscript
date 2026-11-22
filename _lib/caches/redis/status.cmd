@@ -51,9 +51,9 @@ goto :find_root
 
 if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "Redis"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\status_service.cmd" "Redis"
 if "!ERRORLEVEL!" equ "0" exit /b 0
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "redis-server"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\status_service.cmd" "redis-server"
 if "!ERRORLEVEL!" equ "0" exit /b 0
 powershell -NoProfile -Command "try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', 6379); $c.Close(); exit 0 } catch { exit 1 }" >nul 2>&1
 if "!ERRORLEVEL!" equ "0" exit /b 0

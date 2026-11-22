@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/source_builder.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/os_info.sh" "engine/common/versioning.sh" "engine/common/source_builder.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -204,10 +204,10 @@ PG_FIRSTBOOT
     if [ -n "${POSTGRES_DATA_DIR:-${PGDATA:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" ]; then
       "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" configure "${POSTGRES_DATA_DIR:-${PGDATA:-}}" || true
     fi
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/hw_tune.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/hw_tune.sh"
       # shellcheck disable=SC1090,SC1091
-      . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+      . "${LIBSCRIPT_ROOT_DIR}/engine/common/hw_tune.sh"
       unset SCRIPT_NAME || true
       libscript_apply_hardware_tuning "postgres" || true
     fi

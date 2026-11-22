@@ -48,7 +48,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\os_info.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\os_info.cmd"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%BUSYBOX_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
@@ -85,14 +85,14 @@ exit /b 0
 set "RELEASES_URL=%BUSYBOX_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/SamuelMarks/busybox-windows/releases/latest"
 echo [ls-remote] Fetching available busybox versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
 :: Activates a specific installed version of busybox and updates alias junctions.
 :action_use
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "busybox" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "busybox" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
@@ -100,8 +100,8 @@ if not exist "!TARGET_DIR!" (
     set "STACK="
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "%BUSYBOX_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "busybox" "%BUSYBOX_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "busybox" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -115,7 +115,7 @@ set "DL_DIR=!DL_DIR!\busybox"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading busybox !EXACT_VERSION! ^(!TARGET_OS!^) from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -125,34 +125,34 @@ if /i "%BUSYBOX_INSTALL_METHOD%"=="from-source" (
     call :resolve_version
     set "SRC_URL=%BUSYBOX_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://busybox.net/downloads/busybox-!EXACT_VERSION!.tar.bz2"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "busybox" "!EXACT_VERSION!" "busybox" "c" "make-defconfig" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "busybox" "!EXACT_VERSION!" "busybox" "c" "make-defconfig" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if /i "%BUSYBOX_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget busybox
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget busybox
     exit /b !errorlevel!
 )
 if /i "%BUSYBOX_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget busybox
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget busybox
     exit /b !errorlevel!
 )
 if /i "%BUSYBOX_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco busybox
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco busybox
     exit /b !errorlevel!
 )
 if /i "%BUSYBOX_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop busybox
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop busybox
     exit /b !errorlevel!
 )
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "busybox" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "busybox" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if exist "!TARGET_DIR!\bin\busybox.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] busybox !EXACT_VERSION! is already installed at !TARGET_DIR!.
         call :materialize_busybox_shims "!TARGET_DIR!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "%BUSYBOX_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "busybox" "%BUSYBOX_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "busybox" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -167,12 +167,12 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\busybox-!RANDOM!-!ARCHIVE_NAME!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 (
         if "%BUSYBOX_DOWNLOAD_URL%"=="" (
             call :resolve_busybox_fallback_url
             set "TMP_FILE=%TEMP%\busybox-!RANDOM!-alt"
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+            call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
             if errorlevel 1 exit /b 1
         ) else (
             exit /b 1
@@ -183,8 +183,8 @@ call :stage_busybox_artifact "!TMP_FILE!" "!URL!" "!TARGET_DIR!"
 if errorlevel 1 exit /b 1
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
 call :materialize_busybox_shims "!TARGET_DIR!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "%BUSYBOX_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "busybox" "%BUSYBOX_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "busybox" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## materialize_busybox_shims
@@ -324,7 +324,7 @@ exit /b 0
 set "EXACT_VERSION="
 set "_REL_API=%BUSYBOX_RELEASES_URL%"
 if "!_REL_API!"=="" set "_REL_API=https://api.github.com/repos/SamuelMarks/busybox-windows/releases/latest"
-for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
+for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
     set "EXACT_VERSION=%%T"
 )
 if not "!EXACT_VERSION!"=="" (
@@ -336,5 +336,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "busybox" "%ACTION%" "%BUSYBOX_VERSION%" "%BUSYBOX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\busybox\%BUSYBOX_VERSION%\\bin\\busybox.exe\"" "%LIBSCRIPT_HOME%\busybox\%BUSYBOX_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "busybox" "%ACTION%" "%BUSYBOX_VERSION%" "%BUSYBOX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\busybox\%BUSYBOX_VERSION%\\bin\\busybox.exe\"" "%LIBSCRIPT_HOME%\busybox\%BUSYBOX_VERSION%"
 exit /b !errorlevel!

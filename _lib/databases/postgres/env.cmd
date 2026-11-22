@@ -53,7 +53,7 @@ if not "%POSTGRES_URL_VERSION%"=="" set "POSTGRES_VERSION=%POSTGRES_URL_VERSION%
 if "%POSTGRES_VERSION%"=="" if not "%POSTGRESQL_VERSION%"=="" set "POSTGRES_VERSION=%POSTGRESQL_VERSION%"
 if "%POSTGRES_VERSION%"=="" set "POSTGRES_VERSION=latest"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "postgres" "%POSTGRES_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "postgres" "%POSTGRES_VERSION%"
 
 if /i "%POSTGRES_VERSION%"=="latest" (
     if exist "%LIBSCRIPT_HOME%\postgres\default\bin" (

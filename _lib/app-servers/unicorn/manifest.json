@@ -1,16 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "unicorn",
-  "title": "Unicorn",
-  "description": "Rack HTTP server for fast clients and Unix-like operating systems utilizing pre-forking worker processes.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["unicorn", "rack-server", "app-server"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["windows"],
-  "ports": [8080],
-  "multitenant": true,
-  "repository": "https://github.com/defunkt/unicorn",
+  "description": "Rack HTTP server for fast clients and Unix-like operating systems utilizing pre-forking worker processes.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +18,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "unicorn",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["all"],
+  "ports": [8080],
+  "provides": ["unicorn", "rack-server", "app-server"],
+  "repository": "https://github.com/defunkt/unicorn",
+  "tier": "T1",
+  "title": "Unicorn"
 }

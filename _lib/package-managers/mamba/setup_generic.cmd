@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%MAMBA_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MAMBA_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MAMBA_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MAMBA_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/mamba-org/mamba" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%MAMBA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mamba %MAMBA_VERSION% to %DOWNLOAD_DIR%\mamba...
     if not exist "%DOWNLOAD_DIR%\mamba" mkdir "%DOWNLOAD_DIR%\mamba"
     if not "%MAMBA_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAMBA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mamba\mamba-%MAMBA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MAMBA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mamba\mamba-%MAMBA_VERSION%.zip"
     ) else (
         echo MAMBA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MAMBA_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mamba
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends mamba
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mamba\mamba-%MAMBA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MAMBA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAMBA_DOWNLOAD_URL%" "%TEMP%\mamba.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MAMBA_DOWNLOAD_URL%" "%TEMP%\mamba.zip"
         tar -xf "%TEMP%\mamba.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mamba.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "mamba" "%ACTION%" "%MAMBA_VERSION%" "%MAMBA_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mamba\%MAMBA_VERSION%\\bin\\mamba.exe\"" "%LIBSCRIPT_HOME%\mamba\%MAMBA_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "mamba" "%ACTION%" "%MAMBA_VERSION%" "%MAMBA_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mamba\%MAMBA_VERSION%\\bin\\mamba.exe\"" "%LIBSCRIPT_HOME%\mamba\%MAMBA_VERSION%"
 exit /b !errorlevel!

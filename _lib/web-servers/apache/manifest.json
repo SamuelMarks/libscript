@@ -1,16 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "apache",
-  "title": "Apache HTTP Server",
-  "description": "Apache HTTP Server (apachectl / apache2) modular, cross-platform web server recipe.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "web-servers",
-  "provides": ["web-server", "apache", "apache2", "apachectl"],
-  "os_whitelist": ["all"],
   "conflicts": ["httpd"],
-  "ports": [80, 443],
-  "multitenant": true,
-  "repository": "https://github.com/apache/httpd",
+  "description": "Apache HTTP Server (apachectl / apache2) modular, cross-platform web server recipe.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +19,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "apache",
+  "os_whitelist": ["all"],
+  "ports": [80, 443],
+  "provides": ["web-server", "apache", "apache2", "apachectl"],
+  "repository": "https://github.com/apache/httpd",
+  "tier": "T1",
+  "title": "Apache HTTP Server"
 }

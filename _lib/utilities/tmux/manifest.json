@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "tmux",
-  "title": "tmux",
-  "description": "tmux is a terminal multiplexer.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["tmux"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "tmux is a terminal multiplexer.",
+  "name": "tmux",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["tmux"],
+  "tier": "T1",
+  "title": "tmux"
 }

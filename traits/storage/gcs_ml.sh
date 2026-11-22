@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Applies `schemas/gcs-ml-storage.schema.json` across TPU slices and GKE XPK clusters: enforces
+# Applies `engine/schemas/gcs-ml-storage.schema.json` across TPU slices and GKE XPK clusters: enforces
 # TFRC same-region bucket checks, configures checkpoint lifecycle retention, exports worker env
 # (`JAX_COMPILATION_CACHE_DIR`, `ORBAX_CHECKPOINT_URI`), and emits GKE GCS FUSE CSI annotations.
 #
@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 _gcs_this="${THIS_FILE}"; _gcs_dir="${SCRIPT_DIR}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/_common/tfrc_guard.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/tfrc_guard.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

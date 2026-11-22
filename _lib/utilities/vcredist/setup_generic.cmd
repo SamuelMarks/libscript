@@ -60,8 +60,8 @@ if exist "%TARGET_DIR%\bin\vcredist.installed" (
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
 
 echo [INFO] Downloading VC++ Redistributable...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://aka.ms/vs/17/release/vc_redist.arm64.exe" "%TEMP%\vc_redist.arm64.exe"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://aka.ms/vs/17/release/vc_redist.x64.exe" "%TEMP%\vc_redist.x64.exe"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://aka.ms/vs/17/release/vc_redist.arm64.exe" "%TEMP%\vc_redist.arm64.exe"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://aka.ms/vs/17/release/vc_redist.x64.exe" "%TEMP%\vc_redist.x64.exe"
 
 echo [INFO] Installing VC++ Redistributable...
 start /wait "" "%TEMP%\vc_redist.arm64.exe" /install /quiet /norestart

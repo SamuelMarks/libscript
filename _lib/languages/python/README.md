@@ -96,7 +96,7 @@ running the setup script.
 | `LIBSCRIPT_FORCE_PYTHONHOME`    | When set to 1, exports PYTHONHOME to the base LibScript Python installation directory if no virtualenv is active.                                                                                                                                                   | `0`                |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

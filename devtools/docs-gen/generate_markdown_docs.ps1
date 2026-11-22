@@ -110,7 +110,7 @@ $payloadReadmes = if (Test-Path -LiteralPath $payloadsDir) {
 } else { @() }
 $readmes = @($libReadmes) + @($topoReadmes) + @($payloadReadmes)
 
-$baseSchema = Join-Path $rootDir '_lib\_common\base_vars.schema.json'
+$baseSchema = Join-Path $rootDir 'engine\schemas\base_vars.schema.json'
 $baseVarRows = @()
 if (Test-Path -LiteralPath $baseSchema) {
     $baseJson = [System.IO.File]::ReadAllText($baseSchema, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
@@ -158,7 +158,7 @@ foreach ($readme in $readmes) {
 
     if ($dir.Contains('_lib')) {
         $varsLines += ""
-        $varsLines += "Global framework variables (such as ``LIBSCRIPT_HOME``, ``LIBSCRIPT_CACHE_DIR``, ``LIBSCRIPT_OFFLINE``, and ``LIBSCRIPT_DEFAULT_INSTALL_METHOD``) are documented in ``_lib/_common/README.md``."
+        $varsLines += "Global framework variables (such as ``LIBSCRIPT_HOME``, ``LIBSCRIPT_CACHE_DIR``, ``LIBSCRIPT_OFFLINE``, and ``LIBSCRIPT_DEFAULT_INSTALL_METHOD``) are documented in ``engine/common/README.md``."
     }
 
     $varsBlock = ($varsLines -join "`n") + "`n"

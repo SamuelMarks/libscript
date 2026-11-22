@@ -46,8 +46,8 @@ fail_test() {
   exit 1
 }
 
-BASE_SCHEMA="${LIBSCRIPT_ROOT_DIR}/_lib/_common/base_vars.schema.json"
-[ -f "$BASE_SCHEMA" ] || fail_test 'Missing _lib/_common/base_vars.schema.json'
+BASE_SCHEMA="${LIBSCRIPT_ROOT_DIR}/engine/schemas/base_vars.schema.json"
+[ -f "$BASE_SCHEMA" ] || fail_test 'Missing engine/schemas/base_vars.schema.json'
 
 PROP_COUNT=$(jq -r '.properties | keys | length' "$BASE_SCHEMA")
 if [ "$PROP_COUNT" -gt 32 ] || [ "$PROP_COUNT" -lt 20 ]; then
@@ -76,13 +76,13 @@ for _unrel in "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/lynx/README.md" "${LIBSCRIPT
     fail_test "Unrelated README ${_unrel} still contains leaked TPU/Experiment/RTOS global variables"
   fi
 done
-grep -q 'LIBSCRIPT_HOME' "${LIBSCRIPT_ROOT_DIR}/_lib/_common/README.md" || fail_test '_lib/_common/README.md missing LIBSCRIPT_HOME documentation'
+grep -q 'LIBSCRIPT_HOME' "${LIBSCRIPT_ROOT_DIR}/engine/common/README.md" || fail_test 'engine/common/README.md missing LIBSCRIPT_HOME documentation'
 grep -q 'JETSTREAM_IMAGE' "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/jetstream/README.md" || fail_test 'jetstream/README.md missing JETSTREAM_IMAGE documentation'
 printf '[PASS] Unrelated component READMEs are completely free of leaked subsystem globals.\n'
 
-WRAP_REF=$(jq -r '."$ref" // empty' "${LIBSCRIPT_ROOT_DIR}/schemas/libscript.schema.json")
+WRAP_REF=$(jq -r '."$ref" // empty' "${LIBSCRIPT_ROOT_DIR}/workloads/schemas/libscript.schema.json")
 if [ "$WRAP_REF" != '../libscript.schema.json' ]; then
-  fail_test "schemas/libscript.schema.json expected \$ref ../libscript.schema.json, got ${WRAP_REF}"
+  fail_test "workloads/schemas/libscript.schema.json expected \$ref ../libscript.schema.json, got ${WRAP_REF}"
 fi
 
 FAKE_COMP="${TEST_TMP}/fake_comp"

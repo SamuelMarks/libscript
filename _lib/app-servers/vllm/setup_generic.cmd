@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%VLLM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%VLLM_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%VLLM_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%VLLM_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/vllm-project/vllm" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading vllm %VLLM_VERSION% to %DOWNLOAD_DIR%\vllm...
     if not exist "%DOWNLOAD_DIR%\vllm" mkdir "%DOWNLOAD_DIR%\vllm"
     if not "%VLLM_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VLLM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%VLLM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.zip"
     ) else (
         echo VLLM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs the requested vllm version using the configured installation method.
 :action_install
 if "%VLLM_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends vllm
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends vllm
     exit /b !errorlevel!
 )
 
@@ -163,7 +163,7 @@ if exist "%TARGET_DIR%\Scripts" (
 )
 
 echo Installing vllm %VLLM_VERSION% natively to %TARGET_DIR%...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_venv "%TARGET_DIR%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\python_env.cmd" libscript_python_venv "%TARGET_DIR%"
 
 if "%EXACT_VERSION%"=="latest" (
     "%TARGET_DIR%\Scripts\pip.exe" install --upgrade vllm
@@ -227,5 +227,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "vllm" "%ACTION%" "%VLLM_VERSION%" "%VLLM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%\\bin\\vllm.exe\"" "%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "vllm" "%ACTION%" "%VLLM_VERSION%" "%VLLM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%\\bin\\vllm.exe\"" "%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%"
 exit /b !errorlevel!

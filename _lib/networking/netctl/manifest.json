@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "netctl",
-  "title": "LibScript Network Control (netctl)",
-  "description": "Unified network port, reverse proxy, and firewall orchestration engine for LibScript.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "networking",
-  "provides": ["netctl", "firewall-router"],
   "conflicts": [],
-  "versions": ["latest", "1.0.0"],
-  "os_whitelist": ["all"],
+  "description": "Unified network port, reverse proxy, and firewall orchestration engine for LibScript.",
+  "name": "netctl",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["netctl", "firewall-router"],
+  "tier": "T2",
+  "title": "LibScript Network Control (netctl)",
+  "versions": ["latest", "1.0.0"]
 }

@@ -112,7 +112,7 @@ if "%LIBSCRIPT_OFFLINE%"=="1" (
     exit /b 0
 )
 if not "%RUST_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%RUST_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%RUST_RELEASES_URL%"
     exit /b !errorlevel!
 )
 where git >nul 2>&1
@@ -139,7 +139,7 @@ if not exist "%TARGET_DIR%\bin" (
     call :action_install
     if errorlevel 1 exit /b 1
 )
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "rust" "default" "%RUST_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "rust" "default" "%RUST_VERSION%"
 echo Active rust toolchain set to %RUST_VERSION%.
 exit /b 0
 
@@ -154,7 +154,7 @@ if exist "!_DL_DEST!" (
     echo [REUSE] Rust archive already cached at !_DL_DEST!.
     exit /b 0
 )
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_DL_URL!" "!_DL_DEST!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!_DL_URL!" "!_DL_DEST!"
 exit /b !errorlevel!
 
 :: ## extract_rust_archive
@@ -216,7 +216,7 @@ if exist "!_IOT_DIR!\.libscript_target_stamp" (
 if not exist "%DOWNLOAD_DIR%\rust" mkdir "%DOWNLOAD_DIR%\rust"
 set "_IOT_ARC=%DOWNLOAD_DIR%\rust\rust-std-%RUST_VERSION%-!_IOT!.tar.gz"
 if not exist "!_IOT_ARC!" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://static.rust-lang.org/dist/rust-std-%RUST_VERSION%-!_IOT!.tar.gz" "!_IOT_ARC!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://static.rust-lang.org/dist/rust-std-%RUST_VERSION%-!_IOT!.tar.gz" "!_IOT_ARC!"
     if errorlevel 1 exit /b 1
 )
 call :extract_rust_archive "!_IOT_ARC!" "%LIBSCRIPT_HOME%\rust\%RUST_VERSION%"
@@ -283,7 +283,7 @@ if not exist "%DOWNLOAD_DIR%\rust" mkdir "%DOWNLOAD_DIR%\rust"
 set "_IOC_ARC=%DOWNLOAD_DIR%\rust\!_IOC!-%RUST_VERSION%-%RUST_HOST_TRIPLE%.tar.gz"
 if not exist "!_IOC_ARC!" if exist "%DOWNLOAD_DIR%\rust\!_IOC!-%RUST_VERSION%.tar.gz" set "_IOC_ARC=%DOWNLOAD_DIR%\rust\!_IOC!-%RUST_VERSION%.tar.gz"
 if not exist "!_IOC_ARC!" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://static.rust-lang.org/dist/!_IOC!-%RUST_VERSION%-%RUST_HOST_TRIPLE%.tar.gz" "!_IOC_ARC!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://static.rust-lang.org/dist/!_IOC!-%RUST_VERSION%-%RUST_HOST_TRIPLE%.tar.gz" "!_IOC_ARC!"
     if errorlevel 1 exit /b 1
 )
 call :extract_rust_archive "!_IOC_ARC!" "%LIBSCRIPT_HOME%\rust\%RUST_VERSION%"
@@ -302,7 +302,7 @@ exit /b 0
 :: Installs the requested Rust toolchain version into an isolated directory under LIBSCRIPT_HOME\rust.
 :action_install
 if /i "%RUST_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends rust
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends rust
     exit /b !errorlevel!
 )
 set "TARGET_DIR=%LIBSCRIPT_HOME%\rust\%RUST_VERSION%"
@@ -319,7 +319,7 @@ if "!_RUST_INSTALLED!"=="1" (
     if not exist "!_ARC!" (
         set "_DL_URL=%RUST_DOWNLOAD_URL%"
         if "!_DL_URL!"=="" set "_DL_URL=https://static.rust-lang.org/dist/rust-%RUST_VERSION%-%RUST_HOST_TRIPLE%.tar.gz"
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_DL_URL!" "!_ARC!"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!_DL_URL!" "!_ARC!"
         if errorlevel 1 exit /b 1
     )
     call :extract_rust_archive "!_ARC!" "%TARGET_DIR%"
@@ -337,9 +337,9 @@ if not "%RUST_COMPONENTS%"=="" (
 )
 
 if "%LIBSCRIPT_AUTO_USE%"=="1" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "rust" "default" "%RUST_VERSION%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "rust" "default" "%RUST_VERSION%"
 ) else if not exist "%LIBSCRIPT_HOME%\rust\default" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "rust" "default" "%RUST_VERSION%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "rust" "default" "%RUST_VERSION%"
 )
 exit /b 0
 
@@ -347,5 +347,5 @@ exit /b 0
 :: Delegates generic status/uninstall lifecycle actions to setup_base.cmd.
 :action_generic
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "rust" "%ACTION%" "%RUST_VERSION%" "%RUST_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\rust\%RUST_VERSION%\\bin\\rustc.exe\"" "%LIBSCRIPT_HOME%\rust\%RUST_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "rust" "%ACTION%" "%RUST_VERSION%" "%RUST_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\rust\%RUST_VERSION%\\bin\\rustc.exe\"" "%LIBSCRIPT_HOME%\rust\%RUST_VERSION%"
 exit /b !errorlevel!

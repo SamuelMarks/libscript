@@ -1,14 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "tailscale",
-  "title": "Tailscale Mesh VPN",
-  "description": "Tailscale zero-config WireGuard mesh VPN client and daemon (tailscale and tailscaled).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "networking",
-  "provides": ["tailscale", "tailscaled"],
-  "os_whitelist": ["all"],
-  "ports": [41641],
-  "repository": "https://github.com/tailscale/tailscale",
+  "description": "Tailscale zero-config WireGuard mesh VPN client and daemon (tailscale and tailscaled).",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -21,9 +18,13 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "tailscale",
+  "os_whitelist": ["all"],
+  "ports": [41641],
+  "provides": ["tailscale", "tailscaled"],
+  "repository": "https://github.com/tailscale/tailscale",
+  "tier": "T2",
+  "title": "Tailscale Mesh VPN"
 }

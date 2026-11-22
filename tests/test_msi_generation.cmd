@@ -73,7 +73,7 @@ set "BANNER_SIDE_PATH=%TEST_TMP_DIR%\test_banner_side.bmp"
 set "LICENSE_PATH=%TEST_TMP_DIR%\LICENSE.txt"
 
 set "WXS_FILE=%TEST_TMP_DIR%\TestPackage.wxs"
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress" --out "%WXS_FILE%"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\workloads\apps\wordpress" --out "%WXS_FILE%"
 
 if not exist "%WXS_FILE%" (
     echo [FAIL] Expected .wxs file was not generated

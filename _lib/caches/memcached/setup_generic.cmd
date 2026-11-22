@@ -115,7 +115,7 @@ exit /b 0
 :action_ls_remote
 if "%MEMCACHED_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MEMCACHED_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MEMCACHED_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MEMCACHED_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/SamuelMarks/memcached-windows" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -152,7 +152,7 @@ if "%MEMCACHED_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading memcached %MEMCACHED_VERSION% to %DOWNLOAD_DIR%\memcached...
     if not exist "%DOWNLOAD_DIR%\memcached" mkdir "%DOWNLOAD_DIR%\memcached"
     if not "%MEMCACHED_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MEMCACHED_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\memcached\memcached-%MEMCACHED_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MEMCACHED_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\memcached\memcached-%MEMCACHED_VERSION%.zip"
     ) else (
         echo MEMCACHED_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -163,11 +163,11 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if /i "%MEMCACHED_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "memcached" "%MEMCACHED_VERSION%" "memcached" "c"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "memcached" "%MEMCACHED_VERSION%" "memcached" "c"
     exit /b !errorlevel!
 )
 if "%MEMCACHED_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends memcached
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends memcached
     exit /b !errorlevel!
 )
 
@@ -183,7 +183,7 @@ if not exist "%TARGET_DIR%\bin\memcached.exe" (
         tar -xf "%DOWNLOAD_DIR%\memcached\memcached-%MEMCACHED_VERSION%.tar.gz" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%DOWNLOAD_DIR%\memcached\memcached-%MEMCACHED_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MEMCACHED_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MEMCACHED_DOWNLOAD_URL%" "%TEMP%\memcached.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MEMCACHED_DOWNLOAD_URL%" "%TEMP%\memcached.zip"
         tar -xf "%TEMP%\memcached.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\memcached.zip" -C "%TARGET_DIR%" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\memcached.zip' -DestinationPath '%TARGET_DIR%' -Force"
         del /f /q "%TEMP%\memcached.zip" 2>nul
     ) else (
@@ -226,5 +226,5 @@ goto :action_uninstall
 :: Uninstalls the component version from LIBSCRIPT_HOME.
 :action_uninstall
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "memcached" "%ACTION%" "%MEMCACHED_VERSION%" "%MEMCACHED_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\memcached\%MEMCACHED_VERSION%\\bin\\memcached.exe\"" "%LIBSCRIPT_HOME%\memcached\%MEMCACHED_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "memcached" "%ACTION%" "%MEMCACHED_VERSION%" "%MEMCACHED_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\memcached\%MEMCACHED_VERSION%\\bin\\memcached.exe\"" "%LIBSCRIPT_HOME%\memcached\%MEMCACHED_VERSION%"
 exit /b !errorlevel!

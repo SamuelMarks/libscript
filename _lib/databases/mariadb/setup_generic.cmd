@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%MARIADB_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MARIADB_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MARIADB_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MARIADB_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/MariaDB/server" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%MARIADB_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mariadb %MARIADB_VERSION% to %DOWNLOAD_DIR%\mariadb...
     if not exist "%DOWNLOAD_DIR%\mariadb" mkdir "%DOWNLOAD_DIR%\mariadb"
     if not "%MARIADB_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MARIADB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MARIADB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.zip"
     ) else (
         echo MARIADB_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MARIADB_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mariadb
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends mariadb
     exit /b !errorlevel!
 )
 
@@ -164,7 +164,7 @@ if "!_MARIADB_INSTALLED!"=="0" (
         tar -xf "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MARIADB_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MARIADB_DOWNLOAD_URL%" "%TEMP%\mariadb.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MARIADB_DOWNLOAD_URL%" "%TEMP%\mariadb.zip"
         tar -xf "%TEMP%\mariadb.zip" -C "%TARGET_DIR%"
     ) else (
         for /d %%M in ("%ProgramFiles%\MariaDB*" "%ProgramFiles%\MySQL\MySQL Server*") do (
@@ -203,5 +203,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "mariadb" "%ACTION%" "%MARIADB_VERSION%" "%MARIADB_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mariadb\%MARIADB_VERSION%\\bin\\mysqld.exe\"" "%LIBSCRIPT_HOME%\mariadb\%MARIADB_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "mariadb" "%ACTION%" "%MARIADB_VERSION%" "%MARIADB_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mariadb\%MARIADB_VERSION%\\bin\\mysqld.exe\"" "%LIBSCRIPT_HOME%\mariadb\%MARIADB_VERSION%"
 exit /b !errorlevel!

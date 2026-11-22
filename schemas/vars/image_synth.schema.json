@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/schemas/vars/image_synth.schema.json",
-  "title": "LibScript Tier 2 Image, Sysroot & Unikernel Synthesis Variables",
+  "title": "LibScript T3 Image, Sysroot & Unikernel Synthesis Variables",
   "description": "Domain-scoped configuration variables for cross-sysroot staging, offline OS image synthesis, service unit path overrides, and unikernel targets.",
   "type": "object",
   "properties": {
@@ -28,7 +28,7 @@
     },
     "LIBSCRIPT_STAGE": {
       "type": "string",
-      "description": "Active multi-stage Tier 2 execution plan stage identifier (e.g., stage0, stage1, stage2, stage3)."
+      "description": "Active multi-stage T3 execution plan stage identifier (e.g., stage0, stage1, stage2, stage3)."
     },
     "LIBSCRIPT_IMAGE_BUILD": {
       "type": "string",

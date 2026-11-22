@@ -1,15 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "vault",
-  "title": "HashiCorp Vault",
-  "description": "Identity-based secrets management, dynamic credentials, and encryption-as-a-service server.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "security",
-  "provides": ["vault", "secrets-manager"],
-  "os_whitelist": ["all"],
-  "ports": [8200, 8201],
-  "multitenant": true,
-  "repository": "https://github.com/hashicorp/vault",
+  "description": "Identity-based secrets management, dynamic credentials, and encryption-as-a-service server.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -22,9 +18,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "vault",
+  "os_whitelist": ["all"],
+  "ports": [8200, 8201],
+  "provides": ["vault", "secrets-manager"],
+  "repository": "https://github.com/hashicorp/vault",
+  "tier": "T1",
+  "title": "HashiCorp Vault"
 }

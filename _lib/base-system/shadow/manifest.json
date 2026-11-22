@@ -1,16 +1,17 @@
 {
-  "name": "shadow",
-  "title": "Shadow",
-  "description": "User account and password management suite",
-  "provides": ["shadow"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "User account and password management suite",
+  "name": "shadow",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["shadow"],
+  "tier": "T2",
+  "title": "Shadow",
+  "versions": ["1.0.0"]
 }

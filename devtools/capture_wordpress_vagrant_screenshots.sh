@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Backward-compatible wrapper delegating WordPress Vagrant MSI wizard, desktop, and wp-admin login
-# screenshot capture to the generic `_lib/_common/experiment/pkg_ui_runner.sh` pipeline.
+# screenshot capture to the generic `experiments/_common/pkg_ui_runner.sh` pipeline.
 # ## Usage
 # ./devtools/capture_wordpress_vagrant_screenshots.sh [--target-os=windows-11] [--pkg-source=build|github-release] [--dry-run=1]
 set -feu
@@ -32,9 +32,9 @@ run_wp_generic_experiment() {
   mkdir -p "$_wp_suite_root"
   STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment scaffold wordpress \
     --template=installer-e2e \
-    --packaging-manifest="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/packaging.json" \
+    --packaging-manifest="${LIBSCRIPT_ROOT_DIR}/workloads/apps/wordpress/packaging.json" \
     --out-root="$_wp_suite_root" >/dev/null
-  STACK='' sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/experiment/pkg_ui_runner.sh" \
+  STACK='' sh "${LIBSCRIPT_ROOT_DIR}/experiments/_common/pkg_ui_runner.sh" \
     --suite-dir="${_wp_suite_root}/wordpress" \
     --target-os=windows-11 \
     --pkg-format=msi \

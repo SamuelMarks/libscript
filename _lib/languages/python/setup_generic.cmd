@@ -152,7 +152,7 @@ exit /b 0
 :action_ls_remote
 if "%PYTHON_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%PYTHON_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%PYTHON_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%PYTHON_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -196,7 +196,7 @@ if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading python %PYTHON_VERSION% to %DOWNLOAD_DIR%\python...
     if not exist "%DOWNLOAD_DIR%\python" mkdir "%DOWNLOAD_DIR%\python"
     if not "%PYTHON_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PYTHON_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.zip"
     ) else (
         echo PYTHON_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -229,7 +229,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if /i "%PYTHON_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "python" "%PYTHON_VERSION%" "python" "c"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "python" "%PYTHON_VERSION%" "python" "c"
     exit /b !errorlevel!
 )
 if not "%FORCE_REINSTALL%"=="1" (
@@ -258,7 +258,7 @@ if not errorlevel 1 (
     )
 )
 if "%PYTHON_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python3
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends python3
     exit /b !errorlevel!
 )
 
@@ -287,17 +287,17 @@ if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe
         tar -xf "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PYTHON_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_DOWNLOAD_URL%" "%TEMP%\python.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PYTHON_DOWNLOAD_URL%" "%TEMP%\python.zip"
         tar -xf "%TEMP%\python.zip" -C "%TARGET_DIR%"
     ) else (
         if not "%PROP_OPENEDX_FAST_VERIFY%"=="1" (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python3
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends python3
         )
         if not exist "C:\Program Files\Python312\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
             echo Downloading portable Python 3.12...
             set "_PY_ARCH=amd64"
             if /I "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_PY_ARCH=arm64"
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://www.python.org/ftp/python/3.12.8/python-3.12.8-embed-!_PY_ARCH!.zip" "%TEMP%\python-embed.zip"
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://www.python.org/ftp/python/3.12.8/python-3.12.8-embed-!_PY_ARCH!.zip" "%TEMP%\python-embed.zip"
             if exist "%TEMP%\python-embed.zip" (
                 tar -xf "%TEMP%\python-embed.zip" -C "%TARGET_DIR%\bin" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\python-embed.zip' -DestinationPath '%TARGET_DIR%\bin' -Force"
                 copy /y "%TARGET_DIR%\bin\python.exe" "%TARGET_DIR%\python.exe" >nul 2>&1
@@ -317,7 +317,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\python\default"
 if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "python" "default" "%PYTHON_VERSION%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "python" "default" "%PYTHON_VERSION%"
 )
 exit /b 0
 
@@ -333,5 +333,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "python" "%ACTION%" "%PYTHON_VERSION%" "%PYTHON_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\\bin\\python.exe\"" "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "python" "%ACTION%" "%PYTHON_VERSION%" "%PYTHON_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\\bin\\python.exe\"" "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
 exit /b !errorlevel!

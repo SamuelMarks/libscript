@@ -98,7 +98,7 @@ exit /b 0
 :action_ls_remote
 if "%FNM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%FNM_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%FNM_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%FNM_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/Schniz/fnm" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -135,7 +135,7 @@ if "%FNM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading fnm %FNM_VERSION% to %DOWNLOAD_DIR%\fnm...
     if not exist "%DOWNLOAD_DIR%\fnm" mkdir "%DOWNLOAD_DIR%\fnm"
     if not "%FNM_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FNM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\fnm\fnm-%FNM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%FNM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\fnm\fnm-%FNM_VERSION%.zip"
     ) else (
         echo FNM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -146,7 +146,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%FNM_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends fnm
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends fnm
     exit /b !errorlevel!
 )
 
@@ -162,7 +162,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\fnm\fnm-%FNM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%FNM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FNM_DOWNLOAD_URL%" "%TEMP%\fnm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%FNM_DOWNLOAD_URL%" "%TEMP%\fnm.zip"
         tar -xf "%TEMP%\fnm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for fnm.
@@ -193,5 +193,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "fnm" "%ACTION%" "%FNM_VERSION%" "%FNM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\fnm\%FNM_VERSION%\\bin\\fnm.exe\"" "%LIBSCRIPT_HOME%\fnm\%FNM_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "fnm" "%ACTION%" "%FNM_VERSION%" "%FNM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\fnm\%FNM_VERSION%\\bin\\fnm.exe\"" "%LIBSCRIPT_HOME%\fnm\%FNM_VERSION%"
 exit /b !errorlevel!

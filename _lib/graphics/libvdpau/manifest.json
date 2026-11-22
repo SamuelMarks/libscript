@@ -1,16 +1,17 @@
 {
-  "name": "libvdpau",
-  "title": "LibVDPAU",
-  "description": "Video Decode and Presentation API for Unix",
-  "provides": ["libvdpau"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "graphics",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Video Decode and Presentation API for Unix",
+  "name": "libvdpau",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "provides": ["libvdpau"],
+  "tier": "T2",
+  "title": "LibVDPAU",
+  "versions": ["1.0.0"]
 }

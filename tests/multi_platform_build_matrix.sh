@@ -37,24 +37,24 @@ mkdir -p "$TEST_TMP"
 
 # 1. Verify Glibc Linux configuration and profile validation
 printf '[MATRIX] Checking Glibc Linux target validation...\n'
-"${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${LIBSCRIPT_ROOT_DIR}/profiles/linux-standard-server-glibc.json"
+"${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/linux/linux-standard-server-glibc.json"
 
 # 2. Verify Musl Linux configuration and profile validation
 printf '[MATRIX] Checking Musl Linux target validation...\n'
-"${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${LIBSCRIPT_ROOT_DIR}/profiles/linux-minimal-headless-musl.json"
+"${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/linux/linux-minimal-headless-musl.json"
 
 # 3. Verify FreeBSD target configuration
 printf '[MATRIX] Checking FreeBSD target validation...\n'
-"${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${LIBSCRIPT_ROOT_DIR}/profiles/freebsd-server-standard.json"
+"${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/freebsd/freebsd-server-standard.json"
 
 # 4. Verify Unikernel microVM configuration
 printf '[MATRIX] Checking Unikernel target validation...\n'
-"${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${LIBSCRIPT_ROOT_DIR}/profiles/unikraft-nginx-redis.json"
+"${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/unikernel/unikraft-nginx-redis.json"
 
 # 5. Verify Windows batch parity scripts existence
 printf '[MATRIX] Checking Windows batch parity across orchestration and packaging tools...\n'
 MISSING_CMD=0
-for sh_file in "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/distro"/*.sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers"/*.sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen"/*.sh "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as"/*.sh; do
+for sh_file in "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/linux"/*.sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers"/*.sh "${LIBSCRIPT_ROOT_DIR}/synthesis/repogen"/*.sh "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as"/*.sh; do
   [ -f "$sh_file" ] || continue
   cmd_file="${sh_file%.sh}.cmd"
   if [ ! -f "$cmd_file" ]; then

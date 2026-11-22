@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "jetstream",
-  "title": "Jetstream",
-  "description": "High-performance generative AI inference server",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["app-server", "jetstream"],
   "conflicts": [],
-  "os_whitelist": ["linux", "darwin"],
+  "description": "High-performance generative AI inference server",
+  "name": "jetstream",
   "os_blacklist": ["windows", "freebsd", "sunos"],
+  "os_whitelist": ["linux", "darwin"],
   "ports": [],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["app-server", "jetstream"],
+  "tier": "T1",
+  "title": "Jetstream"
 }

@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Delegates public ACME TLS certificate acquisition and renewal to _lib/cloud/cert and reloads ingress.
+# Delegates public ACME TLS certificate acquisition and renewal to _lib/networking/netctl and reloads ingress.
 #
 # ## Usage
 # ./traits/tls/acme.sh <domain_name> [email]
@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 # ## issue_acme_cert
-# Delegates certificate generation to netctl ensure-cert / _lib/cloud/cert and records ACME state.
+# Delegates certificate generation to netctl ensure-cert / _lib/networking/netctl and records ACME state.
 issue_acme_cert() {
   domain="${1:-example.com}"
   email="${2:-admin@${domain}}"

@@ -1,16 +1,17 @@
 {
-  "name": "greetd",
-  "title": "greetd",
-  "description": "Minimal, generic and agnostic login daemon",
-  "provides": ["greetd"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-managers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Minimal, generic and agnostic login daemon",
+  "name": "greetd",
   "os_blacklist": ["windows", "sunos", "rhel", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["greetd"],
+  "tier": "T2",
+  "title": "greetd",
+  "versions": ["1.0.0"]
 }

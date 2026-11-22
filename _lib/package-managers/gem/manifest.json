@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gem",
-  "provides": ["gem"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "title": "gem",
-  "description": "Bootstrap module for the `gem` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `gem` package manager.",
+  "name": "gem",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["gem"],
   "repository": "https://github.com/rubygems/rubygems",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "gem"
 }

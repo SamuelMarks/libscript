@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "libarchive",
-  "title": "libarchive (bsdtar)",
-  "description": "Multi-format streaming archive library and bsdtar command-line utility.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["libarchive", "bsdtar"],
+  "description": "Multi-format streaming archive library and bsdtar command-line utility.",
+  "name": "libarchive",
   "os_whitelist": ["all"],
+  "provides": ["libarchive", "bsdtar"],
   "repository": "https://github.com/libarchive/libarchive",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "libarchive (bsdtar)"
 }

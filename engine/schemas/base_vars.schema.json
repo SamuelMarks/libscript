@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/engine/schemas/base_vars.schema.json",
+  "title": "LibScript Base Component Variables",
+  "description": "Core framework-wide configuration variables shared across all LibScript components.",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_HOME": {
+      "type": "string",
+      "description": "Base installation prefix where LibScript installs isolated component versions.",
+      "deprecated_aliases": ["PREFIX"]
+    },
+    "LIBSCRIPT_DATA_DIR": {
+      "type": "string",
+      "description": "Base data directory for runtime component state, databases, and service configurations."
+    },
+    "LIBSCRIPT_CACHE_DIR": {
+      "type": "string",
+      "description": "Directory where cached release metadata and build artifacts are stored."
+    },
+    "LIBSCRIPT_BUILD_DIR": {
+      "type": "string",
+      "description": "Scratch build directory used when compiling components from source."
+    },
+    "LIBSCRIPT_DOWNLOAD_DIR": {
+      "type": "string",
+      "description": "Staging directory where downloaded component archives and binaries are cached.",
+      "deprecated_aliases": ["DOWNLOAD_DIR"]
+    },
+    "LIBSCRIPT_LOG_DIR": {
+      "type": "string",
+      "description": "Base directory where component and lifecycle log files are written.",
+      "deprecated_aliases": ["LOGS_DIR", "LIBSCRIPT_LOGS_DIR"]
+    },
+    "LIBSCRIPT_LOG_FILE": {
+      "type": "string",
+      "description": "Explicit file path to append structured or text logs to in addition to standard output."
+    },
+    "LIBSCRIPT_LOG_LEVEL": {
+      "type": "string",
+      "description": "Minimum logging severity level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR).",
+      "default": "1"
+    },
+    "LIBSCRIPT_LOG_FORMAT": {
+      "type": "string",
+      "description": "Output serialization format for lifecycle log messages (text or json).",
+      "enum": ["text", "json"],
+      "default": "text"
+    },
+    "LIBSCRIPT_OUTPUT_FORMAT": {
+      "type": "string",
+      "description": "Shell or data output format emitted by env and status commands (sh, cmd, ps1, dotenv, json, text).",
+      "deprecated_aliases": ["FORMAT"]
+    },
+    "LIBSCRIPT_DEBUG": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) enabling verbose debug and STACK recursion trace output across LibScript."
+    },
+    "LIBSCRIPT_OFFLINE": {
+      "type": "string",
+      "description": "Flag (0 or 1) indicating offline execution mode using pre-hydrated local caches.",
+      "enum": ["0", "1"],
+      "default": "0"
+    },
+    "LIBSCRIPT_FORCE_OFFLINE": {
+      "type": "string",
+      "description": "Strict air-gapped flag (0 or 1) that immediately aborts execution if any network call is attempted.",
+      "enum": ["0", "1"],
+      "default": "0"
+    },
+    "LIBSCRIPT_FORCE_FETCH": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) forcing remote artifact re-fetching even when present in the local download cache."
+    },
+    "LIBSCRIPT_DRY_RUN": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) to simulate lifecycle and service operations without executing mutating commands."
+    },
+    "LIBSCRIPT_AUTO_USE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) automatically activating an installed component version in LIBSCRIPT_HOME/bin upon installation."
+    },
+    "LIBSCRIPT_DRY_RUN_PKG_MGR": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) to simulate OS package manager invocations without mutating the host system."
+    },
+    "LIBSCRIPT_DEFAULT_INSTALL_METHOD": {
+      "description": "Global override for how software should be installed ('libscript_native' prebuilt binary, 'from-source' compiled from source code, or 'system' via OS/selected package manager).",
+      "type": "string",
+      "enum": [
+        "libscript_native",
+        "from-source",
+        "system",
+        "nix",
+        "guix",
+        "spack",
+        "vcpkg",
+        "conan",
+        "brew",
+        "winget",
+        "choco",
+        "scoop"
+      ],
+      "default": "libscript_native",
+      "deprecated_aliases": ["LIBSCRIPT_GLOBAL_INSTALL_METHOD"]
+    },
+    "LIBSCRIPT_PKG_MGR": {
+      "description": "Explicit package manager override for 'system' or package-manager-driven installations (e.g., 'apt-get', 'apk', 'dnf', 'yum', 'zypper', 'pacman', 'brew', 'port', 'pkg', 'xbps', 'emerge', 'winget', 'choco', 'scoop', 'nix', 'guix', 'spack', 'vcpkg', 'conan').",
+      "type": "string"
+    },
+    "LIBSCRIPT_WINDOWS_PKG_MGR": {
+      "description": "Global package manager override on Windows and MS-DOS hosts (libscript, winget, choco, scoop, vcpkg, rapps).",
+      "type": "string",
+      "enum": ["libscript", "winget", "choco", "scoop", "vcpkg", "rapps"],
+      "default": "winget"
+    },
+    "LIBSCRIPT_SKIP_SYSTEM_DEPS": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) to skip OS-level system dependency installation during component setup."
+    },
+    "LIBSCRIPT_PROFILE": {
+      "type": "string",
+      "description": "Active configuration profile identifier (e.g., dev, prod, minimal, hpc)."
+    },
+    "LIBSCRIPT_VERSION": {
+      "type": "string",
+      "description": "Requested target package version override when not specified via <COMP>_VERSION."
+    },
+    "LIBSCRIPT_SERVICE_NAME": {
+      "type": "string",
+      "description": "Explicit service unit identifier overriding the default libscript_<component> service name."
+    },
+    "LIBSCRIPT_SERVICE_RUN_AS_USER": {
+      "type": "string",
+      "description": "System user account under which daemonized component services execute."
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global fallback bind address for network-listening components."
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": "string",
+      "description": "Global fallback TCP port for network-listening components."
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global fallback UNIX domain socket path for listening components."
+    },
+    "LIBSCRIPT_TARGET_SYSROOT": {
+      "type": "string",
+      "description": "Optional target root filesystem path when staging components into chroots or OS images.",
+      "deprecated_aliases": ["LIBSCRIPT_TARGET_ROOTFS"]
+    },
+    "LIBSCRIPT_ARIA2_EXPORT_FILE": {
+      "type": "string",
+      "description": "File path to export aria2-compatible download manifests instead of downloading immediately."
+    },
+    "FORCE_REINSTALL": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) forcing re-downloading and reinstalling a component even when already present."
+    },
+    "FORCE_REBUILD": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) forcing recompilation or service unit regeneration from scratch."
+    }
+  }
+}

@@ -1,15 +1,16 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nodejs",
-  "title": "Node.js Runtime",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "languages",
+  "conflicts": [],
+  "description": "JavaScript runtime built on Chrome's V8 JavaScript engine.",
   "license": "MIT",
   "license_name": "MIT License",
-  "description": "JavaScript runtime built on Chrome's V8 JavaScript engine.",
-  "category": "languages",
-  "provides": ["runtime", "javascript", "nodejs", "npm"],
-  "conflicts": [],
-  "os_whitelist": ["all"],
+  "name": "nodejs",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["runtime", "javascript", "nodejs", "npm"],
+  "tier": "T1",
+  "title": "Node.js Runtime"
 }

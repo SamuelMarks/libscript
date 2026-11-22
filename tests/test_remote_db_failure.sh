@@ -36,7 +36,7 @@ BAD_IP='192.0.2.254'
 
 # Execute the POSIX provisioning script directly, expecting it to handle the failure gracefully
 # We will use grep to assert it printed the [WARN] about skipping gracefully
-if ! "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_logical_db.sh" --host "$BAD_IP" --port 3306 --db-name testdb | grep -q "Attempting creation, but will skip gracefully on permission denied"; then
+if ! "${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/provision_logical_db.sh" --host "$BAD_IP" --port 3306 --db-name testdb | grep -q "Attempting creation, but will skip gracefully on permission denied"; then
   printf '[ERROR] Script did not attempt graceful fallback on bad remote IP!\n' >&2
   exit 1
 fi

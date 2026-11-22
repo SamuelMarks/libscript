@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gawk",
-  "title": "GNU Awk (gawk)",
-  "description": "Standalone GNU Awk 5.4+ pattern scanning and processing language with native Windows (MSVC) and MS-DOS (dos32) builds via SamuelMarks/gawk-windows.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["gawk", "gawk-windows", "awk"],
+  "description": "Standalone GNU Awk 5.4+ pattern scanning and processing language with native Windows (MSVC) and MS-DOS (dos32) builds via SamuelMarks/gawk-windows.",
+  "name": "gawk",
   "os_whitelist": ["all"],
+  "provides": ["gawk", "gawk-windows", "awk"],
   "repository": "https://github.com/SamuelMarks/gawk-windows",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "GNU Awk (gawk)"
 }

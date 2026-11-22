@@ -1,19 +1,27 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rust",
-  "title": "Rust Toolchain",
-  "description": "A language empowering everyone to build reliable and efficient software.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "cross-toolchain"],
   "category": "languages",
-  "provides": ["compiler", "rust", "cargo"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A language empowering everyone to build reliable and efficient software.",
+  "memory_footprint_class": "mcu-sram-64k",
+  "name": "rust",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["compiler", "rust", "cargo"],
   "repository": "https://github.com/rust-lang/rust",
   "rtos_support": ["zephyr", "freertos"],
-  "memory_footprint_class": "mcu-sram-64k",
-  "capabilities": ["versioned-artifact"],
   "sub_artifacts": {
+    "components": [
+      "cargo",
+      "clippy",
+      "rustfmt",
+      "rust-std",
+      "rust-src",
+      "llvm-tools-preview",
+      "rust-analyzer"
+    ],
     "targets": [
       "x86_64-unknown-linux-gnu",
       "x86_64-unknown-linux-musl",
@@ -26,15 +34,8 @@
       "x86_64-apple-darwin",
       "wasm32-unknown-unknown",
       "wasm32-wasip1"
-    ],
-    "components": [
-      "cargo",
-      "clippy",
-      "rustfmt",
-      "rust-std",
-      "rust-src",
-      "llvm-tools-preview",
-      "rust-analyzer"
     ]
-  }
+  },
+  "tier": "T1",
+  "title": "Rust Toolchain"
 }

@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 export DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/source_builder.sh" "_lib/_common/hw_tune.sh"; do
+for LIB in "engine/common/log.sh" "engine/common/pkg_mgr.sh" "engine/common/source_builder.sh" "engine/common/hw_tune.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091

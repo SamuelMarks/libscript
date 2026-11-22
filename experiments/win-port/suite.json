@@ -1,5 +1,5 @@
 {
-  "$schema": "../../experiment-suite.schema.json",
+  "$schema": "../../experiments/schemas/experiment-suite.schema.json",
   "id": "win-port",
   "title": "win_port 14-Repository Empirical Evaluation & Zero-Hallucination Benchmarking Protocol (E0-E7)",
   "protocol_version": "PLDI-2027-win-port-v1",

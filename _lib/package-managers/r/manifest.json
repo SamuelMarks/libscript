@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "r",
-  "provides": ["R"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "R",
-  "description": "Bootstrap module for the `R` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `R` package manager.",
+  "name": "r",
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["R"],
   "repository": "https://github.com/wch/r-source",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "R"
 }

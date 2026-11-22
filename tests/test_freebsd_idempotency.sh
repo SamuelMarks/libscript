@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
-PROFILE="${1:-${REPO_ROOT}/profiles/freebsd/minimal-server.json}"
+PROFILE="${1:-${REPO_ROOT}/synthesis/profiles/freebsd/minimal-server.json}"
 TEST_SYSROOT="${REPO_ROOT}/tests_tmp/idempotency_sysroot_$$"
 TEST_IMG="${REPO_ROOT}/tests_tmp/idempotency_img_$$.qcow2"
 
@@ -39,12 +39,12 @@ LOG_PASS1="${REPO_ROOT}/tests_tmp/pass1.log"
 LOG_PASS2="${REPO_ROOT}/tests_tmp/pass2.log"
 
 printf '[TEST]     Starting FreeBSD idempotency matrix test (Pass 1)...\n'
-"${REPO_ROOT}/_lib/freebsd/distro/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS1}" 2>&1
-"${REPO_ROOT}/cli/commands/package_as/freebsd_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS1}" 2>&1
+"${REPO_ROOT}/synthesis/distro/freebsd/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS1}" 2>&1
+"${REPO_ROOT}/synthesis/formats/freebsd_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS1}" 2>&1
 
 printf '[TEST]     Starting FreeBSD idempotency matrix test (Pass 2)...\n'
-"${REPO_ROOT}/_lib/freebsd/distro/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS2}" 2>&1
-"${REPO_ROOT}/cli/commands/package_as/freebsd_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS2}" 2>&1
+"${REPO_ROOT}/synthesis/distro/freebsd/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS2}" 2>&1
+"${REPO_ROOT}/synthesis/formats/freebsd_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS2}" 2>&1
 
 # Assert Pass 2 emitted [SKIP]
 if ! grep -q "\[SKIP\]" "${LOG_PASS2}"; then

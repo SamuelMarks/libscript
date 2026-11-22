@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cmake",
-  "title": "CMake",
-  "description": "An open-source, cross-platform family of tools designed to build, test and package software.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["cmake", "build-system"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "An open-source, cross-platform family of tools designed to build, test and package software.",
+  "name": "cmake",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["cmake", "build-system"],
+  "tier": "T1",
+  "title": "CMake"
 }

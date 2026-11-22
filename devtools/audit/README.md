@@ -12,9 +12,9 @@ LibScript repository.
   - `POSIX_SHEBANG`, `SET_FEU_SAFETY`, `THIS_FILE_DANCE`, `RECURSION_GUARD`, `ROOT_DIR_RESOLUTION`
   - `WINDOWS_PARITY` / `POSIX_PARITY`: Enforces 1:1 `.sh` and `.cmd` script pairing
   - `RAW_NETWORK_FETCH`: Bans raw `curl`, `wget`, `aria2c`, `Invoke-WebRequest`,
-    `Invoke-RestMethod`, `iwr`, `irm`, and `certutil -urlcache` outside `_lib/_common/pkg_mgr.*`
+    `Invoke-RestMethod`, `iwr`, `irm`, and `certutil -urlcache` outside `engine/common/pkg_mgr.*`
   - `RAW_PACKAGE_MANAGER`: Bans direct OS/language package manager mutations outside
-    `_lib/_common/pkg_mgr.*` and `_lib/package-managers/*`
+    `engine/common/pkg_mgr.*` and `_lib/package-managers/*`
   - `UNNECESSARY_DOUBLE_QUOTES`: Enforces single quotes `'...'` for static literals in `.sh` scripts
   - `IDEMPOTENCY`, `BAN_EVAL`, `REMOTE_SAFETY`, `BATCH_HYGIENE`, `STACK_HYGIENE`,
     `CHECKSUM_INTEGRITY`, `JSON_VALIDITY`, `SCHEMA_DESCRIPTIONS`

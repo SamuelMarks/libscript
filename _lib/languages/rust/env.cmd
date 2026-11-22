@@ -75,7 +75,7 @@ if "%RUSTUP_HOME%"=="" (
 )
 
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "rust" "%RUST_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "rust" "%RUST_VERSION%"
 for %%P in ("%LIBSCRIPT_BASE_DIR%\rust\default\bin" "%CARGO_HOME%\bin" "%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%\bin") do (
     set "_CAND_P=%%~P"
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1

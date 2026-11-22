@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%PNPM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%PNPM_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%PNPM_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%PNPM_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/pnpm/pnpm" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%PNPM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pnpm %PNPM_VERSION% to %DOWNLOAD_DIR%\pnpm...
     if not exist "%DOWNLOAD_DIR%\pnpm" mkdir "%DOWNLOAD_DIR%\pnpm"
     if not "%PNPM_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PNPM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pnpm\pnpm-%PNPM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PNPM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pnpm\pnpm-%PNPM_VERSION%.zip"
     ) else (
         echo PNPM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PNPM_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pnpm
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends pnpm
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pnpm\pnpm-%PNPM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PNPM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PNPM_DOWNLOAD_URL%" "%TEMP%\pnpm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PNPM_DOWNLOAD_URL%" "%TEMP%\pnpm.zip"
         tar -xf "%TEMP%\pnpm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pnpm.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "pnpm" "%ACTION%" "%PNPM_VERSION%" "%PNPM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\pnpm\%PNPM_VERSION%\\bin\\pnpm.exe\"" "%LIBSCRIPT_HOME%\pnpm\%PNPM_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "pnpm" "%ACTION%" "%PNPM_VERSION%" "%PNPM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\pnpm\%PNPM_VERSION%\\bin\\pnpm.exe\"" "%LIBSCRIPT_HOME%\pnpm\%PNPM_VERSION%"
 exit /b !errorlevel!

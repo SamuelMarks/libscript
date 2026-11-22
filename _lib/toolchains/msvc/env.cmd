@@ -59,7 +59,7 @@ if "%MSVC_DARICE_CUB_PATH%"=="" (
 )
 
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "msvc"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "msvc"
 
 endlocal & (
     set "PATH=%PATH%"

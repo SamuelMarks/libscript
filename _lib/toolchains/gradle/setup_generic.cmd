@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%GRADLE_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%GRADLE_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%GRADLE_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%GRADLE_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -108,8 +108,8 @@ exit /b 0
 :action_use
 if "%GRADLE_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%GRADLE_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/gradle/gradle/releases/latest"`) do set "EXACT_VERSION=%%a"
-) else if "%GRADLE_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/gradle/gradle/releases/latest"`) do set "EXACT_VERSION=%%a"
+if "%GRADLE_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/gradle/gradle/releases/latest"`) do set "EXACT_VERSION=%%a"
+) else if "%GRADLE_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/gradle/gradle/releases/latest"`) do set "EXACT_VERSION=%%a"
 ) else (
     set "EXACT_VERSION=%GRADLE_VERSION%"
 )
@@ -134,7 +134,7 @@ if "%GRADLE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gradle %GRADLE_VERSION% to %DOWNLOAD_DIR%\gradle...
     if not exist "%DOWNLOAD_DIR%\gradle" mkdir "%DOWNLOAD_DIR%\gradle"
     if not "%GRADLE_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GRADLE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gradle\gradle-%GRADLE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%GRADLE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gradle\gradle-%GRADLE_VERSION%.zip"
     ) else (
         echo GRADLE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GRADLE_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends gradle
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends gradle
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\gradle\gradle-%GRADLE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GRADLE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GRADLE_DOWNLOAD_URL%" "%TEMP%\gradle.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%GRADLE_DOWNLOAD_URL%" "%TEMP%\gradle.zip"
         tar -xf "%TEMP%\gradle.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gradle.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "gradle" "%ACTION%" "%GRADLE_VERSION%" "%GRADLE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\gradle\%GRADLE_VERSION%\\bin\\gradle.exe\"" "%LIBSCRIPT_HOME%\gradle\%GRADLE_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "gradle" "%ACTION%" "%GRADLE_VERSION%" "%GRADLE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\gradle\%GRADLE_VERSION%\\bin\\gradle.exe\"" "%LIBSCRIPT_HOME%\gradle\%GRADLE_VERSION%"
 exit /b !errorlevel!

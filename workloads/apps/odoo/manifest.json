@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "odoo",
+  "category": "web-apps",
+  "title": "odoo",
+  "description": "odoo stack",
+  "provides": ["odoo"],
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["nginx", "postgres", "python"]
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
+}

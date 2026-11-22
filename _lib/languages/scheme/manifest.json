@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "scheme",
-  "title": "Scheme",
-  "description": "Chez Scheme and GNU Guile (scheme / guile) minimalist lexically scoped Lisp dialect.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["scheme", "guile", "chez"],
+  "description": "Chez Scheme and GNU Guile (scheme / guile) minimalist lexically scoped Lisp dialect.",
+  "name": "scheme",
   "os_whitelist": ["all"],
+  "provides": ["scheme", "guile", "chez"],
   "repository": "https://github.com/cisco/ChezScheme",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Scheme"
 }

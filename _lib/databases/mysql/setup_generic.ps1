@@ -14,7 +14,7 @@ if ($Action -eq "install") {
     if (Get-Command "mysql" -ErrorAction SilentlyContinue) {
         Write-Host "MySQL is already installed on the system."
 $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+. (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
         exit 0
     }
     if (Get-Command "winget" -ErrorAction SilentlyContinue) {
@@ -31,7 +31,7 @@ $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Res
     exit 1
 } elseif ($Action -eq "uninstall") {
     $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-    . (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+    . (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
     libscript_uninstall_pkg -Packages @("Oracle.MySQL", "mysql")
     exit 0
 } elseif ($Action -eq "test") {

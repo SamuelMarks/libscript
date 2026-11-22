@@ -51,5 +51,5 @@ goto :find_root
 
 set "STACK="
 set "LIBSCRIPT_PKG_MGR=choco"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_uninstall_pkg hmailserver
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_uninstall_pkg hmailserver
 exit /b 0

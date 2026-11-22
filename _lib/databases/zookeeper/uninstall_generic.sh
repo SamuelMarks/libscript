@@ -3,7 +3,7 @@
 # Generic uninstall implementation for Apache ZooKeeper supporting `--purge-data`.
 #
 # ## Usage
-# Dispatches to `_lib/_common/uninstall_generic.sh`.
+# Dispatches to `engine/common/uninstall_generic.sh`.
 
 set -feu
 
@@ -36,7 +36,7 @@ for _arg in "$@"; do
   fi
 done
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/uninstall_generic.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/uninstall_generic.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

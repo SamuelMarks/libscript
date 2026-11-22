@@ -1,16 +1,17 @@
 {
-  "name": "wireplumber",
-  "title": "WirePlumber",
-  "description": "Modular session and policy manager for PipeWire",
-  "provides": ["wireplumber"],
+  "capabilities": ["sysroot-package"],
   "category": "audio",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Modular session and policy manager for PipeWire",
+  "name": "wireplumber",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["wireplumber"],
+  "tier": "T2",
+  "title": "WirePlumber",
+  "versions": ["1.0.0"]
 }

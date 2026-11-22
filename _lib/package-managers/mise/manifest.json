@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mise",
-  "provides": ["version-manager", "mise", "rtx"],
-  "os_whitelist": ["linux", "darwin"],
-  "title": "mise",
-  "description": "mise-en-place",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "mise-en-place",
+  "name": "mise",
+  "os_whitelist": ["linux", "darwin"],
+  "provides": ["version-manager", "mise", "rtx"],
   "repository": "https://github.com/jdx/mise",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "mise"
 }

@@ -62,18 +62,18 @@ set "DATA_DIR=%LIBSCRIPT_HOME%\mongodb\data"
 
 if /i "%ACTION%"=="start" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active MongoDB >nul 2>&1 && exit /b 0
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active MongoDB >nul 2>&1 && exit /b 0
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start MongoDB >nul 2>&1 && exit /b 0
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" start MongoDB >nul 2>&1 && exit /b 0
     if exist "%MONGO_DIR%\bin\mongod.exe" (
         if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" 2>nul
-        powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\_common\daemon_launcher.ps1" -Port 27017 -DataDir "%DATA_DIR%" 2>nul
+        powershell -NoProfile -ExecutionPolicy Bypass -File "!LIBSCRIPT_ROOT_DIR!\engine\common\daemon_launcher.ps1" -Port 27017 -DataDir "%DATA_DIR%" 2>nul
     )
     exit /b 0
 )
 if /i "%ACTION%"=="stop" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop MongoDB >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" stop MongoDB >nul 2>&1
     taskkill /F /IM mongod.exe >nul 2>&1
     exit /b 0
 )
@@ -84,7 +84,7 @@ if /i "%ACTION%"=="restart" (
 )
 if /i "%ACTION%"=="status" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active MongoDB >nul 2>&1 && (echo [RUNNING] MongoDB & exit /b 0)
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active MongoDB >nul 2>&1 && (echo [RUNNING] MongoDB & exit /b 0)
     tasklist /FI "IMAGENAME eq mongod.exe" 2>nul | findstr /I "mongod.exe" >nul 2>&1 && (echo [RUNNING] mongod.exe & exit /b 0)
     echo [STOPPED] mongodb
     exit /b 1

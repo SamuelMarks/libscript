@@ -112,7 +112,7 @@ exit /b 0
 :action_download
 if not exist "%DOWNLOAD_DIR%\certbot" mkdir "%DOWNLOAD_DIR%\certbot"
 if not "%CERTBOT_DOWNLOAD_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CERTBOT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\certbot\certbot-%CERTBOT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CERTBOT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\certbot\certbot-%CERTBOT_VERSION%.zip"
 )
 exit /b 0
 
@@ -146,7 +146,7 @@ if exist "%TARGET_DIR%\bin\certbot.cmd" (
     )
 )
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends certbot
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends certbot
 where certbot >nul 2>&1
 if not errorlevel 1 exit /b 0
 
@@ -176,5 +176,5 @@ goto :action_uninstall_service
 :: Removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "certbot" "%ACTION%" "%CERTBOT_VERSION%" "%CERTBOT_INSTALL_METHOD%" "" "" "" ""%LIBSCRIPT_HOME%\certbot\%CERTBOT_VERSION%\bin\certbot.cmd"" "%LIBSCRIPT_HOME%\certbot\%CERTBOT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "certbot" "%ACTION%" "%CERTBOT_VERSION%" "%CERTBOT_INSTALL_METHOD%" "" "" "" ""%LIBSCRIPT_HOME%\certbot\%CERTBOT_VERSION%\bin\certbot.cmd"" "%LIBSCRIPT_HOME%\certbot\%CERTBOT_VERSION%"
 exit /b !errorlevel!

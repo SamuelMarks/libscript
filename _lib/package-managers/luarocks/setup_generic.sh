@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/os_info.sh" "engine/common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -94,7 +94,7 @@ case "$ACTION" in
       libscript_depends "luarocks" || log_info "luarocks is not supported or failed to install natively on this OS."
       if [ ! -f /usr/local/bin/luarocks ] && [ -f /usr/local/bin/luarocks54 ]; then
         if ! command -v priv >/dev/null 2>&1; then
-          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/priv.sh"
           export SCRIPT_NAME
           # shellcheck disable=SC1090,SC1091
           . "${SCRIPT_NAME}"

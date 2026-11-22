@@ -36,7 +36,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/os_info.sh" "engine/common/versioning.sh"; do
   _rust_saved_this="${THIS_FILE}"
   _rust_saved_dir="${SCRIPT_DIR}"
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "go-pm",
-  "provides": ["package-manager", "go"],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "title": "go",
-  "description": "Bootstrap module for the `go` package manager (enables `go install`).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `go` package manager (enables `go install`).",
+  "name": "go-pm",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "go"],
   "repository": "https://github.com/golang/go",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "go"
 }

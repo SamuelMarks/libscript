@@ -48,7 +48,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\os_info.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\os_info.cmd"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%WIN_CMD_RS_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
@@ -91,7 +91,7 @@ if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/SamuelMar
 echo [ls-remote] Fetching available win-cmd-rs versions from !RELEASES_URL!...
 if not "%LIBSCRIPT_OFFLINE%"=="1" (
     if not "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
     )
 )
 exit /b 0
@@ -100,7 +100,7 @@ exit /b 0
 :: Activates a specific installed version of win-cmd-rs and updates alias junctions.
 :action_use
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!\bin\wincheck.exe" (
     echo Version !EXACT_VERSION! not installed. Installing...
@@ -136,7 +136,7 @@ if exist "!DL_DIR!\!ARCHIVE_NAME!" (
 )
 echo [download] Pre-downloading win-cmd-rs !EXACT_VERSION! from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
 set "PACKAGE_NAME=win-cmd-rs"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!" "%WIN_CMD_RS_CHECKSUM%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!" "%WIN_CMD_RS_CHECKSUM%"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -147,27 +147,27 @@ if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="source" goto :install_from_source
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="cargo" goto :install_from_source
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="system" (
     set "LIBSCRIPT_FORCE_SYSTEM_PKG_MGR=1"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
     exit /b !errorlevel!
 )
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="winget" (
     set "LIBSCRIPT_PKG_MGR=winget"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
     exit /b !errorlevel!
 )
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="choco" (
     set "LIBSCRIPT_PKG_MGR=choco"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
     exit /b !errorlevel!
 )
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="scoop" (
     set "LIBSCRIPT_PKG_MGR=scoop"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
     exit /b !errorlevel!
 )
 
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if exist "!TARGET_DIR!\bin\wincheck.exe" (
     if exist "!TARGET_DIR!\bin\wincmd.exe" (
@@ -199,7 +199,7 @@ if exist "!CACHED_DL!" (
 ) else (
     set "TMP_FILE=%TEMP%\win-cmd-rs-!RANDOM!-!ARCHIVE_NAME!"
     set "PACKAGE_NAME=win-cmd-rs"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!" "%WIN_CMD_RS_CHECKSUM%"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!" "%WIN_CMD_RS_CHECKSUM%"
     if errorlevel 1 (
         if exist "!TMP_FILE!" del /f /q "!TMP_FILE!" >nul 2>&1
         if "%WIN_CMD_RS_DOWNLOAD_URL%"=="" (
@@ -280,7 +280,7 @@ exit /b 0
 :: Compiles wincmd.exe and wincheck.exe from a local checkout or upstream source archive using Cargo.
 :install_from_source
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if exist "!TARGET_DIR!\bin\wincheck.exe" (
     if exist "!TARGET_DIR!\bin\wincmd.exe" (
@@ -311,7 +311,7 @@ if "!_SRC_DIR!"=="" (
     set "_SRC_TMP=%TEMP%\win-cmd-rs-src-!RANDOM!"
     if not exist "!_SRC_TMP!" mkdir "!_SRC_TMP!"
     set "PACKAGE_NAME=win-cmd-rs"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/SamuelMarks/win-cmd-rs/archive/refs/tags/v!EXACT_VERSION!.zip" "!_SRC_TMP!\src.zip" "%WIN_CMD_RS_CHECKSUM%"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/SamuelMarks/win-cmd-rs/archive/refs/tags/v!EXACT_VERSION!.zip" "!_SRC_TMP!\src.zip" "%WIN_CMD_RS_CHECKSUM%"
     if errorlevel 1 exit /b 1
     call :extract_wcr_zip "!_SRC_TMP!\src.zip" "!_SRC_TMP!\tree"
     if errorlevel 1 exit /b 1
@@ -351,7 +351,7 @@ set "_REL_API=%WIN_CMD_RS_RELEASES_URL%"
 if "!_REL_API!"=="" set "_REL_API=https://api.github.com/repos/SamuelMarks/win-cmd-rs/releases/latest"
 if not "%LIBSCRIPT_OFFLINE%"=="1" (
     if not "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
-        for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
+        for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
             set "EXACT_VERSION=%%T"
         )
     )
@@ -409,14 +409,14 @@ exit /b 0
 :update_aliases
 set "_ALIAS_NAME=%WIN_CMD_RS_VERSION%"
 if /i "!_ALIAS_NAME:~0,1!"=="v" set "_ALIAS_NAME=!_ALIAS_NAME:~1!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "!_ALIAS_NAME!" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "!_ALIAS_NAME!" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_other
 :: Delegates generic lifecycle actions such as uninstall to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "win-cmd-rs" "%ACTION%" "%WIN_CMD_RS_VERSION%" "%WIN_CMD_RS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%\bin\wincheck.exe\"" "%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "win-cmd-rs" "%ACTION%" "%WIN_CMD_RS_VERSION%" "%WIN_CMD_RS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%\bin\wincheck.exe\"" "%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%"
 exit /b !errorlevel!
 
 :: ## extract_wcr_zip

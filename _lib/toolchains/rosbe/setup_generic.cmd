@@ -85,7 +85,7 @@ if "!_URL!"=="" set "_URL=%LIBSCRIPT_ROSBE_URL%"
 if "!_URL!"=="" exit /b 0
 if "%DOWNLOAD_DIR%"=="" set "DOWNLOAD_DIR=%TEMP%\libscript_downloads"
 if not exist "%DOWNLOAD_DIR%\rosbe" mkdir "%DOWNLOAD_DIR%\rosbe"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!_URL!" "%DOWNLOAD_DIR%\rosbe\RosBE-%ROSBE_VERSION%.7z" "SKIP"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!_URL!" "%DOWNLOAD_DIR%\rosbe\RosBE-%ROSBE_VERSION%.7z" "SKIP"
 exit /b 0
 
 :: ## action_install
@@ -124,5 +124,5 @@ exit /b 0
 :: ## action_generic
 :: Delegates generic lifecycle actions to versioning.cmd.
 :action_generic
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_handle_generic_action "rosbe" "%ACTION%" "%ROSBE_VERSION%" "libscript_native"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_handle_generic_action "rosbe" "%ACTION%" "%ROSBE_VERSION%" "libscript_native"
 exit /b !errorlevel!

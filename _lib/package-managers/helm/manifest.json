@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "helm",
-  "provides": ["package-manager", "helm"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "title": "helm",
-  "description": "Bootstrap module for the `helm` Kubernetes package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `helm` Kubernetes package manager.",
+  "name": "helm",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "helm"],
   "repository": "https://github.com/helm/helm",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "helm"
 }

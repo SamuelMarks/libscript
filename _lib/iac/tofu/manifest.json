@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "iac",
+  "description": "OpenTofu (tofu) Linux Foundation open-source Infrastructure-as-Code CLI drop-in replacement for Terraform.",
+  "name": "tofu",
+  "os_whitelist": ["all"],
+  "provides": ["tofu", "opentofu"],
+  "repository": "https://github.com/opentofu/opentofu",
+  "tier": "T1",
+  "title": "OpenTofu"
+}

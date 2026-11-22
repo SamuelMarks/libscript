@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 CACHE_DIR="${LIBSCRIPT_ROOT_DIR}/cache"
-PROFILE="${LIBSCRIPT_ROOT_DIR}/profiles/linux-minimal-headless-musl.json"
+PROFILE="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/linux/linux-minimal-headless-musl.json"
 
 for arg in "$@"; do
   case "$arg" in

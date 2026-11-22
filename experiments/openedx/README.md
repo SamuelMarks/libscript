@@ -2,11 +2,11 @@
 
 Declarative `installer-e2e` campaign (`protocol_version: 1.0.0`) verifying native **Open edX**
 packages (`.msi`, `.exe`, `.deb`, `.rpm`, `.pkg`, `.dmg`) across clean **Bento fork Vagrant VMs**
-via `_lib/_common/experiment/pkg_ui_runner.{sh,cmd}` and `_lib/web-apps/openedx/packaging.json` with
+via `experiments/_common/pkg_ui_runner.{sh,cmd}` and `workloads/apps/openedx/packaging.json` with
 **zero application-specific orchestration code**.
 
 Because all URLs, ports, credentials, CSS selectors, and desktop shortcut expectations are inherited
-declaratively from `_lib/web-apps/openedx/packaging.json` (`.verification.screenshots`), the exact
+declaratively from `workloads/apps/openedx/packaging.json` (`.verification.screenshots`), the exact
 same runner powers WordPress, Odoo, or any packaged Tier 1 web application without code changes.
 
 ---
@@ -177,18 +177,18 @@ DESTROY_VM=1 ./libscript.sh experiment teardown openedx --target-os=debian-13 --
 
 ```text
 $ ./libscript.sh experiment validate openedx
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [PASS] Experiment suite "openedx" validated cleanly.
 
 $ ./libscript.sh experiment run openedx --dry-run=1 --target-os=windows-11 --pkg-format=msi --pkg-source=github-release --results-dir=./build/experiments/openedx-win11-plan
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [OK] Dry-run installer-e2e plan emitted -> ./build/experiments/openedx-win11-plan/execution_plan.json
 
 # Re-running the exact same dry-run configuration demonstrates 2x idempotency:
 $ ./libscript.sh experiment run openedx --dry-run=1 --target-os=windows-11 --pkg-format=msi --pkg-source=github-release --results-dir=./build/experiments/openedx-win11-plan
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [SKIP] Dry-run plan for openedx (windows-11/msi) already converged at ./build/experiments/openedx-win11-plan
 

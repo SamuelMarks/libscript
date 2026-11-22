@@ -1,15 +1,16 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gunicorn",
-  "title": "Gunicorn",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "app-servers",
+  "conflicts": [],
+  "description": "Python WSGI HTTP Server for UNIX / POSIX.",
   "license": "MIT",
   "license_name": "MIT License",
-  "description": "Python WSGI HTTP Server for UNIX / POSIX.",
-  "category": "app-servers",
-  "provides": ["app-server", "wsgi", "gunicorn"],
-  "conflicts": [],
-  "os_whitelist": ["all"],
+  "name": "gunicorn",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [8000],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["app-server", "wsgi", "gunicorn"],
+  "tier": "T1",
+  "title": "Gunicorn"
 }

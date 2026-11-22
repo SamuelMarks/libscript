@@ -31,7 +31,7 @@
     },
     "LIBSCRIPT_EXPERIMENT_SUITE_MANIFEST": {
       "type": "string",
-      "description": "Path to a declarative experiment-suite.schema.json manifest file executed by the experiment runner."
+      "description": "Path to a declarative experiments/schemas/experiment-suite.schema.json manifest file executed by the experiment runner."
     },
     "LIBSCRIPT_EXPERIMENT_WARMUP": {
       "type": "string",

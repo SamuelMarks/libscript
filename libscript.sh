@@ -31,7 +31,7 @@ LIBSCRIPT_CLI_DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR
 
 # Source logging
-for LIB in "_lib/_common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -134,55 +134,6 @@ get_desc() {
       else "" end
     ' "$schema" 2>/dev/null || true
   fi
-}
-
-# ## normalize_component_alias
-# Maps legacy and shorthand component paths to canonical repository paths.
-normalize_component_alias() {
-  case "${1:-}" in
-    cloud-providers/gcp/cli|gcp/cli) printf '%s\n' "_lib/cloud-providers/gcp-cli" ;;
-    cloud-providers/gcp/tpu-vm|gcp/tpu-vm) printf '%s\n' "_lib/cloud-providers/gcp-tpu-vm" ;;
-    cloud-providers/gcp/gpu-vm|gcp/gpu-vm) printf '%s\n' "_lib/cloud-providers/gcp-gpu-vm" ;;
-    cloud-providers/gcp/filestore|gcp/filestore) printf '%s\n' "_lib/cloud-providers/gcp-filestore" ;;
-    cloud-providers/gcp/gke-tpu-cluster|gcp/gke-tpu-cluster|gke-tpu-cluster) printf '%s\n' "topologies/gke-tpu-cluster" ;;
-    cloud/storage) printf '%s\n' "_lib/cloud/storage" ;;
-    cloud/cdn) printf '%s\n' "_lib/cloud/cdn" ;;
-    cloud/cert) printf '%s\n' "_lib/cloud/cert" ;;
-    cloud/volume) printf '%s\n' "_lib/cloud/volume" ;;
-    cloud/cloudinit) printf '%s\n' "_lib/cloud/cloudinit" ;;
-    stacks/ml-training/tpu-vm-eval-node|ml-training/tpu-vm-eval-node|tpu-vm-eval-node|ml-training) printf '%s\n' "_lib/ml-training/tpu-trainer" ;;
-    stacks/ml-training/gke-xpk-training|ml-training/gke-xpk-training|gke-xpk-training) printf '%s\n' "topologies/gke-tpu-cluster" ;;
-    stacks/ai-serving/tpu-vm-vllm|ai-serving/tpu-vm-vllm|tpu-vm-vllm|ai-serving) printf '%s\n' "_lib/ai-serving/inference-router" ;;
-    stacks/ai-serving/gke-xpk-inference|ai-serving/gke-xpk-inference|gke-xpk-inference) printf '%s\n' "_lib/ai-serving/gke-xpk-inference" ;;
-    stacks/cms/openedx) printf '%s\n' "_lib/web-apps/openedx" ;;
-    stacks/cms/wordpress) printf '%s\n' "_lib/web-apps/wordpress" ;;
-    stacks/cms/drupal) printf '%s\n' "_lib/web-apps/drupal" ;;
-    stacks/cms/joomla) printf '%s\n' "_lib/web-apps/joomla" ;;
-    stacks/ecommerce/woocommerce) printf '%s\n' "_lib/web-apps/woocommerce" ;;
-    stacks/ecommerce/magento) printf '%s\n' "_lib/web-apps/magento" ;;
-    stacks/ecommerce/prestashop) printf '%s\n' "_lib/web-apps/prestashop" ;;
-    stacks/collaboration/nextcloud) printf '%s\n' "_lib/web-apps/nextcloud" ;;
-    stacks/crawlers/firecrawl) printf '%s\n' "_lib/web-apps/firecrawl" ;;
-    stacks/data-science/jupyterhub) printf '%s\n' "_lib/web-apps/jupyterhub" ;;
-    stacks/erp/odoo) printf '%s\n' "_lib/web-apps/odoo" ;;
-    stacks/forums/phpbb) printf '%s\n' "_lib/web-apps/phpbb" ;;
-    stacks/networking/openvpn) printf '%s\n' "_lib/networking/openvpn" ;;
-    stacks/scaffolds/serve-actix-diesel-auth-scaffold) printf '%s\n' "_lib/web-apps/serve-actix-diesel-auth-scaffold" ;;
-    stacks/task-queues/celery) printf '%s\n' "_lib/web-apps/celery" ;;
-    stacks/virtualization/bento-builder) printf '%s\n' "_lib/virtualization/bento-builder" ;;
-    toolchains/gemma-tpu-suite|gemma_tpu_suite|gemma-tpu-suite) printf '%s\n' "_lib/toolchains/gemma-tpu-suite" ;;
-    freebsd-distro|freebsd_distro) printf '%s\n' '_lib/freebsd/distro' ;;
-    illumos-distro|illumos_distro) printf '%s\n' '_lib/illumos/distro' ;;
-    reactos-distro|reactos_distro) printf '%s\n' '_lib/reactos/distro' ;;
-    freebsd-usr-bin|freebsd-usr-bin-windows|freebsd_usr_bin) printf '%s\n' '_lib/utilities/freebsd-usr-bin' ;;
-    toybox|toybox-windows) printf '%s\n' '_lib/utilities/toybox' ;;
-    gawk-windows|awk) printf '%s\n' '_lib/utilities/gawk' ;;
-    busybox-windows) printf '%s\n' '_lib/utilities/busybox' ;;
-    jq-windows) printf '%s\n' '_lib/utilities/jq' ;;
-    dash-windows) printf '%s\n' '_lib/utilities/dash' ;;
-    ai-tools/ollama|_lib/ai-tools/ollama) printf '%s\n' "_lib/app-servers/ollama" ;;
-    *) printf '%s\n' "${1:-}" ;;
-  esac
 }
 
 # Pre-scan arguments for global offline and cache flags
@@ -322,19 +273,21 @@ libscript_source_cli_cmd() {
 case "$CMD" in
   list) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/core/list.sh" "$@" ;;
   process-downloads) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" "$@" ;;
-  provision) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" "$@" ;;
-  deprovision) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" "$@" ;;
-  rapid-experiment) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/experiment.sh" "$@" ;;
-  deploy) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy.sh" "$@" ;;
-  deploy-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy-remote.sh" "$@" ;;
-  backup|export-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/backup.sh" "$@" ;;
-  restore|import-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/restore.sh" "$@" ;;
+  provision|deprovision|backup|export-remote|restore|import-remote|cluster|import-image|publish-marketplace)
+    exec "$LIBSCRIPT_ROOT_DIR/infrastructure/cli.sh" "$CMD" "$@"
+    ;;
+  infrastructure) exec "$LIBSCRIPT_ROOT_DIR/infrastructure/cli.sh" "$@" ;;
+  rapid-experiment) exec "$LIBSCRIPT_ROOT_DIR/experiments/cli/rapid_experiment.sh" "$@" ;;
+  deploy) exec "$LIBSCRIPT_ROOT_DIR/workloads/services/deploy.sh" "$@" ;;
+  deploy-remote) exec "$LIBSCRIPT_ROOT_DIR/workloads/services/deploy-remote.sh" "$@" ;;
   netctl) exec "$LIBSCRIPT_ROOT_DIR/_lib/networking/netctl/cli.sh" "$@" ;;
   search) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/core/search.sh" "$@" ;;
-  start|stop|status|health|logs|restart|up|down|deprovision-db|export-state|import-state|prepare-storage) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" "$@" ;;
+  start|stop|status|health|logs|restart|up|down|deprovision-db|export-state|import-state|prepare-storage)
+    libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/workloads/services/actions.sh" "$@"
+    ;;
   uninstall-service)
     if [ $# -eq 0 ] || [ "${1:-}" = "libscript.json" ] || [ "${1##*.}" = "json" ] || [ "${1#--}" != "${1:-}" ]; then
-      libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" "$@"
+      libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/workloads/services/actions.sh" "$@"
     fi
     ;;
   install-deps) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/install.sh" "$@" ;;
@@ -343,7 +296,7 @@ case "$CMD" in
       printf '%s\n' 'Error: at least one package_name is required for depends' >&2
       exit 1
     fi
-    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/pkg_mgr.sh"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/engine/common/pkg_mgr.sh"
     export SCRIPT_NAME
     # shellcheck disable=SC1090,SC1091
     . "$SCRIPT_NAME"
@@ -354,19 +307,19 @@ case "$CMD" in
   db-search) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/search.sh" "$@" ;;
   update-db) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" "$@" ;;
   semver) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" "$@" ;;
-  package-as) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package-as.sh" "$@" ;;
-  build-image|build-installer) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/synthesize-image.sh" "$@" ;;
+  synthesize|synthesize-image|build-image|build-installer|hydrate-cache|package-as|distro|repogen)
+    exec "$LIBSCRIPT_ROOT_DIR/synthesis/cli.sh" "$CMD" "$@"
+    ;;
   scaffold|new-component) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/scaffold/scaffold.sh" "$@" ;;
   config) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/config/config.sh" "$@" ;;
-  repogen) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/repogen/repogen.sh" "$@" ;;
-  distro) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/distro/distro.sh" "$@" ;;
-  payload) exec "$LIBSCRIPT_ROOT_DIR/payloads/engine.sh" "$@" ;;
-  topology) exec "$LIBSCRIPT_ROOT_DIR/topologies/engine.sh" "$@" ;;
+  workload|payload) exec "$LIBSCRIPT_ROOT_DIR/workloads/engine.sh" "$@" ;;
+  constellation) exec "$LIBSCRIPT_ROOT_DIR/workloads/constellations/engine.sh" "$@" ;;
+  stack) exec "$LIBSCRIPT_ROOT_DIR/workloads/cli.sh" 'stack' "$@" ;;
+  app) exec "$LIBSCRIPT_ROOT_DIR/workloads/cli.sh" 'app' "$@" ;;
   trait) exec "$LIBSCRIPT_ROOT_DIR/traits/engine.sh" "$@" ;;
-  experiment|experiments) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/experiment/cli.sh" "$@" ;;
+  experiment|experiments) exec "$LIBSCRIPT_ROOT_DIR/experiments/cli/cli.sh" "$@" ;;
   resolve-env) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/resolve_env.sh" "$@" ;;
-  publish-marketplace) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/marketplace/publish.sh" "$@" ;;
-  train|infer|serve-ml|eval-ml|benchmark-ml) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/ml/actions.sh" "$CMD" "$@" ;;
+  train|infer|serve-ml|eval-ml|benchmark-ml) exec "$LIBSCRIPT_ROOT_DIR/workloads/ai/actions.sh" "$CMD" "$@" ;;
   env)
     if [ "${1:-}" = "--manifest" ] || [ -z "${1:-}" ] || [ -f "${1:-}" ]; then
       _env_manifest='libscript.json'
@@ -387,7 +340,7 @@ case "$CMD" in
           sh|bash|zsh|fish|cmd|powershell|ps1|docker|dockerfile|docker_compose|dotenv|envfile|systemd|json) _env_fmt="$_e_arg" ;;
         esac
       done
-      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
+      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/engine/common/env_printer.sh"
       export SCRIPT_NAME
       # shellcheck disable=SC1090,SC1091
       . "$SCRIPT_NAME"
@@ -418,20 +371,19 @@ if [ "$IS_ACTION" = "1" ]; then
   set -- "$CMD" "$@"
 fi
 
-ACTION_PKG="$(normalize_component_alias "$ACTION_PKG")"
 SCRIPT_DIR="$LIBSCRIPT_CLI_DIR"
 
 TARGET=""
 if [ "$ACTION_PKG" = "cloud" ]; then
-  TARGET="$LIBSCRIPT_CLI_DIR/_lib/cloud/core"
+  TARGET="$LIBSCRIPT_CLI_DIR/infrastructure/resources/core"
 elif [ -f "$SCRIPT_DIR/$ACTION_PKG/cli.sh" ]; then
   TARGET="$LIBSCRIPT_CLI_DIR/$ACTION_PKG"
 elif [ -f "$SCRIPT_DIR/_lib/$ACTION_PKG/cli.sh" ]; then
   TARGET="$LIBSCRIPT_CLI_DIR/_lib/$ACTION_PKG"
-elif [ -f "$SCRIPT_DIR/topologies/$ACTION_PKG/cli.sh" ]; then
-  TARGET="$LIBSCRIPT_CLI_DIR/topologies/$ACTION_PKG"
-elif [ -f "$SCRIPT_DIR/payloads/$ACTION_PKG/cli.sh" ]; then
-  TARGET="$LIBSCRIPT_CLI_DIR/payloads/$ACTION_PKG"
+elif [ -f "$SCRIPT_DIR/workloads/apps/$ACTION_PKG/cli.sh" ]; then
+  TARGET="$LIBSCRIPT_CLI_DIR/workloads/apps/$ACTION_PKG"
+elif [ -f "$SCRIPT_DIR/infrastructure/providers/$ACTION_PKG/cli.sh" ]; then
+  TARGET="$LIBSCRIPT_CLI_DIR/infrastructure/providers/$ACTION_PKG"
 else
   if ! matches=$(find_components | grep -i "$ACTION_PKG"); then
     matches=""
@@ -458,6 +410,13 @@ else
       printf '%s\n' "$matches" | sed 's/^/  /' >&2
       exit 1
     fi
+  fi
+fi
+
+if [ "$CMD" = "use" ] && [ -f "$TARGET/manifest.json" ]; then
+  if grep -Eq '"tier"[[:space:]]*:[[:space:]]*"T2"' "$TARGET/manifest.json" 2>/dev/null; then
+    printf "Error: Cannot 'use' T2 system/sysroot recipe '%s' in unprivileged userland; install into LIBSCRIPT_TARGET_SYSROOT instead.\n" "$ACTION_PKG" >&2
+    exit 2
   fi
 fi
 

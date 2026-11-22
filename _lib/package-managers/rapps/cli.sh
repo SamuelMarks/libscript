@@ -155,7 +155,7 @@ prefetch_rapps_pkg() {
   printf '%s\n' "$_silent" > "${_dest}/${_pkg_id}.flags"
 
   if [ -n "$_url" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mgr.sh"
     export SCRIPT_NAME
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
@@ -205,7 +205,7 @@ case "${1:-}" in
 esac
 
 : "${PACKAGE_NAME:=$(basename "$SCRIPT_DIR")}"
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

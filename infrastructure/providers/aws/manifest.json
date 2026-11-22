@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "aws",
+  "provides": ["aws"],
+  "os_whitelist": ["all"],
+  "category": "cloud-providers",
+  "title": "Aws",
+  "description": "LibScript component for AWS",
+  "capabilities": ["versioned-artifact", "cloud-operator"]
+}

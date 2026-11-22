@@ -57,7 +57,7 @@ running the setup script.
 | `SHELLCHECK_OPTIONAL_CHECKS` | Comma-separated optional ShellCheck checks enabled via -o when supported.                                                                           | `useless-use-of-cat`                                        |                                |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

@@ -25,7 +25,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/_common/experiment_harness.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/experiments/_common/harness.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
@@ -36,7 +36,7 @@ rm -rf "${WORK_DIR}"
 mkdir -p "${WORK_DIR}"
 
 # ## test_full_e0_to_e7_and_2x_idempotency
-# Executes E0-E7 via `./libscript.sh edgcpp-backends-suite experiments --synthetic-fixtures`, verifies all 13 raw JSON files and 60 LaTeX macros, and asserts byte-identical 2x idempotency.
+# Executes E0-E7 via `./libscript.sh experiment run edgcpp-backends --synthetic-fixtures`, verifies all 13 raw JSON files and 60 LaTeX macros, and asserts byte-identical 2x idempotency.
 test_full_e0_to_e7_and_2x_idempotency() {
   _res="${WORK_DIR}/run_results"
   _paper="${WORK_DIR}/paper_clean"
@@ -49,7 +49,7 @@ Coverage is \EdgGccBeCovLinePct\% and psABI passed \EdgPsabiFuzzPassedOfThousand
 \end{document}
 TEX_CLEAN
 
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" edgcpp-backends-suite experiments --synthetic-fixtures --results-dir="${_res}" --paper-dir="${_paper}"
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run edgcpp-backends --synthetic-fixtures --results-dir="${_res}" --paper-dir="${_paper}"
 
   for _f in \
     metadata.json \
@@ -74,7 +74,7 @@ TEX_CLEAN
   cp "${_res}/generated_metrics.tex" "${WORK_DIR}/metrics_run1.tex"
 
   # 2x idempotency run must reuse cached outputs and produce byte-identical generated_metrics.tex
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" edgcpp-backends-suite experiments --synthetic-fixtures --results-dir="${_res}" --paper-dir="${_paper}"
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run edgcpp-backends --synthetic-fixtures --results-dir="${_res}" --paper-dir="${_paper}"
   cmp -s "${WORK_DIR}/metrics_run1.tex" "${_res}/generated_metrics.tex"
 }
 
@@ -100,7 +100,7 @@ test_negative_integrity_gates() {
     git commit -q -m 'init'
     printf 'int x = 2;\n' > a.c
   )
-  if "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/edgcpp-backends-suite/suites/e0_phase0_gates.sh" "${_dirty_repo}" "${WORK_DIR}/dirty_out" 'macos_arm64' 2>/dev/null; then
+  if "${LIBSCRIPT_ROOT_DIR}/experiments/edgcpp-backends/suites/e0_phase0_gates.sh" "${_dirty_repo}" "${WORK_DIR}/dirty_out" 'macos_arm64' 2>/dev/null; then
     printf '[FAIL] E0 accepted dirty git worktree!\n' >&2
     exit 1
   fi
@@ -126,7 +126,7 @@ MC_EOF
 
   # 4. Non-Linux host must refuse authentic Linux kernel Kbuild sweep when --synthetic-fixtures is off
   if [ "${UNAME:-}" != "Linux" ]; then
-    if EDGCPP_BACKENDS_SUITE_SYNTHETIC='0' "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/edgcpp-backends-suite/suites/e6_corpus_and_kernel.sh" "${WORK_DIR}/run_results/.synthetic_edgcpp_repo" "${WORK_DIR}/bad_kbuild" 'macos_arm64' 2>/dev/null; then
+    if EDGCPP_BACKENDS_SUITE_SYNTHETIC='0' "${LIBSCRIPT_ROOT_DIR}/experiments/edgcpp-backends/suites/e6_corpus_and_kernel.sh" "${WORK_DIR}/run_results/.synthetic_edgcpp_repo" "${WORK_DIR}/bad_kbuild" 'macos_arm64' 2>/dev/null; then
       printf '[FAIL] E6 allowed fake Linux kernel Kbuild sweep on non-Linux host!\n' >&2
       exit 1
     fi
@@ -136,7 +136,7 @@ MC_EOF
   _bad_paper="${WORK_DIR}/paper_tbd"
   mkdir -p "${_bad_paper}"
   printf '\\documentclass{article}\n\\begin{document}\nLatency is \\tbd s (???).\n\\end{document}\n' > "${_bad_paper}/edgecpp_backends.tex"
-  if "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/edgcpp-backends-suite/suites/e7_latex_verify.sh" "${WORK_DIR}/run_results" "${_bad_paper}" '0' 2>/dev/null; then
+  if "${LIBSCRIPT_ROOT_DIR}/experiments/edgcpp-backends/suites/e7_latex_verify.sh" "${WORK_DIR}/run_results" "${_bad_paper}" '0' 2>/dev/null; then
     printf '[FAIL] E7 accepted unresolved \\tbd / ??? placeholder in edgecpp_backends.tex!\n' >&2
     exit 1
   fi

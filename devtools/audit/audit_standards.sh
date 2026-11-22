@@ -333,17 +333,17 @@ audit_single_file() {
         if (eval_hits != "") print "BAN_EVAL|Disallowed use of eval found: " eval_hits
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (adhoc_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends): " adhoc_pkg_hits
-        if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw init/daemon manager usage found (delegate to _lib/_common/service.sh or service_install.sh): " raw_daemon_hits
+        if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw init/daemon manager usage found (delegate to engine/common/service.sh or service_install.sh): " raw_daemon_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout): " raw_fetch_hits
-        if (raw_sync_hits != "") print "RAW_REMOTE_SYNC|Raw rsync/scp call found (delegate to _lib/_common/remote_sync.sh): " raw_sync_hits
-        if (raw_venv_hits != "") print "RAW_PYTHON_VENV|Explicit Python venv creation found (delegate to _lib/_common/python_env.sh): " raw_venv_hits
-        if (raw_priv_hits != "") print "RAW_PRIV_ESCALATION|Raw sudo invocation found (delegate to priv / priv_as from _lib/_common/priv.sh): " raw_priv_hits
-        if (raw_envsubst_hits != "") print "RAW_ENVSUBST|Raw envsubst invocation found (delegate to envsubst_safe from _lib/_common/envsubst_safe.sh): " raw_envsubst_hits
-        if (raw_uuid_hits != "") print "RAW_UUID_GEN|Non-deterministic UUID generation found (delegate to _lib/_common/uuid_gen.sh): " raw_uuid_hits
-        if (raw_hw_hits != "") print "RAW_HW_DETECT|Raw hardware core/RAM query found (delegate to _lib/_common/hw_tune.sh): " raw_hw_hits
+        if (raw_sync_hits != "") print "RAW_REMOTE_SYNC|Raw rsync/scp call found (delegate to engine/common/remote_sync.sh): " raw_sync_hits
+        if (raw_venv_hits != "") print "RAW_PYTHON_VENV|Explicit Python venv creation found (delegate to engine/common/python_env.sh): " raw_venv_hits
+        if (raw_priv_hits != "") print "RAW_PRIV_ESCALATION|Raw sudo invocation found (delegate to priv / priv_as from engine/common/priv.sh): " raw_priv_hits
+        if (raw_envsubst_hits != "") print "RAW_ENVSUBST|Raw envsubst invocation found (delegate to envsubst_safe from engine/common/envsubst_safe.sh): " raw_envsubst_hits
+        if (raw_uuid_hits != "") print "RAW_UUID_GEN|Non-deterministic UUID generation found (delegate to engine/common/uuid_gen.sh): " raw_uuid_hits
+        if (raw_hw_hits != "") print "RAW_HW_DETECT|Raw hardware core/RAM query found (delegate to engine/common/hw_tune.sh): " raw_hw_hits
         if (ext_vm_hits != "") print "EXTERNAL_VERSION_MANAGER|Direct third-party version manager invocation found (delegate to LibScript native components): " ext_vm_hits
-        if (raw_uname_hits != "") print "RAW_UNAME|Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh): " raw_uname_hits
-        if (raw_tpu_hits != "") print "RAW_GCLOUD_TPU|Ad-hoc gcloud compute tpus tpu-vm call found (delegate to _lib/cloud-providers/gcp-tpu-vm): " raw_tpu_hits
+        if (raw_uname_hits != "") print "RAW_UNAME|Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from engine/common/os_info.sh): " raw_uname_hits
+        if (raw_tpu_hits != "") print "RAW_GCLOUD_TPU|Ad-hoc gcloud compute tpus tpu-vm call found (delegate to infrastructure/providers/gcp-tpu-vm): " raw_tpu_hits
         if (unguarded_src_hits != "") print "UNGUARDED_SOURCE_SH|Sourcing LibScript .sh file without setting SCRIPT_NAME first: " unguarded_src_hits
         if (unnecessary_dq_hits != "") print "UNNECESSARY_DOUBLE_QUOTES|Double quotes used where single quotes suffice: " unnecessary_dq_hits
         if (sc2015_hits != "") print "SC2015_AND_OR|SC2015-prone A && B || true chain (use explicit if ...; then ... || true; fi): " sc2015_hits
@@ -374,73 +374,73 @@ audit_single_file() {
             ;;
           RAW_PACKAGE_MANAGER)
             case "$file" in
-              *_lib/_common/pkg_mgr.sh|*_lib/_common/service.sh|*_lib/package-managers/*|*_lib/orchestration/distro/*|*tests/*|*devtools/ci/*|*devtools/audit/*|*docker*) ;;
+              *engine/common/pkg_mgr.sh|*engine/common/service.sh|*_lib/package-managers/*|*synthesis/distro/linux/*|*tests/*|*devtools/ci/*|*devtools/audit/*|*docker*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_DAEMON_MANAGER)
             case "$file" in
-              *_lib/_common/service.sh|*_lib/_common/service_install.sh|*_lib/_common/logs_service.sh|*_lib/_common/os_info.sh|*_lib/init-systems/*|*payloads/schedulers/*|*devtools/audit/*|*.tpl) ;;
+              *engine/common/service.sh|*engine/common/service_install.sh|*engine/common/logs_service.sh|*engine/common/os_info.sh|*engine/common/daemonize.sh|*_lib/init-systems/*|*workloads/schedulers/*|*devtools/audit/*|*.tpl) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_NETWORK_FETCH)
             case "$file" in
-              *_lib/_common/pkg_mgr.sh|*_lib/init-systems/daemonize.sh|*_lib/utilities/curl/test.sh|*_lib/utilities/wget/test.sh|*_lib/utilities/aria2/test.sh|*_lib/web-apps/*/test_harness.sh|*_lib/web-apps/*/health*.sh|*_lib/web-apps/*/service.sh|*tests/*|*devtools/ci/*|*devtools/capture_*|*devtools/render_*|*devtools/verify_*|*devtools/wait_*|*devtools/trigger_*|*docker*) ;;
+              *engine/common/pkg_mgr.sh|*engine/common/daemonize.sh|*_lib/utilities/curl/test.sh|*_lib/utilities/wget/test.sh|*_lib/utilities/aria2/test.sh|*workloads/apps/*/test_harness.sh|*workloads/apps/*/health*.sh|*workloads/apps/*/service.sh|*tests/*|*devtools/ci/*|*devtools/capture_*|*devtools/render_*|*devtools/verify_*|*devtools/wait_*|*devtools/trigger_*|*docker*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_REMOTE_SYNC)
             case "$file" in
-              *_lib/_common/remote_sync.sh|*_lib/utilities/rsync/*|*_lib/utilities/openssh/*|*packaging/*|*devtools/*|*tests/*|*vagrant/*) ;;
+              *engine/common/remote_sync.sh|*_lib/utilities/rsync/*|*_lib/utilities/openssh/*|*synthesis/msi/*|*devtools/*|*tests/*|*vagrant/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_PYTHON_VENV)
             case "$file" in
-              *_lib/_common/python_env.sh|*devtools/*|*tests/*) ;;
+              *engine/common/python_env.sh|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_PRIV_ESCALATION)
             case "$file" in
-              *_lib/_common/priv.sh|*_lib/base-system/sudo/*|*devtools/*|*tests/*|*vagrant/*|*packaging/*|cli/*) ;;
+              *engine/common/priv.sh|*_lib/base-system/sudo/*|*devtools/*|*tests/*|*vagrant/*|*synthesis/msi/*|*workloads/services/*|*infrastructure/cli_actions/*|cli/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_ENVSUBST)
             case "$file" in
-              *_lib/_common/envsubst_safe.sh|*devtools/*|*tests/*) ;;
+              *engine/common/envsubst_safe.sh|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_UUID_GEN)
             case "$file" in
-              *_lib/_common/uuid_gen.sh|*devtools/*|*tests/*) ;;
+              *engine/common/uuid_gen.sh|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_HW_DETECT)
             case "$file" in
-              *_lib/_common/hw_tune.sh|*_lib/_common/source_builder.sh|*devtools/*|*tests/*|*packaging/*) ;;
+              *engine/common/hw_tune.sh|*engine/common/source_builder.sh|*devtools/*|*tests/*|*synthesis/msi/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           EXTERNAL_VERSION_MANAGER)
             case "$file" in
-              *_lib/_common/versioning.sh|*_lib/package-managers/*|*_lib/languages/rust/*|*devtools/*|*tests/*) ;;
+              *engine/common/versioning.sh|*_lib/package-managers/*|*_lib/languages/rust/*|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_UNAME)
             case "$file" in
-              *_lib/_common/os_info.sh|*devtools/*|*tests/*|*vagrant/*) ;;
+              *engine/common/os_info.sh|*devtools/*|*tests/*|*vagrant/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_GCLOUD_TPU)
             case "$file" in
-              *_lib/cloud-providers/gcp*|*_lib/cloud/core/tags.sh|*_lib/ml-training/_common/tfrc_guard.sh|*devtools/*|*tests/*) ;;
+              *infrastructure/providers/gcp*|*infrastructure/resources/core/tags.sh|*engine/common/tfrc_guard.sh|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -559,19 +559,19 @@ audit_single_file() {
         case "$v_rule" in
           RAW_NETWORK_FETCH)
             case "$file" in
-              *_lib/_common/pkg_mgr.ps1|*devtools/*|*tests/*) ;;
+              *engine/common/pkg_mgr.ps1|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_PACKAGE_MANAGER)
             case "$file" in
-              *_lib/_common/pkg_mgr.ps1|*_lib/package-managers/*|*devtools/*|*tests/*) ;;
+              *engine/common/pkg_mgr.ps1|*_lib/package-managers/*|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_DAEMON_MANAGER)
             case "$file" in
-              *_lib/_common/service.ps1|*_lib/_common/service_install.ps1|*_lib/init-systems/*|*devtools/audit/*) ;;
+              *engine/common/service.ps1|*engine/common/service_install.ps1|*engine/common/daemonize.ps1|*_lib/init-systems/*|*devtools/audit/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -814,10 +814,10 @@ audit_single_file() {
         if (chained_if_else_hits != "") print "BATCH_CHAINED_IF_ELSE|Chained if ... if ... ( ... ) else ( ... ) skips else when outer if is false: " chained_if_else_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw network call in batch script (delegate to pkg_mgr.cmd): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd): " raw_pkg_hits
-        if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw service/daemon manager call in batch script (delegate to _lib\\_common\\service.cmd or service_install.cmd): " raw_daemon_hits
-        if (raw_sync_hits != "") print "RAW_REMOTE_SYNC|Raw rsync/scp call in batch script (delegate to _lib\\_common\\remote_sync.cmd): " raw_sync_hits
-        if (raw_venv_hits != "") print "RAW_PYTHON_VENV|Explicit Python venv creation in batch script (delegate to _lib\\_common\\python_env.cmd): " raw_venv_hits
-        if (raw_uuid_hits != "") print "RAW_UUID_GEN|Non-deterministic Guid::NewGuid() in batch script (delegate to _lib\\_common\\uuid_gen.cmd): " raw_uuid_hits
+        if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw service/daemon manager call in batch script (delegate to engine\\common\\service.cmd or service_install.cmd): " raw_daemon_hits
+        if (raw_sync_hits != "") print "RAW_REMOTE_SYNC|Raw rsync/scp call in batch script (delegate to engine\\common\\remote_sync.cmd): " raw_sync_hits
+        if (raw_venv_hits != "") print "RAW_PYTHON_VENV|Explicit Python venv creation in batch script (delegate to engine\\common\\python_env.cmd): " raw_venv_hits
+        if (raw_uuid_hits != "") print "RAW_UUID_GEN|Non-deterministic Guid::NewGuid() in batch script (delegate to engine\\common\\uuid_gen.cmd): " raw_uuid_hits
         if (bare_exit_hits != "") print "BATCH_HYGIENE|Bare exit without /b found in batch script: " bare_exit_hits
         if (lone_cr_hits != "") print "BATCH_EOL_CRLF|Double CR (\\r\\r\\n) or lone CR byte found in batch script: " lone_cr_hits
         if (spliced_guard_hits != "") print "BATCH_SPLICED_GUARD|Corrupted if exist guard spliced inside ls-remote block: " spliced_guard_hits
@@ -835,37 +835,37 @@ audit_single_file() {
         case "$v_rule" in
           RAW_NETWORK_FETCH)
             case "$file" in
-              *_lib/_common/pkg_mgr.cmd|*_lib/init-systems/daemonize.cmd|*_lib/utilities/curl/test.cmd|*_lib/utilities/wget/test.cmd|*_lib/utilities/aria2/test.cmd|*devtools/*|*tests/*|cli/commands/packaging/formats/pkg_docker_compose.cmd) ;;
+              *engine/common/pkg_mgr.cmd|*engine/common/daemonize.cmd|*_lib/utilities/curl/test.cmd|*_lib/utilities/wget/test.cmd|*_lib/utilities/aria2/test.cmd|*devtools/*|*tests/*|synthesis/formats/docker_compose.cmd) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_PACKAGE_MANAGER)
             case "$file" in
-              *_lib/_common/pkg_mgr.cmd|*_lib/package-managers/*|*devtools/*|*tests/*) ;;
+              *engine/common/pkg_mgr.cmd|*_lib/package-managers/*|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_DAEMON_MANAGER)
             case "$file" in
-              *_lib/_common/service.cmd|*_lib/_common/service_install.cmd|*_lib/init-systems/*|*payloads/schedulers/*|*devtools/audit/*) ;;
+              *engine/common/service.cmd|*engine/common/service_install.cmd|*engine/common/daemonize.cmd|*_lib/init-systems/*|*workloads/schedulers/*|*devtools/audit/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_REMOTE_SYNC)
             case "$file" in
-              *_lib/_common/remote_sync.cmd|*_lib/utilities/rsync/*|*_lib/utilities/openssh/*|*packaging/*|*devtools/*|*tests/*|*vagrant/*) ;;
+              *engine/common/remote_sync.cmd|*_lib/utilities/rsync/*|*_lib/utilities/openssh/*|*synthesis/msi/*|*devtools/*|*tests/*|*vagrant/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_PYTHON_VENV)
             case "$file" in
-              *_lib/_common/python_env.cmd|*devtools/*|*tests/*) ;;
+              *engine/common/python_env.cmd|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_UUID_GEN)
             case "$file" in
-              *_lib/_common/uuid_gen.cmd|*devtools/*|*tests/*) ;;
+              *engine/common/uuid_gen.cmd|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -904,7 +904,7 @@ audit_single_file() {
         log_failure "$file" "RTOS_VENV_LEAK" "RTOS kernel recipe creates Python venv outside LIBSCRIPT_HOME: $venv_leak_hits"
       fi
       ;;
-    _lib/orchestration/*|_lib/storage/*|_lib/_common/*|_lib/*/_common/*|_lib/cloud/*|_lib/cloud-providers/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*)
+    _lib/orchestration/*|synthesis/disk/*|engine/common/*|_lib/*/_common/*|infrastructure/resources/*|infrastructure/providers/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*)
       ;;
     _lib/*/*/*.sh)
       boundary_hits=$(grep -nE '^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]' "$file" 2>/dev/null || true)
@@ -914,9 +914,9 @@ audit_single_file() {
       ;;
   esac
 
-  # 8b. Verify _lib/*/*/env.cmd and _lib/_common/os_info.cmd export across endlocal boundary and idempotent PATH updates
+  # 8b. Verify _lib/*/*/env.cmd and engine/common/os_info.cmd export across endlocal boundary and idempotent PATH updates
   case "$file" in
-    _lib/*/env.cmd|_lib/_common/os_info.cmd)
+    _lib/*/env.cmd|engine/common/os_info.cmd)
       if grep -qi "setlocal" "$file" && ! grep -qi "endlocal" "$file"; then
         log_failure "$file" "ENV_CMD_ENDLOCAL" "$(basename -- "$file") uses setlocal without endlocal; PATH and variable updates will be lost on return."
       fi
@@ -964,14 +964,14 @@ audit_single_file() {
       ;;
   esac
 
-  # 8f. Ensure _lib/_common/env_base.cmd and pkg_mgr.sh preserve caller context and STACK hygiene
+  # 8f. Ensure engine/common/env_base.cmd and pkg_mgr.sh preserve caller context and STACK hygiene
   case "$file" in
-    _lib/_common/env_base.cmd)
+    engine/common/env_base.cmd)
       if ! grep -q 'CALLER_SCRIPT_DIR' "$file"; then
         log_failure "$file" "STACK_HYGIENE" "env_base.cmd must support CALLER_SCRIPT_DIR to prevent resolving PACKAGE_NAME to _common."
       fi
       ;;
-    _lib/_common/pkg_mgr.sh|_lib/_common/os_info.sh)
+    engine/common/pkg_mgr.sh|engine/common/os_info.sh)
       if ! grep -q 'STACK=.*THIS_FILE' "$file"; then
         log_failure "$file" "STACK_HYGIENE" "Common library script must pop THIS_FILE from STACK on completion."
       fi
@@ -1136,7 +1136,7 @@ if [ "${1:-}" = "--all" ]; then
   fi
   rm -f "$_all_candidates"
   # Enforce SOURCE_CONTEXT_SAFETY on sourced _common/*.sh libraries
-  for _src_lib in _lib/_common/*.sh _lib/*/_common/*.sh _lib/_common/experiment/*.sh; do
+  for _src_lib in engine/common/*.sh _lib/*/_common/*.sh experiments/_common/*.sh; do
     [ -f "$_src_lib" ] || continue
     case "$_src_lib" in
       */daemon_launcher.sh|*/component_core.sh|*/envsubst_safe_exec.sh|*/find_replace_exec.sh|*/test_matrix_driver.sh|*/upgrade_engine.sh) continue ;;
@@ -1146,7 +1146,7 @@ if [ "${1:-}" = "--all" ]; then
     fi
   done
   # Enforce .sh <-> .cmd verb parity across domain engines (ignoring comments and Usage help lines)
-  for _eng_pair in "topologies/engine:up status scale drain failover upgrade destroy" "payloads/engine:compile submit status logs stop destroy" "traits/engine:list enable disable apply verify teardown" "experiments/engine:list scaffold validate run render-latex update-readme"; do
+  for _eng_pair in "infrastructure/clusters/engine:up status scale drain failover upgrade destroy" "workloads/constellations/engine:up status scale drain failover upgrade destroy" "workloads/engine:compile submit status logs stop destroy" "traits/engine:list enable disable apply verify teardown" "experiments/engine:list scaffold validate run render-latex update-readme"; do
     _ep_base="${_eng_pair%%:*}"
     _ep_verbs="${_eng_pair#*:}"
     if [ -f "${_ep_base}.sh" ] && [ -f "${_ep_base}.cmd" ]; then
@@ -1170,30 +1170,27 @@ if [ "${1:-}" = "--all" ]; then
       [ -d "$comp_dir" ] || continue
       [ "$(basename "$comp_dir")" = "_common" ] && continue
       case "$comp_dir" in
-        _lib/toolchains/edgcpp-backends-suite|_lib/toolchains/gemma-tpu-suite|_lib/toolchains/win-port-suite|_lib/toolchains/libtpu-rs) ;;
         _lib/*/*-suite)
-          log_failure "$comp_dir" "EXP_IN_LIB" "New empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
-          ;;
-        *)
-          if [ -d "$comp_dir/suites" ]; then
-            log_failure "$comp_dir" "EXP_IN_LIB" "New empirical subsuites belong in experiments/<suite-id>/, not inside $comp_dir/suites/."
-          fi
+          log_failure "$comp_dir" "EXP_IN_LIB" "Empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
           ;;
       esac
+      if [ -d "$comp_dir/suites" ]; then
+        log_failure "$comp_dir" "EXP_IN_LIB" "Empirical subsuites belong in experiments/<suite-id>/, not inside $comp_dir/suites/."
+      fi
       for req_file in cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
         if [ ! -f "$comp_dir/$req_file" ]; then
           log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required Version Manager Contract file: $req_file"
         fi
       done
-      _as_caps=' versioned-artifact '
+      _as_caps=' userland-package '
       if [ -f "$comp_dir/manifest.json" ] && command -v jq >/dev/null 2>&1; then
         _as_caps=" $(jq -r '.capabilities[]? // empty' "$comp_dir/manifest.json" 2>/dev/null | tr '\n' ' ') "
       fi
       case "$_as_caps" in
-        *' versioned-artifact '*)
+        *' userland-package '*|*' sysroot-package '*)
           for req_file in setup.sh setup.cmd env.sh env.cmd uninstall.sh uninstall.cmd; do
             if [ ! -f "$comp_dir/$req_file" ]; then
-              log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required versioned-artifact file: $req_file"
+              log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required package lifecycle file: $req_file"
             fi
           done
           ;;
@@ -1217,21 +1214,21 @@ if [ "${1:-}" = "--all" ]; then
     done
   done
 elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then
-  staged_files=$(git diff --no-ext-diff --cached --name-only --diff-filter=ACM || true)
-  if [ -z "$staged_files" ]; then
+  _staged_tmp=$(mktemp)
+  git diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM > "$_staged_tmp" || true
+  if [ ! -s "$_staged_tmp" ]; then
+    rm -f "$_staged_tmp"
     printf '%s\n' '[AUDIT] No matching files to audit.'
     exit 0
   fi
-  case "$staged_files" in
-    *".gitattributes"*|*".githooks/pre-commit"*) audit_gitattributes_eol ;;
-  esac
-  OIFS="$IFS"
-  IFS='
-'
-  for candidate in $staged_files; do
-    [ -f "$candidate" ] && audit_single_file "$candidate"
-  done
-  IFS="$OIFS"
+  if grep -Eq '(\.gitattributes|\.githooks/pre-commit)$' "$_staged_tmp"; then
+    audit_gitattributes_eol
+  fi
+  if ! STACK="" LIBSCRIPT_AUDIT_BATCH=1 xargs -n 500 -P 4 "$THIS_FILE" < "$_staged_tmp" >/dev/null; then
+    rm -f "$_staged_tmp"
+    exit 1
+  fi
+  rm -f "$_staged_tmp"
 else
   _explicit_target='1'
   if [ "${LIBSCRIPT_AUDIT_BATCH:-0}" = '1' ]; then

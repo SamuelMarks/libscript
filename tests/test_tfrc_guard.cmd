@@ -1,7 +1,7 @@
 @echo off
 :: # test_tfrc_guard.cmd
 :: ## Overview
-:: Hermetic Windows Batch test suite for _lib\ml-training\_common\tfrc_guard.cmd verifying missing config, project mismatch, UTC expiry, SKU/zone/tier bounds, GKE/Artifact Registry blocks, disk stripping, GCS region parity, postflight audit, and 2x idempotency.
+:: Hermetic Windows Batch test suite for engine\common\tfrc_guard.cmd verifying missing config, project mismatch, UTC expiry, SKU/zone/tier bounds, GKE/Artifact Registry blocks, disk stripping, GCS region parity, postflight audit, and 2x idempotency.
 :: ## Usage
 :: tests\test_tfrc_guard.cmd
 
@@ -63,7 +63,7 @@ pushd "!_WDIR!\empty_repo"
 set "TFRC_CONFIG="
 set "LIBSCRIPT_TFRC_CONFIG="
 set "TFRC_STRICT=1"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" create test-node >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\gcp-tpu-vm\cli.cmd" create test-node >nul 2>&1
 set "_rc=!ERRORLEVEL!"
 popd
 if not "!_rc!"=="78" goto :fail
@@ -73,27 +73,27 @@ for %%S in ("!GCLOUD_LOG!") do if %%~zS gtr 0 goto :fail
 :: 2. Project mismatch -> exits 78
 set "TFRC_CONFIG=!_POL!"
 set "TFRC_MOCK_UTC_DATE=2026-11-14"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_validate_request "wrong-proj" "us-central2-b" "v4-8" "spot" "1" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_validate_request "wrong-proj" "us-central2-b" "v4-8" "spot" "1" >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
 
 :: 3. Expired grant -> exits 78
 set "TFRC_MOCK_UTC_DATE=2027-02-01"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "us-central2-b" "v4-8" "spot" "1" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "us-central2-b" "v4-8" "spot" "1" >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
 
 :: 4. Disallowed zone, SKU, chip bound, and on-demand tier on Spot-only grant -> exits 78
 set "TFRC_MOCK_UTC_DATE=2026-11-14"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "europe-west4-a" "v4-8" "spot" "1" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "europe-west4-a" "v4-8" "spot" "1" >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "us-central2-b" "v5p-8" "spot" "1" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "us-central2-b" "v5p-8" "spot" "1" >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "us-central2-b" "v4-64" "spot" "1" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "us-central2-b" "v4-64" "spot" "1" >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "us-central1-a" "v6e-8" "on-demand" "1" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_validate_request "my-trc-research-project" "us-central1-a" "v6e-8" "on-demand" "1" >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
 
 :: 5. gke-xpk targets blocked with 78
-call "!LIBSCRIPT_ROOT_DIR!\topologies\gke-tpu-cluster\cli.cmd" create bad-cluster >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\infrastructure\clusters\gke-tpu-cluster\cli.cmd" create bad-cluster >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" train --tfrc-only "--target=gke-xpk" --dry-run >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
@@ -104,9 +104,9 @@ set "DISK_SIZE_GB=500"
 set "TPU_DATA_DISK_SIZE=500"
 set "BUCKET_NAME=manifest-bucket"
 set "GCS_BUCKET=gs://manifest-bucket"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
 if errorlevel 1 goto :fail
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
 if errorlevel 1 goto :fail
 if not "!DISK_SIZE_GB!"=="" goto :fail
 if not "!TPU_DATA_DISK_SIZE!"=="" goto :fail
@@ -118,24 +118,24 @@ set "TPU_ACCELERATOR_TYPE=v4-8"
 set "TPU_SCHEDULING_TYPE=spot"
 set "DISK_SIZE_GB=500"
 set "TPU_DATA_DISK_SIZE=500"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" create tfrc-ok-node
+call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\gcp-tpu-vm\cli.cmd" create tfrc-ok-node
 if errorlevel 1 goto :fail
 findstr /I /C:"disks create" "!GCLOUD_LOG!" >nul 2>&1
 if not errorlevel 1 goto :fail
 
 :: 7. GCS bucket region parity: matching single-region passes; multi-region & wrong-region exit 78
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "gs://valid-us-central2" "us-central2-b"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "gs://valid-us-central2" "us-central2-b"
 if errorlevel 1 goto :fail
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "gs://multi-us-bucket" "us-central2-b" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "gs://multi-us-bucket" "us-central2-b" >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "gs://wrong-region-east1" "us-central2-b" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "gs://wrong-region-east1" "us-central2-b" >nul 2>&1
 if not "!ERRORLEVEL!"=="78" goto :fail
 
 :: 8. Postflight audit passes when clean and fails when leaked node exists
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "my-trc-research-project" "us-central2-b" "leaked-node"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "my-trc-research-project" "us-central2-b" "leaked-node"
 if errorlevel 1 goto :fail
 set "MOCK_LEAKED_TPU=1"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "my-trc-research-project" "us-central2-b" "leaked-node" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "my-trc-research-project" "us-central2-b" "leaked-node" >nul 2>&1
 if not errorlevel 1 goto :fail
 
 rmdir /s /q "!_WDIR!" >nul 2>&1

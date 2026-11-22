@@ -49,15 +49,15 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\hooks.cmd" :libscript_exec_hook postgres configure --role leader
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\hooks.cmd" :libscript_exec_hook postgres configure --role leader
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\hooks.cmd" :libscript_exec_hook postgres probe readiness
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\hooks.cmd" :libscript_exec_hook postgres probe readiness
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\hooks.cmd" :libscript_exec_hook postgres announce
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\hooks.cmd" :libscript_exec_hook postgres announce
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\hooks.cmd" :libscript_exec_hook postgres provision_tenant --tenant wordpress
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\hooks.cmd" :libscript_exec_hook postgres provision_tenant --tenant wordpress
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\hooks.cmd" :libscript_exec_hook postgres deprovision_tenant --tenant wordpress
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\hooks.cmd" :libscript_exec_hook postgres deprovision_tenant --tenant wordpress
 if errorlevel 1 exit /b 1
 
 echo [PASS] Dual-layer lifecycle hook runner tests succeeded.

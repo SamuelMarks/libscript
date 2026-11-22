@@ -56,7 +56,7 @@ running the setup script.
 | `TEXLIVE_EXTRA_PACKAGES` | Space-separated CTAN packages installed via tlmgr to prevent missing styles or Type-3 bitmap PK fonts.                                           | `acmart pgfplots pgf booktabs microtype hyperref cm-super libertine` |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

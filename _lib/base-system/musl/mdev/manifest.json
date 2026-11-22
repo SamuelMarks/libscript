@@ -1,15 +1,16 @@
 {
-  "name": "mdev",
-  "title": "Mdev",
-  "description": "BusyBox dynamic device node manager",
-  "provides": ["mdev"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "capabilities": ["versioned-artifact"]
+  "description": "BusyBox dynamic device node manager",
+  "name": "mdev",
+  "provides": ["mdev"],
+  "tier": "T2",
+  "title": "Mdev",
+  "versions": ["1.0.0"]
 }

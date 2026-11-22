@@ -1,0 +1,140 @@
+#!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'tui' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+    cat << 'EOF'
+#!/bin/sh
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+if command -v whiptail >/dev/null; then DIALOG=whiptail; elif command -v dialog >/dev/null; then DIALOG=dialog; else printf '%s\n' "Error: dialog or whiptail required." >&2; exit 1; fi
+EOF
+    printf '%s\n' "SELECTED=\$(\$DIALOG --title \"LibScript Installer\" --checklist \"Select components to install:\" 20 60 10 \\"
+    if [ $# -gt 0 ]; then
+      while [ $# -gt 0 ]; do
+        pkg="$1"
+        ver="${2:-latest}"
+        printf '%s\n' "  \"$pkg\" \"$ver\" ON \\"
+        if [ "${2:-}" != "" ]; then shift 2; else shift; fi
+      done
+    elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+      deps=$("${LIBSCRIPT_ROOT_DIR:-.}/engine/solver/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
+      printf '%s\n' "$deps" | while read -r pkg ver; do
+        if [ -n "$pkg" ]; then
+          if [ "$ver" = "null" ]; then ver="latest"; fi
+          printf '%s\n' "  \"$pkg\" \"$ver\" ON \\"
+        fi
+      done
+      # list all available components
+      find_components | sort | while read -r comp; do
+        printf '%s\n' "  \"$comp\" \"latest\" OFF \\"
+      done
+    fi
+    cat << 'EOF'
+  3>&1 1>&2 2>&3)
+if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
+  action=$($DIALOG --title "Action" --menu "What would you like to produce?" 16 65 11 \
+    "install" "Install locally now" \
+    "openedx_admin" "Open edX Management Console (Tutor Parity)" \
+    "dockerfile" "Dockerfile" \
+    "docker_compose" "Dockerfiles + docker-compose" \
+    "msi" ".msi installer" \
+    "innosetup" ".exe (InnoSetup)" \
+    "nsis" ".exe (NSIS)" \
+    "pkg" "macOS .pkg installer" \
+    "dmg" "macOS .dmg installer" \
+    "deb" ".deb package" \
+    "rpm" ".rpm package" \
+    3>&1 1>&2 2>&3)
+
+  if [ "$action" = "openedx_admin" ]; then
+    sub_act=$($DIALOG --title "Open edX Management" --menu "Select administrative command:" 18 65 12 \
+      "user" "User management (create/staff/superuser)" \
+      "demo" "Import demo course & content libraries" \
+      "dbshell" "Interactive database console (mysql/mongo/redis)" \
+      "healthcheck" "Full-stack diagnostics & health probe" \
+      "config" "View & modify environment settings" \
+      "backup" "Create backup snapshot archive" \
+      "restore" "Restore from backup snapshot archive" \
+      "workers" "Lifecycle controls for Celery workers & beat" \
+      "theme" "Manage and apply comprehensive themes" \
+      "xblock" "Install & list XBlock plugins" \
+      "upgrade" "Execute database migrations & release upgrade" \
+      "mfe" "Build & deploy Micro-Frontends" \
+      3>&1 1>&2 2>&3)
+    if [ -n "$sub_act" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx/cli.sh" "$sub_act"
+    fi
+  elif [ -n "$action" ]; then
+    offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; printf '%s\n' $?)
+    os_ans=$($DIALOG --title "Target OS" --checklist "Select OS targets:" 15 50 5 \
+      "windows" "Windows" ON \
+      "dos" "DOS" OFF \
+      "linux" "Linux" ON \
+      "macos" "macOS" OFF \
+      "bsd" "BSD" OFF \
+      3>&1 1>&2 2>&3)
+
+    extra_args=""
+    if [ "$offline_ans" = "0" ]; then extra_args="$extra_args --offline"; fi
+    for os in $(printf '%s\n' "$os_ans" | tr -d '"'); do
+      extra_args="$extra_args --os-$os"
+    done
+
+    items=""
+    for item in $(printf '%s\n' "$SELECTED" | tr -d '"'); do
+      items="$items $item latest"
+    done
+
+    if [ "$action" = "install" ]; then
+      for item in $(printf '%s\n' "$SELECTED" | tr -d '"'); do
+        "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$item" latest
+      done
+    else
+      if [ "$action" = "dockerfile" ]; then action="docker"; fi
+      # shellcheck disable=SC2086
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" package-as "$action" $items $extra_args
+    fi
+  else
+    printf '%s\n' "Cancelled."
+  fi
+else
+  printf '%s\n' "Installation cancelled."
+fi
+EOF
+    exit 0

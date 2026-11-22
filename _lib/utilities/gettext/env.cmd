@@ -60,7 +60,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\gettext\%GETTEXT_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "gettext" "%GETTEXT_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "gettext" "%GETTEXT_VERSION%"
 
 endlocal & set "GETTEXT_VERSION=%GETTEXT_VERSION%" & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "PATH=%PATH%"
 exit /b 0

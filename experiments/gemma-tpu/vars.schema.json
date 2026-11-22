@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/toolchains/gemma-tpu-suite/vars.schema.json",
+  "$id": "/experiments/gemma-tpu/vars.schema.json",
   "title": "gemma-tpu-suite variables",
   "description": "Configuration variables for the gemma-tpu-suite 7-backend TFRC TPU benchmark component.",
   "type": "object",

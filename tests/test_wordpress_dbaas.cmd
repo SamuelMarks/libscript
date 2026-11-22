@@ -54,7 +54,7 @@ if "%LIBSCRIPT_ROOT_DIR%"=="" (
 )
 
 echo ==> Testing DBaaS Connection URL Parser on Windows...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\parse_dbaas_url.cmd" "mysql://wpuser:p@ss!@db.example.com:3307/wp_db?ssl-ca=ca.pem" --eval
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_dbaas_url.cmd" "mysql://wpuser:p@ss!@db.example.com:3307/wp_db?ssl-ca=ca.pem" --eval
 
 echo ==> All hosted DBaaS tests passed successfully on Windows^^!
 exit /b 0

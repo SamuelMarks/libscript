@@ -69,17 +69,17 @@ if not exist "!TEST_WORK!\DL\freebsd-usr-bin" mkdir "!TEST_WORK!\DL\freebsd-usr-
 set "LIBSCRIPT_TARGET_OS=msdos"
 set "LIBSCRIPT_DOS_83=1"
 set "LIBSCRIPT_HOME="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_home >nul
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\dos_83.cmd" :libscript_dos83_home >nul
 if /i not "!DOS83_HOME!"=="C:\LIBSCRIP" (
     echo [FAIL] Expected default MS-DOS LIBSCRIPT_HOME C:\LIBSCRIP, got !DOS83_HOME! 1>&2
     goto :fail_cleanup
 )
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_comp "freebsd-usr-bin" >nul
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\dos_83.cmd" :libscript_dos83_comp "freebsd-usr-bin" >nul
 if not "!DOS83_COMP!"=="FBSDUBIN" (
     echo [FAIL] Expected FBSDUBIN for freebsd-usr-bin, got !DOS83_COMP! 1>&2
     goto :fail_cleanup
 )
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_comp "sqlite-tools" >nul
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\dos_83.cmd" :libscript_dos83_comp "sqlite-tools" >nul
 if not "!DOS83_COMP!"=="SQLITETL" (
     echo [FAIL] Expected SQLITETL for sqlite-tools, got !DOS83_COMP! 1>&2
     goto :fail_cleanup
@@ -110,7 +110,7 @@ if not exist "!DOS_HOME!\JQ\ACTIVE.VER" (
 set "LIBSCRIPT_OFFLINE=1"
 set "LIBSCRIPT_HOME=!TEST_WORK!\OFFNET"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\wattcp_cfg.cmd" >nul
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\dos32\wattcp_cfg.cmd" >nul
 if exist "!TEST_WORK!\OFFNET\ETC\WATTCP.CFG" (
     echo [FAIL] WATTCP.CFG must not be generated when LIBSCRIPT_OFFLINE=1 1>&2
     goto :fail_cleanup
@@ -119,7 +119,7 @@ if exist "!TEST_WORK!\OFFNET\ETC\WATTCP.CFG" (
 set "LIBSCRIPT_OFFLINE=0"
 set "LIBSCRIPT_HOME=!TEST_WORK!\ONNET"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\wattcp_cfg.cmd" >nul
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\dos32\wattcp_cfg.cmd" >nul
 if not exist "!TEST_WORK!\ONNET\ETC\WATTCP.CFG" (
     echo [FAIL] Expected !TEST_WORK!\ONNET\ETC\WATTCP.CFG in online MS-DOS mode 1>&2
     goto :fail_cleanup
@@ -185,7 +185,7 @@ if "!EXECUTED_BENTO_DISK!"=="0" (
     set "DOS32_HELPER_BIN="
     set "LIBSCRIPT_HOME=!TEST_WORK!\HELPERS"
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\build_dos32.cmd" ls-mkdos-smoke >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\dos32\build_dos32.cmd" ls-mkdos-smoke >nul 2>&1
     if not "!DOS32_HELPER_BIN!"=="" if exist "!DOS32_HELPER_BIN!" (
         "!DOS32_HELPER_BIN!" "!TEST_WORK!\DOS32SMK.IMG" "!TEST_WORK!\DL\DOS32A.EXE" "!DOS_HOME!\JQ\1_8_2\bin\jq.exe" "!DOS_HOME!\JQ\1_8_2\bin\jq.exe" "!DOS_HOME!\JQ\1_8_2\bin\jq.exe" "!DOS_HOME!\JQ\1_8_2\bin\jq.exe" "WIN_HOST_SMOKE"
         if errorlevel 1 goto :fail_cleanup

@@ -74,7 +74,7 @@ if "!PYTHON_EXE!"=="" (
     )
     if "!PYTHON_EXE!"=="" (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends python
         for /d %%P in ("C:\Python*" "%LOCALAPPDATA%\Programs\Python\Python*" "%ProgramFiles%\Python*") do (
             if exist "%%~fP\python.exe" set "PYTHON_EXE=%%~fP\python.exe"
         )
@@ -86,7 +86,7 @@ set "TEMP_ZIP=%TEMP%\spack.zip"
 
 echo Downloading Spack from %URL%...
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download Spack.
     exit /b 1

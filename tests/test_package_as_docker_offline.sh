@@ -62,7 +62,7 @@ assert_not_contains() {
 
 printf '=== Testing Online Dockerfile Generation with ADD Layer Caching ===\n'
 DOCKERFILE_ONLINE="$TEST_TMP_DIR/Dockerfile.online"
-"${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_docker.sh" --online python 3.11 https://example.com/python-3.11.tar.gz > "$DOCKERFILE_ONLINE"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dockerfile.sh" --online python 3.11 https://example.com/python-3.11.tar.gz > "$DOCKERFILE_ONLINE"
 
 assert_contains "$DOCKERFILE_ONLINE" 'ENV LIBSCRIPT_CACHE_DIR="/opt/libscript_cache"' "Cache directory env variable declared"
 # shellcheck disable=SC2016
@@ -73,7 +73,7 @@ assert_not_contains "$DOCKERFILE_ONLINE" 'ENV LIBSCRIPT_OFFLINE="1"' "LIBSCRIPT_
 
 printf '=== Testing Air-Gapped Offline Dockerfile Generation ===\n'
 DOCKERFILE_OFFLINE="$TEST_TMP_DIR/Dockerfile.offline"
-"${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_docker.sh" --offline python 3.11 > "$DOCKERFILE_OFFLINE"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dockerfile.sh" --offline python 3.11 > "$DOCKERFILE_OFFLINE"
 
 assert_contains "$DOCKERFILE_OFFLINE" 'ENV LIBSCRIPT_OFFLINE="1"' "LIBSCRIPT_OFFLINE=1 set in offline mode"
 assert_contains "$DOCKERFILE_OFFLINE" 'ENV PIP_NO_INDEX="1"' "PIP_NO_INDEX=1 configured"
@@ -88,7 +88,7 @@ assert_not_contains "$DOCKERFILE_OFFLINE" 'git clone' "No git clone commands pre
 
 printf '=== Testing Open edX Online Dockerfile with Manifest ADD Caching ===\n'
 DOCKERFILE_OPENEDX_ONLINE="$TEST_TMP_DIR/Dockerfile.openedx.online"
-"${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_docker.sh" --online "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx" > "$DOCKERFILE_OPENEDX_ONLINE"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dockerfile.sh" --online "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx" > "$DOCKERFILE_OPENEDX_ONLINE"
 
 assert_contains "$DOCKERFILE_OPENEDX_ONLINE" 'ADD https://www.python.org/' "Python runtime ADD statement"
 assert_contains "$DOCKERFILE_OPENEDX_ONLINE" 'ADD https://nodejs.org/' "Node.js runtime ADD statement"
@@ -100,7 +100,7 @@ printf '=== Testing Open edX Air-Gapped Offline Docker Compose Generation ===\n'
 COMPOSE_OFFLINE="$TEST_TMP_DIR/docker-compose.yml"
 (
   cd "$TEST_TMP_DIR"
-  "${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_docker_compose.sh" --offline mysql latest redis latest mongodb latest meilisearch latest openedx latest > "$COMPOSE_OFFLINE"
+  "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/docker_compose.sh" --offline mysql latest redis latest mongodb latest meilisearch latest openedx latest > "$COMPOSE_OFFLINE"
 )
 
 assert_contains "$COMPOSE_OFFLINE" "version: '3.8'" "Compose file version declared"

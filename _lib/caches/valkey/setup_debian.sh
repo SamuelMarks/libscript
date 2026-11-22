@@ -36,7 +36,7 @@ PREVIOUS_WD="$(pwd)"
 _DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${_DIR}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/_common/environ.sh" "_lib/_common/settings_updater.sh" "_lib/_common/service.sh" "_lib/git-servers/utils/git.sh"; do
+for LIB in "engine/common/log.sh" "engine/common/pkg_mgr.sh" "engine/common/priv.sh" "engine/common/environ.sh" "engine/common/settings_updater.sh" "engine/common/service.sh" "_lib/git-servers/utils/git.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091

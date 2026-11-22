@@ -82,22 +82,22 @@ exit /b 0
 set "RELEASES_URL=%SQLITE_TOOLS_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://www.sqlite.org/download.html"
 echo [ls-remote] Fetching available sqlite-tools versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
 :: Activates a specific installed version of sqlite-tools and updates alias junctions.
 :action_use
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "sqlite-tools" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "sqlite-tools" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "%SQLITE_TOOLS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "%SQLITE_TOOLS_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -113,7 +113,7 @@ set "DL_DIR=!DL_DIR!\sqlite-tools"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading sqlite-tools %SQLITE_TOOLS_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -125,27 +125,27 @@ if /i "%SQLITE_TOOLS_INSTALL_METHOD%"=="from-source" (
     set "SRC_URL=%SQLITE_TOOLS_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://www.sqlite.org/2024/sqlite-autoconf-{VERSION}.tar.gz"
     call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "sqlite-tools" "!EXACT_VERSION!" "sqlite3" "c" "autotools" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "sqlite-tools" "!EXACT_VERSION!" "sqlite3" "c" "autotools" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if "%SQLITE_TOOLS_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends sqlite-tools
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends sqlite-tools
     exit /b !errorlevel!
 )
 if /i "%SQLITE_TOOLS_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget sqlite-tools
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget sqlite-tools
     exit /b !errorlevel!
 )
 if /i "%SQLITE_TOOLS_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco sqlite-tools
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco sqlite-tools
     exit /b !errorlevel!
 )
 if /i "%SQLITE_TOOLS_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop sqlite-tools
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop sqlite-tools
     exit /b !errorlevel!
 )
 call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "sqlite-tools" "!EXACT_VERSION!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_get_version_dir "sqlite-tools" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 set "_BIN_FOUND=0"
 if exist "!TARGET_DIR!\bin\sqlite3.exe" set "_BIN_FOUND=1"
@@ -154,8 +154,8 @@ if exist "!TARGET_DIR!\bin\sqlite3.bat" set "_BIN_FOUND=1"
 if "!_BIN_FOUND!"=="1" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] sqlite-tools !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "%SQLITE_TOOLS_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "%SQLITE_TOOLS_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -163,7 +163,7 @@ set "URL=%SQLITE_TOOLS_DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=https://www.sqlite.org/2024/sqlite-tools-win-x64-{VERSION}.zip"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends sqlite-tools
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends sqlite-tools
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -176,7 +176,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\sqlite-tools-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 set "_IS_ARCHIVE=0"
@@ -228,8 +228,8 @@ if not "!_IS_ARCHIVE!"=="0" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\sqlite3.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "%SQLITE_TOOLS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "%SQLITE_TOOLS_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -246,7 +246,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos//releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos//releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -259,5 +259,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "sqlite-tools" "%ACTION%" "%SQLITE_TOOLS_VERSION%" "%SQLITE_TOOLS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\sqlite-tools\%SQLITE_TOOLS_VERSION%\\bin\\sqlite3.exe\"" "%LIBSCRIPT_HOME%\sqlite-tools\%SQLITE_TOOLS_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "sqlite-tools" "%ACTION%" "%SQLITE_TOOLS_VERSION%" "%SQLITE_TOOLS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\sqlite-tools\%SQLITE_TOOLS_VERSION%\\bin\\sqlite3.exe\"" "%LIBSCRIPT_HOME%\sqlite-tools\%SQLITE_TOOLS_VERSION%"
 exit /b !errorlevel!

@@ -34,7 +34,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh" "_lib/_common/service.sh" "_lib/_common/priv.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/versioning.sh" "engine/common/service.sh" "engine/common/priv.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

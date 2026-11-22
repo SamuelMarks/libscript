@@ -1,16 +1,17 @@
 {
-  "name": "pf",
-  "title": "Packet Filter (PF)",
-  "description": "FreeBSD stateful packet inspection firewall",
-  "provides": ["pf"],
+  "capabilities": ["sysroot-package"],
   "category": "networking",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "FreeBSD stateful packet inspection firewall",
+  "name": "pf",
   "os_whitelist": ["freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["pf"],
+  "tier": "T2",
+  "title": "Packet Filter (PF)",
+  "versions": ["1.0.0"]
 }

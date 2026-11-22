@@ -14,7 +14,7 @@ $LibHome = if ($env:LIBSCRIPT_HOME) { $env:LIBSCRIPT_HOME } else { Join-Path $en
 
 if ($Action -eq "install") {
 $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
-. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+. (Join-Path $_ls_root "engine\common\pkg_mgr.ps1")
     if (Get-Command "meilisearch" -ErrorAction SilentlyContinue) {
         Write-Host "Meilisearch is already installed on the system."
         exit 0

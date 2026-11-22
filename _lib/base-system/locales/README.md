@@ -56,7 +56,7 @@ running the setup script.
 | `LOCALES_LIST`           | Comma-separated list of locale entries staged into /etc/locale.gen when provisioning a target sysroot.                                           | `en_US.UTF-8 UTF-8,C.UTF-8 UTF-8` |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

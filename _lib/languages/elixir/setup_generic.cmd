@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%ELIXIR_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%ELIXIR_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%ELIXIR_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%ELIXIR_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/elixir-lang/elixir" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%ELIXIR_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading elixir %ELIXIR_VERSION% to %DOWNLOAD_DIR%\elixir...
     if not exist "%DOWNLOAD_DIR%\elixir" mkdir "%DOWNLOAD_DIR%\elixir"
     if not "%ELIXIR_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ELIXIR_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\elixir\elixir-%ELIXIR_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ELIXIR_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\elixir\elixir-%ELIXIR_VERSION%.zip"
     ) else (
         echo ELIXIR_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ELIXIR_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends elixir
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends elixir
     exit /b !errorlevel!
 )
 
@@ -161,13 +161,13 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\elixir\elixir-%ELIXIR_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ELIXIR_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ELIXIR_DOWNLOAD_URL%" "%TEMP%\elixir.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ELIXIR_DOWNLOAD_URL%" "%TEMP%\elixir.zip"
         tar -xf "%TEMP%\elixir.zip" -C "%TARGET_DIR%"
     ) else (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends erlang
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends erlang
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends elixir
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends elixir
         exit /b 0
     )
 ) else (
@@ -195,5 +195,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "elixir" "%ACTION%" "%ELIXIR_VERSION%" "%ELIXIR_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\elixir\%ELIXIR_VERSION%\\bin\\elixir.exe\"" "%LIBSCRIPT_HOME%\elixir\%ELIXIR_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "elixir" "%ACTION%" "%ELIXIR_VERSION%" "%ELIXIR_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\elixir\%ELIXIR_VERSION%\\bin\\elixir.exe\"" "%LIBSCRIPT_HOME%\elixir\%ELIXIR_VERSION%"
 exit /b !errorlevel!

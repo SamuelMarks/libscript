@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nix",
-  "provides": ["nix"],
-  "os_whitelist": ["linux"],
-  "os_blacklist": ["alpine"],
-  "title": "Nix",
-  "description": "Nix is a powerful package manager for Linux and other Unix systems that makes package management reliable and reproducible. It provides atomic upgrades and rollbacks, side-by-side installation of multiple versions of a package, multi-user package management, and easy setup of build environments.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Nix is a powerful package manager for Linux and other Unix systems that makes package management reliable and reproducible. It provides atomic upgrades and rollbacks, side-by-side installation of multiple versions of a package, multi-user package management, and easy setup of build environments.",
+  "name": "nix",
+  "os_blacklist": ["alpine"],
+  "os_whitelist": ["linux"],
+  "provides": ["nix"],
   "repository": "https://github.com/NixOS/nix",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Nix"
 }

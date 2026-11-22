@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
+  "category": "unikernels",
+  "description": "NetBSD rump kernel unikernel cross-toolchain and rumpbake image baker targeting KVM/VirtIO (hw_virtio) and Xen.",
+  "name": "rumprun",
+  "os_whitelist": ["all"],
+  "provides": ["rumprun", "rumpbake", "unikernel-builder"],
+  "repository": "https://github.com/rumpkernel/rumprun",
+  "tier": "T2",
+  "title": "Rumprun Unikernel"
+}

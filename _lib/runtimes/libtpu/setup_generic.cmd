@@ -65,8 +65,8 @@ if /i "%ACTION%"=="ls-remote" (
 )
 if /i "%ACTION%"=="use" (
     call :do_install
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "libtpu" "%LIBTPU_VERSION%" "!EXACT_VERSION!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "libtpu" "default" "!EXACT_VERSION!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu" "%LIBTPU_VERSION%" "!EXACT_VERSION!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu" "default" "!EXACT_VERSION!"
     exit /b 0
 )
 if /i "%ACTION%"=="download" goto :do_install
@@ -97,6 +97,6 @@ if not "%LIBTPU_SDK_SO_PATH%"=="" (
     echo echo libtpu-reference !EXACT_VERSION! ^(!TARGET_DIR!^)
 ) > "!TARGET_DIR!\bin\libtpu-info.cmd.tmp"
 move /y "!TARGET_DIR!\bin\libtpu-info.cmd.tmp" "!TARGET_DIR!\bin\libtpu-info.cmd" >nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "libtpu" "%LIBTPU_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "libtpu" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu" "%LIBTPU_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu" "default" "!EXACT_VERSION!"
 exit /b 0

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../experiment-suite.schema.json",
+  "$schema": "../../experiments/schemas/experiment-suite.schema.json",
   "id": "libtpu-pjrt",
   "title": "libtpu-rs Empirical Evaluation Protocol (SIGPLAN E0-E8)",
   "protocol_version": "PLDI-2027-v1",

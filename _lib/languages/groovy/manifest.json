@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "groovy",
-  "title": "Apache Groovy",
-  "description": "Multi-faceted dynamic and optionally typed programming language for the Java platform.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["groovy", "groovyc"],
+  "description": "Multi-faceted dynamic and optionally typed programming language for the Java platform.",
+  "name": "groovy",
   "os_whitelist": ["all"],
+  "provides": ["groovy", "groovyc"],
   "repository": "https://github.com/apache/groovy",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Apache Groovy"
 }

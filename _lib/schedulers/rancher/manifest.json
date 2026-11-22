@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "schedulers",
+  "description": "Rancher multi-cluster Kubernetes management CLI and control-plane server orchestration recipe.",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "name": "rancher",
+  "os_whitelist": ["all"],
+  "ports": [80, 443],
+  "provides": ["rancher", "rancher-cli"],
+  "repository": "https://github.com/rancher/cli",
+  "tier": "T1",
+  "title": "Rancher Multi-Cluster Kubernetes Manager"
+}

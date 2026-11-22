@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "maven-wrapper",
-  "title": "Maven Wrapper",
-  "description": "Apache Maven Wrapper (mvnw) standalone distribution manager for reproducible JVM project builds.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "provides": ["maven-wrapper", "mvnw"],
+  "description": "Apache Maven Wrapper (mvnw) standalone distribution manager for reproducible JVM project builds.",
+  "name": "maven-wrapper",
   "os_whitelist": ["all"],
+  "provides": ["maven-wrapper", "mvnw"],
   "repository": "https://github.com/apache/maven-wrapper",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Maven Wrapper"
 }

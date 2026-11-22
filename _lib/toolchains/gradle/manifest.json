@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gradle",
-  "title": "Gradle",
-  "description": "A build automation tool for multi-language software development, primarily Java.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["gradle", "build-system"],
-  "os_whitelist": ["all"],
+  "description": "A build automation tool for multi-language software development, primarily Java.",
+  "name": "gradle",
   "os_blacklist": ["sunos"],
-  "capabilities": ["versioned-artifact"]
+  "os_whitelist": ["all"],
+  "provides": ["gradle", "build-system"],
+  "tier": "T1",
+  "title": "Gradle"
 }

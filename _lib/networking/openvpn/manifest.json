@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "openvpn",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "networking",
-  "title": "openvpn",
-  "description": "openvpn stack",
-  "provides": ["openvpn"],
-  "os_blacklist": ["sunos", "darwin"],
   "dependencies": {
     "runtime_deps": ["openvpn"]
   },
-  "capabilities": ["versioned-artifact"]
+  "description": "openvpn stack",
+  "name": "openvpn",
+  "os_blacklist": ["sunos", "darwin"],
+  "provides": ["openvpn"],
+  "tier": "T1",
+  "title": "openvpn"
 }

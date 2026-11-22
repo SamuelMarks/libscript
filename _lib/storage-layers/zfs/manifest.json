@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "zfs",
-  "title": "OpenZFS",
-  "description": "OpenZFS copy-on-write enterprise filesystem and logical volume administration utilities (zfs and zpool).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "storage-layers",
-  "provides": ["zfs", "zpool", "openzfs"],
-  "os_whitelist": ["all"],
+  "description": "OpenZFS copy-on-write enterprise filesystem and logical volume administration utilities (zfs and zpool).",
+  "name": "zfs",
   "os_blacklist": ["windows"],
+  "os_whitelist": ["all"],
+  "provides": ["zfs", "zpool", "openzfs"],
   "repository": "https://github.com/openzfs/zfs",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "OpenZFS"
 }

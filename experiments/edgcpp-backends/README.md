@@ -198,25 +198,25 @@ checked out:
 ### 1. Console Output (`E0`–`E7` Execution)
 
 ```text
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [CONTINUE] processing "./experiments/edgcpp-backends/run.sh"
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/benchmark_experiments.sh"
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/suites/e0_phase0_gates.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/benchmark_experiments.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/suites/e0_phase0_gates.sh"
 [INFO] [E0] Verified 6 Phase 0 gates, coverage, and Bug #4 ablation -> ./build/edgcpp_synthetic/raw/exp0_coverage.json
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/suites/e1_compile_perf.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/suites/e1_compile_perf.sh"
 [INFO] [E1] Matched-optimization compile latency & RSS recorded -> ./build/edgcpp_synthetic/raw/exp1_compile_perf.json
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/suites/e2_sqlite_ablation.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/suites/e2_sqlite_ablation.sh"
 [INFO] [E2] Verified 15-way SQLite SHA-256 gate, section sizes, and TBAA/ThinLTO/PGO ablations -> ./build/edgcpp_synthetic/raw/exp2_sqlite_runtime.json
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/suites/e3_eh_unwinding.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/suites/e3_eh_unwinding.sh"
 [INFO] [E3] Verified C++ exception unwinding rows (RAII, single-inheritance, virtual-diamond VBase&) -> ./build/edgcpp_synthetic/raw/exp3_eh.json
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/suites/e4_coroutines.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/suites/e4_coroutines.sh"
 [INFO] [E4] Verified C++20 Generator, HALO (O0=5000 -> O2=5000), and Task ASan gate -> ./build/edgcpp_synthetic/raw/exp4_coro.json
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/suites/e5_abi_and_fuzz.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/suites/e5_abi_and_fuzz.sh"
 [INFO] [E5] Completed Split-TU psABI, GCC Torture, and Differential Fuzzing -> ./build/edgcpp_synthetic/raw/exp5_abi_fuzz.json
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/suites/e6_corpus_and_kernel.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/suites/e6_corpus_and_kernel.sh"
 [INFO] [E6] Completed 8-project C/C++ corpus and Linux kernel TU sweep -> ./build/edgcpp_synthetic/raw/exp6_projects.json
-[CONTINUE] processing "./_lib/toolchains/edgcpp-backends-suite/suites/e7_latex_verify.sh"
+[CONTINUE] processing "./experiments/edgcpp-backends/suites/e7_latex_verify.sh"
 [INFO] [E7] Emitted all 60 verified LaTeX metrics -> ./build/edgcpp_synthetic/generated_metrics.tex
 [INFO] Completed edgcpp_backends suites (E0,E1,E2,E3,E4,E5,E6,E7) -> ./build/edgcpp_synthetic/campaign_summary.json
 ```

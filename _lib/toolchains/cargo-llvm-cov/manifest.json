@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cargo-llvm-cov",
-  "title": "cargo-llvm-cov Rust Coverage Subcommand",
-  "description": "Cargo subcommand for LLVM source-based line, region, and branch code coverage JSON extraction.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["cargo-llvm-cov"],
+  "description": "Cargo subcommand for LLVM source-based line, region, and branch code coverage JSON extraction.",
+  "name": "cargo-llvm-cov",
   "os_whitelist": ["all"],
+  "provides": ["cargo-llvm-cov"],
   "repository": "https://github.com/taiki-e/cargo-llvm-cov",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "cargo-llvm-cov Rust Coverage Subcommand"
 }

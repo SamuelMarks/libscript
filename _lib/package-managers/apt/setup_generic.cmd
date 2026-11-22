@@ -99,7 +99,7 @@ exit /b 0
 :action_ls_remote
 if "%APT_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%APT_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%APT_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%APT_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://salsa.debian.org/apt-team/apt" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -136,7 +136,7 @@ if "%APT_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading apt %APT_VERSION% to %DOWNLOAD_DIR%\apt...
     if not exist "%DOWNLOAD_DIR%\apt" mkdir "%DOWNLOAD_DIR%\apt"
     if not "%APT_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%APT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\apt\apt-%APT_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%APT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\apt\apt-%APT_VERSION%.zip"
     ) else (
         echo APT_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -147,7 +147,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%APT_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends apt
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends apt
     exit /b !errorlevel!
 )
 
@@ -163,7 +163,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\apt\apt-%APT_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%APT_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%APT_DOWNLOAD_URL%" "%TEMP%\apt.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%APT_DOWNLOAD_URL%" "%TEMP%\apt.zip"
         tar -xf "%TEMP%\apt.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for apt.
@@ -194,5 +194,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "apt" "%ACTION%" "%APT_VERSION%" "%APT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\apt\%APT_VERSION%\\bin\\apt.exe\"" "%LIBSCRIPT_HOME%\apt\%APT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "apt" "%ACTION%" "%APT_VERSION%" "%APT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\apt\%APT_VERSION%\\bin\\apt.exe\"" "%LIBSCRIPT_HOME%\apt\%APT_VERSION%"
 exit /b !errorlevel!

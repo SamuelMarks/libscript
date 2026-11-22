@@ -54,7 +54,7 @@ if "%ZOOKEEPER_CLIENT_PORT%"=="" set "ZOOKEEPER_CLIENT_PORT=2181"
 set "ZOOKEEPER_HOME=%LIBSCRIPT_HOME%\zookeeper\%ZOOKEEPER_VERSION%"
 set "ZOOKEEPER_DATA_DIR=%LIBSCRIPT_HOME%\zookeeper\data"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "zookeeper" "%ZOOKEEPER_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "zookeeper" "%ZOOKEEPER_VERSION%"
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "ZOOKEEPER_VERSION=%ZOOKEEPER_VERSION%"

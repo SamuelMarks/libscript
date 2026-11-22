@@ -109,9 +109,9 @@ build_linux() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-linux-live.iso}"
   printf '[ORCHESTRATE] Building Live Linux installer (%s)...\n' "$MODE"
   if [ -n "$COMPONENTS_CSV" ]; then
-    LIBSCRIPT_TARGET_OS='linux' STACK='' "${REPO_ROOT}/_lib/package-managers/msi-rs/workloads/components.sh" "${REPO_ROOT}/build/live-linux-stage/rootfs" "$COMPONENTS_CSV"
+    LIBSCRIPT_TARGET_OS='linux' STACK='' "${REPO_ROOT}/synthesis/msi/live_installer/presets/components.sh" "${REPO_ROOT}/build/live-linux-stage/rootfs" "$COMPONENTS_CSV"
   fi
-  "${REPO_ROOT}/_lib/orchestration/distro/live_linux.sh" "alpine" "$_out" "${REPO_ROOT}/build/live-linux-stage"
+  "${REPO_ROOT}/synthesis/distro/linux/live_linux.sh" "alpine" "$_out" "${REPO_ROOT}/build/live-linux-stage"
 }
 
 # ## build_freebsd
@@ -120,9 +120,9 @@ build_freebsd() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-freebsd-live.iso}"
   printf '[ORCHESTRATE] Building Live FreeBSD installer (%s)...\n' "$MODE"
   if [ -n "$COMPONENTS_CSV" ]; then
-    LIBSCRIPT_TARGET_OS='freebsd' STACK='' "${REPO_ROOT}/_lib/package-managers/msi-rs/workloads/components.sh" "${REPO_ROOT}/build/live-freebsd-stage/rootfs" "$COMPONENTS_CSV"
+    LIBSCRIPT_TARGET_OS='freebsd' STACK='' "${REPO_ROOT}/synthesis/msi/live_installer/presets/components.sh" "${REPO_ROOT}/build/live-freebsd-stage/rootfs" "$COMPONENTS_CSV"
   fi
-  "${REPO_ROOT}/_lib/freebsd/distro/live_freebsd.sh" "$_out" "${REPO_ROOT}/build/live-freebsd-stage"
+  "${REPO_ROOT}/synthesis/distro/freebsd/live_freebsd.sh" "$_out" "${REPO_ROOT}/build/live-freebsd-stage"
 }
 
 # ## build_illumos
@@ -131,9 +131,9 @@ build_illumos() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-illumos-live.iso}"
   printf '[ORCHESTRATE] Building Live illumos installer (%s)...\n' "$MODE"
   if [ -n "$COMPONENTS_CSV" ]; then
-    LIBSCRIPT_TARGET_OS='sunos' STACK='' "${REPO_ROOT}/_lib/package-managers/msi-rs/workloads/components.sh" "${REPO_ROOT}/build/live-illumos-stage/rootfs" "$COMPONENTS_CSV"
+    LIBSCRIPT_TARGET_OS='sunos' STACK='' "${REPO_ROOT}/synthesis/msi/live_installer/presets/components.sh" "${REPO_ROOT}/build/live-illumos-stage/rootfs" "$COMPONENTS_CSV"
   fi
-  "${REPO_ROOT}/_lib/illumos/distro/live_illumos.sh" "$_out" "${REPO_ROOT}/build/live-illumos-stage"
+  "${REPO_ROOT}/synthesis/distro/illumos/live_illumos.sh" "$_out" "${REPO_ROOT}/build/live-illumos-stage"
 }
 
 # ## build_reactos
@@ -142,9 +142,9 @@ build_reactos() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-reactos-live.iso}"
   printf '[ORCHESTRATE] Building Live ReactOS installer (%s)...\n' "$MODE"
   if [ -n "$COMPONENTS_CSV" ]; then
-    LIBSCRIPT_TARGET_OS='reactos' STACK='' "${REPO_ROOT}/_lib/package-managers/msi-rs/workloads/components.sh" "${REPO_ROOT}/build/live-reactos-stage/iso_root" "$COMPONENTS_CSV"
+    LIBSCRIPT_TARGET_OS='reactos' STACK='' "${REPO_ROOT}/synthesis/msi/live_installer/presets/components.sh" "${REPO_ROOT}/build/live-reactos-stage/iso_root" "$COMPONENTS_CSV"
   fi
-  "${REPO_ROOT}/_lib/reactos/distro/live_reactos.sh" "$_out" "${REPO_ROOT}/build/live-reactos-stage"
+  "${REPO_ROOT}/synthesis/distro/reactos/live_reactos.sh" "$_out" "${REPO_ROOT}/build/live-reactos-stage"
 }
 
 case "$TARGET_OS" in

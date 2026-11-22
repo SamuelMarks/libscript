@@ -54,7 +54,7 @@ if "%LIBSCRIPT_ROOT_DIR%"=="" (
 )
 
 echo ==> Testing Universal Database Discovery on Windows...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\discover_databases.cmd" --eval
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\discover_databases.cmd" --eval
 
 echo ==> Database discovery verification succeeded on Windows^^!
 exit /b 0

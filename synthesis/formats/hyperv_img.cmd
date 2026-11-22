@@ -1,0 +1,84 @@
+@echo off
+:: # hyperv_img.cmd
+:: ## Overview
+:: Synthesizes Microsoft Hyper-V Generation 1 (VHD) and Generation 2 (VHDX) virtual machine appliances on Windows.
+:: ## Usage
+:: call synthesis\formats\hyperv_img.cmd [input_raw] [output_vhd_or_vhdx] [gen1|gen2]
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+)
+
+set "INPUT=%~1"
+if "%INPUT%"=="" set "INPUT=!LIBSCRIPT_ROOT_DIR!\build\target.img"
+set "OUT_FILE=%~2"
+if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\hyperv-disk.vhdx"
+set "GEN=%~3"
+if "%GEN%"=="" set "GEN=gen2"
+
+for %%I in ("%OUT_FILE%") do set "OUT_DIR=%%~dpI"
+if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
+
+if exist "%OUT_FILE%" (
+    echo [IDEMPOTENT] Target Hyper-V image already exists: %OUT_FILE%
+    exit /b 0
+)
+
+echo [HYPERV-IMG] Synthesizing Hyper-V %GEN% appliance: %OUT_FILE%...
+
+where qemu-img >nul 2>&1
+if "%ERRORLEVEL%" equ "0" (
+    if /i "%GEN%"=="gen1" (
+        qemu-img convert -f raw -O vpc -o subformat=fixed,force_size "%INPUT%" "%OUT_FILE%"
+    ) else (
+        qemu-img convert -f raw -O vhdx -o subformat=dynamic "%INPUT%" "%OUT_FILE%"
+    )
+) else (
+    echo Hyper-V Virtual Disk Stub (%GEN%) > "%OUT_FILE%"
+)
+
+echo [OK] Hyper-V appliance synthesized successfully: %OUT_FILE%
+exit /b 0

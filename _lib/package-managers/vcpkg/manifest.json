@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "vcpkg",
-  "provides": ["vcpkg"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "vcpkg",
-  "description": "Bootstrap module for the `vcpkg` package manager/tool.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap module for the `vcpkg` package manager/tool.",
+  "name": "vcpkg",
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["vcpkg"],
+  "tier": "T1",
+  "title": "vcpkg"
 }

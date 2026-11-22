@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ollama",
-  "title": "Ollama",
-  "description": "Get up and running with large language models.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "app-servers",
-  "provides": ["ollama"],
   "conflicts": [],
-  "os_whitelist": ["linux", "darwin", "windows"],
+  "description": "Get up and running with large language models.",
+  "name": "ollama",
   "os_blacklist": ["freebsd"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["ollama"],
+  "tier": "T1",
+  "title": "Ollama"
 }

@@ -59,7 +59,7 @@ echo ==> Testing Remote DB Connection Failure Handling on Windows...
 set "BAD_IP=192.0.2.254"
 
 :: Execute the CMD provisioning script directly, expecting it to handle the failure gracefully
-call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_logical_db.cmd" --host "!BAD_IP!" --port 3306 --db-name testdb > "%TEMP%\test_remote_db_failure.out" 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\provision_logical_db.cmd" --host "!BAD_IP!" --port 3306 --db-name testdb > "%TEMP%\test_remote_db_failure.out" 2>&1
 
 findstr /c:"Attempting creation, but will skip gracefully on permission denied" "%TEMP%\test_remote_db_failure.out" >nul
 if "%ERRORLEVEL%" NEQ "0" (

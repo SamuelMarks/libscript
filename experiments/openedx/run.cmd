@@ -37,5 +37,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment\pkg_ui_runner.cmd" "--suite-dir=!SCRIPT_DIR!" %*
+call "!LIBSCRIPT_ROOT_DIR!\experiments\_common\pkg_ui_runner.cmd" "--suite-dir=!SCRIPT_DIR!" %*
 exit /b !errorlevel!

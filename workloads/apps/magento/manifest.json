@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "magento",
+  "category": "web-apps",
+  "title": "magento",
+  "license": "OSL-3.0",
+  "license_name": "Open Software License 3.0",
+  "description": "magento stack",
+  "provides": ["magento"],
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["mysql", "nginx", "php", "unzip"]
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
+}

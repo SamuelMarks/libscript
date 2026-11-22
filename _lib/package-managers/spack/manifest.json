@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "spack",
-  "provides": ["package-manager", "spack"],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "title": "spack",
-  "description": "Bootstrap script for [Spack](https://spack.io/), a flexible package manager that supports multiple versions, configurations, platforms, and compilers.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap script for [Spack](https://spack.io/), a flexible package manager that supports multiple versions, configurations, platforms, and compilers.",
+  "name": "spack",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "spack"],
+  "tier": "T1",
+  "title": "spack"
 }

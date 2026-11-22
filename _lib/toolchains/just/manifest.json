@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "just",
-  "title": "Just",
-  "description": "A handy way to save and run project-specific commands.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["just", "task-runner"],
+  "description": "A handy way to save and run project-specific commands.",
+  "name": "just",
   "os_whitelist": ["linux", "darwin", "windows"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["just", "task-runner"],
+  "tier": "T1",
+  "title": "Just"
 }

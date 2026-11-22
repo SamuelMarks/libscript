@@ -41,7 +41,7 @@ truncate -s 100M "$RAW_DISK" 2>/dev/null || dd if=/dev/zero of="$RAW_DISK" bs=1M
 
 # 1. Azure VHD Verification
 AZURE_VHD="$TEST_DIR/azure.vhd"
-"${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/azure_vhd.sh" "$RAW_DISK" "$AZURE_VHD" "1"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/azure_vhd.sh" "$RAW_DISK" "$AZURE_VHD" "1"
 
 VHD_SIZE=$(wc -c < "$AZURE_VHD" | tr -d ' ' 2>/dev/null || echo 0)
 VHD_REM=$(( VHD_SIZE % 1048576 ))
@@ -54,7 +54,7 @@ printf '[PASS] Azure VHD geometry validated (size=%s bytes, remainder=%s mod 1MB
 
 # 2. GCP Image Verification
 GCP_TAR="$TEST_DIR/gcp.tar.gz"
-"${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/gcp_image.sh" "$RAW_DISK" "$GCP_TAR" "1"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/gcp_image.sh" "$RAW_DISK" "$GCP_TAR" "1"
 
 GCP_MEMBERS=$(tar -tf "$GCP_TAR" 2>/dev/null || echo "")
 case "$GCP_MEMBERS" in
@@ -69,7 +69,7 @@ esac
 
 # 3. AWS AMI Raw Verification
 AWS_RAW="$TEST_DIR/aws.raw"
-"${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/aws_ami.sh" "$RAW_DISK" "$AWS_RAW" "1"
+"${LIBSCRIPT_ROOT_DIR}/synthesis/formats/aws_ami.sh" "$RAW_DISK" "$AWS_RAW" "1"
 
 if [ ! -f "$AWS_RAW" ]; then
   printf '[FAIL] AWS raw EBS volume was not generated.\n' >&2
@@ -79,7 +79,7 @@ printf '[PASS] AWS AMI raw EBS image verified successfully.\n'
 
 # 4. Cloud-Init NoCloud ISO Verification
 CIDATA_ISO="$TEST_DIR/cidata.iso"
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/cloud/gen_nocloud_iso.sh" "test-node" "" "$CIDATA_ISO"
+"${LIBSCRIPT_ROOT_DIR}/infrastructure/resources/cloudinit/gen_nocloud_iso.sh" "test-node" "" "$CIDATA_ISO"
 
 if [ ! -f "$CIDATA_ISO" ]; then
   printf '[FAIL] Cloud-Init NoCloud ISO was not generated.\n' >&2

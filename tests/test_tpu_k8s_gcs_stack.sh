@@ -40,10 +40,10 @@ fail_ml() {
 
 printf '%s\n' '=== 1. GKE+TPU Topology Convergence, Dynamic Scale, & Choreography Checkpoints ==='
 export LIBSCRIPT_TOPOLOGY_STATE_DIR="${TEST_TMP}/gke_topo"
-"${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" up "${LIBSCRIPT_ROOT_DIR}/topologies/gke-tpu-cluster/topology.json" >/dev/null
-"${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" up "${LIBSCRIPT_ROOT_DIR}/topologies/gke-tpu-cluster/topology.json" >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" up "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/gke-tpu-cluster/topology.json" >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" up "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/gke-tpu-cluster/topology.json" >/dev/null
 jq -e '.status == "HEALTHY" and (.completed_hooks | length == 5)' "${LIBSCRIPT_TOPOLOGY_STATE_DIR}/.topology_state.json" >/dev/null || fail_ml 'Topology choreography hooks not recorded'
-"${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" scale "${LIBSCRIPT_ROOT_DIR}/topologies/gke-tpu-cluster/topology.json" tpu-slice-pool=4 >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" scale "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/gke-tpu-cluster/topology.json" tpu-slice-pool=4 >/dev/null
 jq -e '[.nodes[] | select(.group == "tpu-slice-pool")] | length == 4' "${LIBSCRIPT_TOPOLOGY_STATE_DIR}/.topology_state.json" >/dev/null || fail_ml 'Dynamic topology scale failed to reconcile node count to 4'
 
 printf '%s\n' '=== 2. 4-Role GCS ML Storage Synthesis & TFRC Same-Region Verification ==='
@@ -127,9 +127,9 @@ if PATH="${TEST_TMP}/bin:${PATH}" TFRC_CONFIG="${TEST_TMP}/tfrc.policy.json" GCP
 fi
 
 printf '%s\n' '=== 3. Unified tpu_vm & xpk Payload Scheduler Lifecycle ==='
-"${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" compile "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gcp-tpu-vm/payload.json" --scheduler=tpu_vm | jq -e '.scheduler == "tpu_vm" and .sync_mode == "tree-hash-all-workers"' >/dev/null || fail_ml 'tpu_vm compile failed'
-"${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" submit "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gcp-tpu-vm/payload.json" --scheduler=tpu_vm --dry-run | jq -e '.status == "ok"' >/dev/null || fail_ml 'tpu_vm submit failed'
-"${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" destroy "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gcp-tpu-vm/payload.json" --scheduler=tpu_vm --dry-run | jq -e '.status == "ok"' >/dev/null || fail_ml 'tpu_vm destroy failed'
+"${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" compile "${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/gcp-tpu-vm/payload.json" --scheduler=tpu_vm | jq -e '.scheduler == "tpu_vm" and .sync_mode == "tree-hash-all-workers"' >/dev/null || fail_ml 'tpu_vm compile failed'
+"${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" submit "${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/gcp-tpu-vm/payload.json" --scheduler=tpu_vm --dry-run | jq -e '.status == "ok"' >/dev/null || fail_ml 'tpu_vm submit failed'
+"${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" destroy "${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/gcp-tpu-vm/payload.json" --scheduler=tpu_vm --dry-run | jq -e '.status == "ok"' >/dev/null || fail_ml 'tpu_vm destroy failed'
 
 rm -rf "${TEST_TMP}"
 printf '%s\n' '[PASS] All Pillar 3 ML / TPU / Kubernetes / GCS stack tests passed!'

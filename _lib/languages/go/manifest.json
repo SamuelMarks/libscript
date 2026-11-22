@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "go",
-  "title": "Go Toolchain",
-  "description": "An open-source programming language that makes it easy to build simple, reliable, and efficient software.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["compiler", "go"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "An open-source programming language that makes it easy to build simple, reliable, and efficient software.",
+  "name": "go",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["compiler", "go"],
   "repository": "https://github.com/golang/go",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Go Toolchain"
 }

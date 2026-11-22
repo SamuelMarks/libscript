@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/workloads/schemas/workload-common.schema.json",
+  "title": "LibScript T5 Shared Workload, Resource & Tenant Definitions",
+  "description": "Shared T5 resource, port, secret, artifact, and tenant-binding definitions referenced across libscript.schema.json, payload.schema.json, and ml-workload.schema.json.",
+  "$defs": {
+    "computeResources": {
+      "type": "object",
+      "description": "Compute, memory, GPU, and Cloud TPU resource request specification",
+      "properties": {
+        "cpu_cores": {
+          "type": "number",
+          "minimum": 0.1,
+          "description": "Requested virtual CPU cores"
+        },
+        "memory_mb": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Requested system memory in megabytes"
+        },
+        "gpu_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of discrete GPUs requested per replica"
+        },
+        "tpu_accelerator_type": {
+          "type": "string",
+          "description": "Cloud TPU accelerator SKU (e.g., v4-8, v5litepod-8, v6e-8)"
+        },
+        "tpu_topology": {
+          "type": "string",
+          "description": "Multi-dimensional TPU interconnect topology (e.g., 2x2x1, 2x4)"
+        },
+        "tpu_slice_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of coordinated TPU slices for gang-scheduled jobs"
+        }
+      }
+    },
+    "servicePort": {
+      "type": "object",
+      "description": "Declared network listener port for a workload or stack service",
+      "required": ["port"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Logical port name (e.g., http, grpc, metrics)"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Listening TCP or UDP port number"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": ["tcp", "udp"],
+          "default": "tcp",
+          "description": "Transport layer protocol"
+        }
+      }
+    }
+  }
+}

@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "gcc",
-  "title": "GNU Compiler Collection (GCC)",
-  "description": "Standalone version manager and source builder for the GNU C Compiler (GCC).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "cross-toolchain"],
   "category": "languages",
-  "provides": ["compiler", "c", "gcc"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "Standalone version manager and source builder for the GNU C Compiler (GCC).",
+  "name": "gcc",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["compiler", "c", "gcc"],
+  "tier": "T1",
+  "title": "GNU Compiler Collection (GCC)"
 }

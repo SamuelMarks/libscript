@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "prestashop",
+  "category": "web-apps",
+  "title": "prestashop",
+  "description": "prestashop stack",
+  "provides": ["prestashop"],
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["mysql", "nginx", "php", "unzip"]
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
+}

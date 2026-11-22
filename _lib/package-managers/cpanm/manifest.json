@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cpanm",
-  "provides": ["cpanm"],
-  "os_whitelist": ["all"],
-  "title": "cpanm",
-  "description": "Bootstrap module for `cpanm` (CPAN Minus - Perl).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap module for `cpanm` (CPAN Minus - Perl).",
+  "name": "cpanm",
+  "os_whitelist": ["all"],
+  "provides": ["cpanm"],
+  "tier": "T1",
+  "title": "cpanm"
 }

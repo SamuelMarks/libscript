@@ -70,7 +70,7 @@ for /f "usebackq tokens=1,2,3 delims= " %%A in ("%list_file%") do (
     set "c=%%C"
     if not "!u!"=="" (
         if not "!u:~0,1!"=="#" (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!u!" "!d!" "!c!"
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!u!" "!d!" "!c!"
         )
     )
 )

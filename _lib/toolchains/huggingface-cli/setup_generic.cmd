@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%HUGGINGFACE_CLI_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%HUGGINGFACE_CLI_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%HUGGINGFACE_CLI_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%HUGGINGFACE_CLI_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -108,8 +108,8 @@ exit /b 0
 :action_use
 if "%HUGGINGFACE_CLI_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%HUGGINGFACE_CLI_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/huggingface/huggingface_hub/releases/latest"`) do set "EXACT_VERSION=%%a"
-) else if "%HUGGINGFACE_CLI_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/huggingface/huggingface_hub/releases/latest"`) do set "EXACT_VERSION=%%a"
+if "%HUGGINGFACE_CLI_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/huggingface/huggingface_hub/releases/latest"`) do set "EXACT_VERSION=%%a"
+) else if "%HUGGINGFACE_CLI_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/huggingface/huggingface_hub/releases/latest"`) do set "EXACT_VERSION=%%a"
 ) else (
     set "EXACT_VERSION=%HUGGINGFACE_CLI_VERSION%"
 )
@@ -134,7 +134,7 @@ if "%HUGGINGFACE_CLI_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading huggingface-cli %HUGGINGFACE_CLI_VERSION% to %DOWNLOAD_DIR%\huggingface-cli...
     if not exist "%DOWNLOAD_DIR%\huggingface-cli" mkdir "%DOWNLOAD_DIR%\huggingface-cli"
     if not "%HUGGINGFACE_CLI_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HUGGINGFACE_CLI_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\huggingface-cli\huggingface-cli-%HUGGINGFACE_CLI_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%HUGGINGFACE_CLI_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\huggingface-cli\huggingface-cli-%HUGGINGFACE_CLI_VERSION%.zip"
     ) else (
         echo HUGGINGFACE_CLI_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%HUGGINGFACE_CLI_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends huggingface-cli
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends huggingface-cli
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\huggingface-cli\huggingface-cli-%HUGGINGFACE_CLI_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%HUGGINGFACE_CLI_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HUGGINGFACE_CLI_DOWNLOAD_URL%" "%TEMP%\huggingface-cli.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%HUGGINGFACE_CLI_DOWNLOAD_URL%" "%TEMP%\huggingface-cli.zip"
         tar -xf "%TEMP%\huggingface-cli.zip" -C "%TARGET_DIR%"
     ) else (
         if exist "C:\Program Files\Python312" set "PATH=C:\Program Files\Python312;C:\Program Files\Python312\Scripts;!PATH!"
@@ -176,7 +176,7 @@ if not exist "%TARGET_DIR%\bin" (
             if exist "%LOCALAPPDATA%\Programs\Python\Python312" set "PATH=%LOCALAPPDATA%\Programs\Python\Python312;%LOCALAPPDATA%\Programs\Python\Python312\Scripts;!PATH!"
         )
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_venv "" "%TARGET_DIR%\venv" >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\python_env.cmd" libscript_python_venv "" "%TARGET_DIR%\venv" >nul 2>&1
         if exist "%TARGET_DIR%\venv\Scripts\pip.exe" (
             "%TARGET_DIR%\venv\Scripts\pip.exe" install -q -U "huggingface_hub[cli]" 2>nul || "%TARGET_DIR%\venv\Scripts\pip.exe" install -q -U "huggingface_hub"
             if exist "%TARGET_DIR%\venv\Scripts\huggingface-cli.exe" copy /y "%TARGET_DIR%\venv\Scripts\huggingface-cli.exe" "%TARGET_DIR%\bin\huggingface-cli.exe" >nul 2>&1
@@ -220,5 +220,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "huggingface-cli" "%ACTION%" "%HUGGINGFACE_CLI_VERSION%" "%HUGGINGFACE_CLI_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\huggingface-cli\%HUGGINGFACE_CLI_VERSION%\\bin\\huggingface-cli.exe\"" "%LIBSCRIPT_HOME%\huggingface-cli\%HUGGINGFACE_CLI_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "huggingface-cli" "%ACTION%" "%HUGGINGFACE_CLI_VERSION%" "%HUGGINGFACE_CLI_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\huggingface-cli\%HUGGINGFACE_CLI_VERSION%\\bin\\huggingface-cli.exe\"" "%LIBSCRIPT_HOME%\huggingface-cli\%HUGGINGFACE_CLI_VERSION%"
 exit /b !errorlevel!

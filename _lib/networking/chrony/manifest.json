@@ -1,16 +1,17 @@
 {
-  "name": "chrony",
-  "title": "Chrony NTP",
-  "description": "Versatile Network Time Protocol daemon",
-  "provides": ["chrony"],
+  "capabilities": ["userland-package"],
   "category": "networking",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Versatile Network Time Protocol daemon",
+  "name": "chrony",
   "os_blacklist": ["windows", "sunos"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["chrony"],
+  "tier": "T1",
+  "title": "Chrony NTP",
+  "versions": ["1.0.0"]
 }

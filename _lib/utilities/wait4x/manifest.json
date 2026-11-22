@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "wait4x",
-  "title": "wait4x",
-  "description": "Wait4X is a command-line tool that allows you to wait for various services or conditions to become available before executing a command.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["wait4x"],
+  "description": "Wait4X is a command-line tool that allows you to wait for various services or conditions to become available before executing a command.",
+  "name": "wait4x",
   "os_whitelist": ["linux", "darwin", "windows"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["wait4x"],
+  "tier": "T1",
+  "title": "wait4x"
 }

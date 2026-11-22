@@ -1,0 +1,53 @@
+#!/bin/sh
+# ## Overview
+# Test suite for Vagrant component.
+#
+# ## Usage
+# Execute this script to verify Vagrant installation and functionality.
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+if [ -z "${UNAME:-}" ] || [ -z "${ARCH:-}" ]; then
+  _vgt_oi_this="${THIS_FILE}"
+  _vgt_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_vgt_oi_this}"
+  SCRIPT_DIR="${_vgt_oi_dir}"
+  unset _vgt_oi_this _vgt_oi_dir || true
+fi
+
+if ! command -v vagrant >/dev/null 2>&1; then
+  if [ "${ARCH:-}" = "aarch64" ] && [ "${UNAME:-}" = "Linux" ]; then
+    printf '%s\n' 'Vagrant is unsupported upstream on Linux aarch64, skipping.'
+    exit 0
+  fi
+  printf '%s\n' 'vagrant binary not found in PATH' >&2
+  exit 1
+fi
+
+vagrant --version
+vagrant plugin list 2>/dev/null || true

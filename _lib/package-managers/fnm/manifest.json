@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "fnm",
-  "provides": ["package-manager", "fnm"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "title": "fnm",
-  "description": "Bootstrap script for [fnm](https://github.com/Schniz/fnm), a fast and simple Node.js version manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap script for [fnm](https://github.com/Schniz/fnm), a fast and simple Node.js version manager.",
+  "name": "fnm",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["package-manager", "fnm"],
   "repository": "https://github.com/Schniz/fnm",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "fnm"
 }

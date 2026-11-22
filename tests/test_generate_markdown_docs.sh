@@ -62,11 +62,11 @@ fail_msg() {
 # Populates a temporary workspace with >55 components, UTF-8 characters, and schema definitions.
 setup_mock_workspace() {
   _ws="$1"
-  mkdir -p "$_ws/_lib/_common"
+  mkdir -p "$_ws/engine/common"
   cp "${LIBSCRIPT_ROOT_DIR}/.prettierrc" "$_ws/.prettierrc" 2>/dev/null || true
   cp "${LIBSCRIPT_ROOT_DIR}/.editorconfig" "$_ws/.editorconfig" 2>/dev/null || true
 
-  cat <<'EOF' > "$_ws/_lib/_common/base_vars.schema.json"
+  cat <<'EOF' > "$_ws/engine/schemas/base_vars.schema.json"
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "base vars",

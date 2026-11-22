@@ -51,4 +51,4 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=openvpn"
-call "%~dp0..\..\..\_lib\_common\component_core.cmd" %*
+call "%~dp0..\..\..\engine\common\component_core.cmd" %*

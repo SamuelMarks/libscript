@@ -49,7 +49,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "OPENEDX_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\openedx"
+set "OPENEDX_DIR=%LIBSCRIPT_ROOT_DIR%\workloads\apps\openedx"
 
 echo ==^> Testing Open edX CLI Router on Windows...
 call "%OPENEDX_DIR%\cli.cmd" help >nul

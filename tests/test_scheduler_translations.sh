@@ -37,55 +37,55 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # 1. Test all AI & application payloads across K8s + Marathon-equivalent and Mesos + Marathon
-for rel_pf in "payloads/ai/vllm/payload.json" "payloads/ai/ollama/payload.json" "payloads/ai/jetstream/payload.json" "payloads/ai/gke-xpk-training/payload.json" "payloads/ai/gke-xpk-inference/payload.json" "payloads/ai/gke-tpu-cluster/payload.json" "payloads/ai/gcp-gpu-vm/payload.json" "payloads/ai/gcp-tpu-vm/payload.json"; do
+for rel_pf in "workloads/payloads/ai/vllm/payload.json" "workloads/payloads/ai/ollama/payload.json" "workloads/payloads/ai/jetstream/payload.json" "workloads/payloads/ai/gke-xpk-training/payload.json" "workloads/payloads/ai/gke-xpk-inference/payload.json" "workloads/workloads/payloads/ai/jax-tpu-multi-slice-training/payload.json" "workloads/payloads/ai/gcp-gpu-vm/payload.json" "workloads/payloads/ai/gcp-tpu-vm/payload.json"; do
   pf="${LIBSCRIPT_ROOT_DIR}/${rel_pf}"
   [ -f "$pf" ] || continue
 
   # Kubernetes + Marathon-Equivalent Controller verification (2x idempotent compile & lifecycle)
-  k8s_pass1=$(SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" compile "$pf" --scheduler kubernetes)
-  k8s_pass2=$(SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" compile "$pf" --scheduler kubernetes)
+  k8s_pass1=$(SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" compile "$pf" --scheduler kubernetes)
+  k8s_pass2=$(SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" compile "$pf" --scheduler kubernetes)
   [ "$k8s_pass1" = "$k8s_pass2" ] || exit 1
   printf '%s
 ' "$k8s_pass1" | jq -e '.metadata.labels["libscript.io/paas-controller"] == "marathon-equivalent" and .marathon_equivalent.id != null' >/dev/null
 
   for verb in submit status logs stop destroy; do
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" "$verb" "$pf" --scheduler kubernetes | jq -e '.scheduler == "kubernetes" and .controller == "marathon-equivalent"' >/dev/null
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" "$verb" "$pf" --scheduler kubernetes | jq -e '.scheduler == "kubernetes" and .controller == "marathon-equivalent"' >/dev/null
   done
 
   # Apache Mesos + Marathon verification (2x idempotent compile, containerizers, & 6-verb lifecycle)
-  mesos_pass1=$(SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" compile "$pf" --scheduler mesos)
-  mesos_pass2=$(SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" compile "$pf" --scheduler mesos)
+  mesos_pass1=$(SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" compile "$pf" --scheduler mesos)
+  mesos_pass2=$(SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" compile "$pf" --scheduler mesos)
   [ "$mesos_pass1" = "$mesos_pass2" ] || exit 1
   printf '%s
 ' "$mesos_pass1" | jq -e '.id != null and .cpus != null and .mem != null and .instances != null and .container.type != null' >/dev/null
 
   for ctype in DOCKER MESOS; do
-    LIBSCRIPT_MESOS_CONTAINERIZER="$ctype" SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/mesos.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/mesos.sh" compile "$pf" | jq -e --arg c "$ctype" '.container.type == $c' >/dev/null
+    LIBSCRIPT_MESOS_CONTAINERIZER="$ctype" SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/mesos.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/mesos.sh" compile "$pf" | jq -e --arg c "$ctype" '.container.type == $c' >/dev/null
   done
 
   for verb in submit status logs stop destroy; do
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" "$verb" "$pf" --scheduler mesos | jq -e '.scheduler == "mesos" and .framework == "marathon"' >/dev/null
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" "$verb" "$pf" --scheduler mesos | jq -e '.scheduler == "mesos" and .framework == "marathon"' >/dev/null
   done
 done
 
 # 2. Verify Nomad, MicroVM (firecracker, cloud-hypervisor, solo5), XPK, and Slurm/Ray
-PAYLOAD_FILE="${LIBSCRIPT_ROOT_DIR}/payloads/ai/vllm/payload.json"
+PAYLOAD_FILE="${LIBSCRIPT_ROOT_DIR}/workloads/payloads/ai/vllm/payload.json"
 for sched in kubernetes nomad mesos microvm xpk slurm_ray; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" compile "$PAYLOAD_FILE" --scheduler "$sched" >/dev/null
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" compile "$PAYLOAD_FILE" --scheduler "$sched" >/dev/null
   for verb in submit status logs stop destroy; do
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" "$verb" "$PAYLOAD_FILE" --scheduler "$sched" >/dev/null
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/engine.sh" "$verb" "$PAYLOAD_FILE" --scheduler "$sched" >/dev/null
   done
 done
 
 for vmm in firecracker cloud-hypervisor solo5; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/microvm.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/microvm.sh" compile "$PAYLOAD_FILE" --vmm "$vmm" | jq -e --arg v "$vmm" '.vmm == $v' >/dev/null
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/microvm.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/microvm.sh" compile "$PAYLOAD_FILE" --vmm "$vmm" | jq -e --arg v "$vmm" '.vmm == $v' >/dev/null
 done
 
 # 3. Verify all 10 Native OS Init Systems (systemd, openrc, runit, s6, dinit, sysvinit, bsd-rc, smf, launchd, sc)
 for init_sys in systemd openrc runit s6 dinit sysvinit bsd-rc smf launchd sc; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/native.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/native.sh" compile "$PAYLOAD_FILE" --init "$init_sys" >/dev/null
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/native.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/native.sh" compile "$PAYLOAD_FILE" --init "$init_sys" >/dev/null
   for verb in submit status logs stop destroy; do
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/native.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/native.sh" "$verb" "$PAYLOAD_FILE" --init "$init_sys" >/dev/null
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/native.sh" sh "${LIBSCRIPT_ROOT_DIR}/workloads/schedulers/native.sh" "$verb" "$PAYLOAD_FILE" --init "$init_sys" >/dev/null
   done
 done
 

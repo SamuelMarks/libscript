@@ -1,19 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "postgres",
-  "title": "PostgreSQL",
-  "license": "PostgreSQL",
-  "license_name": "The PostgreSQL License",
-  "description": "A powerful, open source object-relational database system.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["database", "postgres", "postgresql", "rdbms", "sql"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "ports": [5432],
-  "stateful": true,
-  "multitenant": true,
+  "description": "A powerful, open source object-relational database system.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -26,12 +19,20 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "repository": "https://github.com/postgres/postgres",
+  "license": "PostgreSQL",
+  "license_name": "The PostgreSQL License",
+  "multitenant": true,
+  "name": "postgres",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [5432],
   "process_model": "multiprocess-fork",
-  "unikernel_support": ["osv", "nanos"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["database", "postgres", "postgresql", "rdbms", "sql"],
+  "repository": "https://github.com/postgres/postgres",
+  "stateful": true,
+  "tier": "T1",
+  "title": "PostgreSQL",
+  "unikernel_support": ["osv", "nanos"]
 }

@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%WGET_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%WGET_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%WGET_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%WGET_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -134,7 +134,7 @@ if "%WGET_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading wget %WGET_VERSION% to %DOWNLOAD_DIR%\wget...
     if not exist "%DOWNLOAD_DIR%\wget" mkdir "%DOWNLOAD_DIR%\wget"
     if not "%WGET_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WGET_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\wget\wget-%WGET_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%WGET_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\wget\wget-%WGET_VERSION%.zip"
     ) else (
         echo WGET_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%WGET_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends wget
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends wget
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\wget\wget-%WGET_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%WGET_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WGET_DOWNLOAD_URL%" "%TEMP%\wget.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%WGET_DOWNLOAD_URL%" "%TEMP%\wget.zip"
         tar -xf "%TEMP%\wget.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for wget.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "wget" "%ACTION%" "%WGET_VERSION%" "%WGET_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\wget\%WGET_VERSION%\\bin\\wget.exe\"" "%LIBSCRIPT_HOME%\wget\%WGET_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "wget" "%ACTION%" "%WGET_VERSION%" "%WGET_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\wget\%WGET_VERSION%\\bin\\wget.exe\"" "%LIBSCRIPT_HOME%\wget\%WGET_VERSION%"
 exit /b !errorlevel!

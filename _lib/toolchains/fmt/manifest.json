@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "fmt",
-  "title": "{fmt} Modern C++17 Formatting Library",
-  "description": "Standalone version manager and CMake source builder for {fmt} (pinned default 11.0.2), providing both single-TU fmt/format.cc template inputs and full multi-TU CTest verification.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["fmt", "libfmt"],
+  "description": "Standalone version manager and CMake source builder for {fmt} (pinned default 11.0.2), providing both single-TU fmt/format.cc template inputs and full multi-TU CTest verification.",
+  "name": "fmt",
   "os_whitelist": ["all"],
+  "provides": ["fmt", "libfmt"],
   "repository": "https://github.com/fmtlib/fmt",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "{fmt} Modern C++17 Formatting Library"
 }

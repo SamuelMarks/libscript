@@ -31,7 +31,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path (Join-Path $ScriptDir "..\..\..")).Path } else { $env:LIBSCRIPT_ROOT_DIR }
 
 if ($InstallMethod -eq "system") {
-    & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_depends gitea
+    & (Join-Path $LibscriptRootDir "engine\common\pkg_mgr.cmd") :libscript_depends gitea
 } else {
     $Prefix = $env:PREFIX
     if ([string]::IsNullOrEmpty($Prefix)) {
@@ -50,7 +50,7 @@ if ($InstallMethod -eq "system") {
     $Url = "https://dl.gitea.com/gitea/${GiteaVersion}/gitea-${GiteaVersion}-windows-4.0-amd64.exe"
 
     Write-Host "Downloading Gitea from $Url ..."
-    & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_download $Url $ExePath
+    & (Join-Path $LibscriptRootDir "engine\common\pkg_mgr.cmd") :libscript_download $Url $ExePath
 
     Write-Host "Gitea installed to $ExePath"
 }
@@ -82,7 +82,7 @@ if ($Action -eq "download") {
 
 if ($Action -match "^(start|stop|restart|status|health|logs|up|down)$") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_gitea" }
         if (Get-Command libscript_service -ErrorAction SilentlyContinue) {
@@ -100,7 +100,7 @@ if ($Action -match "^(start|stop|restart|status|health|logs|up|down)$") {
 
 if ($Action -eq "install-service") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_gitea" }
         if (Get-Command libscript_install_service -ErrorAction SilentlyContinue) {
@@ -118,7 +118,7 @@ if ($Action -eq "install-service") {
 
 if ($Action -eq "uninstall-service") {
     if ($InstallMethod -eq "libscript_native" -or $InstallMethod -eq "system") {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         if ($env:LIBSCRIPT_SERVICE_NAME) { $ServiceName = $env:LIBSCRIPT_SERVICE_NAME } elseif ($env:PACKAGE_NAME) { $ServiceName = "libscript_$($env:PACKAGE_NAME)" } else { $ServiceName = "libscript_gitea" }
         if (Get-Command libscript_uninstall_service -ErrorAction SilentlyContinue) {

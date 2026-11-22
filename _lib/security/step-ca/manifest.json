@@ -1,14 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "step-ca",
-  "title": "Smallstep step-ca",
-  "description": "Private online X.509 and SSH certificate authority server supporting automated ACME certificate issuance.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "security",
-  "provides": ["step-ca", "certificate-authority", "acme"],
-  "os_whitelist": ["all"],
-  "ports": [9000],
-  "repository": "https://github.com/smallstep/certificates",
+  "description": "Private online X.509 and SSH certificate authority server supporting automated ACME certificate issuance.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -21,9 +18,13 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "step-ca",
+  "os_whitelist": ["all"],
+  "ports": [9000],
+  "provides": ["step-ca", "certificate-authority", "acme"],
+  "repository": "https://github.com/smallstep/certificates",
+  "tier": "T1",
+  "title": "Smallstep step-ca"
 }

@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "dnf",
-  "provides": ["dnf"],
-  "os_whitelist": ["rhel", "fedora", "centos", "rocky", "almalinux"],
-  "title": "dnf",
-  "description": "Bootstrap module for the `dnf` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap module for the `dnf` package manager.",
+  "name": "dnf",
+  "os_whitelist": ["rhel", "fedora", "centos", "rocky", "almalinux"],
+  "provides": ["dnf"],
+  "tier": "T1",
+  "title": "dnf"
 }

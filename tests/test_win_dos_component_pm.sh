@@ -158,12 +158,12 @@ env LIBSCRIPT_TARGET_OS='windows' LIBSCRIPT_TARGET_ARCH='x86_64' LIBSCRIPT_OFFLI
 [ "$(cat "${WIN_HOME}/dash/default/bin/dash.exe")" = 'WIN32-PE-X64-DASH-0.5.12' ] || fail_test 'Windows dash payload mismatch'
 [ "$(cat "${WIN_HOME}/freebsd-usr-bin/default/bin/sed.exe")" = 'WIN32-PE-FBSD-SED-15.0.0' ] || fail_test 'Windows freebsd-usr-bin sed payload mismatch'
 
-# 4. Verify *-windows component aliases via `libscript.sh install <alias> <ver>`
+# 4. Verify canonical `freebsd-usr-bin` component installation via `libscript.sh install freebsd-usr-bin <ver>`
 ALIAS_HOME="${TEST_WORK}/alias_home"
-env LIBSCRIPT_TARGET_OS='windows' LIBSCRIPT_TARGET_ARCH='x86_64' LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="$ALIAS_HOME" DOWNLOAD_DIR="$DL_FIXTURES" "$LIBSCRIPT_ROOT_DIR/libscript.sh" install freebsd-usr-bin-windows 15.0.0
-[ "$(cat "${ALIAS_HOME}/freebsd-usr-bin/default/bin/sed.exe")" = 'WIN32-PE-X64-FBSD-SUITE-15.0.0' ] || fail_test 'freebsd-usr-bin-windows suite alias failed'
+env LIBSCRIPT_TARGET_OS='windows' LIBSCRIPT_TARGET_ARCH='x86_64' LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="$ALIAS_HOME" DOWNLOAD_DIR="$DL_FIXTURES" "$LIBSCRIPT_ROOT_DIR/libscript.sh" install freebsd-usr-bin 15.0.0
+[ "$(cat "${ALIAS_HOME}/freebsd-usr-bin/default/bin/sed.exe")" = 'WIN32-PE-X64-FBSD-SUITE-15.0.0' ] || fail_test 'freebsd-usr-bin direct install failed'
 
-# 5. Verify in-process `depends jq` shell function from _lib/_common/pkg_mgr.sh updates PATH
+# 5. Verify in-process `depends jq` shell function from engine/common/pkg_mgr.sh updates PATH
 FUNC_HOME="${TEST_WORK}/func_home"
 (
   LIBSCRIPT_TARGET_OS='msdos'
@@ -172,7 +172,7 @@ FUNC_HOME="${TEST_WORK}/func_home"
   DOWNLOAD_DIR="$DL_FIXTURES"
   export LIBSCRIPT_TARGET_OS LIBSCRIPT_OFFLINE LIBSCRIPT_HOME DOWNLOAD_DIR
   unset ARCH UNAME UNAME_LOWER TARGET_OS PKG_MGR IS_MSDOS || true
-  SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/pkg_mgr.sh"
+  SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/engine/common/pkg_mgr.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "$SCRIPT_NAME"

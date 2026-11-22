@@ -139,6 +139,15 @@ if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_posix.cmd" (
     )
 )
 
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_tiers.cmd" (
+    echo Running T0-T5 architectural tier boundary audit...
+    call "!HOOK_REPO_ROOT!\devtools\audit\audit_tiers.cmd" !AUDIT_MODE!
+    if errorlevel 1 (
+        echo [ERROR] Architectural tier boundary audit failed.
+        exit /b 1
+    )
+)
+
 if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_version_manager.cmd" (
     echo Running Version Manager Contract audit...
     call "!HOOK_REPO_ROOT!\devtools\audit\audit_version_manager.cmd"

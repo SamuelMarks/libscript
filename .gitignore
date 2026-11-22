@@ -12,8 +12,8 @@
 !make.sh
 !make.bat
 !libscript.json
-!packaging/installer.schema.json
-!_lib/_common/prelude.sh
+!synthesis/msi/installer.schema.json
+!engine/common/prelude.sh
 !top.sh
 !bottom.sh
 
@@ -140,8 +140,8 @@ generate_*
 parse_*
 standardize_*
 # Exception for core test helpers
-!_lib/_common/test_base.*
-!_lib/_common/test_matrix_driver.*
+!engine/common/test_base.*
+!engine/common/test_matrix_driver.*
 !tests/update_results.*
 !tests/test_update_results.*
 !cli/commands/config/validate_lfs_profile.*
@@ -151,11 +151,12 @@ standardize_*
 !tests/test_harvest_payload.*
 !tests/test_hydrate_offline_cache.*
 !tests/test_package_as_docker_offline.*
-!_lib/web-apps/openedx/test_harness.*
-!_lib/web-apps/openedx/test_server.*
+!workloads/apps/openedx/test_harness.*
+!workloads/apps/openedx/test_server.*
 !tests/test_packaging_branding.*
 !test_table.*
-!packaging/create_desktop_shortcuts.*
+!synthesis/msi/create_desktop_shortcuts.*
+!synthesis/msi/live_installer/**
 !tests/test_msi_generation.*
 !tests/os_boot_test.*
 !tests/os_gui_smoke_test.*
@@ -164,14 +165,14 @@ standardize_*
 !devtools/docs-gen/generate_markdown_docs.*
 !devtools/generate_html_docs.*
 !docker/create_docker_builder.*
-!packaging/create_installer_from_json.*
-!packaging/generate_openedx_branding.*
-!packaging/generate_wordpress_branding.*
+!synthesis/msi/create_installer_from_json.*
+!synthesis/msi/generate_openedx_branding.*
+!synthesis/msi/generate_wordpress_branding.*
 !tests/test_wordpress_*
-!_lib/databases/parse_dbaas_url.*
-!_lib/databases/parse_connection_uri.*
-!_lib/databases/detect_openedx_db.*
-!_lib/orchestration/create_fhs_layout.*
+!engine/hooks/databases/parse_dbaas_url.*
+!engine/hooks/databases/parse_connection_uri.*
+!engine/hooks/databases/detect_openedx_db.*
+!synthesis/vfs/create_fhs_layout.*
 !_lib/kernel/initramfs/gen_initramfs.*
 !_lib/web-servers/*/create_*
 !_lib/web-servers/nginx/test_merge.*
@@ -179,7 +180,8 @@ run_cmd.sh
 README_patch.sh
 gen_table.*
 *_gen.sh
-!_lib/_common/uuid_gen.*
+!engine/common/uuid_gen.*
+!infrastructure/resources/cloudinit/gen_nocloud_iso.*
 *_test.*
 !tests/*_test.*
 !tests/test_*
@@ -218,6 +220,8 @@ gen/*
 !gen/README.md
 !gen/ROOT
 kubernetes-the-hard-way/
+!infrastructure/clusters/kubernetes-thw/kubernetes-the-hard-way/
+!infrastructure/clusters/kubernetes-thw/kubernetes-the-hard-way/**
 /*.html
 
 ### Environment / Secrets ###
@@ -232,8 +236,8 @@ kubernetes-the-hard-way/
 
 # Analysis and inconsistency reports
 detect_*.sh
-!packaging/detect_runtimes.sh
-!_lib/databases/detect_openedx_db.sh
+!synthesis/msi/detect_runtimes.sh
+!engine/hooks/databases/detect_openedx_db.sh
 missing_*.txt
 fn_style_*.txt
 structural_inconsistencies.txt
@@ -280,7 +284,7 @@ all_scripts.txt
 !/libscript.sh
 !/install.sh
 !/make.sh
-!_lib/_common/prelude.sh
+!engine/common/prelude.sh
 !/top.sh
 !/bottom.sh
 !/test_table.sh
@@ -320,18 +324,19 @@ tests_tmp/
 *.jpg
 *.jpeg
 !devtools/docs-gen/*.png
-packaging/assets/*.rtf
-packaging/assets/*.ico
-packaging/assets/*.bmp
+!synthesis/msi/screenshots/*.png
+synthesis/msi/assets/*.rtf
+synthesis/msi/assets/*.ico
+synthesis/msi/assets/*.bmp
 
 # Generated installer build artifacts
 *.wxs
-!_lib/toolchains/win-port-suite/fixtures/wxs/*.wxs
+!experiments/win-port/fixtures/wxs/*.wxs
 *.wixobj
 *.msi
-packaging/*.msi
-packaging/*.wxs
-packaging/*.wixobj
+synthesis/msi/*.msi
+synthesis/msi/*.wxs
+synthesis/msi/*.wixobj
 
 
 streams/

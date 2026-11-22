@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "busybox",
-  "title": "BusyBox",
-  "description": "Multi-call UNIX command suite combining common POSIX utilities with native Windows (MSVC) builds via SamuelMarks/busybox-windows.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["busybox", "busybox-windows"],
-  "os_whitelist": ["all"],
+  "description": "Multi-call UNIX command suite combining common POSIX utilities with native Windows (MSVC) builds via SamuelMarks/busybox-windows.",
+  "name": "busybox",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["busybox", "busybox-windows"],
   "repository": "https://github.com/SamuelMarks/busybox-windows",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "BusyBox"
 }

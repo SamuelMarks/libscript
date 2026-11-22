@@ -41,7 +41,7 @@ if ($NodeVersion -eq "lts") {
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
-. (Join-Path $LibscriptRootDir "_lib\_common\versioning.ps1")
+. (Join-Path $LibscriptRootDir "engine\common\versioning.ps1")
 
 # ## Resolve-ExactVersion
 # Resolves the requested version identifier to an exact release version string.
@@ -107,7 +107,7 @@ switch ($Action) {
     }
     
     "start" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_nodejs" }
         if (Get-Command Libscript-Service -ErrorAction SilentlyContinue) {
@@ -116,7 +116,7 @@ switch ($Action) {
         break
     }
     "install-service" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_nodejs" }
         if (Get-Command Libscript-InstallService -ErrorAction SilentlyContinue) {
@@ -125,7 +125,7 @@ switch ($Action) {
         break
     }
     "uninstall-service" {
-        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        $ServiceScript = Join-Path $LibscriptRootDir "engine\common\service_install.ps1"
         if (Test-Path $ServiceScript) { . $ServiceScript }
         $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_nodejs" }
         if (Get-Command Libscript-UninstallService -ErrorAction SilentlyContinue) {
@@ -163,7 +163,7 @@ switch ($Action) {
     default {
         # download and install
         if ($InstallMethod -eq "system") {
-            & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_depends nodejs
+            & (Join-Path $LibscriptRootDir "engine\common\pkg_mgr.cmd") :libscript_depends nodejs
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -191,7 +191,7 @@ switch ($Action) {
 
             $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) $ZipName
             Write-Host "Downloading $DownloadUrl"
-            & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_download $DownloadUrl $TempZip
+            & (Join-Path $LibscriptRootDir "engine\common\pkg_mgr.cmd") :libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $NodeDir"
             Expand-Archive -Path $TempZip -DestinationPath $NodeDir -Force

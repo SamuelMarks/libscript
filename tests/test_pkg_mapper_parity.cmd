@@ -2,7 +2,7 @@
 :: # test_pkg_mapper_parity.cmd
 ::
 :: ## Overview
-:: Verifies Windows pkg_mapper.cmd lookups against _lib\_common\pkg_map.tsv across winget, choco, and scoop.
+:: Verifies Windows pkg_mapper.cmd lookups against engine\common\pkg_map.tsv across winget, choco, and scoop.
 ::
 :: ## Usage
 :: tests\test_pkg_mapper_parity.cmd
@@ -52,7 +52,7 @@ goto :find_root
 
 set "STACK="
 set "PKG_MGR=winget"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package "bun"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mapper.cmd" :map_package "bun"
 if not "!MAPPED_PKG!"=="Oven-sh.Bun" (
     echo [FAIL] Expected Oven-sh.Bun for bun on winget, got !MAPPED_PKG! >&2
     exit /b 1
@@ -60,7 +60,7 @@ if not "!MAPPED_PKG!"=="Oven-sh.Bun" (
 
 set "STACK="
 set "PKG_MGR=scoop"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package "bun"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mapper.cmd" :map_package "bun"
 if errorlevel 1 (
     echo [PASS] Unsupported bun on scoop returned non-zero as expected.
     exit /b 0

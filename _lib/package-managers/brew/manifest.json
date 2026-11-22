@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "brew",
-  "provides": ["brew"],
-  "os_whitelist": ["darwin"],
-  "title": "Homebrew",
-  "description": "Homebrew is a free and open-source software package management system that simplifies the installation of software on macOS and Linux. It builds packages from source and provides pre-compiled binaries, making it easy to manage dependencies and development tools.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Homebrew is a free and open-source software package management system that simplifies the installation of software on macOS and Linux. It builds packages from source and provides pre-compiled binaries, making it easy to manage dependencies and development tools.",
+  "name": "brew",
+  "os_whitelist": ["darwin"],
+  "provides": ["brew"],
   "repository": "https://github.com/Homebrew/brew",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Homebrew"
 }

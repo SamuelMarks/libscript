@@ -39,11 +39,11 @@ fail_mkt_test() {
 }
 
 printf '%s\n' '=== 1. Open edX 8-Node Unikernel Constellation Assembly (2x Idempotency) ==='
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/unikernel_pod/setup_generic.sh" assemble \
-  --topology="${LIBSCRIPT_ROOT_DIR}/topologies/openedx-unikernel-pod/topology.json" \
+"${LIBSCRIPT_ROOT_DIR}/workloads/constellations/unikernel_pod/setup_generic.sh" assemble \
+  --topology="${LIBSCRIPT_ROOT_DIR}/workloads/constellations/openedx-unikernel-pod/topology.json" \
   --out-dir="${TEST_TMP}/pod" --cloud-boot=uefi-gpt --allow-stub-sdk >/dev/null
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/unikernel_pod/setup_generic.sh" assemble \
-  --topology="${LIBSCRIPT_ROOT_DIR}/topologies/openedx-unikernel-pod/topology.json" \
+"${LIBSCRIPT_ROOT_DIR}/workloads/constellations/unikernel_pod/setup_generic.sh" assemble \
+  --topology="${LIBSCRIPT_ROOT_DIR}/workloads/constellations/openedx-unikernel-pod/topology.json" \
   --out-dir="${TEST_TMP}/pod" --cloud-boot=uefi-gpt --allow-stub-sdk >/dev/null
 
 jq -e '.appliances | length == 8' "${TEST_TMP}/pod/pod-manifest.json" >/dev/null || fail_mkt_test 'Expected 8 Open edX unikernel appliances in constellation'
@@ -53,10 +53,10 @@ jq -e '.appliances | length == 8' "${TEST_TMP}/pod/pod-manifest.json" >/dev/null
 printf '%s\n' '=== 2. Multicloud Marketplace Publish (AWS CloudFormation + Azure Managed App + GCP Terraform) ==='
 OUT_MKT="${TEST_TMP}/mkt"
 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" publish-marketplace \
-  "${LIBSCRIPT_ROOT_DIR}/marketplace/openedx-unikernel/offer.json" \
+  "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/openedx-unikernel/offer.json" \
   --clouds=aws,azure,gcp --out-dir="${OUT_MKT}" --dry-run --allow-stub-sdk
 OUT_SECOND=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" publish-marketplace \
-  "${LIBSCRIPT_ROOT_DIR}/marketplace/openedx-unikernel/offer.json" \
+  "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/openedx-unikernel/offer.json" \
   --clouds=aws,azure,gcp --out-dir="${OUT_MKT}" --dry-run --allow-stub-sdk)
 
 printf '%s\n' "$OUT_SECOND" | grep -q '\[SKIP\]' || fail_mkt_test 'Second publish-marketplace run did not hit idempotent [SKIP]'
@@ -70,8 +70,8 @@ grep -q 'unikernel_lms_wsgi' "${OUT_MKT}/gcp/main.tf" || fail_mkt_test 'Missing 
 printf '%s\n' '=== 3. Pre-Marketplace Compliance Gate Rejects Leaked SSH Keys ==='
 mkdir -p "${TEST_TMP}/dirty_sysroot/root/.ssh"
 printf 'ssh-ed25519 test-public-key-material\n' > "${TEST_TMP}/dirty_sysroot/root/.ssh/authorized_keys"
-if "${LIBSCRIPT_ROOT_DIR}/cli/commands/marketplace/verify_compliance.sh" \
-  "${LIBSCRIPT_ROOT_DIR}/marketplace/openedx-unikernel/offer.json" \
+if "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/verify_compliance.sh" \
+  "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/openedx-unikernel/offer.json" \
   --sysroot-dir="${TEST_TMP}/dirty_sysroot" >/dev/null 2>&1; then
   fail_mkt_test 'Compliance gate should have rejected leaked authorized_keys!'
 fi

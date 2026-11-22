@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR
 
-for LIB in "_lib/_common/environ.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "engine/common/environ.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -66,7 +66,7 @@ infer_locations() {
       # shellcheck disable=SC1090
       VARS="$(. "${ENV_SAVED_FILE}"; printf '%s' "${VARS:-}")"
 
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe.sh'
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/engine/common/envsubst_safe.sh'
       export SCRIPT_NAME
       # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"

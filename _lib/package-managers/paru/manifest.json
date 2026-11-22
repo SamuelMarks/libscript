@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "paru",
-  "provides": ["paru"],
-  "os_whitelist": ["arch", "artix", "manjaro"],
-  "title": "paru",
-  "description": "Bootstrap module for the `paru` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `paru` package manager.",
+  "name": "paru",
   "os_blacklist": ["freebsd"],
+  "os_whitelist": ["arch", "artix", "manjaro"],
+  "provides": ["paru"],
   "repository": "https://github.com/Morganamilo/paru",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "paru"
 }

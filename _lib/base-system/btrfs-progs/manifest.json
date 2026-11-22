@@ -1,16 +1,17 @@
 {
-  "name": "btrfs-progs",
-  "title": "Btrfs Progs",
-  "description": "Btrfs filesystem creation and management tools",
-  "provides": ["btrfs-progs"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Btrfs filesystem creation and management tools",
+  "name": "btrfs-progs",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["btrfs-progs"],
+  "tier": "T2",
+  "title": "Btrfs Progs",
+  "versions": ["1.0.0"]
 }

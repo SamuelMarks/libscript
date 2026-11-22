@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "linux",
-  "title": "Linux Kernel",
-  "description": "Monolithic Unix operating system kernel",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "kernel-image"],
   "category": "kernel",
-  "provides": ["linux"],
-  "os_whitelist": ["linux"],
+  "description": "Monolithic Unix operating system kernel",
+  "name": "linux",
   "os_blacklist": ["windows"],
-  "capabilities": ["versioned-artifact", "os-synthesizer"]
+  "os_whitelist": ["linux"],
+  "provides": ["linux"],
+  "tier": "T2",
+  "title": "Linux Kernel"
 }

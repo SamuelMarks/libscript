@@ -1,0 +1,513 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/workloads/apps/openedx/vars.schema.json",
+  "title": "Open edX Stack Variables",
+  "description": "Variables for Open edX LMS and Studio/CMS stack deployment with full Tutor and edx-platform parameter parity.",
+  "type": "object",
+  "properties": {
+    "OPENEDX_INSTALL_MODE": {
+      "type": "string",
+      "enum": ["minimal", "production", "dev", "offline"],
+      "default": "minimal",
+      "description": "Deployment mode for the Open edX installation (minimal, production, dev, or offline)."
+    },
+    "OPENEDX_ROLE": {
+      "type": "string",
+      "enum": ["all", "lms", "cms", "celery", "mfe-static"],
+      "default": "all",
+      "description": "Single-process workload role staged into a T3 unikernel or appliance sysroot (all, lms, cms, celery, or mfe-static)."
+    },
+    "OPENEDX_RELEASE": {
+      "type": "string",
+      "default": "release/verawood.1",
+      "description": "Open edX release branch or tag to install (e.g., release/verawood.1, release/verawood, master)."
+    },
+    "OPENEDX_GIT_REPO": {
+      "type": "string",
+      "default": "https://github.com/openedx/openedx-platform.git",
+      "description": "Git repository URL for cloning or updating the openedx-platform source code."
+    },
+    "PLATFORM_NAME": {
+      "type": "string",
+      "default": "My Open edX",
+      "description": "Public display name of the Open edX learning platform."
+    },
+    "CONTACT_EMAIL": {
+      "type": "string",
+      "default": "contact@openedx.local",
+      "description": "Public contact and support email address for the Open edX platform."
+    },
+    "LANGUAGE_CODE": {
+      "type": "string",
+      "default": "en",
+      "description": "Default ISO 639-1 language code for the Open edX platform."
+    },
+    "LMS_HOST": {
+      "type": "string",
+      "default": "openedx.local",
+      "description": "Domain name or hostname for the LMS (Learning Management System)."
+    },
+    "CMS_HOST": {
+      "type": "string",
+      "default": "studio.openedx.local",
+      "description": "Domain name or hostname for Studio/CMS."
+    },
+    "PREVIEW_LMS_HOST": {
+      "type": "string",
+      "default": "preview.openedx.local",
+      "description": "Domain name or hostname for course preview mode in the LMS."
+    },
+    "MFE_HOST": {
+      "type": "string",
+      "default": "apps.openedx.local",
+      "description": "Domain name or hostname serving Micro-Frontend (MFE) single-page applications."
+    },
+    "LMS_PORT": {
+      "type": "integer",
+      "default": 8000,
+      "description": "HTTP port for the LMS application server."
+    },
+    "CMS_PORT": {
+      "type": "integer",
+      "default": 8001,
+      "description": "HTTP port for the Studio/CMS application server."
+    },
+    "CADDY_HTTP_PORT": {
+      "type": "integer",
+      "default": 80,
+      "description": "HTTP port bound by the Caddy reverse proxy."
+    },
+    "ENABLE_HTTPS": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to enable HTTPS / TLS termination on public Open edX URLs."
+    },
+    "ENABLE_WEB_PROXY": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether Caddy should act as the primary reverse proxy and TLS terminator."
+    },
+    "ENABLE_CORS_CREDENTIALS": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether cross-origin requests with credentials are permitted across LMS, Studio, and MFE domains."
+    },
+    "CORS_ORIGIN_WHITELIST": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Allowed CORS origin URL."
+      },
+      "default": [],
+      "description": "List of additional origin URLs allowed to perform cross-origin requests against LMS and CMS."
+    },
+    "RUN_LMS": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to run the LMS web application service locally."
+    },
+    "RUN_CMS": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to run the Studio/CMS web application service locally."
+    },
+    "RUN_LMS_WORKER": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to run the LMS Celery background worker locally."
+    },
+    "RUN_CMS_WORKER": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to run the Studio/CMS Celery background worker locally."
+    },
+    "RUN_CADDY": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to run the local Caddy web proxy service."
+    },
+    "RUN_MYSQL": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to provision and run a local MySQL database instance."
+    },
+    "RUN_MONGODB": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to provision and run a local MongoDB database instance."
+    },
+    "RUN_REDIS": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to provision and run a local Redis cache and message broker instance."
+    },
+    "RUN_MEILISEARCH": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to provision and run a local Meilisearch search engine instance."
+    },
+    "RUN_SMTP": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to provision and run a local SMTP mail transfer agent."
+    },
+    "RUN_MINIO": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to provision and run a local MinIO S3-compatible object storage service."
+    },
+    "RUN_MFE": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to build and serve Micro-Frontend (MFE) applications."
+    },
+    "MYSQL_HOST": {
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "Hostname or IP address of the MySQL database server."
+    },
+    "MYSQL_PORT": {
+      "type": "integer",
+      "default": 3306,
+      "description": "TCP port of the MySQL database server."
+    },
+    "MYSQL_ROOT_USERNAME": {
+      "type": "string",
+      "default": "root",
+      "description": "Administrative root username for MySQL database provisioning."
+    },
+    "MYSQL_ROOT_PASSWORD": {
+      "type": "string",
+      "default": "",
+      "description": "Administrative root password for MySQL database provisioning."
+    },
+    "OPENEDX_MYSQL_DATABASE": {
+      "type": "string",
+      "default": "openedx",
+      "description": "Name of the MySQL database schema used by Open edX."
+    },
+    "OPENEDX_MYSQL_USERNAME": {
+      "type": "string",
+      "default": "openedx",
+      "description": "MySQL application username for Open edX."
+    },
+    "OPENEDX_MYSQL_PASSWORD": {
+      "type": "string",
+      "default": "",
+      "description": "MySQL application password for Open edX."
+    },
+    "MONGODB_HOST": {
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "Hostname or SRV connection string of the MongoDB server."
+    },
+    "MONGODB_PORT": {
+      "type": "integer",
+      "default": 27017,
+      "description": "TCP port of the MongoDB server."
+    },
+    "MONGODB_USERNAME": {
+      "type": "string",
+      "default": "",
+      "description": "MongoDB authentication username for Open edX modulestore."
+    },
+    "MONGODB_PASSWORD": {
+      "type": "string",
+      "default": "",
+      "description": "MongoDB authentication password for Open edX modulestore."
+    },
+    "MONGODB_DATABASE": {
+      "type": "string",
+      "default": "openedx",
+      "description": "Name of the MongoDB database used for course modulestore."
+    },
+    "MONGODB_AUTH_SOURCE": {
+      "type": "string",
+      "default": "admin",
+      "description": "MongoDB authentication database source."
+    },
+    "REDIS_HOST": {
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "Hostname or IP address of the Redis server."
+    },
+    "REDIS_PORT": {
+      "type": "integer",
+      "default": 6379,
+      "description": "TCP port of the Redis server."
+    },
+    "REDIS_USERNAME": {
+      "type": "string",
+      "default": "",
+      "description": "Optional ACL username for authenticating with Redis."
+    },
+    "REDIS_PASSWORD": {
+      "type": "string",
+      "default": "",
+      "description": "Optional password for authenticating with Redis."
+    },
+    "REDIS_DATABASE": {
+      "type": "integer",
+      "default": 0,
+      "description": "Redis logical database index used by Open edX cache and Celery."
+    },
+    "MEILISEARCH_HOST": {
+      "type": "string",
+      "default": "meilisearch.openedx.local",
+      "description": "Public hostname for the Meilisearch search service."
+    },
+    "MEILISEARCH_PORT": {
+      "type": "integer",
+      "default": 7700,
+      "description": "TCP port for the Meilisearch search service."
+    },
+    "MEILISEARCH_API_KEY": {
+      "type": "string",
+      "default": "",
+      "description": "Master API key used to authenticate against Meilisearch."
+    },
+    "MEILISEARCH_URL": {
+      "type": "string",
+      "default": "http://127.0.0.1:7700",
+      "description": "Internal URL used by LMS and Studio to connect to Meilisearch."
+    },
+    "MEILISEARCH_PUBLIC_URL": {
+      "type": "string",
+      "default": "http://meilisearch.openedx.local",
+      "description": "Publicly accessible URL for Meilisearch queries from browser clients."
+    },
+    "MINIO_HOST": {
+      "type": "string",
+      "default": "files.openedx.local",
+      "description": "Hostname for MinIO S3-compatible object storage."
+    },
+    "MINIO_PORT": {
+      "type": "integer",
+      "default": 9000,
+      "description": "TCP port for MinIO S3 API."
+    },
+    "MINIO_ACCESS_KEY": {
+      "type": "string",
+      "default": "openedx",
+      "description": "Access key ID for MinIO or S3 storage."
+    },
+    "MINIO_SECRET_KEY": {
+      "type": "string",
+      "default": "",
+      "description": "Secret access key for MinIO or S3 storage."
+    },
+    "OPENEDX_AWS_S3_STORAGE": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to store media, staticgrades, and course exports on S3/MinIO object storage."
+    },
+    "SMTP_HOST": {
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "SMTP server hostname for outbound transactional emails."
+    },
+    "SMTP_PORT": {
+      "type": "integer",
+      "default": 25,
+      "description": "SMTP server port for outbound transactional emails."
+    },
+    "SMTP_USERNAME": {
+      "type": "string",
+      "default": "",
+      "description": "Username for authenticating with the outbound SMTP server."
+    },
+    "SMTP_PASSWORD": {
+      "type": "string",
+      "default": "",
+      "description": "Password for authenticating with the outbound SMTP server."
+    },
+    "SMTP_USE_TLS": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to use STARTTLS when connecting to the SMTP server."
+    },
+    "SMTP_USE_SSL": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to use implicit SSL/TLS when connecting to the SMTP server."
+    },
+    "OPENEDX_ADMIN_USERNAME": {
+      "type": "string",
+      "default": "admin",
+      "description": "Default superuser username created during platform initialization."
+    },
+    "OPENEDX_ADMIN_EMAIL": {
+      "type": "string",
+      "default": "admin@example.com",
+      "description": "Default superuser email address created during platform initialization."
+    },
+    "OPENEDX_ADMIN_PASSWORD": {
+      "type": "string",
+      "default": "admin",
+      "description": "Default superuser password created during platform initialization."
+    },
+    "OPENEDX_SECRET_KEY": {
+      "type": "string",
+      "default": "openedx-default-secret-key-change-in-prod",
+      "description": "Cryptographic secret key used by Django for signing sessions and tokens."
+    },
+    "JWT_RSA_PRIVATE_KEY": {
+      "type": "string",
+      "default": "",
+      "description": "PEM-encoded RSA private key used to sign Open edX JWT authentication tokens."
+    },
+    "CMS_OAUTH2_KEY": {
+      "type": "string",
+      "default": "cms",
+      "description": "Internal OAuth2 client key used by Studio to communicate with LMS."
+    },
+    "CMS_OAUTH2_SECRET": {
+      "type": "string",
+      "default": "openedx-cms-oauth2-secret",
+      "description": "OAuth2 client secret shared between LMS and Studio."
+    },
+    "CMS_OAUTH2_KEY_SSO": {
+      "type": "string",
+      "default": "cms-sso",
+      "description": "Production OAuth2 client key for browser single sign-on (SSO) into Studio."
+    },
+    "CMS_OAUTH2_KEY_DEV": {
+      "type": "string",
+      "default": "cms-dev",
+      "description": "Development OAuth2 client key for Studio."
+    },
+    "CMS_OAUTH2_KEY_SSO_DEV": {
+      "type": "string",
+      "default": "cms-sso-dev",
+      "description": "Development OAuth2 client key for browser single sign-on (SSO) into Studio."
+    },
+    "OPENEDX_LMS_UWSGI_WORKERS": {
+      "type": "integer",
+      "default": 2,
+      "description": "Number of Gunicorn / WSGI worker processes for the LMS service."
+    },
+    "OPENEDX_CMS_UWSGI_WORKERS": {
+      "type": "integer",
+      "default": 2,
+      "description": "Number of Gunicorn / WSGI worker processes for the Studio/CMS service."
+    },
+    "LMS_CELERY_WORKERS": {
+      "type": "integer",
+      "default": 1,
+      "description": "Concurrency level for LMS Celery background workers."
+    },
+    "CMS_CELERY_WORKERS": {
+      "type": "integer",
+      "default": 1,
+      "description": "Concurrency level for Studio/CMS Celery background workers."
+    },
+    "CELERY_BROKER_KIND": {
+      "type": "string",
+      "enum": ["redis", "rabbitmq"],
+      "default": "redis",
+      "description": "Message broker backend used for Celery asynchronous task queues."
+    },
+    "OPENEDX_THEME": {
+      "type": "string",
+      "default": "indigo",
+      "description": "Active comprehensive theme applied to LMS and Studio (e.g., indigo, default)."
+    },
+    "OPENEDX_EXTRA_PIP_REQUIREMENTS": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Python package specification or Git URL for pip installation."
+      },
+      "default": [],
+      "description": "Additional Python packages and XBlocks to install into the Open edX virtual environment."
+    },
+    "PLUGINS": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Name of enabled Tutor-compatible Open edX plugin."
+      },
+      "default": ["mfe", "indigo"],
+      "description": "Enabled Tutor-compatible Open edX plugins."
+    },
+    "PLUGIN_INDEXES": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "URL of a Tutor plugin index."
+      },
+      "default": ["https://overhang.io/tutor/main", "https://overhang.io/tutor/contrib"],
+      "description": "Remote plugin index URLs for discovering and installing Open edX plugins."
+    },
+    "MOUNTS": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Mount specification in the form /host/path or service:/host/path:/target/path."
+      },
+      "default": [],
+      "description": "Local host directory bind mounts linked into the Open edX application and MFE paths."
+    },
+    "PATCHES": {
+      "type": "object",
+      "description": "Dictionary mapping Tutor patch slot names (e.g., openedx-common-settings, lms-env, caddyfile) to custom snippet strings.",
+      "additionalProperties": {
+        "type": "string",
+        "description": "Custom configuration or Python settings snippet injected into the named patch slot."
+      },
+      "default": {}
+    },
+    "OPENEDX_BACKUP_DIR": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for openedx (OPENEDX_BACKUP_DIR)."
+    },
+    "OPENEDX_CMS_PORT": {
+      "type": "string",
+      "description": "TCP port on which openedx listens."
+    },
+    "OPENEDX_DATABASE_PASSWORD": {
+      "type": "string",
+      "description": "Configuration variable OPENEDX_DATABASE_PASSWORD for openedx."
+    },
+    "OPENEDX_EDX_PLATFORM_REPOSITORY": {
+      "type": "string",
+      "description": "Configuration variable OPENEDX_EDX_PLATFORM_REPOSITORY for openedx."
+    },
+    "OPENEDX_INSTALL_DIR": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for openedx (OPENEDX_INSTALL_DIR)."
+    },
+    "OPENEDX_DATA_DIR": {
+      "type": "string",
+      "description": "Filesystem directory where Open edX databases, courseware, and mutable state are stored."
+    },
+    "OPENEDX_LOG_DIR": {
+      "type": "string",
+      "description": "Filesystem directory where Open edX service and installation logs are written."
+    },
+    "OPENEDX_LMS_DOMAIN": {
+      "type": "string",
+      "description": "Public domain and optional port for the Open edX LMS."
+    },
+    "OPENEDX_CMS_DOMAIN": {
+      "type": "string",
+      "description": "Public domain and optional port for Open edX Studio CMS."
+    },
+    "OPENEDX_LMS_PORT": {
+      "type": "string",
+      "description": "TCP port on which openedx listens."
+    },
+    "OPENEDX_OFFLINE": {
+      "type": "string",
+      "description": "Configuration variable OPENEDX_OFFLINE for openedx."
+    },
+    "OPENEDX_VERSION": {
+      "type": "string",
+      "description": "Specific version of openedx to install (e.g., latest, lts, or exact version)."
+    },
+    "LIBSCRIPT_FOLDER": {
+      "type": "string",
+      "description": "Filesystem directory where the bundled LibScript engine and offline cache are installed by the Windows MSI."
+    }
+  }
+}

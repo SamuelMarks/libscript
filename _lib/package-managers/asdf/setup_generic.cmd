@@ -105,7 +105,7 @@ if "%ASDF_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list comman
 if "%ASDF_INSTALL_METHOD%"=="vfox" ( vfox ls all asdf & exit /b 0 )
 if "%ASDF_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%ASDF_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%ASDF_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%ASDF_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/asdf-vm/asdf" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -146,7 +146,7 @@ if "%ASDF_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading asdf %ASDF_VERSION% to %DOWNLOAD_DIR%\asdf...
     if not exist "%DOWNLOAD_DIR%\asdf" mkdir "%DOWNLOAD_DIR%\asdf"
     if not "%ASDF_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ASDF_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\asdf\asdf-%ASDF_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ASDF_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\asdf\asdf-%ASDF_VERSION%.zip"
     ) else (
         echo ASDF_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -157,7 +157,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ASDF_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends asdf
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends asdf
     exit /b !errorlevel!
 )
 if "%ASDF_INSTALL_METHOD%"=="mise" ( mise install "asdf@%ASDF_VERSION%" & exit /b 0 )
@@ -177,7 +177,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\asdf\asdf-%ASDF_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ASDF_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ASDF_DOWNLOAD_URL%" "%TEMP%\asdf.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ASDF_DOWNLOAD_URL%" "%TEMP%\asdf.zip"
         tar -xf "%TEMP%\asdf.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for asdf.
@@ -208,5 +208,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "asdf" "%ACTION%" "%ASDF_VERSION%" "%ASDF_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\asdf\%ASDF_VERSION%\\bin\\asdf.exe\"" "%LIBSCRIPT_HOME%\asdf\%ASDF_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "asdf" "%ACTION%" "%ASDF_VERSION%" "%ASDF_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\asdf\%ASDF_VERSION%\\bin\\asdf.exe\"" "%LIBSCRIPT_HOME%\asdf\%ASDF_VERSION%"
 exit /b !errorlevel!

@@ -39,15 +39,15 @@ TEST_SYS="${TMP_DIR}/sysroot-i686"
 TEST_SYS64="${TMP_DIR}/sysroot-x64"
 
 # Pass 1: Assemble i686 + x86_64 and export all 6 formats
-STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/reactos/distro/assemble.sh" \
-  "${LIBSCRIPT_ROOT_DIR}/profiles/reactos/minimal-headless-i686.json" "$TEST_SYS" >/dev/null
-STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/reactos/distro/assemble.sh" \
-  "${LIBSCRIPT_ROOT_DIR}/profiles/reactos/nightly-x86_64.json" "$TEST_SYS64" >/dev/null
+STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/reactos/assemble.sh" \
+  "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/reactos/minimal-headless-i686.json" "$TEST_SYS" >/dev/null
+STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/reactos/assemble.sh" \
+  "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/reactos/nightly-x86_64.json" "$TEST_SYS64" >/dev/null
 
 for _fmt in iso raw qcow2 vhd vmdk box; do
-  STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_distro.sh" \
+  STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_distro.sh" \
     --format "$_fmt" \
-    --profile "${LIBSCRIPT_ROOT_DIR}/profiles/reactos/minimal-headless-i686.json" \
+    --profile "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/reactos/minimal-headless-i686.json" \
     --sysroot "$TEST_SYS" \
     --output "${TMP_DIR}/out.${_fmt}" >/dev/null
   [ -s "${TMP_DIR}/out.${_fmt}" ]
@@ -60,11 +60,11 @@ SNAP2="${TMP_DIR}/snap2.txt"
 
 # Pass 2: Assert [SKIP] and zero file churn
 LOG_PASS2="${TMP_DIR}/pass2.log"
-STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/reactos/distro/assemble.sh" \
-  "${LIBSCRIPT_ROOT_DIR}/profiles/reactos/minimal-headless-i686.json" "$TEST_SYS" > "$LOG_PASS2" 2>&1
-STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_iso.sh" \
+STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/reactos/assemble.sh" \
+  "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/reactos/minimal-headless-i686.json" "$TEST_SYS" > "$LOG_PASS2" 2>&1
+STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_iso.sh" \
   "$TEST_SYS" "${TMP_DIR}/out.iso" >> "$LOG_PASS2" 2>&1
-STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_qcow2.sh" \
+STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_qcow2.sh" \
   "$TEST_SYS" "${TMP_DIR}/out.qcow2" >> "$LOG_PASS2" 2>&1
 
 grep -q '\[SKIP\]' "$LOG_PASS2"
@@ -83,11 +83,11 @@ printf 'MZ' > "$PE64"
 dd if=/dev/zero bs=1 count=58 >> "$PE64" 2>/dev/null
 printf '\100\000\000\000PE\000\000\144\206' >> "$PE64"
 
-if STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/reactos/distro/pkg.sh" --check-pe "$PE64" i686 2>/dev/null; then
+if STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/reactos/pkg.sh" --check-pe "$PE64" i686 2>/dev/null; then
   printf '[FAIL] Expected x86_64 PE to be rejected on i686!\n' >&2
   exit 1
 fi
-if STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/reactos/distro/pkg.sh" --check-pe "$PE32" x86_64 2>/dev/null; then
+if STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/reactos/pkg.sh" --check-pe "$PE32" x86_64 2>/dev/null; then
   printf '[FAIL] Expected i686 PE to be rejected on x86_64!\n' >&2
   exit 1
 fi
@@ -106,7 +106,7 @@ cat <<'BAD_EOF' > "$BAD_PROF"
   "components": ["systemd"]
 }
 BAD_EOF
-if STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.sh" "$BAD_PROF" >/dev/null 2>&1; then
+if STACK='' "${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" "$BAD_PROF" >/dev/null 2>&1; then
   printf '[FAIL] Expected resolve_stack.sh to reject Linux-only systemd on ReactOS!\n' >&2
   exit 1
 fi

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "xbps",
-  "provides": ["package-manager", "xbps"],
-  "os_whitelist": ["void"],
-  "os_blacklist": ["darwin", "windows", "freebsd"],
-  "title": "xbps",
-  "description": "Bootstrap module for the Void Linux `xbps` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the Void Linux `xbps` package manager.",
+  "name": "xbps",
+  "os_blacklist": ["darwin", "windows", "freebsd"],
+  "os_whitelist": ["void"],
+  "provides": ["package-manager", "xbps"],
   "repository": "https://github.com/void-linux/xbps",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "xbps"
 }

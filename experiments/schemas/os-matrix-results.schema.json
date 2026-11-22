@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/experiments/schemas/os-matrix-results.schema.json",
+  "title": "LibScript 7-OS Component Compatibility & Idempotency Matrix Results",
+  "description": "Provenance-stamped multi-OS component compatibility and 2x-rerun idempotency matrix consumed by root README.md table synthesis.",
+  "type": "object",
+  "required": ["generated_at", "components"],
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "description": "ISO-8601 UTC timestamp when the OS matrix results were aggregated."
+    },
+    "git_commit": {
+      "type": "string",
+      "description": "Git commit SHA of the evaluated LibScript checkout."
+    },
+    "components": {
+      "type": "array",
+      "description": "Per-component compatibility and 2x-idempotency outcomes across all 7 target OS families.",
+      "items": {
+        "type": "object",
+        "description": "Single component row in the 5-tier, 7-OS compatibility matrix.",
+        "required": ["component", "tier"],
+        "properties": {
+          "component": { "type": "string", "description": "Canonical component identifier." },
+          "category": { "type": "string", "description": "Component category." },
+          "tier": { "type": "string", "description": "Architectural tier (1, 1.5, 2, 3, 4)." },
+          "idempotent": {
+            "type": "boolean",
+            "description": "Whether 2x-rerun idempotency has been verified."
+          },
+          "apk": { "type": "string", "description": "Alpine Linux (apk/musl) status." },
+          "deb": { "type": "string", "description": "Debian/Ubuntu (deb/glibc) status." },
+          "rpm": { "type": "string", "description": "Rocky/RHEL/Fedora (rpm/glibc) status." },
+          "windows": { "type": "string", "description": "Native Windows Batch/Win32 status." },
+          "sunos": { "type": "string", "description": "OmniOS / illumos (SunOS) status." },
+          "freebsd": { "type": "string", "description": "FreeBSD status." },
+          "macos": { "type": "string", "description": "macOS (Darwin) status." }
+        }
+      }
+    }
+  }
+}

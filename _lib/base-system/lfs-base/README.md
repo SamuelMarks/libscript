@@ -34,7 +34,7 @@ running the setup script.
 | `LFS_BASE_INSTALL_METHOD` | How to install LFS_BASE. 'libscript_native' uses isolated sysroot staging, 'system' uses OS package manager. | `libscript_native` |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Platform Support

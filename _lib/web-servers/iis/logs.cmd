@@ -49,5 +49,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\logs_service.cmd" "%~1" "W3SVC" "%SystemDrive%\inetpub\logs\LogFiles\W3SVC1\*.log"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\logs_service.cmd" "%~1" "W3SVC" "%SystemDrive%\inetpub\logs\LogFiles\W3SVC1\*.log"
 exit /b !ERRORLEVEL!

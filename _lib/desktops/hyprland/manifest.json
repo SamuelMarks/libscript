@@ -1,16 +1,17 @@
 {
-  "name": "hyprland",
-  "title": "Hyprland",
-  "description": "Dynamic tiling Wayland compositor with animations",
-  "provides": ["hyprland"],
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Dynamic tiling Wayland compositor with animations",
+  "name": "hyprland",
   "os_blacklist": ["windows", "sunos", "rhel", "debian", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["hyprland"],
+  "tier": "T2",
+  "title": "Hyprland",
+  "versions": ["1.0.0"]
 }

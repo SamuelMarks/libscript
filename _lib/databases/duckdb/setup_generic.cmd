@@ -115,7 +115,7 @@ exit /b 0
 :action_ls_remote
 if "%DUCKDB_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%DUCKDB_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%DUCKDB_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%DUCKDB_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/duckdb/duckdb" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -174,12 +174,12 @@ if "%DUCKDB_INSTALL_METHOD%"=="libscript_native" (
     set "_dl_dest=%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip"
     if exist "!_dl_dest!" del /f /q "!_dl_dest!" 2>nul
     if not "%DUCKDB_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "!_dl_dest!"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "!_dl_dest!"
     ) else (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v!EXACT_VERSION!/duckdb_cli-windows-amd64.zip" "!_dl_dest!"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v!EXACT_VERSION!/duckdb_cli-windows-amd64.zip" "!_dl_dest!"
         if errorlevel 1 (
             if exist "!_dl_dest!" del /f /q "!_dl_dest!" 2>nul
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-windows-amd64.zip" "!_dl_dest!"
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-windows-amd64.zip" "!_dl_dest!"
         )
     )
 )
@@ -208,11 +208,11 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if /i "%DUCKDB_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "duckdb" "%DUCKDB_VERSION%" "duckdb" "c++"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "duckdb" "%DUCKDB_VERSION%" "duckdb" "c++"
     exit /b !errorlevel!
 )
 if "%DUCKDB_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends duckdb
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends duckdb
     exit /b !errorlevel!
 )
 
@@ -251,10 +251,10 @@ if not exist "%TARGET_DIR%\bin\duckdb.exe" (
         if not "%DUCKDB_DOWNLOAD_URL%"=="" (
             echo Downloading and extracting...
             if exist "%TEMP%\duckdb_cli.zip" del /f /q "%TEMP%\duckdb_cli.zip" 2>nul
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%TEMP%\duckdb_cli.zip"
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%TEMP%\duckdb_cli.zip"
             if errorlevel 1 (
                 call :purge_stale_duckdb_cache "%DUCKDB_DOWNLOAD_URL%"
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%TEMP%\duckdb_cli.zip"
+                call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%TEMP%\duckdb_cli.zip"
                 if errorlevel 1 (
                     echo [ERROR] Failed to download duckdb from %DUCKDB_DOWNLOAD_URL% 1>&2
                     exit /b 1
@@ -265,7 +265,7 @@ if not exist "%TARGET_DIR%\bin\duckdb.exe" (
         ) else (
             if exist "%TEMP%\duckdb_cli.zip" del /f /q "%TEMP%\duckdb_cli.zip" 2>nul
             set "_dl_ok=0"
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v!EXACT_VERSION!/duckdb_cli-windows-amd64.zip" "%TEMP%\duckdb_cli.zip"
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v!EXACT_VERSION!/duckdb_cli-windows-amd64.zip" "%TEMP%\duckdb_cli.zip"
             if not errorlevel 1 if exist "%TEMP%\duckdb_cli.zip" (
                 tar -xf "%TEMP%\duckdb_cli.zip" -C "%TARGET_DIR%\bin" 2>nul
                 if exist "%TARGET_DIR%\bin\duckdb.exe" set "_dl_ok=1"
@@ -273,7 +273,7 @@ if not exist "%TARGET_DIR%\bin\duckdb.exe" (
             if "!_dl_ok!"=="0" (
                 call :purge_stale_duckdb_cache "duckdb_cli-windows-amd64.zip"
                 if exist "%TEMP%\duckdb_cli.zip" del /f /q "%TEMP%\duckdb_cli.zip" 2>nul
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-windows-amd64.zip" "%TEMP%\duckdb_cli.zip"
+                call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-windows-amd64.zip" "%TEMP%\duckdb_cli.zip"
                 if not errorlevel 1 if exist "%TEMP%\duckdb_cli.zip" (
                     tar -xf "%TEMP%\duckdb_cli.zip" -C "%TARGET_DIR%\bin" 2>nul
                     if exist "%TARGET_DIR%\bin\duckdb.exe" set "_dl_ok=1"
@@ -328,5 +328,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "duckdb" "%ACTION%" "%DUCKDB_VERSION%" "%DUCKDB_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%\\bin\\duckdb.exe\"" "%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "duckdb" "%ACTION%" "%DUCKDB_VERSION%" "%DUCKDB_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%\\bin\\duckdb.exe\"" "%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%"
 exit /b !errorlevel!

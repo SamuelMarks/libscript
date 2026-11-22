@@ -39,7 +39,7 @@ goto :find_root
 set "WP_SUITE_ROOT=!LIBSCRIPT_ROOT_DIR!\tests_tmp\experiments\_transient_suites"
 if not exist "!WP_SUITE_ROOT!" mkdir "!WP_SUITE_ROOT!"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment scaffold wordpress "--template=installer-e2e" "--packaging-manifest=!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\wordpress\packaging.json" "--out-root=!WP_SUITE_ROOT!" >nul
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment scaffold wordpress "--template=installer-e2e" "--packaging-manifest=!LIBSCRIPT_ROOT_DIR!\workloads\apps\wordpress\packaging.json" "--out-root=!WP_SUITE_ROOT!" >nul
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment\pkg_ui_runner.cmd" "--suite-dir=!WP_SUITE_ROOT!\wordpress" "--target-os=windows-11" "--pkg-format=msi" %*
+call "!LIBSCRIPT_ROOT_DIR!\experiments\_common\pkg_ui_runner.cmd" "--suite-dir=!WP_SUITE_ROOT!\wordpress" "--target-os=windows-11" "--pkg-format=msi" %*
 exit /b !errorlevel!

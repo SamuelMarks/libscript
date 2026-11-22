@@ -55,9 +55,9 @@ set "TMP_DIR=%TEMP%\msi_test_%RANDOM%"
 if not exist "%TMP_DIR%" mkdir "%TMP_DIR%"
 
 echo ==> Testing Declarative WiX Generation on Windows...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\openedx" --out "%TMP_DIR%\openedx.wxs"
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress" --out "%TMP_DIR%\wordpress.wxs"
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\drupal" --out "%TMP_DIR%\drupal.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\workloads\apps\openedx" --out "%TMP_DIR%\openedx.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\workloads\apps\wordpress" --out "%TMP_DIR%\wordpress.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\workloads\apps\drupal" --out "%TMP_DIR%\drupal.wxs"
 
 if not exist "%TMP_DIR%\openedx.wxs" (
     echo [ERROR] openedx.wxs was not generated >&2
@@ -83,7 +83,7 @@ echo   "topology": "suite_orchestrator"
 echo }
 ) > "%TMP_DIR%\mock_orchestrator.json"
 
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%TMP_DIR%\mock_orchestrator.json" --out "%TMP_DIR%\orchestrator.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\synthesis\msi\template_msi.cmd" "%TMP_DIR%\mock_orchestrator.json" --out "%TMP_DIR%\orchestrator.wxs"
 
 findstr /C:"Enterprise Suite Orchestrator" "%TMP_DIR%\orchestrator.wxs" >nul
 if errorlevel 1 ( echo [ERROR] Missing Title in orchestrator.wxs >&2 & exit /b 1 )

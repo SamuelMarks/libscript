@@ -1,16 +1,17 @@
 {
-  "name": "kde-plasma-6",
-  "title": "KDE Plasma 6",
-  "description": "Feature-rich desktop workspace by KDE",
-  "provides": ["kde-plasma-6"],
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Feature-rich desktop workspace by KDE",
+  "name": "kde-plasma-6",
   "os_blacklist": ["windows", "sunos", "rhel", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["kde-plasma-6"],
+  "tier": "T2",
+  "title": "KDE Plasma 6",
+  "versions": ["1.0.0"]
 }

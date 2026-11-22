@@ -38,7 +38,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "engine/common/pkg_mgr.sh" "engine/common/os_info.sh" "engine/common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -333,7 +333,7 @@ case "$ACTION" in
     ;;
   start|stop|restart|status|health|logs|up|down)
     if [ "$MSI_RS_INSTALL_METHOD" = "libscript_native" ] || [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/service.sh"
       export SCRIPT_NAME
       # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
@@ -344,7 +344,7 @@ case "$ACTION" in
     ;;
   install-service)
     if [ "$MSI_RS_INSTALL_METHOD" = "libscript_native" ] || [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/service_install.sh"
       export SCRIPT_NAME
       # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
@@ -355,7 +355,7 @@ case "$ACTION" in
     ;;
   uninstall-service)
     if [ "$MSI_RS_INSTALL_METHOD" = "libscript_native" ] || [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/service_install.sh"
       export SCRIPT_NAME
       # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"

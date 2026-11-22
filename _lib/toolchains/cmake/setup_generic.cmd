@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%CMAKE_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%CMAKE_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%CMAKE_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%CMAKE_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -134,7 +134,7 @@ if "%CMAKE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cmake %CMAKE_VERSION% to %DOWNLOAD_DIR%\cmake...
     if not exist "%DOWNLOAD_DIR%\cmake" mkdir "%DOWNLOAD_DIR%\cmake"
     if not "%CMAKE_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CMAKE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cmake\cmake-%CMAKE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CMAKE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cmake\cmake-%CMAKE_VERSION%.zip"
     ) else (
         echo CMAKE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CMAKE_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cmake
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends cmake
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cmake\cmake-%CMAKE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CMAKE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CMAKE_DOWNLOAD_URL%" "%TEMP%\cmake.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CMAKE_DOWNLOAD_URL%" "%TEMP%\cmake.zip"
         tar -xf "%TEMP%\cmake.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cmake.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "cmake" "%ACTION%" "%CMAKE_VERSION%" "%CMAKE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cmake\%CMAKE_VERSION%\\bin\\cmake.exe\"" "%LIBSCRIPT_HOME%\cmake\%CMAKE_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "cmake" "%ACTION%" "%CMAKE_VERSION%" "%CMAKE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cmake\%CMAKE_VERSION%\\bin\\cmake.exe\"" "%LIBSCRIPT_HOME%\cmake\%CMAKE_VERSION%"
 exit /b !errorlevel!

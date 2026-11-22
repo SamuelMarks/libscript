@@ -1,15 +1,16 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "tokei",
-  "title": "Tokei Source Code Auditor",
-  "description": "Fast, deterministic polyglot source line (SLOC) and file statistics auditor.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["tokei"],
-  "os_whitelist": ["all"],
-  "repository": "https://github.com/XAMPPRocky/tokei",
   "dependencies": {
     "host_tools": ["rust"],
     "tier": "optional"
   },
-  "capabilities": ["versioned-artifact"]
+  "description": "Fast, deterministic polyglot source line (SLOC) and file statistics auditor.",
+  "name": "tokei",
+  "os_whitelist": ["all"],
+  "provides": ["tokei"],
+  "repository": "https://github.com/XAMPPRocky/tokei",
+  "tier": "T1",
+  "title": "Tokei Source Code Auditor"
 }

@@ -1,0 +1,122 @@
+#!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'rpm' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/synthesis/formats/_common_installer_args.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+  deps_list=""
+  if [ $# -gt 0 ]; then
+    while [ $# -gt 0 ]; do
+      deps_list="$deps_list $1 ${2:-latest}"
+      if [ "${2:-}" != "" ]; then shift 2; else shift; fi
+    done
+  elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+    deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/engine/solver/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
+  else
+    deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
+  fi
+      printf '%s\n' '#!/bin/sh'
+      printf '%s\n' 'set -e'
+      printf '%s\n' "OUT_DIR=\"${OUT_DIR:-.}\""
+      printf '%s\n' "mkdir -p \"\$OUT_DIR\""
+      printf '%s\n' "OUT_DIR=\"\$(cd \"\$OUT_DIR\" && pwd)\""
+      meta_depends=""
+      safe_app_name="$(printf '%s\n' "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9+.-' '-' | sed 's/^-*//;s/-*$//')"
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        safe_pkg="$(printf '%s\n' "$pkg" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9+.-' '-' | sed 's/^-*//;s/-*$//')"
+        pkg_name="${safe_app_name}-${safe_pkg}"
+        if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
+        meta_depends="${meta_depends}${pkg_name} = ${APP_VERSION}"
+        printf '%s\n' "printf '%s\n' \"Building $pkg_name ...\""
+        printf '%s\n' "BUILD_DIR=\"\${TMPDIR:-/tmp}/${pkg_name}_rpmbuild\""
+        printf '%s\n' "mkdir -p \"\$BUILD_DIR/BUILD\" \"\$BUILD_DIR/RPMS\" \"\$BUILD_DIR/SOURCES\" \"\$BUILD_DIR/SPECS\" \"\$BUILD_DIR/SRPMS\""
+        printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/SPECS/${pkg_name}.spec\""
+        printf '%s\n' "Name: $pkg_name"
+        printf '%s\n' "Version: $APP_VERSION"
+        printf '%s\n' "Release: 1%{?dist}"
+        printf '%s\n' "Summary: $APP_NAME deployment - $pkg"
+        printf '%s\n' "License: MIT"
+        printf '%s\n' "BuildArch: noarch"
+        printf '%s\n' "%description"
+        printf '%s\n' "$APP_NAME deployment - $pkg"
+        printf '%s\n' "%install"
+        printf '%s\n' "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then printf '%s\n' "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; printf '%s\n' "rm -rf %{buildroot}/opt/libscript/.git"; fi
+        printf '%s\n' "touch %{buildroot}/var/LIB/libscript/.${pkg_name}_installed"
+        printf '%s\n' "%post"
+        printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh install-service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install-service $pkg $ver; fi"
+        if [ "$pkg" = "openedx" ] || [ "$pkg" = "stacks/cms/openedx" ] || [ "$pkg" = "workloads/apps/openedx" ]; then
+          printf '%s\n' "mkdir -p /usr/local/bin && ln -sf /opt/libscript/workloads/apps/openedx/cli.sh /usr/local/bin/openedx"
+          printf '%s\n' "/opt/libscript/workloads/apps/openedx/healthcheck.sh || true"
+        fi
+        printf '%s\n' "%preun"
+        if [ "$pkg" = "openedx" ] || [ "$pkg" = "stacks/cms/openedx" ] || [ "$pkg" = "workloads/apps/openedx" ]; then
+          printf '%s\n' "/opt/libscript/workloads/apps/openedx/workers.sh stop 2>/dev/null || true"
+          printf '%s\n' "rm -f /usr/local/bin/openedx"
+        fi
+        printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
+        printf '%s\n' "%files"
+        printf '%s\n' "/var/LIB/libscript/.${pkg_name}_installed"
+        printf '%s\n' "EOF"
+        printf '%s\n' "rpmbuild --define \"_topdir \$BUILD_DIR\" -bb \"\$BUILD_DIR/SPECS/${pkg_name}.spec\""
+        printf '%s\n' "find \"\$BUILD_DIR/RPMS\" -name \"*.rpm\" -exec cp {} \"\$OUT_DIR/\" \\;"
+        printf '%s\n' "rm -rf \"\$BUILD_DIR\""
+      done
+      meta_pkg_name="${safe_app_name}-meta"
+      printf '%s\n' "printf '%s\n' \"Building ${meta_pkg_name} ...\""
+      printf '%s\n' "BUILD_DIR=\"\${TMPDIR:-/tmp}/${meta_pkg_name}_rpmbuild\""
+      printf '%s\n' "mkdir -p \"\$BUILD_DIR/BUILD\" \"\$BUILD_DIR/RPMS\" \"\$BUILD_DIR/SOURCES\" \"\$BUILD_DIR/SPECS\" \"\$BUILD_DIR/SRPMS\""
+      printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/SPECS/${meta_pkg_name}.spec\""
+      printf '%s\n' "Name: ${meta_pkg_name}"
+      printf '%s\n' "Version: $APP_VERSION"
+      printf '%s\n' "Release: 1%{?dist}"
+      printf '%s\n' "Summary: $APP_NAME deployment metapackage"
+      printf '%s\n' "License: MIT"
+      printf '%s\n' "BuildArch: noarch"
+      if [ -n "$meta_depends" ]; then printf '%s\n' "Requires: $meta_depends"; fi
+      printf '%s\n' "%description"
+      printf '%s\n' "$APP_NAME deployment metapackage"
+      printf '%s\n' "%install"
+      printf '%s\n' "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then printf '%s\n' "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; printf '%s\n' "rm -rf %{buildroot}/opt/libscript/.git"; fi
+      printf '%s\n' "touch %{buildroot}/var/LIB/libscript/.${meta_pkg_name}_installed"
+      printf '%s\n' "%files"
+      printf '%s\n' "/var/LIB/libscript/.${meta_pkg_name}_installed"
+      printf '%s\n' "EOF"
+      printf '%s\n' "rpmbuild --define \"_topdir \$BUILD_DIR\" -bb \"\$BUILD_DIR/SPECS/${meta_pkg_name}.spec\""
+      printf '%s\n' "find \"\$BUILD_DIR/RPMS\" -name \"*.rpm\" -exec cp {} \"\$OUT_DIR/\" \\;"
+      printf '%s\n' "rm -rf \"\$BUILD_DIR\""
+      printf '%s\n' "printf '%s\n' \"Done!\""
+      exit 0

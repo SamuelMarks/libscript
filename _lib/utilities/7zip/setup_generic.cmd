@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%SEVENZIP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%SEVENZIP_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%SEVENZIP_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%SEVENZIP_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -134,7 +134,7 @@ if "%SEVENZIP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading 7zip %SEVENZIP_VERSION% to %DOWNLOAD_DIR%\7zip...
     if not exist "%DOWNLOAD_DIR%\7zip" mkdir "%DOWNLOAD_DIR%\7zip"
     if not "%SEVENZIP_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SEVENZIP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\7zip\7zip-%SEVENZIP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SEVENZIP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\7zip\7zip-%SEVENZIP_VERSION%.zip"
     ) else (
         echo SEVENZIP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SEVENZIP_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends 7zip
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends 7zip
     exit /b !errorlevel!
 )
 
@@ -164,11 +164,11 @@ if "!_SEVENZIP_INSTALLED!"=="0" (
         tar -xf "%DOWNLOAD_DIR%\7zip\7zip-%SEVENZIP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SEVENZIP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SEVENZIP_DOWNLOAD_URL%" "%TEMP%\7zip.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%SEVENZIP_DOWNLOAD_URL%" "%TEMP%\7zip.zip"
         tar -xf "%TEMP%\7zip.zip" -C "%TARGET_DIR%"
     ) else (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends 7zip
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends 7zip
         if exist "C:\Program Files\7-Zip\7z.exe" copy /y "C:\Program Files\7-Zip\7z*" "%TARGET_DIR%\bin\" >nul 2>&1
     )
 ) else (
@@ -196,5 +196,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "7zip" "%ACTION%" "%SEVENZIP_VERSION%" "%SEVENZIP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\7zip\%SEVENZIP_VERSION%\\bin\\7zip.exe\"" "%LIBSCRIPT_HOME%\7zip\%SEVENZIP_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "7zip" "%ACTION%" "%SEVENZIP_VERSION%" "%SEVENZIP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\7zip\%SEVENZIP_VERSION%\\bin\\7zip.exe\"" "%LIBSCRIPT_HOME%\7zip\%SEVENZIP_VERSION%"
 exit /b !errorlevel!

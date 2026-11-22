@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "openbao",
-  "title": "OpenBao",
-  "description": "An open-source tool for managing secrets and protecting sensitive data.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "security",
-  "provides": ["openbao", "security", "secrets", "server"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "An open-source tool for managing secrets and protecting sensitive data.",
+  "name": "openbao",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [8200, 8201],
+  "provides": ["openbao", "security", "secrets", "server"],
   "repository": "https://github.com/openbao/openbao",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "OpenBao"
 }

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rbenv",
-  "provides": ["rbenv"],
-  "os_whitelist": ["all"],
-  "title": "rbenv",
-  "description": "Bootstrap module for the `rbenv` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `rbenv` package manager.",
+  "name": "rbenv",
+  "os_whitelist": ["all"],
+  "provides": ["rbenv"],
   "repository": "https://github.com/rbenv/rbenv",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "rbenv"
 }

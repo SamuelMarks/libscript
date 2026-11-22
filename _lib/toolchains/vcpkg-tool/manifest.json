@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "vcpkg-tool",
-  "title": "vcpkg-tool",
-  "description": "Native C++ command-line binary frontend for the vcpkg package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["vcpkg-tool", "vcpkg-cli"],
+  "description": "Native C++ command-line binary frontend for the vcpkg package manager.",
+  "name": "vcpkg-tool",
   "os_whitelist": ["all"],
+  "provides": ["vcpkg-tool", "vcpkg-cli"],
   "repository": "https://github.com/microsoft/vcpkg-tool",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "vcpkg-tool"
 }

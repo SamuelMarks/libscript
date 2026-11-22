@@ -57,7 +57,7 @@ if /i "%~1"=="target-add" (
 )
 
 set "PACKAGE_NAME=rosbe"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*
 exit /b !errorlevel!
 
 :: ## target_add

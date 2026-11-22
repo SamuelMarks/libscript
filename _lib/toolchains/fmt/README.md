@@ -57,7 +57,7 @@ running the setup script.
 | `FMT_SOURCE_DIR`     | Extracted {fmt} source directory containing include/fmt/format-inl.h and src/format.cc for single-TU benchmarks.                             | `none`        |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../experiment-suite.schema.json",
+  "$schema": "../../experiments/schemas/experiment-suite.schema.json",
   "id": "edgcpp-backends",
   "title": "EDG C/C++ v7.0.1 Multi-Backend Empirical Evaluation & Zero-Hallucination Benchmarking Protocol (E0-E7)",
   "protocol_version": "PLDI-2027-v1",

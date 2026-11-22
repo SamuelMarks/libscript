@@ -224,20 +224,20 @@ call .\libscript.cmd experiment run gemma-tpu --local-exec --no-require-tpu-hbm 
 ### 1. Console Output (`E0`–`E4` Execution)
 
 ```text
-[CONTINUE] processing "./cli/commands/experiment/cli.sh"
+[CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 [CONTINUE] processing "./experiments/gemma-tpu/run.sh"
-[CONTINUE] processing "./_lib/toolchains/gemma-tpu-suite/benchmark_experiments.sh"
-[CONTINUE] processing "./_lib/toolchains/gemma-tpu-suite/suites/e0_tfrc_provenance.sh"
+[CONTINUE] processing "./experiments/gemma-tpu/benchmark_experiments.sh"
+[CONTINUE] processing "./experiments/gemma-tpu/suites/e0_tfrc_provenance.sh"
 [INFO] Wrote E0 TFRC & wheel provenance -> ./build/gemma_tpu_results/raw/e0_provenance.json
-[CONTINUE] processing "./_lib/toolchains/gemma-tpu-suite/suites/e1_inference_throughput.sh"
+[CONTINUE] processing "./experiments/gemma-tpu/suites/e1_inference_throughput.sh"
 [INFO] Completed E1 inference cell for hf_transformers -> ./build/gemma_tpu_results/raw/e1_inference_hf_transformers.json
 ...
-[CONTINUE] processing "./_lib/toolchains/gemma-tpu-suite/suites/e2_sql_evaluation.sh"
+[CONTINUE] processing "./experiments/gemma-tpu/suites/e2_sql_evaluation.sh"
 [INFO] Completed E2 SQL evaluation cell for jax_native -> ./build/gemma_tpu_results/raw/e2_sql_eval_jax_native.json
-[CONTINUE] processing "./_lib/toolchains/gemma-tpu-suite/suites/e3_training_finetuning.sh"
+[CONTINUE] processing "./experiments/gemma-tpu/suites/e3_training_finetuning.sh"
 [INFO] Completed E3 training cell for maxtext -> ./build/gemma_tpu_results/raw/e3_training_maxtext.json
-[CONTINUE] processing "./_lib/toolchains/gemma-tpu-suite/suites/e4_custom_matrix_and_synthesis.sh"
+[CONTINUE] processing "./experiments/gemma-tpu/suites/e4_custom_matrix_and_synthesis.sh"
 [INFO] Synthesized 7-backend comparison tables -> ./build/gemma_tpu_results/comparison_summary.{json,csv,md}
 [INFO] Completed gemma-tpu-suite local campaign in ./build/gemma_tpu_results
 ```

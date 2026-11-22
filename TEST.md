@@ -13,8 +13,8 @@ headless operating system boot in virtualized hardware:
 
 ```mermaid
 flowchart TD
-    subgraph Layer1[1. Static Quality & Standards Auditing]
-        Audit["audit_standards.sh / .ps1<br/>(POSIX Shebang, THIS_FILE Dance, STACK Guard, Doc Coverage, Ban Eval)"]
+    subgraph Layer1[1. Static Quality, Tier & Standards Auditing]
+        Audit["audit_standards, audit_posix, audit_tiers & audit_cmd<br/>(POSIX Shebang, THIS_FILE Dance, T0-T5 DAG, wincheck, Doc Coverage)"]
     end
 
     subgraph Layer2[2. Execution Idempotency Verification]
@@ -59,7 +59,7 @@ architectural invariants:
 1. **`POSIX_SHEBANG`**: Strict `#!/bin/sh` on line 1; bans non-POSIX shells (`bash`, `zsh`, `ksh`)
    and non-portable bashisms (`[[ ... ]]`, `source`, `type`).
 2. **`THIS_FILE_DANCE` & `SOURCE_CONTEXT_SAFETY`**: Canonical `THIS_FILE=` path resolution within
-   the first 35 lines, plus caller `THIS_FILE`/`SCRIPT_DIR` preservation in sourced `_lib/_common/`
+   the first 35 lines, plus caller `THIS_FILE`/`SCRIPT_DIR` preservation in sourced `engine/common/`
    libraries.
 3. **`RECURSION_GUARD`**: Re-entrant `STACK` recursion guard (`*':'"${THIS_FILE}"':'*` in POSIX,
    `:!THIS_FILE!:` `findstr` in Batch within the first 25 lines).
@@ -77,9 +77,9 @@ architectural invariants:
    `manifest.json` (`service.{sh,cmd}` strictly when `"service-daemon"` is declared; rejects no-op
    `exit 0` service stubs).
 10. **`RAW_NETWORK_FETCH`, `RAW_GCLOUD_TPU` & `EXP_IN_LIB`**: Bans raw `curl`/`wget`/`aria2c`
-    fetches outside `_lib/_common/pkg_mgr.{sh,cmd}` (`libscript_download` /
+    fetches outside `engine/common/pkg_mgr.{sh,cmd}` (`libscript_download` /
     `libscript_fetch_stdout`), requires `gcloud compute tpus tpu-vm` calls to route through
-    TFRC-guarded providers (`_lib/cloud-providers/gcp-tpu-vm/`), and keeps new empirical paper
+    TFRC-guarded providers (`infrastructure/providers/gcp-tpu-vm/`), and keeps new empirical paper
     campaigns inside `experiments/<suite-id>/` (outside the 3 grandfathered compatibility wrappers
     in `_lib/toolchains/*-suite/`).
 
@@ -279,7 +279,8 @@ pipelines:
 
 - **`.github/workflows/ci.yml`**: Executes `devtools/ci/precommit_dance.{sh,cmd}` across Ubuntu,
   macOS, and Windows runners (enforcing `cspell`, `prettier`, `audit_standards`, `audit_posix`,
-  `audit_version_manager`, `audit_schema_vars`, `shellcheck`, and 100% `doc_coverage`).
+  `audit_tiers`, `audit_version_manager`, `audit_schema_vars`, `shellcheck`, `wincheck`, and 100%
+  `doc_coverage`).
 - **`.github/workflows/release.yml`**: Hydrates air-gapped offline caches (`hydrate_offline_cache`)
   and verifies online/offline native installer builds across target platforms.
 
@@ -297,7 +298,7 @@ Matrix test results are aggregated and updated automatically:
 
 ## 9. Illumos Distribution Verification Suite & 5-Platform Matrix
 
-The illumos distribution subsystem (`_lib/illumos/distro/`) includes a dedicated verification
+The illumos distribution subsystem (`synthesis/distro/illumos/`) includes a dedicated verification
 harness executing exclusively inside Vagrant virtual machine environments across 5 target platforms:
 `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
@@ -337,8 +338,8 @@ Aggregates structured verification statuses into `tests_tmp/illumos_matrix_summa
 
 ## 9B. ReactOS Distribution Verification Suite & 5-Platform Matrix
 
-The ReactOS distribution subsystem (`_lib/reactos/distro/`) includes a dedicated verification suite
-and 5-platform matrix runner across `{macOS, Windows, FreeBSD, SunOS, Linux}`:
+The ReactOS distribution subsystem (`synthesis/distro/reactos/`) includes a dedicated verification
+suite and 5-platform matrix runner across `{macOS, Windows, FreeBSD, SunOS, Linux}`:
 
 - **Headless Serial Boot Smoketest** (`tests/reactos_boot_test.sh` / `.cmd`): Verifies 4 `COM1`
   milestones: 1) `FreeLoader` bootstrap banner, 2) `ntoskrnl.exe` + `FASTFAT` / `btrfs` / `NTFS`
@@ -368,7 +369,7 @@ The `msi-rs` live installer subsystem (`devtools/build_live_installer.sh`) under
 cross-platform matrix testing and screenshot verification:
 
 - **Live Installer Matrix Test (`tests/test_live_installer_matrix.sh` / `.cmd` / `.ps1`)**:
-  - Builds live bootable ISO media adhering to `execution-plan.live.schema.json`.
+  - Builds live bootable ISO media adhering to `synthesis/schemas/execution-plan.live.schema.json`.
   - Boots the live image headless in QEMU across Headless, TUI, and kiosk GUI modes.
   - Asserts disk discovery, partitioning schemes, and co-installation pipeline execution across
     Linux, FreeBSD, and illumos.

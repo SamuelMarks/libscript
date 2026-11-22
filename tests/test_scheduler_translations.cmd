@@ -51,7 +51,7 @@ goto :find_root
 
 for %%S in (kubernetes mesos nomad native xpk slurm_ray) do (
     for %%V in (compile submit status logs stop destroy) do (
-        call "%LIBSCRIPT_ROOT_DIR%\payloads\engine.cmd" %%V "%LIBSCRIPT_ROOT_DIR%\payloads\ai\vllm\payload.json" --scheduler %%S >nul
+        call "%LIBSCRIPT_ROOT_DIR%\workloads\engine.cmd" %%V "%LIBSCRIPT_ROOT_DIR%\workloads\payloads\ai\vllm\payload.json" --scheduler %%S >nul
         if errorlevel 1 exit /b 1
     )
 )

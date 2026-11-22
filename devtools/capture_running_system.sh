@@ -179,13 +179,13 @@ resolve_target_name() {
 }
 
 # ## ensure_msi_built
-# Builds the online or offline .msi package for a component via packaging/build_msi.sh if needed.
+# Builds the online or offline .msi package for a component via synthesis/msi/build_msi.sh if needed.
 ensure_msi_built() {
   _tdir="$1"
   _tname="$2"
   _v="$3"
-  _out_prefix="${LIBSCRIPT_ROOT_DIR}/packaging/${_tname}-${_v}"
-  for _cand in "${LIBSCRIPT_ROOT_DIR}/packaging/"*.msi; do
+  _out_prefix="${LIBSCRIPT_ROOT_DIR}/synthesis/msi/${_tname}-${_v}"
+  for _cand in "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/"*.msi; do
     [ -f "$_cand" ] || continue
     _base=$(basename "$_cand" .msi | tr '[:upper:]' '[:lower:]')
     if [ "$_v" = "offline" ]; then
@@ -205,7 +205,7 @@ ensure_msi_built() {
     fi
   done
   if [ ! -f "${_out_prefix}.msi" ]; then
-    "${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "$_tdir" "--${_v}" --out "$_out_prefix" >/dev/null
+    "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/build_msi.sh" "$_tdir" "--${_v}" --out "$_out_prefix" >/dev/null
   fi
   printf '%s.msi
 ' "$_out_prefix"

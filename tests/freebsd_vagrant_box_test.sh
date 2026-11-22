@@ -43,7 +43,7 @@ printf '[TEST]     Executing Vagrant box lifecycle test on %s...\n' "${BOX_PATH}
 # Ensure box file exists
 if [ ! -f "${BOX_PATH}" ]; then
   printf '[TEST]     Box not found, generating box artifact...\n'
-  "${REPO_ROOT}/cli/commands/package_as/freebsd_distro.sh" --format box --profile "${REPO_ROOT}/profiles/freebsd/zfs-cloud.json" --output "${BOX_PATH}"
+  "${REPO_ROOT}/synthesis/formats/freebsd_distro.sh" --format box --profile "${REPO_ROOT}/synthesis/profiles/freebsd/zfs-cloud.json" --output "${BOX_PATH}"
 fi
 
 SANDBOX_DIR="${REPO_ROOT}/tests_tmp/vagrant_test_$$"

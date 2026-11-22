@@ -1,17 +1,18 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "libtpu-rs",
-  "title": "libtpu-rs Clean-Room PJRT Driver & Compiler Suite",
-  "description": "Clean-room Rust PJRT TPU runtime/compiler version manager, isolated JAX test environment, and SIGPLAN E0-E8 empirical evaluation harness.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["libtpu-rs"],
-  "os_whitelist": ["all"],
-  "repository": "https://github.com/openxla/xla",
   "dependencies": {
-    "host_tools": ["rust", "clang", "llvm", "protobuf", "tokei", "jq", "git"],
     "build_deps": ["c"],
+    "host_tools": ["rust", "clang", "llvm", "protobuf", "tokei", "jq", "git"],
     "runtime_deps": ["python", "libtpu"],
     "tier": "optional"
   },
-  "capabilities": ["versioned-artifact"]
+  "description": "Clean-room Rust PJRT TPU runtime/compiler version manager, isolated JAX test environment, and SIGPLAN E0-E8 empirical evaluation harness.",
+  "name": "libtpu-rs",
+  "os_whitelist": ["all"],
+  "provides": ["libtpu-rs"],
+  "repository": "https://github.com/openxla/xla",
+  "tier": "T1",
+  "title": "libtpu-rs Clean-Room PJRT Driver & Compiler Suite"
 }

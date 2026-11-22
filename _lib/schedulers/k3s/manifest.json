@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "schedulers",
+  "description": "CNCF certified lightweight single-binary Kubernetes distribution (k3s) built for edge, IoT, CI, and cloud workloads.",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "name": "k3s",
+  "os_whitelist": ["linux"],
+  "ports": [6443],
+  "provides": ["k3s", "kubernetes-distro"],
+  "repository": "https://github.com/k3s-io/k3s",
+  "tier": "T1",
+  "title": "Rancher K3s Lightweight Kubernetes"
+}

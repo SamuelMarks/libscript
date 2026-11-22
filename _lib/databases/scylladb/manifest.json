@@ -1,17 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "scylladb",
-  "title": "ScyllaDB",
-  "description": "Ultra-low-latency C++ distributed wide-column NoSQL database compatible with Apache Cassandra and Amazon DynamoDB.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["scylladb", "wide-column-store", "cassandra-compatible", "database"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["windows", "darwin", "sunos"],
-  "ports": [9042, 7000],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/scylladb/scylladb",
+  "description": "Ultra-low-latency C++ distributed wide-column NoSQL database compatible with Apache Cassandra and Amazon DynamoDB.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -24,9 +18,16 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "scylladb",
+  "os_blacklist": ["windows", "darwin", "sunos"],
+  "os_whitelist": ["all"],
+  "ports": [9042, 7000],
+  "provides": ["scylladb", "wide-column-store", "cassandra-compatible", "database"],
+  "repository": "https://github.com/scylladb/scylladb",
+  "stateful": true,
+  "tier": "T1",
+  "title": "ScyllaDB"
 }

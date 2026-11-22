@@ -57,7 +57,7 @@ if "%errorlevel%" equ "0" (
 
 echo Installing scoop via official PowerShell bootstrap...
 set "_scoop_ps1=%TEMP%\install_scoop.ps1"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://raw.githubusercontent.com/ScoopInstaller/Install/master/install.ps1" "!_scoop_ps1!" "SKIP"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://raw.githubusercontent.com/ScoopInstaller/Install/master/install.ps1" "!_scoop_ps1!" "SKIP"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '!_scoop_ps1!' -RunAsAdmin; Remove-Item '!_scoop_ps1!' -Force -ErrorAction SilentlyContinue"
 
 if exist "%USERPROFILE%\scoop\shims\scoop.cmd" (

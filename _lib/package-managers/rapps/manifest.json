@@ -1,15 +1,16 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rapps",
-  "title": "ReactOS Applications Manager (RAPPS)",
-  "description": "ReactOS Applications Manager CLI wrapper and host-side rapps-db INI parser with SHA-256 verified offline installer prefetching.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "provides": ["rapps"],
   "conflicts": [],
-  "versions": ["latest", "0.4.16"],
-  "os_whitelist": ["all"],
+  "description": "ReactOS Applications Manager CLI wrapper and host-side rapps-db INI parser with SHA-256 verified offline installer prefetching.",
+  "name": "rapps",
   "os_blacklist": [],
-  "repository": "https://github.com/reactos/rapps-db",
+  "os_whitelist": ["all"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["rapps"],
+  "repository": "https://github.com/reactos/rapps-db",
+  "tier": "T1",
+  "title": "ReactOS Applications Manager (RAPPS)",
+  "versions": ["latest", "0.4.16"]
 }

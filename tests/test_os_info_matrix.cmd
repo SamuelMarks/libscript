@@ -2,7 +2,7 @@
 :: # test_os_info_matrix.cmd
 ::
 :: ## Overview
-:: Hermetic Windows Batch test suite verifying `_lib\_common\os_info.cmd` across architecture variants (AMD64, ARM64, x86), 2x idempotent sourcing, `INIT_SYS=windows-scm`, and absence of `NGINX_SERVERS_ROOT` side-effect leaks.
+:: Hermetic Windows Batch test suite verifying `engine\common\os_info.cmd` across architecture variants (AMD64, ARM64, x86), 2x idempotent sourcing, `INIT_SYS=windows-scm`, and absence of `NGINX_SERVERS_ROOT` side-effect leaks.
 ::
 :: ## Usage
 :: call tests\test_os_info_matrix.cmd
@@ -64,8 +64,8 @@ if errorlevel 1 exit /b 1
 set "PROCESSOR_ARCHITECTURE=%SAVED_ARCH%"
 set "NGINX_SERVERS_ROOT="
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\os_info.cmd"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\os_info.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\os_info.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\os_info.cmd"
 
 if not "!TARGET_OS!"=="windows" (
     call :fail_test "Expected TARGET_OS=windows, got !TARGET_OS!"
@@ -89,7 +89,7 @@ exit /b 0
 :check_arch
 set "PROCESSOR_ARCHITECTURE=%~1"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\os_info.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\os_info.cmd"
 if not "!ARCH!"=="%~2" (
     call :fail_test "Arch %~1: expected ARCH=%~2, got !ARCH!"
     exit /b 1

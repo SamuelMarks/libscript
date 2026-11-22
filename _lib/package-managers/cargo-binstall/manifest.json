@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "cargo-binstall",
-  "provides": ["cargo-binstall"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "cargo-binstall",
-  "description": "Bootstrap module for the `cargo-binstall` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `cargo-binstall` package manager.",
+  "name": "cargo-binstall",
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["cargo-binstall"],
   "repository": "https://github.com/cargo-bins/cargo-binstall",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "cargo-binstall"
 }

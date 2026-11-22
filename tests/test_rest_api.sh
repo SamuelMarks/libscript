@@ -77,7 +77,7 @@ printf '[PASS] CLI dispatch emits valid RFC 8259 JSON, unique UUIDv4s, and rejec
 # 3. Live HTTP/1.1 socket server + job status polling
 if command -v curl >/dev/null 2>&1; then
   PORT_FILE="${TEST_TMP}/bound.port"
-  "$REST_BIN" --bind 127.0.0.1 --port 0 --max-requests 4 --port-file "$PORT_FILE" >"${TEST_TMP}/srv.log" 2>&1 &
+  "$REST_BIN" --bind 127.0.0.1 --port 0 --max-requests 6 --port-file "$PORT_FILE" >"${TEST_TMP}/srv.log" 2>&1 &
   SRV_PID=$!
   _tries=0
   while [ ! -s "$PORT_FILE" ] && [ "$_tries" -lt 50 ]; do
@@ -92,7 +92,17 @@ if command -v curl >/dev/null 2>&1; then
   [ "$(printf '%s\n' "$HEALTH_JSON" | jq -r '.status')" = 'ok' ] || fail_test "Unexpected /api/v1/health response: ${HEALTH_JSON}"
 
   # libscript-allow-raw-curl
-  SUB_JSON=$(curl -fsS -X POST "http://127.0.0.1:${BOUND_PORT}/api/v1/artifacts/generate" \
+  CAP_JSON=$(curl -fsS "http://127.0.0.1:${BOUND_PORT}/v1/recipes/glibc/capabilities")
+  [ "$(printf '%s\n' "$CAP_JSON" | jq -r '.tier')" = 'T2' ] || fail_test "Expected T2 tier for glibc in /v1/recipes/glibc/capabilities, got: ${CAP_JSON}"
+
+  # libscript-allow-raw-curl
+  WL_JSON=$(curl -fsS -X POST "http://127.0.0.1:${BOUND_PORT}/v1/workloads" \
+    -H 'Content-Type: application/json' \
+    -d '{"action":"compile","target":"workloads/payloads/ai/vllm/payload.json"}')
+  printf '%s\n' "$WL_JSON" | jq -er '.job_id' >/dev/null || fail_test "Expected job_id from POST /v1/workloads: ${WL_JSON}"
+
+  # libscript-allow-raw-curl
+  SUB_JSON=$(curl -fsS -X POST "http://127.0.0.1:${BOUND_PORT}/v1/synthesis" \
     -H 'Content-Type: application/json' \
     -d '{"kernel":"rtos-zephyr","format":"firmware-uf2","components":"sqlite","board":"qemu_cortex_m3"}')
   HTTP_JOB_ID=$(printf '%s\n' "$SUB_JSON" | jq -er '.job_id')

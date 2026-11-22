@@ -63,7 +63,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\fd\%FD_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "fd" "%FD_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "fd" "%FD_VERSION%"
 
 endlocal & (
     set "FD_VERSION=%FD_VERSION%"

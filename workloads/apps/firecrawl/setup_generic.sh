@@ -1,0 +1,134 @@
+#!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the Firecrawl crawler stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for firecrawl.
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export DIR="${SCRIPT_DIR}"
+
+for LIB in 'engine/common/pkg_mgr.sh' 'engine/common/service.sh' 'engine/common/envsubst_safe.sh' '_lib/languages/nodejs/setup.sh' '_lib/git-servers/utils/git.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  # shellcheck source=/dev/null
+# shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
+
+DIR="${_DIR:-$SCRIPT_DIR}"
+SCRIPT_NAME="${DIR}"'/env.sh'
+export SCRIPT_NAME
+# shellcheck source=/dev/null
+# shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+
+: "${LIBSCRIPT_DATA_DIR:=${LIBSCRIPT_ROOT_DIR}/data/firecrawl}"
+
+if [ "${FIRECRAWL_DEST-}" ]; then
+  DEST="${FIRECRAWL_DEST}"
+elif [ -z "${DEST+x}" ]; then
+  if [ -f "${LIBSCRIPT_DATA_DIR}/.firecrawl_dest" ]; then
+    DEST="$(cat "${LIBSCRIPT_DATA_DIR}/.firecrawl_dest")"
+  else
+    rand="$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
+    DEST="${LIBSCRIPT_DATA_DIR}"'/'"${rand}"
+    mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
+    printf '%s\n' "${DEST}" > "${LIBSCRIPT_DATA_DIR}/.firecrawl_dest"
+  fi
+  export DEST
+  mkdir -p -- "${DEST}"
+fi
+
+libscript_depends 'git' || true
+
+if ! libscript_cmd_avail pnpm; then
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install pnpm latest || libscript_depends 'pnpm' || true
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pnpm/env.sh" ]; then
+    STACK=""
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pnpm/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+  fi
+fi
+
+git_get https://github.com/mendableai/firecrawl "${DEST}"
+
+HASH="$(cd -- "${DEST}" && git rev-list HEAD -1 2>/dev/null || echo 'latest')"
+HASH_LOC="${DEST}"'/apps/api/node_modules/'"${HASH}"
+if [ ! -f "${HASH_LOC}" ]; then
+  mkdir -p -- "$(dirname -- "${HASH_LOC}")"
+  touch -- "${HASH_LOC}"
+  if libscript_cmd_avail pnpm && [ -d "${DEST}/apps/api" ]; then
+    (
+      cd -- "${DEST}/apps/api" || exit 1
+      pnpm install || pnpm install --ignore-scripts || true
+    )
+  fi
+fi
+
+if [ "${VARS-}" ]; then
+  libscript_object2key_val "${VARS}" 'export ' "'" > "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+  libscript_object2key_val "${VARS}" 'setenv ' "'" > "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
+fi
+ENV=''
+if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
+  chmod +x "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+  ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk -- '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
+fi
+
+if [ -d '/etc/systemd/system' ] && command -v pnpm >/dev/null 2>&1; then
+  _fc_workers_tmp="$(mktemp)"
+  _fc_serve_tmp="$(mktemp)"
+  trap 'rm -f -- "${_fc_workers_tmp}" "${_fc_serve_tmp}"' EXIT HUP INT QUIT TERM
+
+  service_name='firecrawl_workers'
+  DESCRIPTION='Firecrawl workers' \
+  ENV="${ENV}" \
+  WORKING_DIR="${DEST}"'/apps/api' \
+  EXEC_START="$(command -v pnpm)"' run workers' \
+    envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${_fc_workers_tmp}"
+  if ! cmp -s "${_fc_workers_tmp}" '/etc/systemd/system/'"${service_name}"'.service' 2>/dev/null; then
+    priv install -m 0644 -o 'root' -- "${_fc_workers_tmp}" '/etc/systemd/system/'"${service_name}"'.service'
+    libscript_service daemon-reload "${service_name}" || true
+    libscript_service reload-or-restart "${service_name}" || true
+  fi
+
+  service_name='firecrawl_serve'
+  DESCRIPTION='Firecrawl serve' \
+  ENV="${ENV}" \
+  WORKING_DIR="${DEST}"'/apps/api' \
+  EXEC_START="$(command -v pnpm)"' run start' \
+    envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${_fc_serve_tmp}"
+  if ! cmp -s "${_fc_serve_tmp}" '/etc/systemd/system/'"${service_name}"'.service' 2>/dev/null; then
+    priv install -m 0644 -o 'root' -- "${_fc_serve_tmp}" '/etc/systemd/system/'"${service_name}"'.service'
+    libscript_service daemon-reload "${service_name}" || true
+    libscript_service reload-or-restart "${service_name}" || true
+  fi
+  rm -f -- "${_fc_workers_tmp}" "${_fc_serve_tmp}"
+  trap - EXIT HUP INT QUIT TERM
+fi

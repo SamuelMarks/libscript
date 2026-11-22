@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%WINGET_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%WINGET_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%WINGET_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%WINGET_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/microsoft/winget-pkgs" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%WINGET_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading winget %WINGET_VERSION% to %DOWNLOAD_DIR%\winget...
     if not exist "%DOWNLOAD_DIR%\winget" mkdir "%DOWNLOAD_DIR%\winget"
     if not "%WINGET_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WINGET_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\winget\winget-%WINGET_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%WINGET_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\winget\winget-%WINGET_VERSION%.zip"
     ) else (
         echo WINGET_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%WINGET_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends winget
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends winget
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\winget\winget-%WINGET_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%WINGET_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WINGET_DOWNLOAD_URL%" "%TEMP%\winget.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%WINGET_DOWNLOAD_URL%" "%TEMP%\winget.zip"
         tar -xf "%TEMP%\winget.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for winget.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "winget" "%ACTION%" "%WINGET_VERSION%" "%WINGET_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\winget\%WINGET_VERSION%\\bin\\winget.exe\"" "%LIBSCRIPT_HOME%\winget\%WINGET_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "winget" "%ACTION%" "%WINGET_VERSION%" "%WINGET_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\winget\%WINGET_VERSION%\\bin\\winget.exe\"" "%LIBSCRIPT_HOME%\winget\%WINGET_VERSION%"
 exit /b !errorlevel!

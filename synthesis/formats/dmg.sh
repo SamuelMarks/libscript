@@ -1,0 +1,238 @@
+#!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'dmg' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/synthesis/formats/_common_installer_args.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+      PKG_STAGE="${OUT_FILE}_stage"
+      rm -rf "$PKG_STAGE"
+      mkdir -p "$PKG_STAGE/packages" "$PKG_STAGE/resources" "$PKG_STAGE/scripts"
+
+      if [ -n "$WELCOME_TEXT" ]; then
+        printf '%s\n' "<html><body><h1>Welcome</h1><p>$WELCOME_TEXT</p></body></html>" > "$PKG_STAGE/resources/welcome.html"
+      fi
+      if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
+        cp "$LICENSE_PATH" "$PKG_STAGE/resources/license.html"
+      fi
+
+      DEPS_LIST=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          DEPS_LIST="$DEPS_LIST $1 ${2:-latest}"
+          if [ "${2:-}" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        DEPS_LIST=$("${LIBSCRIPT_ROOT_DIR:-.}/engine/solver/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
+      else
+        DEPS_LIST=$(find_components | sort | awk '{printf "%s latest ", $1}')
+      fi
+
+      # shellcheck disable=SC2086
+      set -- $DEPS_LIST
+      while [ $# -gt 0 ]; do
+        PKG=$1; VER=$2; shift 2
+        COMP_DIR="$PKG_STAGE/comp_${PKG}"
+        mkdir -p "$COMP_DIR/root/opt/libscript"
+        mkdir -p "$COMP_DIR/scripts"
+
+        cat << "EOF_SCRIPT" > "$COMP_DIR/scripts/postinstall"
+#!/bin/sh
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+USER_NAME=$(stat -f "%Su" /dev/console 2>/dev/null || printf '%s\n' "${SUDO_USER:-}")
+if [ -z "${USER_NAME:-}" ] || [ "${USER_NAME:-}" = "root" ]; then
+  USER_NAME="$USER"
+fi
+EOF_SCRIPT
+
+        SCHEMA_FILE=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$PKG/" | head -n 1)
+        PARAMS=""
+        if [ -f "$SCHEMA_FILE" ]; then
+          VARS_JSON=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$SCHEMA_FILE")
+          if [ -n "$VARS_JSON" ]; then
+            printf '%s\n' "$VARS_JSON" | while read -r item; do
+              VARNAME=$(printf '%s\n' "$item" | jq -r '.key')
+              DESC=$(printf '%s\n' "$item" | jq -r '.desc' | sed 's/"/\"/g')
+              DEFVAL=$(printf '%s\n' "$item" | jq -r '.def' | sed 's/"/\"/g')
+
+              if case "$VARNAME" in *"_PASSWORD"*) true;; *) false;; esac; then
+                HIDDEN="with hidden answer"
+              else
+                HIDDEN=""
+              fi
+
+              cat << EOF_PROMPT >> "$COMP_DIR/scripts/postinstall"
+VAL_${VARNAME}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Configuration for ${PKG}
+
+${DESC}:" default answer "${DEFVAL}" ${HIDDEN}' -e 'text returned of result' 2>/dev/null)
+export ${VARNAME}="\$VAL_${VARNAME}"
+EOF_PROMPT
+
+              if case "$VARNAME" in *"_PORT"*) true;; *) false;; esac; then
+                cat << EOF_PROMPT >> "$COMP_DIR/scripts/postinstall"
+while netstat -an | grep -q "[.:]\$VAL_${VARNAME} .*LISTEN"; do
+  VAL_${VARNAME}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Port '"\$VAL_${VARNAME}"' is already in use. Please enter a different port:" default answer ""' -e 'text returned of result' 2>/dev/null)
+  export ${VARNAME}="\$VAL_${VARNAME}"
+done
+EOF_PROMPT
+              fi
+            done
+            PARAMS=$(printf '%s\n' "$VARS_JSON" | jq -r '.key' | awk -v PKG="$PKG" '{printf " --%s=\"$VAL_%s\"", $1, $1}')
+          fi
+        fi
+
+        cat << EOF_SCRIPT >> "$COMP_DIR/scripts/postinstall"
+if [ "\${SCRIPT_NAME-}" ]; then
+  THIS_FILE="\${SCRIPT_NAME}"
+elif [ "\${BASH_SOURCE-}" ]; then
+  THIS_FILE="\${BASH_SOURCE}"
+elif [ "\${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="\${(%):-%x}"
+else
+  THIS_FILE="\${0}"
+fi
+POSTINSTALL_DIR=\$(cd -- "\$(dirname -- "\${THIS_FILE}")" && pwd)
+
+if command -v libscript.sh >/dev/null 2>&1; then
+  libscript.sh install-service "$PKG" "$VER" $PARAMS
+elif [ -f "/opt/libscript/libscript.sh" ]; then
+  /opt/libscript/libscript.sh install-service "$PKG" "$VER" $PARAMS
+elif [ -f "\${POSTINSTALL_DIR}/../../../libscript.sh" ]; then
+  "\${POSTINSTALL_DIR}/../../../libscript.sh" install-service "$PKG" "$VER" $PARAMS
+else
+  sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display alert "libscript.sh not found. Installation of '"$PKG"' failed."'
+  exit 1
+fi
+
+mkdir -p "$COMP_DIR/root/opt/libscript"
+cat << "EOF_UNINST" > "$COMP_DIR/root/opt/libscript/uninstall_${PKG}.command"
+#!/bin/sh
+# ## Overview
+# Uninstaller command for ${PKG}.
+#
+# ## Usage
+# Execute this script to uninstall ${PKG}.
+
+set -feu
+if [ "\${SCRIPT_NAME-}" ]; then
+  THIS_FILE="\${SCRIPT_NAME}"
+elif [ "\${BASH_SOURCE-}" ]; then
+  THIS_FILE="\${BASH_SOURCE}"
+elif [ "\${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="\${(%):-%x}"
+else
+  THIS_FILE="\${0}"
+fi
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || printf '%s\n' "\$SUDO_USER")
+if [ -z "\$USER_NAME" ] || [ "\$USER_NAME" = "root" ]; then
+  USER_NAME="\$USER"
+fi
+
+ANS=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Do you want to completely remove the Data Directory and all records for '"$PKG"'?" buttons {"Yes", "No"} default button "No"' -e 'button returned of result' 2>/dev/null)
+
+PURGE=""
+if [ "\$ANS" = "Yes" ]; then
+  PURGE="--purge-data"
+fi
+
+printf '%s\n' "Uninstalling $PKG..."
+sudo libscript.sh uninstall "$PKG" \$PURGE
+printf '%s\n' "Uninstalled $PKG."
+sleep 2
+EOF_UNINST
+chmod +x "$COMP_DIR/root/opt/libscript/uninstall_${PKG}.command"
+EOF_SCRIPT
+
+        chmod +x "$COMP_DIR/scripts/postinstall"
+
+        if command -v pkgbuild >/dev/null 2>&1; then
+          mkdir -p "$(dirname "$PKG_STAGE/packages/$PKG.pkg")"
+        pkgbuild --root "$COMP_DIR/root" --scripts "$COMP_DIR/scripts" --identifier "com.libscript.comp.$PKG" --version "$APP_VERSION" "$PKG_STAGE/packages/$PKG.pkg"
+        fi
+      done
+
+      SYNTH_ARGS=""
+      for p in "$PKG_STAGE/packages/"*.pkg; do
+        [ -f "$p" ] && SYNTH_ARGS="$SYNTH_ARGS --package $p"
+      done
+      if command -v productbuild >/dev/null 2>&1 && [ -n "$SYNTH_ARGS" ]; then
+        # shellcheck disable=SC2086
+        productbuild --synthesize $SYNTH_ARGS "$PKG_STAGE/Distribution.xml"
+
+        # ## sed_in_place
+        # Cross-platform in-place sed editing helper.
+        sed_in_place() {
+          _sip_expr="$2"
+          _sip_target="$3"
+          sed "$_sip_expr" "$_sip_target" > "${_sip_target}.tmp" && mv "${_sip_target}.tmp" "$_sip_target"
+        }
+
+        sed_in_place -e '/<installer-gui-script/a\
+    <title>'"$APP_NAME"'</title>\
+    <options customize="always" require-scripts="false"/>' "$PKG_STAGE/Distribution.xml"
+
+        if [ -n "$WELCOME_TEXT" ]; then
+          sed_in_place -e '/<installer-gui-script/a\
+    <welcome file="welcome.html"/>' "$PKG_STAGE/Distribution.xml"
+        fi
+
+        if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
+          sed_in_place -e '/<installer-gui-script/a\
+    <license file="license.html"/>' "$PKG_STAGE/Distribution.xml"
+        fi
+
+        # shellcheck disable=SC2086
+        set -- $DEPS_LIST
+        while [ $# -gt 0 ]; do
+          PKG=$1; VER=$2; shift 2
+          sed_in_place "s/choice id=\"com.libscript.comp.$PKG\" title=\"[^\"]*\"/choice id=\"com.libscript.comp.$PKG\" title=\"$PKG installer\"/g" "$PKG_STAGE/Distribution.xml"
+        done
+
+        productbuild --distribution "$PKG_STAGE/Distribution.xml" --package-path "$PKG_STAGE/packages" --resources "$PKG_STAGE/resources" "${OUT_FILE}.pkg"
+
+        if true; then
+          hdiutil create -volname "$APP_NAME" -srcfolder "${OUT_FILE}.pkg" -ov -format UDZO "${OUT_FILE}.dmg"
+          printf '%s\n' "Created ${OUT_FILE}.dmg"
+        else
+          printf '%s\n' "Created ${OUT_FILE}.pkg"
+        fi
+        rm -rf "$PKG_STAGE"
+      else
+        printf '%s\n' "Created source files in $PKG_STAGE"
+        printf '%s\n' 'pkgbuild/productbuild not found. Cannot build .pkg natively.' >&2
+      fi
+      exit 0
+

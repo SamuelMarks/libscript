@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "toolchains",
+  "conflicts": [],
+  "description": "Component for installing and managing the Google Cloud CLI (gcloud).",
+  "name": "gcloud-cli",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "provides": ["gcloud", "gcloud-cli", "gcp-cli"],
+  "tier": "T1",
+  "title": "Google Cloud CLI"
+}

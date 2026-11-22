@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "htop",
-  "title": "htop",
-  "description": "Cross-platform interactive ncurses system process viewer and resource monitor.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["htop", "process-viewer"],
-  "os_whitelist": ["all"],
+  "description": "Cross-platform interactive ncurses system process viewer and resource monitor.",
+  "name": "htop",
   "os_blacklist": ["windows"],
+  "os_whitelist": ["all"],
+  "provides": ["htop", "process-viewer"],
   "repository": "https://github.com/htop-dev/htop",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "htop"
 }

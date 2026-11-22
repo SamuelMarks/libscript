@@ -70,7 +70,7 @@ if exist "!_CAND_P!" (
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 )
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "freebsd-usr-bin" "%FREEBSD_USR_BIN_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "freebsd-usr-bin" "%FREEBSD_USR_BIN_VERSION%"
 
 endlocal & (
     set "FREEBSD_USR_BIN_VERSION=%FREEBSD_USR_BIN_VERSION%"

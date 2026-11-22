@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "swift",
-  "title": "Swift Toolchain",
-  "description": "A powerful and intuitive programming language for iOS, macOS, tvOS, and watchOS.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["swift", "toolchain"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A powerful and intuitive programming language for iOS, macOS, tvOS, and watchOS.",
+  "name": "swift",
   "os_blacklist": ["alpine", "sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["swift", "toolchain"],
   "repository": "https://github.com/swiftlang/swift",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Swift Toolchain"
 }

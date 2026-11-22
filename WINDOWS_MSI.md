@@ -107,7 +107,7 @@ msiexec /x MyStack.msi PURGE_mysql="--purge-data" PURGE_meilisearch="--purge-dat
 
 ## Branding & Visual Asset Requirements
 
-To configure custom branding in `packaging/template_msi.*` or via `libscript.sh package-as msi`:
+To configure custom branding in `synthesis/msi/template_msi.*` or via `libscript.sh package-as msi`:
 
 - **License Agreement**: `--license <path>` (`template_msi.*` / `build_msi.*`) or
   `--license-file <path>` (`package-as msi`, plain text or `.rtf`). Automatically formatted into a
@@ -137,7 +137,7 @@ C:\Program Files (x86)\OpenEdX\
     ├── libscript.sh             # Root POSIX /bin/sh engine
     ├── _lib\                    # Core runtime, database, cache, and netctl recipes
     ├── cli\                     # CLI dispatchers
-    ├── packaging\               # WiX generators, branding tools, and browser launcher
+    ├── synthesis\msi\               # WiX generators, branding tools, and browser launcher
     ├── payloads\                # Declarative workload definitions and schedulers
     ├── topologies\              # Multi-node HA cluster topologies
     └── traits\                  # Cross-cutting node traits (storage, secrets, firewall, backup)
@@ -150,8 +150,8 @@ or `wixl`:
 
 1. **`Product.wxs`**: Defines Product properties, UI dialog flows (Simple and Advanced modes), and
    deferred elevated CustomActions.
-2. **`Product_payload.wxs`**: Generated dynamically by `packaging/harvest_payload.sh` or
-   `packaging/harvest_payload.cmd`, harvesting all repository files while filtering out `.git`,
+2. **`Product_payload.wxs`**: Generated dynamically by `synthesis/msi/harvest_payload.sh` or
+   `synthesis/msi/harvest_payload.cmd`, harvesting all repository files while filtering out `.git`,
    `tests_tmp/`, build artifacts, and ignored patterns.
 
 ### Custom Action Execution Pipeline
@@ -162,7 +162,7 @@ Deferred elevated custom actions invoke the embedded engine directly from
 ```xml
 <CustomAction Id="InstallOpenEdXService"
               Directory="INSTALLFOLDER"
-              ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install _lib/web-apps/openedx ..."
+              ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install workloads/apps/openedx ..."
               Execute="deferred"
               Return="check"
               Impersonate="no" />
@@ -170,7 +170,7 @@ Deferred elevated custom actions invoke the embedded engine directly from
 
 ### Resilient Browser Launch & Fallback
 
-The post-install browser trigger invokes `packaging/launch_browser.cmd`. If no web browser is
+The post-install browser trigger invokes `synthesis/msi/launch_browser.cmd`. If no web browser is
 registered on the host system, it creates desktop `.url` Internet Shortcuts pointing to the LMS and
 CMS endpoints, avoiding blocking Windows modal error popups.
 
@@ -199,10 +199,10 @@ LibScript provides dual-distribution packaging architecture for Windows environm
 
 ```sh
 # POSIX / macOS / Linux build host
-./packaging/build_msi.sh _lib/web-apps/openedx --online --out OpenEdX-Online-Setup
+./synthesis/msi/build_msi.sh workloads/apps/openedx --online --out OpenEdX-Online-Setup
 
 # Windows build host
-call packaging\build_msi.cmd _lib\web-apps\openedx --online --out OpenEdX-Online-Setup
+call synthesis\msi\build_msi.cmd workloads\apps\openedx --online --out OpenEdX-Online-Setup
 ```
 
 #### 2. Hydrating the Offline Artifact Cache
@@ -212,15 +212,15 @@ bundle manifest:
 
 ```sh
 # POSIX build host
-./packaging/hydrate_offline_cache.sh \
-  --manifest _lib/web-apps/openedx/offline_bundle.json \
+./synthesis/msi/hydrate_offline_cache.sh \
+  --manifest workloads/apps/openedx/offline_bundle.json \
   --cache-dir cache/ \
   --wheels \
   --codebase
 
 # Windows build host
-call packaging\hydrate_offline_cache.cmd ^
-  --manifest _lib\web-apps\openedx\offline_bundle.json ^
+call synthesis\msi\hydrate_offline_cache.cmd ^
+  --manifest workloads\apps\openedx\offline_bundle.json ^
   --cache-dir cache\ ^
   --wheels ^
   --codebase
@@ -230,17 +230,17 @@ call packaging\hydrate_offline_cache.cmd ^
 
 ```sh
 # POSIX build host (compiles with multi-cabinet partitioning)
-./packaging/build_msi.sh _lib/web-apps/openedx --offline --cache-dir cache/ --out OpenEdX-Offline-Setup
+./synthesis/msi/build_msi.sh workloads/apps/openedx --offline --cache-dir cache/ --out OpenEdX-Offline-Setup
 
 # Windows build host
-call packaging\build_msi.cmd _lib\web-apps\openedx --offline --cache-dir cache\ --out OpenEdX-Offline-Setup
+call synthesis\msi\build_msi.cmd workloads\apps\openedx --offline --cache-dir cache\ --out OpenEdX-Offline-Setup
 ```
 
 Alternatively, use the unified CLI dispatcher:
 
 ```sh
-./libscript.sh package-as msi _lib/web-apps/openedx --online
-./libscript.sh package-as msi _lib/web-apps/openedx --offline
+./libscript.sh package-as msi workloads/apps/openedx --online
+./libscript.sh package-as msi workloads/apps/openedx --offline
 ```
 
 ### Multi-Cabinet Partitioning Architecture
@@ -325,10 +325,10 @@ Every core dependency is compiled into a self-contained, reference-counted `.msi
 - `libscript-meilisearch-${VERSION}.msi` (`LibScript_Meilisearch` service on port 7700)
 - `openedx-${VERSION}.msi` (LMS/CMS application files, virtualenv wheels, CLI scripts)
 
-### Deterministic GUID Identity (`packaging/guid_registry.json`)
+### Deterministic GUID Identity (`synthesis/msi/guid_registry.json`)
 
 All components adhere to fixed `UpgradeCode` lineages and shared `ComponentId` GUIDs registered in
-`packaging/guid_registry.json`:
+`synthesis/msi/guid_registry.json`:
 
 - **MySQL Service Component GUID**: `{5B2783B0-9A1F-4348-9F93-87CE43C21001}`
 - **MySQL UpgradeCode**: `{E0F45901-83B4-4B21-9B5A-01D38FE81001}`
@@ -354,14 +354,14 @@ Multiple applications can safely share a single MySQL service on Windows without
 
 ## Cross-Platform `SamuelMarks/msi-rs` Building, Multi-OS GUI Testing & Window-Cropped Screenshots
 
-By default, `packaging/build_msi.sh` and `packaging/build_msi.cmd` compile and link `.msi` packages
-using **[`SamuelMarks/msi-rs`](https://github.com/SamuelMarks/msi-rs)** (`candle`, `light`,
+By default, `synthesis/msi/build_msi.sh` and `synthesis/msi/build_msi.cmd` compile and link `.msi`
+packages using **[`SamuelMarks/msi-rs`](https://github.com/SamuelMarks/msi-rs)** (`candle`, `light`,
 `msi-cli`, `msi-gui`, `msiinfo`, `msidiff`) across all 5 operating systems (**Windows**, **Linux**,
 **macOS**, **FreeBSD**, and **illumos / OmniOS**).
 
 Optional WiX Toolset support (`--use-wix`) is retained **strictly on Windows** (`vagrant/windows-11`
-or native Windows) for side-by-side differential comparison (`packaging/compare_msirs_wix.sh` /
-`packaging/compare_msirs_wix.cmd`).
+or native Windows) for side-by-side differential comparison (`synthesis/msi/compare_msirs_wix.sh` /
+`synthesis/msi/compare_msirs_wix.cmd`).
 
 ### Capturing & Verifying Window-Cropped Wizard Stage Screenshots
 

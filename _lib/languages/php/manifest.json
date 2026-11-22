@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "php",
-  "title": "PHP Runtime",
-  "description": "A popular general-purpose scripting language that is especially suited to web development.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["runtime", "php"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A popular general-purpose scripting language that is especially suited to web development.",
+  "name": "php",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["runtime", "php"],
   "repository": "https://github.com/php/php-src",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "PHP Runtime"
 }

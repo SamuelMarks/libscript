@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pipx",
-  "provides": ["pipx"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "pipx",
-  "description": "Bootstrap module for the `pipx` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `pipx` package manager.",
+  "name": "pipx",
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["pipx"],
   "repository": "https://github.com/pypa/pipx",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pipx"
 }

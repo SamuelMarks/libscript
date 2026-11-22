@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "lmdb",
-  "title": "Symas LMDB",
-  "description": "Symas Lightning Memory-Mapped Database ultra-fast, ultra-compact transactional embedded key-value store tools.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "sysroot-library"],
   "category": "databases",
-  "provides": ["lmdb", "kv-store"],
+  "description": "Symas Lightning Memory-Mapped Database ultra-fast, ultra-compact transactional embedded key-value store tools.",
+  "name": "lmdb",
   "os_whitelist": ["all"],
+  "provides": ["lmdb", "kv-store"],
   "repository": "https://github.com/LMDB/lmdb",
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "tier": "T1",
+  "title": "Symas LMDB"
 }

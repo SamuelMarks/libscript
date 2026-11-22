@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%CABAL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%CABAL_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%CABAL_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%CABAL_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/haskell/cabal" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%CABAL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cabal %CABAL_VERSION% to %DOWNLOAD_DIR%\cabal...
     if not exist "%DOWNLOAD_DIR%\cabal" mkdir "%DOWNLOAD_DIR%\cabal"
     if not "%CABAL_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CABAL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cabal\cabal-%CABAL_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CABAL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cabal\cabal-%CABAL_VERSION%.zip"
     ) else (
         echo CABAL_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CABAL_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cabal
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends cabal
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cabal\cabal-%CABAL_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CABAL_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CABAL_DOWNLOAD_URL%" "%TEMP%\cabal.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CABAL_DOWNLOAD_URL%" "%TEMP%\cabal.zip"
         tar -xf "%TEMP%\cabal.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cabal.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "cabal" "%ACTION%" "%CABAL_VERSION%" "%CABAL_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cabal\%CABAL_VERSION%\\bin\\cabal.exe\"" "%LIBSCRIPT_HOME%\cabal\%CABAL_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "cabal" "%ACTION%" "%CABAL_VERSION%" "%CABAL_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cabal\%CABAL_VERSION%\\bin\\cabal.exe\"" "%LIBSCRIPT_HOME%\cabal\%CABAL_VERSION%"
 exit /b !errorlevel!

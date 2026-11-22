@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "curl",
-  "title": "curl",
-  "description": "A command-line tool and library for transferring data with URLs.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["curl"],
+  "description": "A command-line tool and library for transferring data with URLs.",
+  "name": "curl",
   "os_whitelist": ["all"],
+  "provides": ["curl"],
   "repository": "https://github.com/curl/curl",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "curl"
 }

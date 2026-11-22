@@ -75,7 +75,7 @@ for %%F in (deb rpm apk txz) do (
 
 pushd "!TEST_WS!"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\cli\commands\packaging\formats\pkg_pkg.cmd" --out "!TEST_WS!\installer" --welcome-text "Hello" jq 1.7.1 > "!TEST_WS!\pkg_out.txt" 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\pkg.cmd" --out "!TEST_WS!\installer" --welcome-text "Hello" jq 1.7.1 > "!TEST_WS!\pkg_out.txt" 2>&1
 popd
 if exist "!TEST_WS!\installer_stage\comp_jq\scripts\postinstall" (
     call :pass_check "pkg_pkg.cmd staged component postinstall tree"
@@ -86,7 +86,7 @@ if exist "!TEST_WS!\installer_stage\comp_jq\scripts\postinstall" (
 echo === 2. Verifying envsubst_safe_exec.cmd Delegation ===
 set "FOO_TOKEN=hello_win"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\envsubst_safe_exec.cmd" "val=${FOO_TOKEN}" "!TEST_WS!\es_out.txt"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\envsubst_safe_exec.cmd" "val=${FOO_TOKEN}" "!TEST_WS!\es_out.txt"
 findstr /C:"val=hello_win" "!TEST_WS!\es_out.txt" >nul 2>&1
 if errorlevel 1 (
     call :fail_check "envsubst_safe_exec.cmd failed to interpolate FOO_TOKEN"
@@ -96,7 +96,7 @@ if errorlevel 1 (
 
 echo === 3. Verifying Option A Exit-86 Proforma ===
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\kubernetes-thw\alpine-systemctl.cmd" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\infrastructure\clusters\kubernetes-thw\alpine-systemctl.cmd" >nul 2>&1
 if "!ERRORLEVEL!"=="86" (
     call :pass_check "alpine-systemctl.cmd returned Option A exit code 86"
 ) else (
@@ -105,7 +105,7 @@ if "!ERRORLEVEL!"=="86" (
 
 where powershell.exe >nul 2>&1
 if not errorlevel 1 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\kubernetes-thw\alpine-systemctl.ps1" >nul 2>&1
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!LIBSCRIPT_ROOT_DIR!\infrastructure\clusters\kubernetes-thw\alpine-systemctl.ps1" >nul 2>&1
     if "!ERRORLEVEL!"=="86" (
         call :pass_check "alpine-systemctl.ps1 returned Option A exit code 86"
     ) else (
@@ -132,7 +132,7 @@ echo === 4. Verifying os_info.cmd Variable Tunneling ===
 set "INIT_SYS="
 set "TARGET_OS="
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\os_info.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\os_info.cmd"
 if "!INIT_SYS!|!TARGET_OS!"=="windows-scm|windows" (
     call :pass_check "os_info.cmd exported INIT_SYS=windows-scm and TARGET_OS=windows across endlocal"
 ) else (

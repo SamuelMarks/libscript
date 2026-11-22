@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
+  "category": "unikernels",
+  "dependencies": {
+    "runtime_deps": ["ocaml", "opam", "solo5"]
+  },
+  "description": "OCaml library operating system and Solo5 (hvt/spt) unikernel synthesizer.",
+  "name": "mirage",
+  "os_whitelist": ["all"],
+  "provides": ["mirage", "mirageos", "unikernel-builder"],
+  "repository": "https://github.com/mirage/mirage",
+  "tier": "T2",
+  "title": "MirageOS Unikernel"
+}

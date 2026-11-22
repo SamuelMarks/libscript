@@ -65,4 +65,4 @@ if /i "%~1"=="override-env" (
     call "%~dp0service.cmd" %*
     exit /b !ERRORLEVEL!
 )
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*

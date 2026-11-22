@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export POSTGRES_VERSION="${POSTGRES_URL_VERSION:-${POSTGRES_VERSION:-${POSTGRESQL_VERSION:-latest}}}"
 _EB_CALLER_THIS="${THIS_FILE}"
 _EB_CALLER_DIR="${SCRIPT_DIR}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
@@ -65,8 +65,8 @@ if [ -n "$POSTGRES_DATA_DIR" ]; then
   export PGDATA="${POSTGRES_DATA_DIR}"
 fi
 
-if [ -n "${POSTGRES_URL:-}" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" ]; then
-  _pg_parsed=$(env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" "$POSTGRES_URL" --eval 2>/dev/null || true)
+if [ -n "${POSTGRES_URL:-}" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/parse_connection_uri.sh" ]; then
+  _pg_parsed=$(env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/parse_connection_uri.sh" "$POSTGRES_URL" --eval 2>/dev/null || true)
   if [ -n "$_pg_parsed" ]; then
     _pg_u=$(printf '%s\n' "$_pg_parsed" | awk -F'"' '/^DB_USER=/{print $2}')
     _pg_p=$(printf '%s\n' "$_pg_parsed" | awk -F'"' '/^DB_PASS=/{print $2}')

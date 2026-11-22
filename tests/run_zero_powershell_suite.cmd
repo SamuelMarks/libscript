@@ -112,23 +112,23 @@ call "!LIBSCRIPT_ROOT_DIR!\tests\test_qemu_msdos_smoke.cmd" || goto :zps_fail
 if not exist "!ZPS_WORK!\pkg_src\sub" mkdir "!ZPS_WORK!\pkg_src\sub" 2>nul
 > "!ZPS_WORK!\pkg_src\sub\hello.txt" echo hello
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\packaging\template_msi.cmd" "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\wordpress\packaging.json" --out "!ZPS_WORK!\wordpress.wxs" || goto :zps_fail
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\msi\template_msi.cmd" "!LIBSCRIPT_ROOT_DIR!\workloads\apps\wordpress\packaging.json" --out "!ZPS_WORK!\wordpress.wxs" || goto :zps_fail
 if not exist "!ZPS_WORK!\wordpress.wxs" goto :zps_fail
 
 where gawk.exe >nul 2>&1
 if errorlevel 1 where awk.exe >nul 2>&1
 if not errorlevel 1 (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\packaging\harvest_payload.cmd" --source-dir "!ZPS_WORK!\pkg_src" --wix-fragment "!ZPS_WORK!\payload.wxs" || goto :zps_fail
+    call "!LIBSCRIPT_ROOT_DIR!\synthesis\msi\harvest_payload.cmd" --source-dir "!ZPS_WORK!\pkg_src" --wix-fragment "!ZPS_WORK!\payload.wxs" || goto :zps_fail
     if not exist "!ZPS_WORK!\payload.wxs" goto :zps_fail
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\packaging\synthesize_branding.cmd" "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\wordpress\packaging.json" --output-dir "!ZPS_WORK!\brand" || goto :zps_fail
+    call "!LIBSCRIPT_ROOT_DIR!\synthesis\msi\synthesize_branding.cmd" "!LIBSCRIPT_ROOT_DIR!\workloads\apps\wordpress\packaging.json" --output-dir "!ZPS_WORK!\brand" || goto :zps_fail
     if not exist "!ZPS_WORK!\brand\banner_top.bmp" goto :zps_fail
     if not exist "!ZPS_WORK!\brand\app.ico" goto :zps_fail
 )
 
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\reactos\distro\pkg.cmd" --help >nul || goto :zps_fail
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\reactos\pkg.cmd" --help >nul || goto :zps_fail
 
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_cmd.cmd" "!LIBSCRIPT_ROOT_DIR!\tests\run_zero_powershell_suite.cmd" "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_cmd.cmd" || goto :zps_fail

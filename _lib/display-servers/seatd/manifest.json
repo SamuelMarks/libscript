@@ -1,16 +1,17 @@
 {
-  "name": "seatd",
-  "title": "seatd",
-  "description": "Minimal seat management daemon and library",
-  "provides": ["seatd"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-servers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Minimal seat management daemon and library",
+  "name": "seatd",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["seatd"],
+  "tier": "T2",
+  "title": "seatd",
+  "versions": ["1.0.0"]
 }

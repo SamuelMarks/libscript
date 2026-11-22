@@ -33,6 +33,6 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 
-SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/service.sh"
+SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/engine/common/service.sh"
 
 libscript_service logs "httpd" "$@"

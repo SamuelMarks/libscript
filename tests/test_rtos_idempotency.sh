@@ -69,9 +69,9 @@ Z_PASS2=$(STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/zephyr/build_firmware.sh" 
 printf '%s\n' "$Z_PASS2" | grep -q '\[SKIP\]' || fail_idem 'Zephyr build_firmware pass 2 did not [SKIP]'
 
 UF2_OUT="${TMP_IDEM}/out/zephyr.uf2"
-STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/firmware.sh" --format=firmware-uf2 --kernel=zephyr --board=qemu_cortex_m3 "$Z_SYS" "$UF2_OUT" >/dev/null
+STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/firmware_bin.sh" --format=firmware-uf2 --kernel=zephyr --board=qemu_cortex_m3 "$Z_SYS" "$UF2_OUT" >/dev/null
 CK1=$(cksum "$UF2_OUT")
-UF2_PASS2=$(STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/firmware.sh" --format=firmware-uf2 --kernel=zephyr --board=qemu_cortex_m3 "$Z_SYS" "$UF2_OUT")
+UF2_PASS2=$(STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/firmware_bin.sh" --format=firmware-uf2 --kernel=zephyr --board=qemu_cortex_m3 "$Z_SYS" "$UF2_OUT")
 CK2=$(cksum "$UF2_OUT")
 printf '%s\n' "$UF2_PASS2" | grep -q '\[SKIP\]' || fail_idem 'firmware-uf2 pass 2 did not [SKIP]'
 [ "$CK1" = "$CK2" ] || fail_idem 'UF2 checksum mutated across idempotent pass 2'
@@ -81,7 +81,7 @@ FR_SYS="${TMP_IDEM}/frsys"
 STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/freertos/build_firmware.sh" --board=mps2_an385 --sysroot="$FR_SYS" >/dev/null
 FR_PASS2=$(STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/freertos/build_firmware.sh" --board=mps2_an385 --sysroot="$FR_SYS")
 printf '%s\n' "$FR_PASS2" | grep -q '\[SKIP\]' || fail_idem 'FreeRTOS build_firmware pass 2 did not [SKIP]'
-STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/firmware.sh" --format=mcuboot-signed --kernel=freertos --board=mps2_an385 "$FR_SYS" "$MCU_OUT" >/dev/null
+STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/firmware_bin.sh" --format=mcuboot-signed --kernel=freertos --board=mps2_an385 "$FR_SYS" "$MCU_OUT" >/dev/null
 [ -s "$MCU_OUT" ] || fail_idem 'MCUboot signed output is empty'
 
 printf '=== [3/3] Verifying Stamp Invalidation Recovery on Deleted ELF ===\n'

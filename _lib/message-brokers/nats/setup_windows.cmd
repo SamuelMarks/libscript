@@ -66,7 +66,7 @@ set "URL=https://github.com/nats-io/nats-server/releases/download/v2.11.2/nats-s
 set "TEMP_ZIP=%TEMP%\nats.zip"
 
 echo Downloading NATS server from %URL%...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if not errorlevel 1 (
     tar -xf "%TEMP_ZIP%" -C "%TEMP%"
     for /r "%TEMP%\nats-server-v2.11.2-windows-%ARCH%" %%F in (nats-server.exe) do (

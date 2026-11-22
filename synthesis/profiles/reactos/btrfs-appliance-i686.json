@@ -1,0 +1,58 @@
+{
+  "$schema": "../../synthesis/schemas/execution-plan.reactos.schema.json",
+  "schema_version": "1.0.0",
+  "profile_name": "btrfs-appliance-i686",
+  "description": "Unattended ReactOS 0.4.16 WinBtrfs appliance staging silent Windows Installer (.msi) workloads via GuiRunOnce.",
+  "reactos_version": "0.4.16",
+  "build_mode": "repack",
+  "target": {
+    "arch": "i686",
+    "os_family": "reactos",
+    "channel": "release",
+    "image_variant": "bootcd",
+    "libc": "msvcrt"
+  },
+  "init_system": {
+    "provider": "nt-scm",
+    "services_enabled": ["dhcp", "eventlog", "rpcss", "umpnpmgr"]
+  },
+  "display": {
+    "protocol": "win32-gdi",
+    "graphics_driver": "vbemp",
+    "resolution": "1024x768x32"
+  },
+  "desktop": {
+    "shell": "explorer-classic",
+    "theme": "classic",
+    "autologin_user": "admin"
+  },
+  "audio": {
+    "subsystem": "none"
+  },
+  "storage": {
+    "filesystem": "btrfs",
+    "bootloader": "freeldr",
+    "partition_table": "mbr",
+    "boot_mode": "bios-legacy",
+    "disk_size_gib": 10,
+    "serial_debug": true
+  },
+  "package_manager": {
+    "provider": "rapps",
+    "offline_prefetch": true
+  },
+  "unattend": {
+    "enabled": true,
+    "computer_name": "REACTOS-MSI",
+    "locale_id": "00000409",
+    "time_zone_index": 85,
+    "disable_gecko_inst": true
+  },
+  "network": {
+    "hostname": "reactos-btrfs-msi",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1"]
+  },
+  "msi_packages": ["libscript-core-stack.msi"],
+  "components": ["7zip", "sqlite"]
+}

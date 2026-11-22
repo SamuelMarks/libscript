@@ -7,7 +7,7 @@
   "properties": {
     "LIBSCRIPT_TFRC_CONFIG": {
       "type": "string",
-      "description": "Explicit filesystem path to the user-supplied TFRC zero-cost policy JSON file validated against schemas/tfrc-policy.schema.json."
+      "description": "Explicit filesystem path to the user-supplied TFRC zero-cost policy JSON file validated against engine/schemas/tfrc-policy.schema.json."
     },
     "LIBSCRIPT_TFRC_STRICT": {
       "type": "string",

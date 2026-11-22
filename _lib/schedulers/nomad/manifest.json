@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "schedulers",
+  "conflicts": [],
+  "description": "Flexible workload orchestrator to deploy and manage containers, microVMs, and non-containerized applications.",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/v1/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "multitenant": true,
+  "name": "nomad",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [4646, 4647, 4648],
+  "provides": ["nomad"],
+  "stateful": true,
+  "tier": "T1",
+  "title": "HashiCorp Nomad",
+  "versions": ["1.9.0", "1.8.4", "latest"]
+}

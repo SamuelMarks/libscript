@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "powershell",
-  "title": "PowerShell",
-  "description": "A cross-platform task automation solution made up of a command-line shell, a scripting language, and a configuration management framework.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["powershell", "pwsh"],
-  "os_whitelist": ["all"],
+  "description": "A cross-platform task automation solution made up of a command-line shell, a scripting language, and a configuration management framework.",
+  "name": "powershell",
   "os_blacklist": ["sunos"],
-  "capabilities": ["versioned-artifact"]
+  "os_whitelist": ["all"],
+  "provides": ["powershell", "pwsh"],
+  "tier": "T1",
+  "title": "PowerShell"
 }

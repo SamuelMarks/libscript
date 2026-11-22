@@ -51,9 +51,9 @@ case "${1:-}" in
     ;;
 esac
 
-if [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/${TARGET}/healthcheck.sh" ]; then
-  "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/${TARGET}/healthcheck.sh" "$@"
+if [ -x "${LIBSCRIPT_ROOT_DIR}/workloads/apps/${TARGET}/healthcheck.sh" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/workloads/apps/${TARGET}/healthcheck.sh" "$@"
 else
-  "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/healthcheck.sh" "$@"
+  "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx/healthcheck.sh" "$@"
 fi
 

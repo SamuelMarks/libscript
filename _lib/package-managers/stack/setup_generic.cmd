@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%STACK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%STACK_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%STACK_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%STACK_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/commercialhaskell/stack" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%STACK_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading stack %STACK_VERSION% to %DOWNLOAD_DIR%\stack...
     if not exist "%DOWNLOAD_DIR%\stack" mkdir "%DOWNLOAD_DIR%\stack"
     if not "%STACK_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%STACK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\stack\stack-%STACK_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%STACK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\stack\stack-%STACK_VERSION%.zip"
     ) else (
         echo STACK_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%STACK_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends stack
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends stack
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\stack\stack-%STACK_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%STACK_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%STACK_DOWNLOAD_URL%" "%TEMP%\stack.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%STACK_DOWNLOAD_URL%" "%TEMP%\stack.zip"
         tar -xf "%TEMP%\stack.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for stack.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "stack" "%ACTION%" "%STACK_VERSION%" "%STACK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\stack\%STACK_VERSION%\\bin\\stack.exe\"" "%LIBSCRIPT_HOME%\stack\%STACK_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "stack" "%ACTION%" "%STACK_VERSION%" "%STACK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\stack\%STACK_VERSION%\\bin\\stack.exe\"" "%LIBSCRIPT_HOME%\stack\%STACK_VERSION%"
 exit /b !errorlevel!

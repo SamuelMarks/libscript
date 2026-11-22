@@ -59,12 +59,12 @@ if exist "%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe" goto :create_shims
 
 echo Installing OpenVPN via pkg_mgr...
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends openvpn
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends openvpn
 
 if not exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" if not exist "%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe" (
     if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://swupdate.openvpn.org/community/releases/OpenVPN-2.6.12-I001-arm64.msi" "%TEMP%\openvpn-arm64.msi"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "https://swupdate.openvpn.org/community/releases/OpenVPN-2.6.12-I001-arm64.msi" "%TEMP%\openvpn-arm64.msi"
         if exist "%TEMP%\openvpn-arm64.msi" (
             msiexec.exe /i "%TEMP%\openvpn-arm64.msi" /qn /norestart ADDLOCAL="OpenVPN,OpenSSL"
             if not exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" (

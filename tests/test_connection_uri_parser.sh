@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 
 printf '==> Running Universal Connection URI Parser Verification Tests...\n'
-PARSE_SH="${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh"
+PARSE_SH="${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/parse_connection_uri.sh"
 
 # ## parse_and_load
 # Parses URI into environment variables safely without dynamic eval.

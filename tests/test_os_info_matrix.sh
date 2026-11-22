@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Hermetic OS detection matrix test suite verifying _lib/_common/os_info.sh across Alpine, Debian,
+# Hermetic OS detection matrix test suite verifying engine/common/os_info.sh across Alpine, Debian,
 # RHEL, Arch, openSUSE, Void, Gentoo, Solus, macOS (zero side effects), FreeBSD, SunOS, and Windows/MinGW/Cygwin.
 # ## Usage
 # ./tests/test_os_info_matrix.sh
@@ -65,7 +65,7 @@ check_linux_distro() {
   _got=$(
     env -i PATH="${MOCK_BIN}:$PATH" HOME="${HOME:-/root}" LIBSCRIPT_ROOT_DIR="$LIBSCRIPT_ROOT_DIR" \
       MOCK_UNAME='Linux' LIBSCRIPT_OS_RELEASE_FILE="$_rel_file" sh <<'EOF_LINUX'
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 printf '%s|%s|%s' "${PKG_MGR:-}" "${TARGET_OS:-}" "${NGINX_SERVERS_ROOT:-}"
@@ -88,17 +88,17 @@ printf '[PASS] All 10 Linux distro families (including Arch pacman & openSUSE zy
 
 DARWIN_OUT=$(
   env -i PATH="${MOCK_BIN}:$PATH" HOME="${HOME:-/root}" LIBSCRIPT_ROOT_DIR="$LIBSCRIPT_ROOT_DIR" MOCK_UNAME='Darwin' sh <<'EOF_DARWIN'
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 printf '%s|%s|%s|%s' "${PKG_MGR:-}" "${TARGET_OS:-}" "${INIT_SYS:-}" "${NGINX_SERVERS_ROOT:-}"
 EOF_DARWIN
 )
 [ "$DARWIN_OUT" = 'brew|darwin|launchd|' ] || fail_test "Darwin os_info mismatch or NGINX_SERVERS_ROOT leak: ${DARWIN_OUT}"
-if grep -q 'brew/setup.sh' "${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"; then
+if grep -q 'brew/setup.sh' "${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"; then
   fail_test 'os_info.sh still contains side-effectful brew/setup.sh invocation'
 fi
 printf '[PASS] Darwin os_info is side-effect-free, idempotent (2x), and free of NGINX_SERVERS_ROOT leaks.\n'
@@ -106,7 +106,7 @@ printf '[PASS] Darwin os_info is side-effect-free, idempotent (2x), and free of 
 for _win_u in 'CYGWIN_NT-10.0' 'MINGW64_NT-10.0' 'Windows_NT'; do
   _win_init=$(
     env -i PATH="${MOCK_BIN}:$PATH" HOME="${HOME:-/root}" LIBSCRIPT_ROOT_DIR="$LIBSCRIPT_ROOT_DIR" MOCK_UNAME="$_win_u" sh <<'EOF_WIN'
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 printf '%s' "${INIT_SYS:-}"

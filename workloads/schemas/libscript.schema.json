@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/workloads/schemas/libscript.schema.json",
+  "title": "LibScript T5 Stack Manifest Wrapper",
+  "description": "Thin T5 schema wrapper referencing the root libscript.schema.json specification.",
+  "$ref": "../../libscript.schema.json"
+}

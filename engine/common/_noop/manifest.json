@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "_common",
+  "description": "Safe fallback when specific dependencies are disabled or intentionally omitted from a stack deployment.",
+  "name": "_noop",
+  "provides": ["noop"],
+  "tier": "T1",
+  "title": "No-Op Fallback"
+}

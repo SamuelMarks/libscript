@@ -1,16 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "duckdb",
-  "title": "DuckDB",
-  "description": "An in-process SQL OLAP database management system.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "sysroot-library"],
   "category": "databases",
-  "provides": ["duckdb"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "stateful": true,
-  "multitenant": false,
+  "description": "An in-process SQL OLAP database management system.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +19,14 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "multitenant": false,
+  "name": "duckdb",
+  "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["duckdb"],
+  "stateful": true,
+  "tier": "T1",
+  "title": "DuckDB"
 }

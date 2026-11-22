@@ -54,7 +54,7 @@ running the setup script.
 | `TZDATA_TIMEZONE`       | IANA timezone identifier (e.g., UTC or America/New_York) staged into /etc/timezone and /etc/localtime.                                          | `UTC`              |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

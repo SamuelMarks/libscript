@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "containers",
+  "description": "Daemonless tool for building Open Container Initiative (OCI) and Docker container images.",
+  "name": "buildah",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "freebsd"],
+  "provides": ["buildah"],
+  "repository": "https://github.com/containers/buildah",
+  "tier": "T1",
+  "title": "Buildah OCI Image Builder"
+}

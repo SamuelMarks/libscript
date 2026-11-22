@@ -1,5 +1,5 @@
 {
-  "$schema": "../../experiment-suite.schema.json",
+  "$schema": "../../experiments/schemas/experiment-suite.schema.json",
   "id": "os-component-matrix",
   "title": "7-OS Component Compatibility & 2x-Idempotency Matrix",
   "protocol_version": "1.0.0",

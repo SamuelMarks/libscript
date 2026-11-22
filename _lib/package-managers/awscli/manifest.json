@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "awscli",
-  "provides": ["awscli"],
-  "os_whitelist": ["all"],
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "title": "Awscli",
   "description": "Bootstrap module for the `awscli` package manager.",
+  "name": "awscli",
+  "os_whitelist": ["all"],
+  "provides": ["awscli"],
   "repository": "https://github.com/aws/aws-cli",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Awscli"
 }

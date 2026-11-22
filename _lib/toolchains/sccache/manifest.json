@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "sccache",
-  "title": "sccache",
-  "description": "Shared compilation cache for C, C++, Rust, and CUDA.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["sccache", "compiler-cache"],
+  "description": "Shared compilation cache for C, C++, Rust, and CUDA.",
+  "name": "sccache",
   "os_whitelist": ["all"],
+  "provides": ["sccache", "compiler-cache"],
   "repository": "https://github.com/mozilla/sccache",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "sccache"
 }

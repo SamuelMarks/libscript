@@ -51,5 +51,5 @@ goto :find_root
 
 if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\logs_service.cmd" "%~1" "MongoDB" "%ProgramFiles%\MongoDB\Server\*\log\*.log"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\logs_service.cmd" "%~1" "MongoDB" "%ProgramFiles%\MongoDB\Server\*\log\*.log"
 exit /b !ERRORLEVEL!

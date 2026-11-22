@@ -1,16 +1,17 @@
 {
-  "name": "gdm",
-  "title": "GDM",
-  "description": "GNOME Display Manager daemon",
-  "provides": ["gdm"],
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-managers",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "GNOME Display Manager daemon",
+  "name": "gdm",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["gdm"],
+  "tier": "T2",
+  "title": "GDM",
+  "versions": ["1.0.0"]
 }

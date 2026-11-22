@@ -59,4 +59,4 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" %*

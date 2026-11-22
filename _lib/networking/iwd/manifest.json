@@ -1,16 +1,17 @@
 {
-  "name": "iwd",
-  "title": "iwd",
-  "description": "Intel Wireless Daemon for Linux",
-  "provides": ["iwd"],
+  "capabilities": ["sysroot-package"],
   "category": "networking",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Intel Wireless Daemon for Linux",
+  "name": "iwd",
   "os_blacklist": ["windows", "sunos", "rhel", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["iwd"],
+  "tier": "T2",
+  "title": "iwd",
+  "versions": ["1.0.0"]
 }

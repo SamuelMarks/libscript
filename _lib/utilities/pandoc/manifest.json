@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pandoc",
-  "title": "Pandoc",
-  "description": "Universal markup document converter supporting Markdown, LaTeX, HTML, DOCX, EPUB, and PDF.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["pandoc", "document-converter"],
+  "description": "Universal markup document converter supporting Markdown, LaTeX, HTML, DOCX, EPUB, and PDF.",
+  "name": "pandoc",
   "os_whitelist": ["all"],
+  "provides": ["pandoc", "document-converter"],
   "repository": "https://github.com/jgm/pandoc",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Pandoc"
 }

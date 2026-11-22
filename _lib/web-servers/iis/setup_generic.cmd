@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%IIS_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%IIS_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%IIS_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%IIS_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -134,7 +134,7 @@ if "%IIS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading iis %IIS_VERSION% to %DOWNLOAD_DIR%\iis...
     if not exist "%DOWNLOAD_DIR%\iis" mkdir "%DOWNLOAD_DIR%\iis"
     if not "%IIS_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%IIS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\iis\iis-%IIS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%IIS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\iis\iis-%IIS_VERSION%.zip"
     ) else (
         echo IIS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%IIS_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends iis
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends iis
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\iis\iis-%IIS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%IIS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%IIS_DOWNLOAD_URL%" "%TEMP%\iis.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%IIS_DOWNLOAD_URL%" "%TEMP%\iis.zip"
         tar -xf "%TEMP%\iis.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for iis.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "iis" "%ACTION%" "%IIS_VERSION%" "%IIS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\iis\%IIS_VERSION%\\bin\\iis.exe\"" "%LIBSCRIPT_HOME%\iis\%IIS_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "iis" "%ACTION%" "%IIS_VERSION%" "%IIS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\iis\%IIS_VERSION%\\bin\\iis.exe\"" "%LIBSCRIPT_HOME%\iis\%IIS_VERSION%"
 exit /b !errorlevel!

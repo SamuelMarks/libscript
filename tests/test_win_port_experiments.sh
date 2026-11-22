@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Integration, `\tbd{???}` placeholder tamper-rejection, dual-manuscript (`win_port_paper.tex` + `win_port_appendix.tex`) PDF audit, and 2x idempotency test suite for `_lib/toolchains/win-port-suite/`.
+# Integration, `\tbd{???}` placeholder tamper-rejection, dual-manuscript (`win_port_paper.tex` + `win_port_appendix.tex`) PDF audit, and 2x idempotency test suite for `experiments/win-port/`.
 # ## Usage
 # ./tests/test_win_port_experiments.sh
 set -feu
@@ -32,7 +32,7 @@ mkdir -p "${TEST_DIR}/paper"
 # ## run_win_port_suite_and_idempotency_tests
 # Runs E0-E7 twice (2x idempotency), verifies 285 synthesized macros, verifies \tbd{???} rejection, and tests clean dual-manuscript verification.
 run_win_port_suite_and_idempotency_tests() {
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" win-port-suite experiments \
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run win-port \
     --synthetic-fixtures \
     --subsuites='E0,E1,E2,E3,E4,E5,E6,E7' \
     --results-dir="${TEST_DIR}/results"
@@ -50,7 +50,7 @@ run_win_port_suite_and_idempotency_tests() {
   [ "$(wc -l < "${TEST_DIR}/results/raw/e5c_precision_sample.csv" | awk '{print $1+0}')" -eq 121 ]
   [ "$(grep -Ec '^\\providecommand\{\\wpMetric' "${TEST_DIR}/results/generated_metrics.tex")" -eq 285 ]
 
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" win-port-suite experiments \
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run win-port \
     --synthetic-fixtures \
     --subsuites='E0,E1,E2,E3,E4,E5,E6,E7' \
     --results-dir="${TEST_DIR}/results"
@@ -62,7 +62,7 @@ run_win_port_suite_and_idempotency_tests() {
 Unresolved empirical value: \tbd{???}
 \end{document}
 BAD_TEX
-  if "${LIBSCRIPT_ROOT_DIR}/libscript.sh" win-port-suite experiments \
+  if "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run win-port \
     --synthetic-fixtures --subsuites='E7' \
     --results-dir="${TEST_DIR}/results" \
     --paper-dir="${TEST_DIR}/paper" 2>/dev/null; then
@@ -90,7 +90,7 @@ OK_APP
     _pdf_flag='--build-pdf'
   fi
   # shellcheck disable=SC2086
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" win-port-suite experiments \
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run win-port \
     --synthetic-fixtures --subsuites='E7' \
     --results-dir="${TEST_DIR}/results" \
     --paper-dir="${TEST_DIR}/paper" ${_pdf_flag}

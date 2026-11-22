@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 THIS_DIR="${SCRIPT_DIR}"
 
 TEST_CONF="${THIS_DIR}/.tmp_test_proxy.conf"
-# PROVISION_SCRIPT="${REPO_ROOT}/_lib/web-servers/provision_vhost_abstract.sh"
+# PROVISION_SCRIPT="${REPO_ROOT}/engine/hooks/web-servers/provision_vhost_abstract.sh"
 
 ## setup_env
 ## Prepares a mocked test environment for testing the awk engine locally

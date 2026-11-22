@@ -25,7 +25,7 @@
       "type": "string",
       "enum": ["qemu", "renode", "openocd"],
       "default": "qemu",
-      "description": "Target runner selected by payloads/schedulers/rtos_firmware.{sh,cmd} (qemu, renode, or openocd)."
+      "description": "Target runner selected by workloads/schedulers/rtos_firmware.{sh,cmd} (qemu, renode, or openocd)."
     }
   }
 }

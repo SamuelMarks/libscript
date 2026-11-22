@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%TENSORBOARD_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%TENSORBOARD_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%TENSORBOARD_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%TENSORBOARD_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/tensorflow/tensorboard" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%TENSORBOARD_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading tensorboard %TENSORBOARD_VERSION% to %DOWNLOAD_DIR%\tensorboard...
     if not exist "%DOWNLOAD_DIR%\tensorboard" mkdir "%DOWNLOAD_DIR%\tensorboard"
     if not "%TENSORBOARD_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%TENSORBOARD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%TENSORBOARD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip"
     ) else (
         echo TENSORBOARD_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%TENSORBOARD_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends tensorboard
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends tensorboard
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%TENSORBOARD_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%TENSORBOARD_DOWNLOAD_URL%" "%TEMP%\tensorboard.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%TENSORBOARD_DOWNLOAD_URL%" "%TEMP%\tensorboard.zip"
         tar -xf "%TEMP%\tensorboard.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for tensorboard.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "tensorboard" "%ACTION%" "%TENSORBOARD_VERSION%" "%TENSORBOARD_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%\\bin\\tensorboard.exe\"" "%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "tensorboard" "%ACTION%" "%TENSORBOARD_VERSION%" "%TENSORBOARD_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%\\bin\\tensorboard.exe\"" "%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%"
 exit /b !errorlevel!

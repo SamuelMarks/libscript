@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "wsl",
-  "title": "Windows Subsystem for Linux (WSL)",
-  "description": "Microsoft Windows Subsystem for Linux (wsl.exe) distribution lifecycle and kernel manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "virtualization",
-  "provides": ["wsl", "wsl.exe"],
+  "description": "Microsoft Windows Subsystem for Linux (wsl.exe) distribution lifecycle and kernel manager.",
+  "name": "wsl",
   "os_whitelist": ["windows"],
+  "provides": ["wsl", "wsl.exe"],
   "repository": "https://github.com/microsoft/WSL",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Windows Subsystem for Linux (WSL)"
 }

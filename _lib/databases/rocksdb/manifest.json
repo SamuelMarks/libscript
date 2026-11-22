@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "rocksdb",
-  "title": "RocksDB",
-  "description": "Embeddable persistent LSM-tree key-value store library and ldb administration CLI tools optimized for fast flash storage.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "sysroot-library"],
   "category": "databases",
-  "provides": ["rocksdb", "ldb", "kv-store"],
+  "description": "Embeddable persistent LSM-tree key-value store library and ldb administration CLI tools optimized for fast flash storage.",
+  "name": "rocksdb",
   "os_whitelist": ["all"],
+  "provides": ["rocksdb", "ldb", "kv-store"],
   "repository": "https://github.com/facebook/rocksdb",
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "tier": "T1",
+  "title": "RocksDB"
 }

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "openssl",
-  "title": "OpenSSL",
-  "description": "Full-featured commercial-grade TLS/SSL cryptography library and openssl command-line toolkit.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["openssl", "tls-toolkit"],
+  "description": "Full-featured commercial-grade TLS/SSL cryptography library and openssl command-line toolkit.",
+  "name": "openssl",
   "os_whitelist": ["all"],
+  "provides": ["openssl", "tls-toolkit"],
   "repository": "https://github.com/openssl/openssl",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "OpenSSL"
 }

@@ -1,16 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "influxdb",
-  "title": "InfluxDB",
-  "description": "Scalable datastore purpose-built for metrics, events, and real-time time-series analytics.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["influxdb", "tsdb", "database"],
-  "os_whitelist": ["all"],
-  "ports": [8086],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/influxdata/influxdb",
+  "description": "Scalable datastore purpose-built for metrics, events, and real-time time-series analytics.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +18,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "influxdb",
+  "os_whitelist": ["all"],
+  "ports": [8086],
+  "provides": ["influxdb", "tsdb", "database"],
+  "repository": "https://github.com/influxdata/influxdb",
+  "stateful": true,
+  "tier": "T1",
+  "title": "InfluxDB"
 }

@@ -54,7 +54,7 @@ if "%~1"=="-h" goto :help
 
 set "COMP=%~1"
 if "%COMP%"=="" set "COMP=postgres"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\hooks.cmd" :libscript_exec_hook "%COMP%" announce
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\hooks.cmd" :libscript_exec_hook "%COMP%" announce
 exit /b %errorlevel%
 
 :: ## help

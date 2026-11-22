@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 NETCTL_DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR NETCTL_DIR
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/traefik.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "engine/common/log.sh" "engine/common/priv.sh" "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/traefik.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   if [ -f "${SCRIPT_NAME}" ]; then
@@ -314,11 +314,11 @@ netctl_ensure_letsencrypt_cert() {
 }
 
 # ## netctl_reload_proxy
-# Reloads the active web proxy server abstractly via _lib/_common/service.sh.
+# Reloads the active web proxy server abstractly via engine/common/service.sh.
 netctl_reload_proxy() {
   _nrp_fmt="${1:-nginx}"
-  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/service.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/service.sh"
     export SCRIPT_NAME
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
@@ -486,10 +486,10 @@ netctl_apply_manifest() {
     fi
   done
 
-  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh"
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh"
     # shellcheck disable=SC1090,SC1091
-    . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh"
+    . "${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh"
     unset SCRIPT_NAME || true
     libscript_hydrate_manifest_env "$_json_file" || true
   fi

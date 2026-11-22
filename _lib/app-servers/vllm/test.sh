@@ -40,9 +40,9 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 fi
 
-if [ -f "$SCRIPT_DIR/../../_common/os_info.sh" ]; then
+if [ -f "$LIBSCRIPT_ROOT_DIR/engine/common/os_info.sh" ]; then
   _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-  SCRIPT_NAME="$SCRIPT_DIR/../../_common/os_info.sh"
+  SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/engine/common/os_info.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"

@@ -1,14 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "fail2ban",
-  "title": "Fail2ban",
-  "description": "Log-scanning intrusion prevention daemon that bans malicious hosts exhibiting brute-force patterns.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "security",
-  "provides": ["fail2ban", "ips", "security"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["windows"],
-  "repository": "https://github.com/fail2ban/fail2ban",
+  "description": "Log-scanning intrusion prevention daemon that bans malicious hosts exhibiting brute-force patterns.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -21,9 +18,13 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact"]
+  "name": "fail2ban",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["all"],
+  "provides": ["fail2ban", "ips", "security"],
+  "repository": "https://github.com/fail2ban/fail2ban",
+  "tier": "T1",
+  "title": "Fail2ban"
 }

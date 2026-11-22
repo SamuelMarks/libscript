@@ -54,7 +54,7 @@ running the setup script.
 | `LIBSCRIPT_EXPERIMENT_RG`             | Default resource group for rapid cloud experimentation.                                                                                                                                          | `none`                       |                  |
 | `LIBSCRIPT_EXPERIMENT_LOCATION`       | Default cloud location/region for rapid cloud experimentation.                                                                                                                                   | `none`                       |                  |
 | `LIBSCRIPT_EXPERIMENT_OS`             | Default VM operating system image for rapid cloud experimentation.                                                                                                                               | `none`                       |                  |
-| `LIBSCRIPT_EXPERIMENT_SUITE_MANIFEST` | Path to a declarative experiment-suite.schema.json manifest file executed by the experiment runner.                                                                                              | `none`                       |                  |
+| `LIBSCRIPT_EXPERIMENT_SUITE_MANIFEST` | Path to a declarative experiments/schemas/experiment-suite.schema.json manifest file executed by the experiment runner.                                                                          | `none`                       |                  |
 | `LIBSCRIPT_EXPERIMENT_WARMUP`         | Default number of unrecorded warmup runs executed before recorded benchmark trials (defaults to '10').                                                                                           | `none`                       |                  |
 | `LIBSCRIPT_EXPERIMENT_TRIALS`         | Default number of recorded fresh trials captured per benchmark cell (defaults to '200').                                                                                                         | `none`                       |                  |
 | `LIBSCRIPT_EXPERIMENT_SUBSUITES`      | Comma- or space-separated list of sub-suite identifiers to execute (e.g., 'E0,E1,E2,E3,E4,E5,E6,E7,E8').                                                                                         | `none`                       |                  |
@@ -91,7 +91,7 @@ running the setup script.
 | `LIBTPU_RS_ALLOW_DIRTY`               | Flag (0 or 1) permitting exploratory local development runs on dirty git worktrees prior to final RULE-1 locking.                                                                                | `0`                          |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
 
 ## Architecture

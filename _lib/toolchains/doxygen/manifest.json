@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "doxygen",
-  "title": "Doxygen Documentation Generator",
-  "description": "Doxygen documentation analyzer and XML symbol extractor for auditing C89 docstring coverage.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["doxygen"],
+  "description": "Doxygen documentation analyzer and XML symbol extractor for auditing C89 docstring coverage.",
+  "name": "doxygen",
   "os_whitelist": ["all"],
+  "provides": ["doxygen"],
   "repository": "https://github.com/doxygen/doxygen",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Doxygen Documentation Generator"
 }

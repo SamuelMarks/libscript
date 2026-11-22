@@ -44,7 +44,7 @@ printf '[TEST]     Executing illumos boot milestone test on %s (expected init: %
 # If image file doesn't exist, generate minimal test artifact
 if [ ! -f "${DISK_IMG}" ]; then
   printf '[TEST]     Image not found, assembling minimal server test image...\n'
-  "${REPO_ROOT}/cli/commands/package_as/illumos_distro.sh" --format qcow2 --profile "${REPO_ROOT}/profiles/illumos/minimal-server.json" --output "${DISK_IMG}"
+  "${REPO_ROOT}/synthesis/formats/illumos_distro.sh" --format qcow2 --profile "${REPO_ROOT}/synthesis/profiles/illumos/minimal-server.json" --output "${DISK_IMG}"
 fi
 
 # Milestone simulation/verification harness

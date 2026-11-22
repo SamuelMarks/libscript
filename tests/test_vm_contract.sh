@@ -151,16 +151,16 @@ test_daemon_abstraction_and_linter() {
   export LIBSCRIPT_INIT_SYSTEM='fallback'
   mkdir -p "$LIBSCRIPT_DATA_DIR"
 
-  sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh" install "test_daemon_vm" "sleep 30" "$TEST_SANDBOX" "Test Daemon"
-  sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" start "test_daemon_vm"
-  if sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" is-active "test_daemon_vm"; then
+  sh "${LIBSCRIPT_ROOT_DIR}/engine/common/service_install.sh" install "test_daemon_vm" "sleep 30" "$TEST_SANDBOX" "Test Daemon"
+  sh "${LIBSCRIPT_ROOT_DIR}/engine/common/service.sh" start "test_daemon_vm"
+  if sh "${LIBSCRIPT_ROOT_DIR}/engine/common/service.sh" is-active "test_daemon_vm"; then
     printf '[PASS] libscript_service is-active detects running fallback daemon.\n'
   else
     printf '[FAIL] libscript_service is-active failed to detect running fallback daemon!\n' >&2
     FAILURES=$((FAILURES + 1))
   fi
-  sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" stop "test_daemon_vm"
-  sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" uninstall "test_daemon_vm"
+  sh "${LIBSCRIPT_ROOT_DIR}/engine/common/service.sh" stop "test_daemon_vm"
+  sh "${LIBSCRIPT_ROOT_DIR}/engine/common/service.sh" uninstall "test_daemon_vm"
   unset LIBSCRIPT_INIT_SYSTEM
 }
 

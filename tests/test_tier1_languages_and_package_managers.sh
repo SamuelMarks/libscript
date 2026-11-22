@@ -235,7 +235,7 @@ for _fmt in sh cmd ps1 fish json; do
 done
 
 printf '=== 3. Testing Cross-Platform Package Mapper Resolution ===\n'
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mapper.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mapper.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

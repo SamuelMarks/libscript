@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%CYGWIN_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%CYGWIN_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%CYGWIN_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%CYGWIN_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/MachinaCore/CygwinPortable" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%CYGWIN_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cygwin %CYGWIN_VERSION% to %DOWNLOAD_DIR%\cygwin...
     if not exist "%DOWNLOAD_DIR%\cygwin" mkdir "%DOWNLOAD_DIR%\cygwin"
     if not "%CYGWIN_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CYGWIN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cygwin\cygwin-%CYGWIN_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CYGWIN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cygwin\cygwin-%CYGWIN_VERSION%.zip"
     ) else (
         echo CYGWIN_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CYGWIN_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cygwin
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends cygwin
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cygwin\cygwin-%CYGWIN_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CYGWIN_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CYGWIN_DOWNLOAD_URL%" "%TEMP%\cygwin.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CYGWIN_DOWNLOAD_URL%" "%TEMP%\cygwin.zip"
         tar -xf "%TEMP%\cygwin.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cygwin.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "cygwin" "%ACTION%" "%CYGWIN_VERSION%" "%CYGWIN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cygwin\%CYGWIN_VERSION%\\bin\\cygwin.exe\"" "%LIBSCRIPT_HOME%\cygwin\%CYGWIN_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "cygwin" "%ACTION%" "%CYGWIN_VERSION%" "%CYGWIN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cygwin\%CYGWIN_VERSION%\\bin\\cygwin.exe\"" "%LIBSCRIPT_HOME%\cygwin\%CYGWIN_VERSION%"
 exit /b !errorlevel!

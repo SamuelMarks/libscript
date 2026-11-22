@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%CADDY_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%CADDY_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%CADDY_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%CADDY_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -108,8 +108,8 @@ exit /b 0
 :action_use
 if "%CADDY_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%CADDY_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/caddyserver/caddy/releases/latest"`) do set "EXACT_VERSION=%%a"
-) else if "%CADDY_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/caddyserver/caddy/releases/latest"`) do set "EXACT_VERSION=%%a"
+if "%CADDY_VERSION%"=="latest" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/caddyserver/caddy/releases/latest"`) do set "EXACT_VERSION=%%a"
+) else if "%CADDY_VERSION%"=="lts" (for /f "usebackq tokens=*" %%a in (`call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/caddyserver/caddy/releases/latest"`) do set "EXACT_VERSION=%%a"
 ) else (
     set "EXACT_VERSION=%CADDY_VERSION%"
 )
@@ -134,7 +134,7 @@ if "%CADDY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading caddy %CADDY_VERSION% to %DOWNLOAD_DIR%\caddy...
     if not exist "%DOWNLOAD_DIR%\caddy" mkdir "%DOWNLOAD_DIR%\caddy"
     if not "%CADDY_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CADDY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\caddy\caddy-%CADDY_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CADDY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\caddy\caddy-%CADDY_VERSION%.zip"
     ) else (
         echo CADDY_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CADDY_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends caddy
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends caddy
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\caddy\caddy-%CADDY_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CADDY_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CADDY_DOWNLOAD_URL%" "%TEMP%\caddy.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CADDY_DOWNLOAD_URL%" "%TEMP%\caddy.zip"
         tar -xf "%TEMP%\caddy.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for caddy.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "caddy" "%ACTION%" "%CADDY_VERSION%" "%CADDY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\caddy\%CADDY_VERSION%\\bin\\caddy.exe\"" "%LIBSCRIPT_HOME%\caddy\%CADDY_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "caddy" "%ACTION%" "%CADDY_VERSION%" "%CADDY_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\caddy\%CADDY_VERSION%\\bin\\caddy.exe\"" "%LIBSCRIPT_HOME%\caddy\%CADDY_VERSION%"
 exit /b !errorlevel!

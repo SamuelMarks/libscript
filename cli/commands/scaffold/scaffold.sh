@@ -794,8 +794,9 @@ synthesize_manifest_json() {
 
   write_component_file "${_comp_dir}/manifest.json" 0 0 << EOF
 {
-  "\$schema": "../../_common/manifest.schema.json",
+  "\$schema": "../../../engine/schemas/manifest.schema.json",
   "name": "${SCAF_NAME}",
+  "tier": "${SCAF_TIER:-T1}",
   "title": "${SCAF_TITLE}",
   "description": "${SCAF_DESCRIPTION}",
   "category": "${_m_cat}",
@@ -911,7 +912,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export PACKAGE_NAME='__SCAF_NAME__'
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -972,7 +973,7 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=__SCAF_NAME__"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*
 EOF
 }
 
@@ -1013,7 +1014,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/setup_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -1073,7 +1074,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" %*
 EOF
 
   write_component_file "${_comp_dir}/setup_generic.sh" 1 0 << 'EOF'
@@ -1106,17 +1107,17 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mgr.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/versioning.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/source_builder.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/source_builder.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -1414,7 +1415,7 @@ exit /b 0
 set "RELEASES_URL=%__COMP_PREFIX___RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=__SCAF_RELEASES_URL__"
 echo [ls-remote] Fetching available __SCAF_NAME__ versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -1427,8 +1428,8 @@ if not exist "!TARGET_DIR!" (
     set "ACTION=install"
     call "%~f0"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -1444,7 +1445,7 @@ set "DL_DIR=!DL_DIR!\__SCAF_NAME__"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading __SCAF_NAME__ %__COMP_PREFIX___VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -1456,23 +1457,23 @@ if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="from-source" (
     set "SRC_URL=%__COMP_PREFIX___DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=__SCAF_SRC_URL__"
     call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "__SCAF_NAME__" "!EXACT_VERSION!" "__SCAF_BINARY_NAME__" "__SCAF_SRC_LANG__" "__SCAF_SRC_BUILD_SYS__" "!SRC_URL!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "__SCAF_NAME__" "!EXACT_VERSION!" "__SCAF_BINARY_NAME__" "__SCAF_SRC_LANG__" "__SCAF_SRC_BUILD_SYS__" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if "%__COMP_PREFIX___INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends __SCAF_NAME__
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends __SCAF_NAME__
     exit /b !errorlevel!
 )
 if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget __SCAF_NAME__
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via winget __SCAF_NAME__
     exit /b !errorlevel!
 )
 if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco __SCAF_NAME__
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via choco __SCAF_NAME__
     exit /b !errorlevel!
 )
 if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop __SCAF_NAME__
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via scoop __SCAF_NAME__
     exit /b !errorlevel!
 )
 call :resolve_version
@@ -1484,8 +1485,8 @@ if exist "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.bat" set "_BIN_FOUND=1"
 if "!_BIN_FOUND!"=="1" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] __SCAF_NAME__ !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -1493,7 +1494,7 @@ set "URL=%__COMP_PREFIX___DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=__SCAF_URL_WINDOWS__"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends __SCAF_NAME__
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends __SCAF_NAME__
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -1506,7 +1507,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\__SCAF_NAME__-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 set "_IS_ARCHIVE=0"
@@ -1558,8 +1559,8 @@ if not "!_IS_ARCHIVE!"=="0" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -1576,7 +1577,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "__SCAF_GITHUB_REPO__" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/__SCAF_GITHUB_REPO__/releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/__SCAF_GITHUB_REPO__/releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -1589,7 +1590,7 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "__SCAF_NAME__" "%ACTION%" "%__COMP_PREFIX___VERSION%" "%__COMP_PREFIX___INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\__SCAF_NAME__\%__COMP_PREFIX___VERSION%\\bin\\__SCAF_BINARY_NAME__.exe\"" "%LIBSCRIPT_HOME%\__SCAF_NAME__\%__COMP_PREFIX___VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "__SCAF_NAME__" "%ACTION%" "%__COMP_PREFIX___VERSION%" "%__COMP_PREFIX___INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\__SCAF_NAME__\%__COMP_PREFIX___VERSION%\\bin\\__SCAF_BINARY_NAME__.exe\"" "%LIBSCRIPT_HOME%\__SCAF_NAME__\%__COMP_PREFIX___VERSION%"
 exit /b !errorlevel!
 EOF
 }
@@ -1629,7 +1630,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 _EB_CALLER_THIS="${THIS_FILE}"
 _EB_CALLER_DIR="${SCRIPT_DIR}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
@@ -1713,7 +1714,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\__SCAF_NAME__\%__COMP_PREFIX___VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%"
 
 endlocal & (
     set "__COMP_PREFIX___VERSION=%__COMP_PREFIX___VERSION%"
@@ -2040,7 +2041,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/uninstall_base.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/uninstall_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -2100,7 +2101,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\uninstall_base.cmd" %*
 EOF
 
   write_component_file "${_comp_dir}/uninstall_generic.sh" 1 0 << 'EOF'
@@ -2136,7 +2137,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/uninstall_generic.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/uninstall_generic.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -2195,8 +2196,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_generic.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_generic.cmd" %*
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\uninstall_generic.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\uninstall_generic.cmd" %*
 )
 EOF
 
@@ -2620,7 +2621,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_hook_impl.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/component_hook_impl.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -2682,24 +2683,24 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_hook_impl.cmd" "__SCAF_NAME__" "__HOOK_NAME__" %*
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_hook_impl.cmd" "__SCAF_NAME__" "__HOOK_NAME__" %*
 exit /b %errorlevel%
 EOF
   done
 }
 
 # ## register_pkg_mappings
-# Idempotently checks or logs native OS package mappings in _lib/_common/pkg_mapper.{sh,cmd}.
+# Idempotently checks or logs native OS package mappings in engine/common/pkg_mapper.{sh,cmd}.
 register_pkg_mappings() {
   if [ -z "$SCAF_PKG_APT" ] && [ -z "$SCAF_PKG_APK" ] && [ -z "$SCAF_PKG_DNF" ] && [ -z "$SCAF_PKG_PACMAN" ] && [ -z "$SCAF_PKG_BREW" ] && [ -z "$SCAF_PKG_WINGET" ] && [ -z "$SCAF_PKG_CHOCO" ] && [ -z "$SCAF_PKG_SCOOP" ] && [ -z "$SCAF_PKG_RAPPS" ] && [ -z "$SCAF_PKG_FREEBSD" ]; then
     return 0
   fi
-  _mapper_sh="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mapper.sh"
+  _mapper_sh="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mapper.sh"
   if [ -f "$_mapper_sh" ]; then
     if grep -Eq "^[[:space:]]*'${SCAF_NAME}'\)" "$_mapper_sh" 2>/dev/null; then
-      printf '[SKIP] Package mapping for %s already present in _lib/_common/pkg_mapper.sh.\n' "$SCAF_NAME"
+      printf '[SKIP] Package mapping for %s already present in engine/common/pkg_mapper.sh.\n' "$SCAF_NAME"
     else
-      printf '[INFO] Custom pkg_mappings specified for %s (ready for _lib/_common/pkg_mapper.{sh,cmd}).\n' "$SCAF_NAME"
+      printf '[INFO] Custom pkg_mappings specified for %s (ready for engine/common/pkg_mapper.{sh,cmd}).\n' "$SCAF_NAME"
     fi
   fi
 }

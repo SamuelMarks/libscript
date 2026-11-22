@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "minio",
-  "title": "MinIO",
-  "description": "High Performance Object Storage, API compatible with Amazon S3 cloud storage service.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "storage-layers",
-  "provides": ["minio", "object-storage", "s3"],
+  "description": "High Performance Object Storage, API compatible with Amazon S3 cloud storage service.",
+  "name": "minio",
   "os_whitelist": ["linux", "darwin"],
   "ports": ["9000", "9001"],
+  "provides": ["minio", "object-storage", "s3"],
   "repository": "https://github.com/minio/minio",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T1",
+  "title": "MinIO"
 }

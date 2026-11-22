@@ -1,14 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "vector",
-  "title": "Vector",
-  "description": "High-performance end-to-end observability data router and transformation pipeline built in Rust.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "logging",
-  "provides": ["vector", "log-shipper", "observability"],
-  "os_whitelist": ["all"],
-  "ports": [8686],
-  "repository": "https://github.com/vectordotdev/vector",
+  "description": "High-performance end-to-end observability data router and transformation pipeline built in Rust.",
   "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -21,9 +18,13 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "name": "vector",
+  "os_whitelist": ["all"],
+  "ports": [8686],
+  "provides": ["vector", "log-shipper", "observability"],
+  "repository": "https://github.com/vectordotdev/vector",
+  "tier": "T1",
+  "title": "Vector"
 }

@@ -60,7 +60,7 @@ echo Installing Apache HTTP Server via pkg_mgr...
 where choco >nul 2>&1
 if not errorlevel 1 (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco apache-httpd
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends_via choco apache-httpd
 )
 :: wincheck disable=CMD3005
 

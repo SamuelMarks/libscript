@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "iac",
+  "description": "HashiCorp Terraform declarative Infrastructure-as-Code CLI for provisioning and managing cloud and on-prem resources.",
+  "name": "terraform",
+  "os_whitelist": ["all"],
+  "provides": ["terraform"],
+  "repository": "https://github.com/hashicorp/terraform",
+  "tier": "T1",
+  "title": "HashiCorp Terraform"
+}

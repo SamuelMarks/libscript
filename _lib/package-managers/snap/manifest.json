@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "snap",
-  "provides": ["snap"],
-  "os_whitelist": ["linux"],
-  "os_blacklist": ["windows", "sunos", "alpine", "freebsd"],
-  "title": "snap",
-  "description": "Bootstrap module for the `snap` package manager/tool.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "description": "Bootstrap module for the `snap` package manager/tool.",
+  "name": "snap",
+  "os_blacklist": ["windows", "sunos", "alpine", "freebsd"],
+  "os_whitelist": ["linux"],
+  "provides": ["snap"],
+  "tier": "T1",
+  "title": "snap"
 }

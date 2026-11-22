@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "memtier-benchmark",
-  "title": "memtier_benchmark Load Generator",
-  "description": "High-throughput NoSQL Redis and Memcached traffic generator recording P50, IQR, and P99 tail latencies.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["memtier-benchmark", "memtier_benchmark"],
+  "description": "High-throughput NoSQL Redis and Memcached traffic generator recording P50, IQR, and P99 tail latencies.",
+  "name": "memtier-benchmark",
   "os_whitelist": ["linux", "darwin", "freebsd", "windows"],
+  "provides": ["memtier-benchmark", "memtier_benchmark"],
   "repository": "https://github.com/RedisLabs/memtier_benchmark",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "memtier_benchmark Load Generator"
 }

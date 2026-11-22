@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Primary setup entrypoint for the ReactOS Applications Manager (rapps) component.
-# Delegates lifecycle management and sysroot relocation to _lib/_common/setup_base.sh.
+# Delegates lifecycle management and sysroot relocation to engine/common/setup_base.sh.
 #
 # ## Usage
 # ./_lib/package-managers/rapps/setup.sh [args]
@@ -28,7 +28,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/setup_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

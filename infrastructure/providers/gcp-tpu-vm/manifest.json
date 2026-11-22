@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "tpu-vm",
+  "title": "GCP Cloud TPU VM",
+  "description": "Component for provisioning, managing, and connecting to Google Cloud TPU VMs, including robust TFRC support.",
+  "category": "cloud-providers",
+  "provides": ["tpu-vm", "gcp-tpu-vm"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [],
+  "capabilities": ["cloud-operator"]
+}

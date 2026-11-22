@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "containers",
+  "description": "Low-level Linux Containers userspace tools and library (lxc-create, lxc-start, lxc-ls, lxc-attach) over kernel namespaces and cgroups.",
+  "name": "lxc",
+  "os_whitelist": ["linux"],
+  "provides": ["lxc", "lxc-ls", "lxc-create"],
+  "repository": "https://github.com/lxc/lxc",
+  "tier": "T1",
+  "title": "Linux Containers (LXC) Userspace Tools"
+}

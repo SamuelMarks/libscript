@@ -1,13 +1,14 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "certbot",
-  "title": "Certbot (Let's Encrypt ACME Client)",
-  "description": "Electronic Frontier Foundation ACME client for automated Let's Encrypt TLS certificate acquisition and expiry-gated persistence.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "security",
-  "provides": ["certbot", "acme-client", "letsencrypt"],
   "conflicts": [],
+  "description": "Electronic Frontier Foundation ACME client for automated Let's Encrypt TLS certificate acquisition and expiry-gated persistence.",
+  "name": "certbot",
   "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["certbot", "acme-client", "letsencrypt"],
   "repository": "https://github.com/certbot/certbot",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Certbot (Let's Encrypt ACME Client)"
 }

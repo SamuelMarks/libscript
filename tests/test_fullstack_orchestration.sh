@@ -57,7 +57,7 @@ cat << 'EOF' > "${TEST_TMP}/deps_flat.json"
   }
 }
 EOF
-RESOLVED_FLAT=$("${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.sh" "${TEST_TMP}/deps_flat.json")
+RESOLVED_FLAT=$("${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" "${TEST_TMP}/deps_flat.json")
 assert_contains "$RESOLVED_FLAT" '"postgres"' "resolve_stack flat .deps alias postgresql -> postgres"
 assert_contains "$RESOLVED_FLAT" '"nodejs"' "resolve_stack flat .deps alias node -> nodejs"
 assert_contains "$RESOLVED_FLAT" '"valkey"' "resolve_stack flat .deps alias redis -> valkey"
@@ -70,7 +70,7 @@ cat << 'EOF' > "${TEST_TMP}/deps_struct.json"
   }
 }
 EOF
-RESOLVED_STRUCT=$("${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.sh" "${TEST_TMP}/deps_struct.json")
+RESOLVED_STRUCT=$("${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" "${TEST_TMP}/deps_struct.json")
 assert_contains "$RESOLVED_STRUCT" '"python"' "resolve_stack .dependencies.runtime python"
 assert_contains "$RESOLVED_STRUCT" '"duckdb"' "resolve_stack .dependencies.runtime duckdb"
 assert_contains "$RESOLVED_STRUCT" '"gradle"' "resolve_stack .dependencies.build gradle"
@@ -86,7 +86,7 @@ cat << 'EOF' > "${TEST_TMP}/deps_legacy.json"
   }
 }
 EOF
-RESOLVED_LEGACY=$("${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.sh" "${TEST_TMP}/deps_legacy.json")
+RESOLVED_LEGACY=$("${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" "${TEST_TMP}/deps_legacy.json")
 assert_contains "$RESOLVED_LEGACY" '"sqlite"' "resolve_stack legacy .install.dependencies.required"
 
 # 2. Test run_hooks with .hooks and .lifecycle_hooks, unless_exists, if_exists, working_dir
@@ -115,7 +115,7 @@ cat << 'EOF' > "${TEST_TMP}/hooks_test.json"
   }
 }
 EOF
-"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "${TEST_TMP}/hooks_test.json" "build"
+"${LIBSCRIPT_ROOT_DIR}/engine/hooks/run_hooks.sh" "${TEST_TMP}/hooks_test.json" "build"
 if [ ! -f "${TEST_TMP}/subdir/verified.txt" ]; then
   printf '[FAIL] run_hooks did not execute working_dir + if_exists hook\n' >&2
   exit 1
@@ -131,7 +131,7 @@ cat << 'EOF' > "${TEST_TMP}/db_test.json"
   ]
 }
 EOF
-"${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_db.sh" "${TEST_TMP}/db_test.json"
+"${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/provision_db.sh" "${TEST_TMP}/db_test.json"
 ENV_CONTENT=$(cat "${TEST_TMP}/.env.libscript")
 assert_contains "$ENV_CONTENT" "SQLITE_PATH=" "provision_db emits SQLITE_PATH"
 assert_contains "$ENV_CONTENT" "DUCKDB_PATH=" "provision_db emits DUCKDB_PATH"
@@ -148,13 +148,13 @@ cat << 'EOF' > "${TEST_TMP}/daemon_map.json"
   }
 }
 EOF
-"${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" start "${TEST_TMP}/daemon_map.json"
+"${LIBSCRIPT_ROOT_DIR}/engine/common/daemonize.sh" start "${TEST_TMP}/daemon_map.json"
 sleep 1
-STATUS_OUT=$("${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" status "${TEST_TMP}/daemon_map.json")
+STATUS_OUT=$("${LIBSCRIPT_ROOT_DIR}/engine/common/daemonize.sh" status "${TEST_TMP}/daemon_map.json")
 assert_contains "$STATUS_OUT" "RUNNING" "daemonize start/status on object-map service"
-LOGS_OUT=$("${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" logs "${TEST_TMP}/daemon_map.json")
+LOGS_OUT=$("${LIBSCRIPT_ROOT_DIR}/engine/common/daemonize.sh" logs "${TEST_TMP}/daemon_map.json")
 assert_contains "$LOGS_OUT" "worker_token=secret123" "daemonize injects per-service env and captures logs"
-"${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "${TEST_TMP}/daemon_map.json"
+"${LIBSCRIPT_ROOT_DIR}/engine/common/daemonize.sh" stop "${TEST_TMP}/daemon_map.json"
 
 # 5. Test netctl SPA, WebSocket, and netctl apply libscript.json
 cat << 'EOF' > "${TEST_TMP}/ingress_test.json"
@@ -204,7 +204,7 @@ cat << 'EOF' > "${TEST_TMP}/fe_app/libscript.json"
   }
 }
 EOF
-"${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/provision_frontend.sh" --app-dir "${TEST_TMP}/fe_app" --manifest "${TEST_TMP}/fe_app/libscript.json"
+"${LIBSCRIPT_ROOT_DIR}/engine/hooks/app-servers/provision_frontend.sh" --app-dir "${TEST_TMP}/fe_app" --manifest "${TEST_TMP}/fe_app/libscript.json"
 if [ ! -f "${TEST_TMP}/fe_app/webroot/angular_ui/index.html" ]; then
   printf '[FAIL] provision_frontend did not stage Angular 17+ dist/<app>/browser/index.html\n' >&2
   exit 1
@@ -251,11 +251,11 @@ cat << 'EOF' > "${TEST_TMP}/failing_hook.json"
   }
 }
 EOF
-if "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "${TEST_TMP}/failing_hook.json" "db_migrate" >/dev/null 2>&1; then
+if "${LIBSCRIPT_ROOT_DIR}/engine/hooks/run_hooks.sh" "${TEST_TMP}/failing_hook.json" "db_migrate" >/dev/null 2>&1; then
   printf '[FAIL] run_hooks.sh should have exited non-zero on failing db_migrate hook\n' >&2
   exit 1
 fi
-if "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "${TEST_TMP}/failing_hook.json" "health" >/dev/null 2>&1; then
+if "${LIBSCRIPT_ROOT_DIR}/engine/hooks/run_hooks.sh" "${TEST_TMP}/failing_hook.json" "health" >/dev/null 2>&1; then
   printf '[FAIL] run_hooks.sh should have exited non-zero on failing health hook\n' >&2
   exit 1
 fi
@@ -346,10 +346,10 @@ cat << EOF > "${TEST_TMP}/svc_expect_json.json"
   ]
 }
 EOF
-"${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" start "${TEST_TMP}/svc_expect_json.json"
+"${LIBSCRIPT_ROOT_DIR}/engine/common/daemonize.sh" start "${TEST_TMP}/svc_expect_json.json"
 sleep 1
 if "${LIBSCRIPT_ROOT_DIR}/libscript.sh" health "${TEST_TMP}/svc_expect_json.json" >/dev/null 2>&1; then
-  "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
+  "${LIBSCRIPT_ROOT_DIR}/engine/common/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
   printf '[FAIL] libscript.sh health should fail when health_check.expect_json assertion evaluates to false\n' >&2
   exit 1
 fi
@@ -357,11 +357,11 @@ cat << 'EOF' > "${TEST_TMP}/mock_http_payload.json"
 {"status": "healthy", "datasets": {"table_count": 3}}
 EOF
 if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" health "${TEST_TMP}/svc_expect_json.json" >/dev/null 2>&1; then
-  "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
+  "${LIBSCRIPT_ROOT_DIR}/engine/common/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
   printf '[FAIL] libscript.sh health should succeed when health_check.expect_json assertion evaluates to true\n' >&2
   exit 1
 fi
-"${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
+"${LIBSCRIPT_ROOT_DIR}/engine/common/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
 printf '[PASS] libscript.sh health validates service health_check.expect_json assertions\n'
 
 # 11. Test init-system abstraction with LIBSCRIPT_INIT_SYSTEM=fallback (even when LIBSCRIPT_FORCE_FALLBACK_DAEMON is unset)
@@ -502,7 +502,7 @@ EOF_GI
 fi
 
 # 14. Test VM IP TTL caching and Python .venv lockfile hash helpers
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/remote_sync.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -538,7 +538,7 @@ fi
 printf '[PASS] remote_sync.sh generates short ControlPath (%d bytes < 65): %s\n' "${#CTRL_PATH}" "$CTRL_PATH"
 
 # 16. Test libscript_python_venv (3 args) does not prematurely write .libscript_lock_hash, and libscript_python_sync_deps caches and invalidates properly
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/python_env.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -701,14 +701,14 @@ EOF_NPX
 chmod +x "${TEST_TMP}/fe_mock_bin/node" "${TEST_TMP}/fe_mock_bin/npm" "${TEST_TMP}/fe_mock_bin/npx"
 
 # Run 1: node_modules/ already exists but .libscript_pkg_hash is missing -> must run npm install and npx ng build --configuration=release
-PATH="${TEST_TMP}/fe_mock_bin:$PATH" STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/provision_frontend.sh" --app-dir "${FE_APP_DIR}" --manifest "${FE_APP_DIR}/libscript.json" >/dev/null
+PATH="${TEST_TMP}/fe_mock_bin:$PATH" STACK="" "${LIBSCRIPT_ROOT_DIR}/engine/hooks/app-servers/provision_frontend.sh" --app-dir "${FE_APP_DIR}" --manifest "${FE_APP_DIR}/libscript.json" >/dev/null
 FE_LOG_1=$(cat "$FE_CMD_LOG")
 assert_contains "$FE_LOG_1" "npm install" "provision_frontend.sh runs npm install when .libscript_pkg_hash is missing"
 assert_contains "$FE_LOG_1" "npx ng build --configuration=release" "provision_frontend.sh runs npx ng build --configuration=release when release config exists"
 
 # Run 2: unchanged package.json and src -> must reuse both deps and build
 : > "$FE_CMD_LOG"
-FE_RUN2_OUT=$(PATH="${TEST_TMP}/fe_mock_bin:$PATH" STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/provision_frontend.sh" --app-dir "${FE_APP_DIR}" --manifest "${FE_APP_DIR}/libscript.json" 2>&1)
+FE_RUN2_OUT=$(PATH="${TEST_TMP}/fe_mock_bin:$PATH" STACK="" "${LIBSCRIPT_ROOT_DIR}/engine/hooks/app-servers/provision_frontend.sh" --app-dir "${FE_APP_DIR}" --manifest "${FE_APP_DIR}/libscript.json" 2>&1)
 assert_contains "$FE_RUN2_OUT" "[REUSE] Frontend dependencies" "provision_frontend.sh reuses node_modules on second run"
 assert_contains "$FE_RUN2_OUT" "[REUSE] Frontend build" "provision_frontend.sh reuses build on second run"
 if [ -s "$FE_CMD_LOG" ]; then
@@ -727,7 +727,7 @@ cat << 'EOF_PKG2' > "${FE_SUB_DIR}/package.json"
 }
 EOF_PKG2
 PATH="${TEST_TMP}/fe_mock_bin:$PATH" STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/ollama/env.sh" >/dev/null 2>&1 || true
-PATH="${TEST_TMP}/fe_mock_bin:$PATH" STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/provision_frontend.sh" --app-dir "${FE_APP_DIR}" --manifest "${FE_APP_DIR}/libscript.json" >/dev/null
+PATH="${TEST_TMP}/fe_mock_bin:$PATH" STACK="" "${LIBSCRIPT_ROOT_DIR}/engine/hooks/app-servers/provision_frontend.sh" --app-dir "${FE_APP_DIR}" --manifest "${FE_APP_DIR}/libscript.json" >/dev/null
 FE_LOG_3=$(cat "$FE_CMD_LOG")
 assert_contains "$FE_LOG_3" "npm install" "provision_frontend.sh re-runs npm install when package.json changes even if node_modules exists"
 printf '[PASS] provision_frontend.sh sub-app lockfile hash invalidation and ng build --configuration=release\n'
@@ -816,7 +816,7 @@ cat << EOF_PS_JSON > "${PS_DIR}/libscript.json"
 EOF_PS_JSON
 
 CMD="prepare-storage" LIBSCRIPT_DATA_DIR="${PS_DATA}" LIBSCRIPT_FORCE_FALLBACK_DAEMON=1 STACK="" \
-  sh "${LIBSCRIPT_ROOT_DIR}/cli/commands/services/actions.sh" "${PS_DIR}/libscript.json" >/dev/null 2>&1
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/services/actions.sh" "${PS_DIR}/libscript.json" >/dev/null 2>&1
 
 PS_SVC_ENV=$(cat "${PS_DATA}/ollama/service.env")
 assert_contains "$PS_SVC_ENV" "export OLLAMA_MODELS=${PS_DATA}/models_from_infra" "prepare-storage merges infrastructure.service_overrides OLLAMA_MODELS"
@@ -828,7 +828,7 @@ assert_contains "$PS_SVC_ENV" "export OLLAMA_NUM_GPU=0" "prepare-storage persist
 printf '[PASS] Ollama CPU runner defaults, service.sh configure overrides, and prepare-storage 11-key merge\n'
 
 # 19. Test Azure --delete-option Detach, prepare-storage Postgres/Valkey configuration, and traits/storage/mount.sh ownership preservation
-AZ_ATTACH_DRY=$(DRY_RUN=true "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/azure/cli.sh" storage attach-disk test-node TEST-RG test-node-data-disk 100 /mnt/data 2>&1)
+AZ_ATTACH_DRY=$(DRY_RUN=true "${LIBSCRIPT_ROOT_DIR}/infrastructure/providers/azure/cli.sh" storage attach-disk test-node TEST-RG test-node-data-disk 100 /mnt/data 2>&1)
 assert_contains "$AZ_ATTACH_DRY" "--delete-option Detach" "azure storage attach-disk uses --delete-option Detach"
 
 PG_VK_DIR="${TEST_TMP}/pg_vk_test"
@@ -853,7 +853,7 @@ cat << EOF_PGVK > "${PG_VK_DIR}/libscript.json"
 EOF_PGVK
 
 CMD="prepare-storage" LIBSCRIPT_DATA_DIR="${PG_VK_DIR}/data" LIBSCRIPT_SYSTEMD_DIR="${PG_VK_SYS}" LIBSCRIPT_ETC_DIR="${PG_VK_ETC}" LIBSCRIPT_MOCK_SYSTEMD=1 STACK="" \
-  sh "${LIBSCRIPT_ROOT_DIR}/cli/commands/services/actions.sh" "${PG_VK_DIR}/libscript.json" >/dev/null 2>&1
+  sh "${LIBSCRIPT_ROOT_DIR}/workloads/services/actions.sh" "${PG_VK_DIR}/libscript.json" >/dev/null 2>&1
 
 if [ ! -f "${PG_VK_SYS}/postgresql.service.d/override.conf" ]; then
   printf '[FAIL] prepare-storage did not create postgresql.service.d/override.conf\n' >&2
@@ -1020,7 +1020,7 @@ cat << 'EOF_DUCK_MOUNT' > "${DUCK_MOUNT_DIR}/libscript.json"
   ]
 }
 EOF_DUCK_MOUNT
-DATA_DISK_MOUNT="${CUSTOM_DATA_MOUNT}" STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_db.sh" "${DUCK_MOUNT_DIR}/libscript.json" >/dev/null 2>&1
+DATA_DISK_MOUNT="${CUSTOM_DATA_MOUNT}" STACK="" "${LIBSCRIPT_ROOT_DIR}/engine/hooks/databases/provision_db.sh" "${DUCK_MOUNT_DIR}/libscript.json" >/dev/null 2>&1
 if [ ! -f "${CUSTOM_DATA_MOUNT}/mounted_analytics.duckdb" ]; then
   printf '[FAIL] provision_db.sh did not use DATA_DISK_MOUNT (%s/mounted_analytics.duckdb) when path is omitted\n' "$CUSTOM_DATA_MOUNT" >&2
   exit 1
@@ -1049,7 +1049,7 @@ EOF_INGRESS_TIMEOUT
 # shellcheck disable=SC2016
 SYNC_ING_OUT=$(
   env -i PATH="$PATH" HOME="${TEST_TMP}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" sh -c '
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/component_core.sh"
     export SCRIPT_NAME
     LIBSCRIPT_COMPONENT_CORE_LIB_ONLY=1 . "${SCRIPT_NAME}"
     libscript_Synchronize_Ingress "'"${INGRESS_TIMEOUT_DIR}/libscript.json"'" --format nginx --out "'"${INGRESS_TIMEOUT_DIR}/nginx.conf"'"

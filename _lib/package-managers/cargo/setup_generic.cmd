@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%CARGO_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%CARGO_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%CARGO_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%CARGO_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/rust-lang/cargo" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%CARGO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cargo %CARGO_VERSION% to %DOWNLOAD_DIR%\cargo...
     if not exist "%DOWNLOAD_DIR%\cargo" mkdir "%DOWNLOAD_DIR%\cargo"
     if not "%CARGO_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CARGO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cargo\cargo-%CARGO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CARGO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cargo\cargo-%CARGO_VERSION%.zip"
     ) else (
         echo CARGO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CARGO_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cargo
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends cargo
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cargo\cargo-%CARGO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CARGO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CARGO_DOWNLOAD_URL%" "%TEMP%\cargo.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%CARGO_DOWNLOAD_URL%" "%TEMP%\cargo.zip"
         tar -xf "%TEMP%\cargo.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cargo.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "cargo" "%ACTION%" "%CARGO_VERSION%" "%CARGO_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cargo\%CARGO_VERSION%\\bin\\cargo.exe\"" "%LIBSCRIPT_HOME%\cargo\%CARGO_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "cargo" "%ACTION%" "%CARGO_VERSION%" "%CARGO_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\cargo\%CARGO_VERSION%\\bin\\cargo.exe\"" "%LIBSCRIPT_HOME%\cargo\%CARGO_VERSION%"
 exit /b !errorlevel!

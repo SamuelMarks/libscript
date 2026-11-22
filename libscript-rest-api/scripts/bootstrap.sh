@@ -40,8 +40,8 @@ fi
 
 _BOOTSTRAP_SCRIPT_DIR="${SCRIPT_DIR}"
 # Import common logging if available
-if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/log.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/log.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -54,8 +54,8 @@ else
   # Outputs error log messages.
   log_error() { printf '[ERROR] %s\n' "$1" >&2; }
 fi
-if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh" ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"

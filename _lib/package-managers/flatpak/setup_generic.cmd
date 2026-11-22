@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%FLATPAK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%FLATPAK_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%FLATPAK_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%FLATPAK_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/flatpak/flatpak" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%FLATPAK_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading flatpak %FLATPAK_VERSION% to %DOWNLOAD_DIR%\flatpak...
     if not exist "%DOWNLOAD_DIR%\flatpak" mkdir "%DOWNLOAD_DIR%\flatpak"
     if not "%FLATPAK_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FLATPAK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\flatpak\flatpak-%FLATPAK_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%FLATPAK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\flatpak\flatpak-%FLATPAK_VERSION%.zip"
     ) else (
         echo FLATPAK_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%FLATPAK_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends flatpak
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends flatpak
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\flatpak\flatpak-%FLATPAK_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%FLATPAK_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FLATPAK_DOWNLOAD_URL%" "%TEMP%\flatpak.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%FLATPAK_DOWNLOAD_URL%" "%TEMP%\flatpak.zip"
         tar -xf "%TEMP%\flatpak.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for flatpak.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "flatpak" "%ACTION%" "%FLATPAK_VERSION%" "%FLATPAK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\flatpak\%FLATPAK_VERSION%\\bin\\flatpak.exe\"" "%LIBSCRIPT_HOME%\flatpak\%FLATPAK_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "flatpak" "%ACTION%" "%FLATPAK_VERSION%" "%FLATPAK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\flatpak\%FLATPAK_VERSION%\\bin\\flatpak.exe\"" "%LIBSCRIPT_HOME%\flatpak\%FLATPAK_VERSION%"
 exit /b !errorlevel!

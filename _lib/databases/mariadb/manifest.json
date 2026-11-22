@@ -1,19 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "mariadb",
-  "title": "MariaDB",
-  "license": "GPL-2.0-only",
-  "license_name": "GNU General Public License v2.0 only",
-  "description": "A community-developed, commercially supported fork of the MySQL relational database management system.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "databases",
-  "provides": ["database", "mysql-compatible", "mariadb"],
   "conflicts": ["mysql"],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "ports": [3306],
-  "stateful": true,
-  "multitenant": true,
+  "description": "A community-developed, commercially supported fork of the MySQL relational database management system.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -26,10 +19,18 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
+  "license": "GPL-2.0-only",
+  "license_name": "GNU General Public License v2.0 only",
+  "multitenant": true,
+  "name": "mariadb",
+  "os_blacklist": [],
+  "os_whitelist": ["all"],
+  "ports": [3306],
+  "provides": ["database", "mysql-compatible", "mariadb"],
   "repository": "https://github.com/MariaDB/server",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "stateful": true,
+  "tier": "T1",
+  "title": "MariaDB"
 }

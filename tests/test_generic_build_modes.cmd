@@ -58,8 +58,8 @@ exit /b 0
 :: Verifies package manager dry-run dispatch across winget, choco, scoop, and vcpkg.
 :verify_mode1_windows
 set "LIBSCRIPT_DRY_RUN_PKG_MGR=1"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via "winget" "sqlite"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via "winget" "sqlite"
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via "choco" "sqlite"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends_via "choco" "sqlite"
 if errorlevel 1 exit /b 1
 exit /b 0

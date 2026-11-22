@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nim",
-  "title": "Nim",
-  "description": "Statically typed compiled systems programming language combining Pythonic expressiveness with C performance.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["nim"],
+  "description": "Statically typed compiled systems programming language combining Pythonic expressiveness with C performance.",
+  "name": "nim",
   "os_whitelist": ["all"],
+  "provides": ["nim"],
   "repository": "https://github.com/nim-lang/Nim",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Nim"
 }

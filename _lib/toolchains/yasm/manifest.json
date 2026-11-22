@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "yasm",
-  "title": "Yasm",
-  "description": "Modular BSD-licensed rewrite of the NASM x86/AMD64 assembler.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["yasm", "assembler"],
+  "description": "Modular BSD-licensed rewrite of the NASM x86/AMD64 assembler.",
+  "name": "yasm",
   "os_whitelist": ["all"],
+  "provides": ["yasm", "assembler"],
   "repository": "https://github.com/yasm/yasm",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Yasm"
 }

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "virtualization",
+  "description": "KVM and MSHV focused virtual machine monitor",
+  "name": "cloud-hypervisor",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux"],
+  "provides": ["cloud-hypervisor"],
+  "tier": "T1",
+  "title": "Cloud Hypervisor"
+}

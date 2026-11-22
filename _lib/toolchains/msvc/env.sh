@@ -31,7 +31,7 @@ export MSVC_ARCH="${MSVC_ARCH:-x64}"
 export MSVC_CRT="${MSVC_CRT:-MD}"
 export MSVC_DARICE_CUB_PATH="${MSVC_DARICE_CUB_PATH:-}"
 
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/env_base.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

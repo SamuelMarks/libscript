@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ansible-galaxy",
-  "provides": ["ansible-galaxy"],
-  "os_whitelist": ["all"],
-  "title": "ansible-galaxy",
-  "description": "Bootstrap module for the `ansible-galaxy` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `ansible-galaxy` package manager.",
+  "name": "ansible-galaxy",
+  "os_whitelist": ["all"],
+  "provides": ["ansible-galaxy"],
   "repository": "https://github.com/ansible/ansible",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "ansible-galaxy"
 }

@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "dash",
-  "title": "Dash",
-  "description": "POSIX-compliant /bin/sh shell with native Windows (MSVC) and MS-DOS builds via SamuelMarks/dash-windows.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["dash", "dash-windows", "sh"],
-  "os_whitelist": ["all"],
+  "description": "POSIX-compliant /bin/sh shell with native Windows (MSVC) and MS-DOS builds via SamuelMarks/dash-windows.",
+  "name": "dash",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
+  "provides": ["dash", "dash-windows", "sh"],
   "repository": "https://github.com/SamuelMarks/dash-windows",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Dash"
 }

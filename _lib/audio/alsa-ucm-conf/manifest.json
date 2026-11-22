@@ -1,16 +1,17 @@
 {
-  "name": "alsa-ucm-conf",
-  "title": "ALSA UCM Conf",
-  "description": "ALSA Use Case Manager configuration files",
-  "provides": ["alsa-ucm-conf"],
+  "capabilities": ["sysroot-package"],
   "category": "audio",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "ALSA Use Case Manager configuration files",
+  "name": "alsa-ucm-conf",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["alsa-ucm-conf"],
+  "tier": "T2",
+  "title": "ALSA UCM Conf",
+  "versions": ["1.0.0"]
 }

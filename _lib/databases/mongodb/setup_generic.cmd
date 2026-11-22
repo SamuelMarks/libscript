@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%MONGODB_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%MONGODB_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MONGODB_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%MONGODB_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/mongodb/mongo" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%MONGODB_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mongodb %MONGODB_VERSION% to %DOWNLOAD_DIR%\mongodb...
     if not exist "%DOWNLOAD_DIR%\mongodb" mkdir "%DOWNLOAD_DIR%\mongodb"
     if not "%MONGODB_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MONGODB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MONGODB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip"
     ) else (
         echo MONGODB_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MONGODB_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mongodb
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends mongodb
     exit /b !errorlevel!
 )
 
@@ -170,12 +170,12 @@ if not exist "%TARGET_DIR%\bin\mongod.exe" (
         tar -xf "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MONGODB_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MONGODB_DOWNLOAD_URL%" "%TEMP%\mongodb.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%MONGODB_DOWNLOAD_URL%" "%TEMP%\mongodb.zip"
         tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%"
     ) else (
         set "_MONGO_URL=https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-8.0.4.zip"
         echo Downloading MongoDB from !_MONGO_URL!...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_MONGO_URL!" "%TEMP%\mongodb.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!_MONGO_URL!" "%TEMP%\mongodb.zip"
         set "_MONGO_DL_OK=0"
         if not errorlevel 1 (
             if exist "%TEMP%\mongodb.zip" set "_MONGO_DL_OK=1"
@@ -184,7 +184,7 @@ if not exist "%TARGET_DIR%\bin\mongod.exe" (
             tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%"
             del /f /q "%TEMP%\mongodb.zip" 2>nul
         ) else (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mongodb
+            call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends mongodb
         )
     )
 ) else (
@@ -212,5 +212,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "mongodb" "%ACTION%" "%MONGODB_VERSION%" "%MONGODB_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mongodb\%MONGODB_VERSION%\\bin\\mongod.exe\"" "%LIBSCRIPT_HOME%\mongodb\%MONGODB_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "mongodb" "%ACTION%" "%MONGODB_VERSION%" "%MONGODB_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\mongodb\%MONGODB_VERSION%\\bin\\mongod.exe\"" "%LIBSCRIPT_HOME%\mongodb\%MONGODB_VERSION%"
 exit /b !errorlevel!

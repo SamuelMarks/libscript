@@ -56,7 +56,7 @@ where gitlab-runner >nul 2>&1
 if "%errorlevel%" equ "0" exit /b 0
 
 echo Installing GLab CLI via pkg_mgr...
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends GLab.GLab
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends GLab.GLab
 if not errorlevel 1 exit /b 0
 
 echo GitLab client wrapper configured.

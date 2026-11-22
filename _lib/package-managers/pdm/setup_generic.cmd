@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%PDM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%PDM_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%PDM_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%PDM_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/pdm-project/pdm" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -134,7 +134,7 @@ if "%PDM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pdm %PDM_VERSION% to %DOWNLOAD_DIR%\pdm...
     if not exist "%DOWNLOAD_DIR%\pdm" mkdir "%DOWNLOAD_DIR%\pdm"
     if not "%PDM_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PDM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pdm\pdm-%PDM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PDM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pdm\pdm-%PDM_VERSION%.zip"
     ) else (
         echo PDM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PDM_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pdm
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends pdm
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pdm\pdm-%PDM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PDM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PDM_DOWNLOAD_URL%" "%TEMP%\pdm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%PDM_DOWNLOAD_URL%" "%TEMP%\pdm.zip"
         tar -xf "%TEMP%\pdm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pdm.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "pdm" "%ACTION%" "%PDM_VERSION%" "%PDM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\pdm\%PDM_VERSION%\\bin\\pdm.exe\"" "%LIBSCRIPT_HOME%\pdm\%PDM_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "pdm" "%ACTION%" "%PDM_VERSION%" "%PDM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\pdm\%PDM_VERSION%\\bin\\pdm.exe\"" "%LIBSCRIPT_HOME%\pdm\%PDM_VERSION%"
 exit /b !errorlevel!

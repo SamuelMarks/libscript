@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "lfs-base",
-  "title": "LFS Base System",
-  "description": "Linux From Scratch (LFS) final chroot userland and base system synthesis.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "provides": ["lfs-base", "base-system"],
   "conflicts": [],
-  "versions": ["latest", "12.2"],
-  "os_whitelist": ["linux"],
+  "description": "Linux From Scratch (LFS) final chroot userland and base system synthesis.",
+  "name": "lfs-base",
   "os_blacklist": ["windows", "darwin", "sunos"],
+  "os_whitelist": ["linux"],
   "ports": [],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["lfs-base", "base-system"],
+  "tier": "T2",
+  "title": "LFS Base System",
+  "versions": ["latest", "12.2"]
 }

@@ -1,15 +1,16 @@
 {
-  "name": "musl-obstack",
-  "title": "Musl Obstack",
-  "description": "GNU obstack library standalone port for musl",
-  "provides": ["musl-obstack"],
+  "capabilities": ["sysroot-package", "sysroot-library"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "capabilities": ["versioned-artifact", "sysroot-library"]
+  "description": "GNU obstack library standalone port for musl",
+  "name": "musl-obstack",
+  "provides": ["musl-obstack"],
+  "tier": "T2",
+  "title": "Musl Obstack",
+  "versions": ["1.0.0"]
 }

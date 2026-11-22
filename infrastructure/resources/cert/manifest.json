@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "cert",
+  "category": "cloud",
+  "title": "Cloud SSL Certificates",
+  "description": "Multicloud interface for managing managed SSL certificates. Adapter-only component without binary installer lifecycle.",
+  "provides": ["cloud-cert"],
+  "adapter_only": true,
+  "capabilities": ["cloud-operator"]
+}

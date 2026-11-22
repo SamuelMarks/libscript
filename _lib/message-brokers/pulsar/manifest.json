@@ -1,16 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pulsar",
-  "title": "Apache Pulsar",
-  "description": "Cloud-native distributed messaging and streaming platform with tiered storage and multi-tenancy.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
   "category": "message-brokers",
-  "provides": ["pulsar", "message-broker", "streaming"],
-  "os_whitelist": ["all"],
-  "ports": [6650, 8080],
-  "stateful": true,
-  "multitenant": true,
-  "repository": "https://github.com/apache/pulsar",
+  "description": "Cloud-native distributed messaging and streaming platform with tiered storage and multi-tenancy.",
   "hooks": {
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "metrics_scrape_path": "/metrics",
     "physical": [
       "configure",
       "probe",
@@ -23,9 +18,15 @@
       "rollback",
       "maintenance"
     ],
-    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
-    "probe_timeout_seconds": 30,
-    "metrics_scrape_path": "/metrics"
+    "probe_timeout_seconds": 30
   },
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "multitenant": true,
+  "name": "pulsar",
+  "os_whitelist": ["all"],
+  "ports": [6650, 8080],
+  "provides": ["pulsar", "message-broker", "streaming"],
+  "repository": "https://github.com/apache/pulsar",
+  "stateful": true,
+  "tier": "T1",
+  "title": "Apache Pulsar"
 }

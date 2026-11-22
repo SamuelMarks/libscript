@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "zephyr",
-  "title": "Zephyr RTOS Kernel",
-  "description": "Zephyr Real-Time Operating System kernel source manager, Kconfig/Devicetree synthesizer, and multi-board firmware builder.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "kernel-image"],
   "category": "kernel",
-  "provides": ["zephyr-kernel", "zephyr-lts", "zephyr-mainline"],
+  "description": "Zephyr Real-Time Operating System kernel source manager, Kconfig/Devicetree synthesizer, and multi-board firmware builder.",
+  "name": "zephyr",
   "os_whitelist": ["all"],
+  "provides": ["zephyr-kernel", "zephyr-lts", "zephyr-mainline"],
   "repository": "https://github.com/zephyrproject-rtos/zephyr",
-  "capabilities": ["versioned-artifact", "os-synthesizer"]
+  "tier": "T2",
+  "title": "Zephyr RTOS Kernel"
 }

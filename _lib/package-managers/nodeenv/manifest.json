@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "nodeenv",
-  "provides": ["nodeenv", "node-virtualenv"],
-  "os_whitelist": ["all"],
-  "title": "nodeenv",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "package-managers",
+  "description": "Bootstrap module for the nodeenv Node.js virtual environment manager.",
   "license": "BSD-3-Clause",
   "license_name": "BSD 3-Clause 'New' or 'Revised' License",
-  "description": "Bootstrap module for the nodeenv Node.js virtual environment manager.",
-  "category": "package-managers",
-  "capabilities": ["versioned-artifact"]
+  "name": "nodeenv",
+  "os_whitelist": ["all"],
+  "provides": ["nodeenv", "node-virtualenv"],
+  "tier": "T1",
+  "title": "nodeenv"
 }

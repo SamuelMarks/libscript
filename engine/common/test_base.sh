@@ -1,0 +1,134 @@
+#!/bin/sh
+# ## Overview
+# Provides the foundational testing framework for components. It sets up necessary paths and defines robust assertion functions (`assert_version`, `assert_service_up`, `assert_exists`) to facilitate uniform validation of component installations and behavior.
+# ## Usage
+# Source this file in component-specific test scripts to utilize the assertion library.
+set -feu
+_test_base_caller_this="${THIS_FILE:-}"; _test_base_caller_dir="${SCRIPT_DIR:-}"
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
+    [ -n "$_test_base_caller_this" ] && THIS_FILE="$_test_base_caller_this"
+    [ -n "$_test_base_caller_dir" ] && SCRIPT_DIR="$_test_base_caller_dir"
+    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+# Resolve component directory and root
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export DIR="${SCRIPT_DIR}"
+export LIBSCRIPT_ROOT_DIR
+
+if [ -z "${UNAME:-}" ] || [ -z "${ARCH:-}" ] || [ -z "${UNAME_LOWER:-}" ]; then
+  _tb_oi_this="${THIS_FILE}"
+  _tb_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_tb_oi_this}"
+  SCRIPT_DIR="${_tb_oi_dir}"
+  export DIR="${SCRIPT_DIR}"
+  unset _tb_oi_this _tb_oi_dir || true
+fi
+
+# Common directories
+LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"
+LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
+export LIBSCRIPT_BUILD_DIR LIBSCRIPT_DATA_DIR
+
+# Common path setup
+for _p in "${LIBSCRIPT_DATA_DIR}/bin" "${HOME:-/root}/.cargo/bin"; do
+  case ":${PATH}:" in
+    *":${_p}:"*) ;;
+    *) PATH="${_p}:${PATH}" ;;
+  esac
+done
+export PATH
+
+[ -d "${LIBSCRIPT_BUILD_DIR}" ] || mkdir -p -- "${LIBSCRIPT_BUILD_DIR}"
+[ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
+
+# Source component-specific environment if exists
+ENV_SCRIPT="${PWD}/env.sh"
+if [ -f "${ENV_SCRIPT}" ]; then
+  SCRIPT_NAME="${ENV_SCRIPT}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+# -----------------------------------------------------------------------------
+# Testing Assertions
+# -----------------------------------------------------------------------------
+
+# ## assert_version
+# Usage: assert_version <cmd> <expected_pattern>
+assert_version() {
+  cmd="${1:-}"
+  expected="${2:-}"
+  if [ -z "$cmd" ] || ! command -v "$cmd" >/dev/null 2>&1; then
+    printf "[FAIL] %s command not found\n" "$cmd" >&2
+    return 1
+  fi
+  version=$("$cmd" --version 2>&1 | head -n 1)
+  if printf '%s\n' "$version" | grep -qi "$expected"; then
+    printf "[PASS] %s version check: %s\n" "$cmd" "$version" >&2
+  else
+    printf "[FAIL] %s version check failed. Expected pattern: %s, Got: %s\n" "$cmd" "$expected" "$version" >&2
+    return 1
+  fi
+}
+
+# ## assert_service_up
+# Usage: assert_service_up <host> <port> [timeout]
+assert_service_up() {
+  host="${1:-}"
+  port="${2:-}"
+  timeout="${3:-10}"
+  printf "[INFO] Waiting for service at %s:%s (timeout %ss)...\n" "$host" "$port" "$timeout" >&2
+  if command -v nc >/dev/null 2>&1; then
+    i=1
+    while [ "$i" -le "$timeout" ]; do
+      if nc -z "$host" "$port" >/dev/null 2>&1; then
+        printf "[PASS] Service at %s:%s is UP\n" "$host" "$port" >&2
+        return 0
+      fi
+      sleep 1
+      i=$((i + 1))
+    done
+  else
+    printf "[WARN] nc not found, skipping service check for %s:%s\n" "$host" "$port" >&2
+  fi
+  printf "[FAIL] Service at %s:%s is DOWN\n" "$host" "$port" >&2
+  return 1
+}
+
+# ## assert_exists
+# Usage: assert_exists <path>
+assert_exists() {
+  if [ -e "${1:-}" ]; then
+    printf "[PASS] Exists: %s\n" "${1:-}" >&2
+  else
+    printf "[FAIL] MISSING: %s\n" "${1:-}" >&2
+    return 1
+  fi
+}
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_test_base_caller_dir:-}" ] && SCRIPT_DIR="$_test_base_caller_dir"
+[ -n "${_test_base_caller_this:-}" ] && THIS_FILE="$_test_base_caller_this"
+unset SCRIPT_NAME _test_base_caller_this _test_base_caller_dir || true

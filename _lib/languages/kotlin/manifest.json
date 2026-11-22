@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "kotlin",
-  "title": "Kotlin Toolchain",
-  "description": "A modern programming language that makes developers happier.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "languages",
-  "provides": ["compiler", "kotlin", "jvm"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "description": "A modern programming language that makes developers happier.",
+  "name": "kotlin",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [],
+  "provides": ["compiler", "kotlin", "jvm"],
   "repository": "https://github.com/JetBrains/kotlin",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Kotlin Toolchain"
 }

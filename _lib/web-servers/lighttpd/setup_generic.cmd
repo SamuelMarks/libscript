@@ -97,7 +97,7 @@ exit /b 0
 :action_ls_remote
 if "%LIGHTTPD_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%LIGHTTPD_RELEASES_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%LIGHTTPD_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "%LIGHTTPD_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -134,7 +134,7 @@ if "%LIGHTTPD_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading lighttpd %LIGHTTPD_VERSION% to %DOWNLOAD_DIR%\lighttpd...
     if not exist "%DOWNLOAD_DIR%\lighttpd" mkdir "%DOWNLOAD_DIR%\lighttpd"
     if not "%LIGHTTPD_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%LIGHTTPD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\lighttpd\lighttpd-%LIGHTTPD_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%LIGHTTPD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\lighttpd\lighttpd-%LIGHTTPD_VERSION%.zip"
     ) else (
         echo LIGHTTPD_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -145,7 +145,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%LIGHTTPD_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends lighttpd
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends lighttpd
     exit /b !errorlevel!
 )
 
@@ -161,7 +161,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\lighttpd\lighttpd-%LIGHTTPD_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%LIGHTTPD_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%LIGHTTPD_DOWNLOAD_URL%" "%TEMP%\lighttpd.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%LIGHTTPD_DOWNLOAD_URL%" "%TEMP%\lighttpd.zip"
         tar -xf "%TEMP%\lighttpd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for lighttpd.
@@ -192,5 +192,5 @@ goto :action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "lighttpd" "%ACTION%" "%LIGHTTPD_VERSION%" "%LIGHTTPD_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\lighttpd\%LIGHTTPD_VERSION%\\bin\\lighttpd.exe\"" "%LIBSCRIPT_HOME%\lighttpd\%LIGHTTPD_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "lighttpd" "%ACTION%" "%LIGHTTPD_VERSION%" "%LIGHTTPD_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\lighttpd\%LIGHTTPD_VERSION%\\bin\\lighttpd.exe\"" "%LIBSCRIPT_HOME%\lighttpd\%LIGHTTPD_VERSION%"
 exit /b !errorlevel!

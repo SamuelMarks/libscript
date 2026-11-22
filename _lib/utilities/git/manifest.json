@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "git",
-  "title": "Git",
-  "description": "Fast, scalable, distributed revision control system with cryptographic integrity.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["git", "vcs"],
+  "description": "Fast, scalable, distributed revision control system with cryptographic integrity.",
+  "name": "git",
   "os_whitelist": ["all"],
+  "provides": ["git", "vcs"],
   "repository": "https://github.com/git/git",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Git"
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/toolchains/win-port-suite/vars.schema.json",
+  "$id": "/experiments/win-port/vars.schema.json",
   "title": "win-port-suite variables",
   "description": "Configuration variables for win-port-suite empirical benchmark orchestrator.",
   "type": "object",

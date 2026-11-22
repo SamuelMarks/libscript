@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pacman",
-  "provides": ["pacman"],
-  "os_whitelist": ["arch", "artix", "manjaro"],
-  "title": "pacman",
-  "description": "Bootstrap module for the `pacman` package manager.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap module for the `pacman` package manager.",
+  "name": "pacman",
+  "os_whitelist": ["arch", "artix", "manjaro"],
+  "provides": ["pacman"],
   "repository": "https://gitlab.archlinux.org/pacman/pacman",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pacman"
 }

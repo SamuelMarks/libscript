@@ -1,16 +1,17 @@
 {
-  "name": "labwc",
-  "title": "labwc",
-  "description": "Openbox-like stacking Wayland compositor",
-  "provides": ["labwc"],
+  "capabilities": ["sysroot-package"],
   "category": "desktops",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Openbox-like stacking Wayland compositor",
+  "name": "labwc",
   "os_blacklist": ["windows", "sunos", "rhel", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["labwc"],
+  "tier": "T2",
+  "title": "labwc",
+  "versions": ["1.0.0"]
 }

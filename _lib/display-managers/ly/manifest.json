@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "ly",
-  "title": "Ly TUI Display Manager",
-  "description": "Lightweight ncurses-like terminal user interface (TUI) display manager for Linux and BSD supporting Wayland and X11.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "display-managers",
-  "provides": ["ly", "display-manager"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
+  "description": "Lightweight ncurses-like terminal user interface (TUI) display manager for Linux and BSD supporting Wayland and X11.",
+  "name": "ly",
   "os_blacklist": ["windows", "macos"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
+  "provides": ["ly", "display-manager"],
   "repository": "https://github.com/fairyglade/ly",
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "tier": "T2",
+  "title": "Ly TUI Display Manager"
 }

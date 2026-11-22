@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pnpm",
-  "provides": ["package-manager", "pnpm"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "title": "pnpm",
-  "description": "Fast, disk space efficient package manager",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Fast, disk space efficient package manager",
+  "name": "pnpm",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["package-manager", "pnpm"],
   "repository": "https://github.com/pnpm/pnpm",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "pnpm"
 }

@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "catch2",
-  "title": "Catch2 v3 C++17 Unit Testing Framework",
-  "description": "Standalone version manager and CMake multi-TU source builder for Catch2 (pinned default 3.7.1) with upstream CTest verification.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["catch2"],
+  "description": "Standalone version manager and CMake multi-TU source builder for Catch2 (pinned default 3.7.1) with upstream CTest verification.",
+  "name": "catch2",
   "os_whitelist": ["all"],
+  "provides": ["catch2"],
   "repository": "https://github.com/catchorg/Catch2",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "Catch2 v3 C++17 Unit Testing Framework"
 }

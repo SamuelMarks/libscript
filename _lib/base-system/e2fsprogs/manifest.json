@@ -1,16 +1,17 @@
 {
-  "name": "e2fsprogs",
-  "title": "e2fsprogs",
-  "description": "Ext2/Ext3/Ext4 filesystem management utilities",
-  "provides": ["e2fsprogs"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Ext2/Ext3/Ext4 filesystem management utilities",
+  "name": "e2fsprogs",
   "os_blacklist": ["windows", "sunos", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["e2fsprogs"],
+  "tier": "T2",
+  "title": "e2fsprogs",
+  "versions": ["1.0.0"]
 }

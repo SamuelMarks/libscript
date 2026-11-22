@@ -70,7 +70,7 @@ if "%LIBSCRIPT_RAPPS_DB_DIR%"=="" (
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "rapps" "%RAPPS_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "rapps" "%RAPPS_VERSION%"
 
 endlocal & (
     set "RAPPS_VERSION=%RAPPS_VERSION%"

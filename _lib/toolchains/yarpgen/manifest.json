@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "yarpgen",
-  "title": "YARPGen v2 Random C/C++17 Optimizer Fuzzing Generator",
-  "description": "Standalone version manager and source builder for YARPGen v2, generating deterministic UB-free C and C++17 differential checksum programs.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "toolchains",
-  "provides": ["yarpgen"],
+  "description": "Standalone version manager and source builder for YARPGen v2, generating deterministic UB-free C and C++17 differential checksum programs.",
+  "name": "yarpgen",
   "os_whitelist": ["all"],
+  "provides": ["yarpgen"],
   "repository": "https://github.com/intel/yarpgen",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "YARPGen v2 Random C/C++17 Optimizer Fuzzing Generator"
 }

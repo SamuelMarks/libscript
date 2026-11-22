@@ -3,8 +3,8 @@
 ## Overview
 
 `traits/storage/` manages persistent block storage, Copy-on-Write datasets, and network filesystems
-by delegating device discovery and formatting to `_lib/storage/disk_discovery.{sh,cmd}` and
-`_lib/storage/format_fs.{sh,cmd}`.
+by delegating device discovery and formatting to `engine/common/disk_discovery.{sh,cmd}` and
+`engine/common/format_fs.{sh,cmd}`.
 
 ## Safety & Dual-Mode Invariants
 

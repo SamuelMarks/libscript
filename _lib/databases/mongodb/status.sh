@@ -46,7 +46,7 @@ elif command -v mongo >/dev/null 2>&1; then
   mongo --quiet --eval 'db.adminCommand("ping")' >/dev/null 2>&1 || exit 1
 fi
 
-SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/service.sh"
+SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/engine/common/service.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "$SCRIPT_NAME"

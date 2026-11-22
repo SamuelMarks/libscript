@@ -1,15 +1,16 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "memcached",
-  "title": "Memcached",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "caches",
+  "conflicts": [],
+  "description": "High-performance, distributed memory object caching system.",
   "license": "BSD-3-Clause",
   "license_name": "BSD 3-Clause 'New' or 'Revised' License",
-  "description": "High-performance, distributed memory object caching system.",
-  "category": "caches",
-  "provides": ["cache", "memcached", "key-value"],
-  "conflicts": [],
-  "os_whitelist": ["all"],
+  "name": "memcached",
   "os_blacklist": ["sunos"],
+  "os_whitelist": ["all"],
   "ports": [11211],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["cache", "memcached", "key-value"],
+  "tier": "T1",
+  "title": "Memcached"
 }

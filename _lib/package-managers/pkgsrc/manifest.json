@@ -1,11 +1,12 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "pkgsrc",
-  "title": "NetBSD pkgsrc",
-  "description": "NetBSD pkgsrc portable cross-platform package management framework (pkgin / bmake).",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
-  "provides": ["pkgsrc", "pkgin", "bmake"],
+  "description": "NetBSD pkgsrc portable cross-platform package management framework (pkgin / bmake).",
+  "name": "pkgsrc",
   "os_whitelist": ["all"],
+  "provides": ["pkgsrc", "pkgin", "bmake"],
   "repository": "https://github.com/NetBSD/pkgsrc",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "NetBSD pkgsrc"
 }

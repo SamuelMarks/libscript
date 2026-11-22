@@ -39,9 +39,9 @@ ARCH="${2:-i686}"
 FS_TYPE="${3:-FASTFAT}"
 
 if [ ! -f "$IMAGE_PATH" ]; then
-  STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_distro.sh" \
+  STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_distro.sh" \
     --format iso \
-    --profile "${LIBSCRIPT_ROOT_DIR}/profiles/reactos/minimal-headless-i686.json" \
+    --profile "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/reactos/minimal-headless-i686.json" \
     --sysroot "${TMP_SANDBOX}/sysroot" \
     --output "$IMAGE_PATH" >/dev/null
 fi

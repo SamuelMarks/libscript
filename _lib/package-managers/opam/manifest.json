@@ -1,12 +1,13 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "opam",
-  "provides": ["package-manager", "opam"],
-  "os_whitelist": ["linux", "darwin", "windows"],
-  "os_blacklist": ["windows"],
-  "title": "opam",
-  "description": "Bootstrap script for [opam](https://opam.ocaml.org/), the source-based package manager for OCaml.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "package-managers",
+  "description": "Bootstrap script for [opam](https://opam.ocaml.org/), the source-based package manager for OCaml.",
+  "name": "opam",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "provides": ["package-manager", "opam"],
   "repository": "https://github.com/ocaml/opam",
-  "capabilities": ["versioned-artifact"]
+  "tier": "T1",
+  "title": "opam"
 }

@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
+  "category": "containers",
+  "description": "Lightweight OCI-based implementation of the Kubernetes Container Runtime Interface (crio).",
+  "hooks": {
+    "logical": [],
+    "metrics_scrape_path": "/metrics",
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "probe_timeout_seconds": 30
+  },
+  "name": "cri-o",
+  "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "freebsd"],
+  "provides": ["cri-o", "crio"],
+  "repository": "https://github.com/cri-o/cri-o",
+  "tier": "T1",
+  "title": "CRI-O Kubernetes Container Runtime"
+}

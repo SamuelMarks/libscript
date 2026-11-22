@@ -1,10 +1,11 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "lynx",
-  "title": "Lynx",
-  "description": "Text-mode web browser and HTML-to-plaintext renderer used by Open edX bulk email and annotations.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package"],
   "category": "utilities",
-  "provides": ["lynx"],
+  "description": "Text-mode web browser and HTML-to-plaintext renderer used by Open edX bulk email and annotations.",
+  "name": "lynx",
   "os_whitelist": ["all"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["lynx"],
+  "tier": "T1",
+  "title": "Lynx"
 }

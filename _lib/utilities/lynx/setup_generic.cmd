@@ -111,7 +111,7 @@ exit /b 0
 :action_download
 if not exist "%DOWNLOAD_DIR%\lynx" mkdir "%DOWNLOAD_DIR%\lynx"
 if not "%LYNX_DOWNLOAD_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%LYNX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\lynx\lynx-%LYNX_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%LYNX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\lynx\lynx-%LYNX_VERSION%.zip"
 )
 exit /b 0
 
@@ -119,7 +119,7 @@ exit /b 0
 :: Installs and configures the requested version of lynx on Windows.
 :action_install
 if /i "%LYNX_INSTALL_METHOD%"=="from-source" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "lynx" "%LYNX_VERSION%" "lynx" "c"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\source_builder.cmd" :libscript_build_component_from_source "lynx" "%LYNX_VERSION%" "lynx" "c"
     exit /b !errorlevel!
 )
 set "EXACT_VERSION=%LYNX_VERSION%"
@@ -140,7 +140,7 @@ if exist "%TARGET_DIR%\bin\lynx.cmd" (
 )
 
 if "%LYNX_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends lynx
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_depends lynx
     where lynx >nul 2>&1
     if not errorlevel 1 exit /b 0
 )
@@ -151,7 +151,7 @@ if exist "%DOWNLOAD_DIR%\lynx\lynx-%LYNX_VERSION%.zip" (
     goto :lynx_done_extract
 )
 if not "%LYNX_DOWNLOAD_URL%"=="" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%LYNX_DOWNLOAD_URL%" "%TEMP%\lynx.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%LYNX_DOWNLOAD_URL%" "%TEMP%\lynx.zip"
     tar -xf "%TEMP%\lynx.zip" -C "%TARGET_DIR%\bin"
     goto :lynx_done_extract
 )
@@ -195,5 +195,5 @@ goto :action_uninstall_service
 :: Removes the registered system service for the component.
 :action_uninstall_service
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "lynx" "%ACTION%" "%LYNX_VERSION%" "%LYNX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\lynx\%LYNX_VERSION%\bin\lynx.cmd\"" "%LIBSCRIPT_HOME%\lynx\%LYNX_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\setup_base.cmd" :libscript_handle_generic_action "lynx" "%ACTION%" "%LYNX_VERSION%" "%LYNX_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\lynx\%LYNX_VERSION%\bin\lynx.cmd\"" "%LIBSCRIPT_HOME%\lynx\%LYNX_VERSION%"
 exit /b !errorlevel!

@@ -82,7 +82,7 @@ exit /b 0
 set "RELEASES_URL=%LLVM_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/llvm/llvm-project/releases"
 echo [ls-remote] Fetching available llvm versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -113,7 +113,7 @@ set "DL_DIR=!DL_DIR!\llvm"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading llvm %LLVM_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -124,11 +124,11 @@ if /i "%LLVM_INSTALL_METHOD%"=="from-source" (
     set "TARGET_DIR=%LIBSCRIPT_HOME%\llvm\!EXACT_VERSION!"
     set "SRC_URL=%LLVM_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=https://github.com/llvm/llvm-project/releases/download/llvmorg-{VERSION}/llvm-project-{VERSION}.src.tar.xz"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "llvm" "!EXACT_VERSION!" "llvm-config" "c"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "llvm" "!EXACT_VERSION!" "llvm-config" "c"
     exit /b !errorlevel!
 )
 if "%LLVM_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends llvm
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends llvm
     exit /b !errorlevel!
 )
 call :resolve_version
@@ -136,8 +136,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\llvm\!EXACT_VERSION!"
 if exist "!TARGET_DIR!\bin\llvm-config.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] llvm !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "llvm" "%LLVM_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "llvm" "default" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "llvm" "%LLVM_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "llvm" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -145,7 +145,7 @@ set "URL=%LLVM_DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=https://github.com/llvm/llvm-project/releases/download/llvmorg-{VERSION}/llvm-{VERSION}-windows.zip"
 call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends llvm
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends llvm
     exit /b !errorlevel!
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -158,7 +158,7 @@ if exist "!CACHED_DL!" (
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\llvm-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 if /i "!URL:~-4!"==".zip" (
@@ -172,8 +172,8 @@ if /i "!URL:~-4!"==".zip" (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\llvm-config.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "llvm" "%LLVM_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "llvm" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "llvm" "%LLVM_VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "llvm" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
@@ -190,7 +190,7 @@ exit /b 0
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
 if not "llvm/llvm-project" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/llvm/llvm-project/releases/latest"') do (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/llvm/llvm-project/releases/latest"') do (
         set "EXACT_VERSION=%%T"
     )
 )
@@ -200,5 +200,5 @@ exit /b 0
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "llvm" "%ACTION%" "%LLVM_VERSION%" "%LLVM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\llvm\%LLVM_VERSION%\\bin\\llvm-config.exe\"" "%LIBSCRIPT_HOME%\llvm\%LLVM_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "llvm" "%ACTION%" "%LLVM_VERSION%" "%LLVM_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\llvm\%LLVM_VERSION%\\bin\\llvm-config.exe\"" "%LIBSCRIPT_HOME%\llvm\%LLVM_VERSION%"
 exit /b !errorlevel!

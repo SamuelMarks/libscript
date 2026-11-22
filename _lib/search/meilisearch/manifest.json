@@ -1,17 +1,18 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "meilisearch",
-  "title": "Meilisearch",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "service-daemon"],
+  "category": "search",
+  "conflicts": [],
+  "description": "A lightning-fast, ultra-relevant search engine built in Rust.",
   "license": "MIT",
   "license_name": "MIT License",
-  "description": "A lightning-fast, ultra-relevant search engine built in Rust.",
-  "category": "search",
-  "provides": ["search", "meilisearch"],
-  "conflicts": [],
-  "os_whitelist": ["all"],
+  "name": "meilisearch",
   "os_blacklist": [],
+  "os_whitelist": ["all"],
   "ports": [7700],
   "process_model": "single-process",
-  "unikernel_support": ["nanos", "osv"],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["search", "meilisearch"],
+  "tier": "T1",
+  "title": "Meilisearch",
+  "unikernel_support": ["nanos", "osv"]
 }

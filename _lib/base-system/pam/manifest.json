@@ -1,16 +1,17 @@
 {
-  "name": "pam",
-  "title": "Linux PAM",
-  "description": "Pluggable Authentication Modules library",
-  "provides": ["pam"],
+  "capabilities": ["sysroot-package"],
   "category": "base-system",
-  "versions": ["1.0.0"],
   "dependencies": {
-    "host_tools": [],
     "build_deps": [],
+    "host_tools": [],
     "runtime_deps": [],
     "tier": "recommended"
   },
+  "description": "Pluggable Authentication Modules library",
+  "name": "pam",
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "capabilities": ["versioned-artifact"]
+  "provides": ["pam"],
+  "tier": "T2",
+  "title": "Linux PAM",
+  "versions": ["1.0.0"]
 }

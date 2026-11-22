@@ -58,7 +58,7 @@ if exist "%LIBSCRIPT_HOME%\meilisearch\%MEILISEARCH_VERSION%\bin" (
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
     set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "meilisearch"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "meilisearch"
 )
 
 endlocal & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "MEILISEARCH_PORT=%MEILISEARCH_PORT%" & set "MEILISEARCH_VERSION=%MEILISEARCH_VERSION%" & set "PATH=%PATH%"

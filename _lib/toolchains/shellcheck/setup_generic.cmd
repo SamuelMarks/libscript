@@ -82,7 +82,7 @@ exit /b 0
 set "RELEASES_URL=%SHELLCHECK_RELEASES_URL%"
 if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/koalaman/shellcheck/releases"
 echo [ls-remote] Fetching available shellcheck versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
 
 :: ## action_use
@@ -117,7 +117,7 @@ if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 echo [download] Pre-downloading shellcheck !EXACT_VERSION! from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
 set "PACKAGE_NAME=shellcheck"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -126,22 +126,22 @@ exit /b !errorlevel!
 if /i "%SHELLCHECK_INSTALL_METHOD%"=="from-source" goto :install_from_source
 if /i "%SHELLCHECK_INSTALL_METHOD%"=="source" goto :install_from_source
 if /i "%SHELLCHECK_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends shellcheck
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends shellcheck
     exit /b !errorlevel!
 )
 if /i "%SHELLCHECK_INSTALL_METHOD%"=="winget" (
     set "LIBSCRIPT_PKG_MGR=winget"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends shellcheck
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends shellcheck
     exit /b !errorlevel!
 )
 if /i "%SHELLCHECK_INSTALL_METHOD%"=="choco" (
     set "LIBSCRIPT_PKG_MGR=choco"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends shellcheck
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends shellcheck
     exit /b !errorlevel!
 )
 if /i "%SHELLCHECK_INSTALL_METHOD%"=="scoop" (
     set "LIBSCRIPT_PKG_MGR=scoop"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends shellcheck
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_depends shellcheck
     exit /b !errorlevel!
 )
 
@@ -173,7 +173,7 @@ if exist "!CACHED_DL!" (
 ) else (
     set "TMP_FILE=%TEMP%\shellcheck-!RANDOM!-!ARCHIVE_NAME!"
     set "PACKAGE_NAME=shellcheck"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
     if errorlevel 1 exit /b 1
 )
 
@@ -240,7 +240,7 @@ if not errorlevel 1 (
         )
     )
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "shellcheck" "!EXACT_VERSION!" "shellcheck" "c"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\source_builder.cmd" :libscript_build_component_from_source "shellcheck" "!EXACT_VERSION!" "shellcheck" "c"
 set "_sb_rc=!errorlevel!"
 if "!_sb_rc!"=="0" call :update_aliases
 exit /b !_sb_rc!
@@ -262,7 +262,7 @@ exit /b 0
 set "EXACT_VERSION="
 if not "%LIBSCRIPT_OFFLINE%"=="1" (
     if not "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
-        for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/koalaman/shellcheck/releases/latest"') do (
+        for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/koalaman/shellcheck/releases/latest"') do (
             set "EXACT_VERSION=%%T"
         )
     )
@@ -287,14 +287,14 @@ exit /b 0
 :update_aliases
 set "_ALIAS_NAME=%SHELLCHECK_VERSION%"
 if /i "!_ALIAS_NAME:~0,1!"=="v" set "_ALIAS_NAME=!_ALIAS_NAME:~1!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "shellcheck" "!_ALIAS_NAME!" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "shellcheck" "default" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "shellcheck" "!_ALIAS_NAME!" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "shellcheck" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "shellcheck" "%ACTION%" "%SHELLCHECK_VERSION%" "%SHELLCHECK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\shellcheck\%SHELLCHECK_VERSION%\\bin\\shellcheck.exe\"" "%LIBSCRIPT_HOME%\shellcheck\%SHELLCHECK_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\setup_base.cmd" :libscript_handle_generic_action "shellcheck" "%ACTION%" "%SHELLCHECK_VERSION%" "%SHELLCHECK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\shellcheck\%SHELLCHECK_VERSION%\\bin\\shellcheck.exe\"" "%LIBSCRIPT_HOME%\shellcheck\%SHELLCHECK_VERSION%"
 exit /b !errorlevel!
 
 :: ## extract_sc_zip

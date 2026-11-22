@@ -1,14 +1,15 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
-  "name": "s6",
-  "title": "s6",
-  "description": "skarnet.org small and secure supervision suite and init system.",
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "service-daemon"],
   "category": "init-systems",
-  "provides": ["s6", "init-system"],
   "conflicts": [],
-  "versions": ["latest", "2.12.0.4"],
-  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
+  "description": "skarnet.org small and secure supervision suite and init system.",
+  "name": "s6",
   "os_blacklist": ["windows"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
   "ports": [],
-  "capabilities": ["versioned-artifact", "service-daemon"]
+  "provides": ["s6", "init-system"],
+  "tier": "T2",
+  "title": "s6",
+  "versions": ["latest", "2.12.0.4"]
 }
