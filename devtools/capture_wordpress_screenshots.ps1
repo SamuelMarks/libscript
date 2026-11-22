@@ -15,7 +15,7 @@ if (-not (Test-Path $OutputDir)) {
     [System.IO.Directory]::CreateDirectory($OutputDir) | Out-Null
 }
 
-$WpCliCmd = Join-Path $PSScriptRoot "..\stacks\cms\wordpress\cli.cmd"
+$WpCliCmd = Join-Path $PSScriptRoot "..\workloads\apps\wordpress\cli.cmd"
 if (Test-Path $WpCliCmd) {
     & $WpCliCmd help | Out-File -FilePath (Join-Path $OutputDir "cli_help_windows.txt") -Encoding utf8
     & $WpCliCmd healthcheck | Out-File -FilePath (Join-Path $OutputDir "healthcheck_windows.txt") -Encoding utf8

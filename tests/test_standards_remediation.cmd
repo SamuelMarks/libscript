@@ -60,15 +60,15 @@ set "CHECKS=0"
 echo === 1. Verifying Packaging .cmd Generators ===
 for %%F in (deb rpm apk txz) do (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\cli\commands\packaging\formats\pkg_%%F.cmd" --app-name Demo --app-version 2.0.0 jq 1.7.1 > "!TEST_WS!\out_%%F.sh"
+    call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\%%F.cmd" --app-name Demo --app-version 2.0.0 jq 1.7.1 > "!TEST_WS!\out_%%F.sh"
     if errorlevel 1 (
-        call :fail_check "pkg_%%F.cmd exited non-zero"
+        call :fail_check "%%F.cmd exited non-zero"
     ) else (
         findstr /C:"Demo" /C:"demo" "!TEST_WS!\out_%%F.sh" >nul 2>&1
         if errorlevel 1 (
-            call :fail_check "pkg_%%F.cmd output missing Demo metadata"
+            call :fail_check "%%F.cmd output missing Demo metadata"
         ) else (
-            call :pass_check "pkg_%%F.cmd generated valid packaging script"
+            call :pass_check "%%F.cmd generated valid packaging script"
         )
     )
 )

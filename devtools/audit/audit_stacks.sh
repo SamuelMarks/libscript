@@ -42,7 +42,7 @@ FIX_MODE=0
 if [ "${1:-}" = "--fix" ]; then
   FIX_MODE=1
 fi
-for stack_dir in "$LIBSCRIPT_ROOT_DIR"/workloads/apps/* "$LIBSCRIPT_ROOT_DIR"/topologies/* "$LIBSCRIPT_ROOT_DIR"/payloads/*/*; do
+for stack_dir in "$LIBSCRIPT_ROOT_DIR"/workloads/apps/* "$LIBSCRIPT_ROOT_DIR"/workloads/constellations/* "$LIBSCRIPT_ROOT_DIR"/workloads/payloads/*/*; do
     if [ ! -d "$stack_dir" ]; then continue; fi
     stack_name="$(basename "$stack_dir")"
     

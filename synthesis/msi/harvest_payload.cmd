@@ -165,7 +165,7 @@ set "TMP_FLT_AWK=%TEMP%\ls_harvest_flt_%RANDOM%.awk"
     echo     if ^(rel ~ /^^^(\.git^|\.vagrant^|tests_tmp\/^|dist\/^|build\/^|tmp\/^|node_modules\/^|cache\/^)/^) next
     echo     if ^(rel ~ /\/^(\.git^|\.github^|\.githooks^|\.vagrant^|tests_tmp^|dist^|build^|tmp^|node_modules^|cache^)^(\/^|$^)/^) next
     echo     if ^(rel ~ /\.^(tmp^|log^|ppm^|bak^|swp^|wixobj^|wxs^)$/^) next
-    echo     if ^(rel ~ /^^synthesis\msi\/screenshots\/release_test\// ^|^| rel == "TODO_PLAN.md"^) next
+    echo     if ^(rel ~ /^^synthesis\/msi\/screenshots\/release_test\// ^|^| rel == "TODO_PLAN.md"^) next
     echo     if ^(rel ~ /\.msi$/^) { if ^(inc_msi == "1"^) print rel; next }
     echo     print rel
     echo   }

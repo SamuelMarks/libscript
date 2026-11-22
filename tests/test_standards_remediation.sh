@@ -54,16 +54,16 @@ fail_check() {
 
 printf '=== 1. Verifying Packaging .cmd/.sh Parity & Stub Elimination ===\n'
 for _fmt in deb rpm apk txz pkg dmg; do
-  _cmd_f="${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_${_fmt}.cmd"
-  _sh_f="${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_${_fmt}.sh"
+  _cmd_f="${LIBSCRIPT_ROOT_DIR}/synthesis/formats/${_fmt}.cmd"
+  _sh_f="${LIBSCRIPT_ROOT_DIR}/synthesis/formats/${_fmt}.sh"
   if [ ! -f "$_cmd_f" ] || [ ! -f "$_sh_f" ]; then
-    fail_check "Missing pkg_${_fmt} script pair"
+    fail_check "Missing ${_fmt} synthesis format script pair"
     continue
   fi
   if grep -qi 'not implemented natively for Windows' "$_cmd_f"; then
-    fail_check "pkg_${_fmt}.cmd still contains unimplemented stub text"
+    fail_check "${_fmt}.cmd still contains unimplemented stub text"
   else
-    pass_check "pkg_${_fmt}.cmd implements native Windows Batch logic without stub error"
+    pass_check "${_fmt}.cmd implements native Windows Batch logic without stub error"
   fi
 done
 

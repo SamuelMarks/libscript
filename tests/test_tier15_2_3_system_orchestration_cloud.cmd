@@ -120,7 +120,7 @@ for %%G in (grub limine refind systemd-boot) do (
     )
 )
 
-for %%V in (lima multipass utm wsl) do (
+for %%V in (lima multipass utm wsl libvirt) do (
     if exist "_lib\virtualization\%%V\cli.cmd" (
         call :pass_check "virtualization\%%V has Windows cli.cmd companion"
     ) else (
@@ -128,12 +128,34 @@ for %%V in (lima multipass utm wsl) do (
     )
 )
 
-for %%O in (ansible buildah cilium consul containerd cri-o helm-controller k3s kubeadm libvirt lxc lxd opensearch-dashboards podman pulumi rancher skopeo terraform tofu) do (
-    if exist "_lib\orchestration\%%O\cli.cmd" (
-        call :pass_check "orchestration\%%O has Windows cli.cmd companion"
+for %%K in (ansible pulumi terraform tofu) do (
+    if exist "_lib\iac\%%K\cli.cmd" (
+        call :pass_check "iac\%%K has Windows cli.cmd companion"
     ) else (
-        call :fail_check "orchestration\%%O missing Windows cli.cmd companion"
+        call :fail_check "iac\%%K missing Windows cli.cmd companion"
     )
+)
+
+for %%K in (buildah containerd cri-o lxc lxd podman skopeo) do (
+    if exist "_lib\containers\%%K\cli.cmd" (
+        call :pass_check "containers\%%K has Windows cli.cmd companion"
+    ) else (
+        call :fail_check "containers\%%K missing Windows cli.cmd companion"
+    )
+)
+
+for %%K in (cilium consul helm-controller k3s kubeadm rancher) do (
+    if exist "_lib\schedulers\%%K\cli.cmd" (
+        call :pass_check "schedulers\%%K has Windows cli.cmd companion"
+    ) else (
+        call :fail_check "schedulers\%%K missing Windows cli.cmd companion"
+    )
+)
+
+if exist "_lib\search\opensearch-dashboards\cli.cmd" (
+    call :pass_check "search\opensearch-dashboards has Windows cli.cmd companion"
+) else (
+    call :fail_check "search\opensearch-dashboards missing Windows cli.cmd companion"
 )
 
 for %%C in (oci ovh) do (

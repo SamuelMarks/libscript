@@ -12,25 +12,27 @@ PowerShell equivalent for audit_stacks.
 $ErrorActionPreference = "Stop"
 
 if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -or $args -contains "-?") {
-    Write-Host "Usage: audit_stacks.ps1"
+    Write-Host "Usage: audit_stacks.ps1 [--fix]"
     Write-Host "Performs an audit and validation of all defined application stacks."
     Write-Host ""
     Write-Host "Options:"
+    Write-Host "  --fix               Append missing Orchestrated Components section stub to README.md."
     Write-Host "  --help, -h, /?, -?  Show this help message."
     exit 0
 }
+$fixMode = ($args -contains "--fix")
 
 $rootDir = if ($env:ROOT_DIR) { Resolve-Path $env:ROOT_DIR } else { Resolve-Path (Join-Path $PSScriptRoot '..\..') }
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 $stacks = @()
-if (Test-Path (Join-Path $rootDir '_lib\web-apps')) {
-    $stacks += Get-ChildItem -Path (Join-Path $rootDir '_lib\web-apps') -Directory
+if (Test-Path (Join-Path $rootDir 'workloads\apps')) {
+    $stacks += Get-ChildItem -Path (Join-Path $rootDir 'workloads\apps') -Directory
 }
-if (Test-Path (Join-Path $rootDir 'topologies')) {
-    $stacks += Get-ChildItem -Path (Join-Path $rootDir 'topologies') -Directory
+if (Test-Path (Join-Path $rootDir 'workloads\constellations')) {
+    $stacks += Get-ChildItem -Path (Join-Path $rootDir 'workloads\constellations') -Directory
 }
-if (Test-Path (Join-Path $rootDir 'payloads')) {
-    $stacks += Get-ChildItem -Path (Join-Path $rootDir 'payloads') -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne 'payloads' }
+if (Test-Path (Join-Path $rootDir 'workloads\payloads')) {
+    $stacks += Get-ChildItem -Path (Join-Path $rootDir 'workloads\payloads') -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne 'payloads' }
 }
 
 foreach ($stack in $stacks) {
@@ -46,7 +48,7 @@ foreach ($stack in $stacks) {
     if ($content -notmatch '(?i)components' -and $content -notmatch '(?i)orchestrates' -and $content -notmatch '(?i)libscript\.json') {
         Write-Host "WARNING: Stack $($stack.Name) README may not explicitly list orchestrated _lib components or libscript.json usage."
         
-        if ($content -notmatch '(?i)## Orchestrated Components') {
+        if ($fixMode -and $content -notmatch '(?i)## Orchestrated Components') {
             $content += "`n## Orchestrated Components`nThis stack orchestrates the following LibScript components:`n- (Please document required components here)`n"
             [IO.File]::WriteAllText($readmePath, $content, $utf8NoBom)
         }

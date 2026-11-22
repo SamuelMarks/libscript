@@ -668,7 +668,7 @@ function Update-TodoPlan {
                 elseif ($compRef -eq "synthesis/distro/illumos") { $readmeKey = "illumos/distro" }
                 elseif ($compRef -eq "synthesis/disk") { $readmeKey = "storage/provision_disk" }
                 elseif ($compRef -eq "synthesis/vfs/provision_isolated_runtime") { $readmeKey = "runtimes/provision_isolated_runtime" }
-                elseif (($compRef -like "topologies/*") -or ($compRef -like "payloads/*") -or ($compRef -like "traits/*")) { $readmeKey = $compRef }
+                elseif (($compRef -like "workloads/*") -or ($compRef -like "synthesis/*") -or ($compRef -like "infrastructure/*") -or ($compRef -like "traits/*")) { $readmeKey = $compRef }
 
                 $rEntry = $null
                 if ($readmeMap.ContainsKey($readmeKey)) { $rEntry = $readmeMap[$readmeKey] }

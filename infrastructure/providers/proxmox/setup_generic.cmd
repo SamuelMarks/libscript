@@ -63,5 +63,5 @@ if "%~1"=="-h" (
 
 for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
 
-call "%REPO_ROOT%\engine\common\vm_builder.cmd" "%REPO_ROOT%\_lib/cloud-providers\proxmox\setup.sh" %*
+call "%REPO_ROOT%\engine\common\vm_builder.cmd" "%REPO_ROOT%\infrastructure\providers\proxmox\setup_generic.sh" %*
 exit /b %ERRORLEVEL%

@@ -157,12 +157,34 @@ case "$_skip_out" in
   *) fail_test "Expected [SKIP] on 2nd scaffold invocation, got: ${_skip_out}" ;;
 esac
 
-printf '%s\n' '=== 5. Test Audit Rule Rejections ==='
+printf '%s\n' '=== 5. Test Audit Rule Rejections & Cross-Platform 6-Tier Parity ==='
 if grep -q 'has_dirname_z0' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_posix.sh"; then
   :
 else
   fail_test 'Expected has_dirname_z0 rule in audit_posix.sh'
 fi
+if grep -qE '_lib/\(_common|web-apps/\.\*/|orchestration/distro/' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.ps1"; then
+  fail_test 'Stale 5-tier allowlist regex found in devtools/audit/audit_standards.ps1'
+fi
+if grep -qE '_lib!_BS!_common|topologies!_BS!engine\.cmd|payloads!_BS!schedulers|cli!_BS!commands!_BS!experiment' "${LIBSCRIPT_ROOT_DIR}/tests/test_standards_adherence.cmd"; then
+  fail_test 'Stale 5-tier path found in tests/test_standards_adherence.cmd'
+fi
+if grep -q 'synthesis\\msi\\/' "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/harvest_payload.cmd"; then
+  fail_test 'Malformed gawk \m escape found in synthesis/msi/harvest_payload.cmd'
+fi
+for _req_pat in \
+  'engine/common/(pkg_mgr|daemonize)' \
+  'workloads/apps/.*/(test_harness|health.*|service)' \
+  'synthesis/distro/linux/' \
+  'workloads/services/' \
+  'engine/common/(service|service_install|daemonize)\.cmd' \
+  'engine/common/pkg_mgr\.ps1'; do
+  grep -qF "$_req_pat" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.ps1" || fail_test "Missing 6-tier allowlist pattern ${_req_pat} in audit_standards.ps1"
+done
+_t1_iptables=$(awk '/^### T1:/{in_t1=1;next} /^### T2:/{in_t1=0} in_t1 && /\| `iptables`[[:space:]]*\|/{print}' "${LIBSCRIPT_ROOT_DIR}/README.md")
+_t2_iptables=$(awk '/^### T2:/{in_t2=1;next} /^### T[345]:/{in_t2=0} in_t2 && /\| `iptables`[[:space:]]*\|/{print}' "${LIBSCRIPT_ROOT_DIR}/README.md")
+[ -z "$_t1_iptables" ] || fail_test 'Expected iptables not to appear under T1 in README.md'
+[ -n "$_t2_iptables" ] || fail_test 'Expected iptables under T2 in README.md'
 
 printf '%s\n' '[PASS] All standards adherence regression tests succeeded.'
 exit 0

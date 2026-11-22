@@ -482,7 +482,7 @@ function Audit-File {
         if ($venvLeakMatch) {
             Log-Violation -File $FilePath -Rule "RTOS_VENV_LEAK" -Details "RTOS kernel recipe creates Python venv outside LIBSCRIPT_HOME."
         }
-    } elseif ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^_lib/(orchestration|storage|_common|cloud|cloud-providers|kernel|bootloaders|freebsd|illumos|reactos)/') {
+    } elseif ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^(_lib/(kernel|bootloaders|[^/]+/_common)|synthesis/disk|engine/common|infrastructure/(resources|providers))/') {
         $boundaryMatch = Select-String -Path $FilePath -Pattern '^\s*(sudo\s+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)\s' -Quiet
         if ($boundaryMatch) {
             Log-Violation -File $FilePath -Rule "RECIPE_BOUNDARY" -Details "Tier 1 leaf recipe directly invokes kernel/storage primitive."
@@ -490,7 +490,7 @@ function Audit-File {
     }
 
     # 8c. Enforce Zero-Dependency Substrate in core orchestration
-    if ($normPath -match '^(_lib/(_common|orchestration|init-systems|databases|cloud/core)|cli)/.*\.sh$') {
+    if ($normPath -match '^(engine/common|synthesis|infrastructure|cli|_lib/(init-systems|databases))/.*\.sh$') {
         $interpMatch = Select-String -Path $FilePath -Pattern '(^\s*|\$\()(python3?\s+-c|node\s+-e|perl\s+-e|ruby\s+-e)\s|libscript-allow-interp' -Quiet
         if ($interpMatch) {
             Log-Violation -File $FilePath -Rule "ZERO_DEP_SUBSTRATE" -Details "Core orchestration script invokes external interpreter inline."
@@ -534,17 +534,17 @@ function Audit-File {
     # 8g. Raw Network Fetch & Raw Package Manager Audit
     if ($normPath -notmatch '(^|/)(devtools|tests|docker)/') {
         if ($ext -eq "sh") {
-            if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health.*|service))\.sh$|docker)') {
+            if ($normPath -notmatch '((engine/common/(pkg_mgr|daemonize)|_lib/utilities/(curl|wget|aria2)/test|workloads/apps/.*/(test_harness|health.*|service))\.sh$|docker)') {
                 if ($rawFetchLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout)."
                 }
             }
-            if ($normPath -notmatch '(_lib/(_common/(pkg_mgr|service)\.sh|package-managers/|orchestration/distro/)|docker)') {
+            if ($normPath -notmatch '(engine/common/(pkg_mgr|service)\.sh|_lib/package-managers/|synthesis/distro/linux/|docker)') {
                 if ($rawPkgLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends)."
                 }
             }
-            if ($normPath -notmatch '(_lib/(_common/(service|service_install|logs_service|os_info)\.sh|init-systems/)|workloads/schedulers/|\.tpl$)') {
+            if ($normPath -notmatch '(engine/common/(service|service_install|logs_service|os_info|daemonize)\.sh|_lib/init-systems/|workloads/schedulers/|\.tpl$)') {
                 if ($rawDaemonLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw init/daemon manager usage found (delegate to engine/common/service.sh or service_install.sh)."
                 }
@@ -559,7 +559,7 @@ function Audit-File {
                     Log-Violation -File $FilePath -Rule "RAW_PYTHON_VENV" -Details "Explicit Python venv creation found (delegate to engine/common/python_env.sh)."
                 }
             }
-            if ($normPath -notmatch '(engine/common/priv\.sh|_lib/base-system/sudo/|vagrant/|synthesis/msi/|^cli/)') {
+            if ($normPath -notmatch '(engine/common/priv\.sh|_lib/base-system/sudo/|vagrant/|synthesis/msi/|workloads/services/|infrastructure/cli_actions/|^cli/)') {
                 if ($rawPrivLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_PRIV_ESCALATION" -Details "Raw sudo invocation found (delegate to priv / priv_as from engine/common/priv.sh)."
                 }
@@ -596,19 +596,19 @@ function Audit-File {
                 }
             }
         } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
-            if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test)|synthesis/formats/docker_compose)\.cmd$') {
+            if ($normPath -notmatch '(engine/common/(pkg_mgr|daemonize)|_lib/utilities/(curl|wget|aria2)/test|synthesis/formats/docker_compose)\.cmd$') {
                 $rawFetchCmd = Select-String -Path $FilePath -Pattern '(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl(\.exe)?\s+(--(silent|location|fail|output)|-[a-zA-Z0-9]*[sSfLOo]))' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-(fetch|curl))' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-(fetch|curl)') }
                 if ($rawFetchCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw network call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
-            if ($normPath -notmatch '_lib/(_common/pkg_mgr\.cmd|package-managers/)') {
+            if ($normPath -notmatch '(engine/common/pkg_mgr\.cmd|_lib/package-managers/)') {
                 $rawPkgCmd = Select-String -Path $FilePath -Pattern '\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-pkg' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-pkg') }
                 if ($rawPkgCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
-            if ($normPath -notmatch '(_lib/(_common/(service|service_install)\.cmd|init-systems/)|workloads/schedulers/)') {
+            if ($normPath -notmatch '(engine/common/(service|service_install|daemonize)\.cmd|_lib/init-systems/|workloads/schedulers/)') {
                 $rawDaemonCmd = Select-String -Path $FilePath -Pattern '(^|[\s&(|])(sc\.exe\s+(start|stop|create|delete|config|query|description)|sc\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop)\s+|systemctl\s+(start|stop|restart|reload|daemon-reload|enable|disable|status|is-active)|rc-service\s+|service\s+[A-Za-z0-9_$"''-]+\s+(start|stop|restart|reload|status))(\s|$)' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-daemon' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-daemon') }
                 if ($rawDaemonCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw service/daemon manager call in batch script (delegate to engine\common\service.cmd or service_install.cmd)."
@@ -639,13 +639,13 @@ function Audit-File {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw Invoke-WebRequest/Invoke-RestMethod found (delegate to pkg_mgr.ps1)."
                 }
             }
-            if ($normPath -notmatch '_lib/(_common/pkg_mgr\.ps1|package-managers/)') {
+            if ($normPath -notmatch '(engine/common/pkg_mgr\.ps1|_lib/package-managers/)') {
                 $rawPkgPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' -Context 1,0 | Where-Object { $_.Line -notmatch 'libscript-allow-raw-pkg' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-pkg') }
                 if ($rawPkgPs1) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in PowerShell script (delegate to pkg_mgr.ps1)."
                 }
             }
-            if ($normPath -notmatch '_lib/(_common/(service|service_install)\.ps1|init-systems/)') {
+            if ($normPath -notmatch '(engine/common/(service|service_install|daemonize)\.ps1|_lib/init-systems/)') {
                 $rawDaemonPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(Start-Service|Stop-Service|Restart-Service|Set-Service|New-Service|sc\.exe\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop))\b' -Context 1,0 | Where-Object { $_.Line -notmatch 'libscript-allow-raw-daemon' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-daemon') }
                 if ($rawDaemonPs1) {
                     Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw Windows service cmdlet or sc.exe invocation found (delegate to service.ps1 or service_install.ps1)."

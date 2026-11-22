@@ -99,6 +99,11 @@ if errorlevel 1 (
     echo [FAIL] jetstream\README.md missing JETSTREAM_IMAGE documentation >&2
     exit /b 1
 )
+findstr /C:"../../libscript.schema.json" "!LIBSCRIPT_ROOT_DIR!\workloads\schemas\libscript.schema.json" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] workloads\schemas\libscript.schema.json missing ../../libscript.schema.json $ref >&2
+    exit /b 1
+)
 
 echo [PASS] Global variable scoping and README hygiene verified (!PROP_COUNT! core globals^).
 exit /b 0

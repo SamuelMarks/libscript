@@ -57,8 +57,8 @@ if not exist "!TEST_TMP!" mkdir "!TEST_TMP!"
 echo === 1. Test uuid_gen.cmd Determinism ===
 set "_U1="
 set "_U2="
-for /f "usebackq delims=" %%U in (`call "!LIBSCRIPT_ROOT_DIR!!_BS!_lib!_BS!_common!_BS!uuid_gen.cmd" "demo-seed"`) do set "_U1=%%U"
-for /f "usebackq delims=" %%U in (`call "!LIBSCRIPT_ROOT_DIR!!_BS!_lib!_BS!_common!_BS!uuid_gen.cmd" "demo-seed"`) do set "_U2=%%U"
+for /f "usebackq delims=" %%U in (`call "!LIBSCRIPT_ROOT_DIR!!_BS!engine!_BS!common!_BS!uuid_gen.cmd" "demo-seed"`) do set "_U1=%%U"
+for /f "usebackq delims=" %%U in (`call "!LIBSCRIPT_ROOT_DIR!!_BS!engine!_BS!common!_BS!uuid_gen.cmd" "demo-seed"`) do set "_U2=%%U"
 if "!_U1!"=="" ( echo [FAIL] uuid_gen.cmd returned empty output 1>&2 & goto :cleanup_fail )
 if not "!_U1!"=="!_U2!" ( echo [FAIL] uuid_gen.cmd non-deterministic: !_U1! vs !_U2! 1>&2 & goto :cleanup_fail )
 
@@ -66,52 +66,65 @@ echo === 2. Test Topology Engine 2x Idempotency, Scale, Drain, Failover, Upgrade
 > "!TEST_TMP!!_BS!topo.json" echo {"name":"win-std-cluster","substrate":{"provider":"local"},"node_groups":[{"name":"db","count":2,"roles":["leader","follower"]}]}
 set "LIBSCRIPT_TOPOLOGY_STATE_DIR=!TEST_TMP!!_BS!state"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" up "!TEST_TMP!!_BS!topo.json" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!constellations!_BS!engine.cmd" up "!TEST_TMP!!_BS!topo.json" >nul
 if errorlevel 1 goto :cleanup_fail
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" up "!TEST_TMP!!_BS!topo.json" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!constellations!_BS!engine.cmd" up "!TEST_TMP!!_BS!topo.json" >nul
 if errorlevel 1 goto :cleanup_fail
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" scale "!TEST_TMP!!_BS!topo.json" "db=3" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!constellations!_BS!engine.cmd" scale "!TEST_TMP!!_BS!topo.json" "db=3" >nul
 if errorlevel 1 goto :cleanup_fail
 jq -e --arg gn "db" "[.nodes[] | select(.group == $gn)] | length == 3" "!LIBSCRIPT_TOPOLOGY_STATE_DIR!!_BS!.topology_state.json" >nul
 if errorlevel 1 ( echo [FAIL] Expected 3 db nodes after scale 1>&2 & goto :cleanup_fail )
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" drain "!TEST_TMP!!_BS!topo.json" db-2 >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!constellations!_BS!engine.cmd" drain "!TEST_TMP!!_BS!topo.json" db-2 >nul
 if errorlevel 1 goto :cleanup_fail
 jq -e --arg nid "db-2" --arg st "DRAINED" ".nodes[] | select(.id == $nid) | .state == $st" "!LIBSCRIPT_TOPOLOGY_STATE_DIR!!_BS!.topology_state.json" >nul
 if errorlevel 1 ( echo [FAIL] Expected db-2 DRAINED 1>&2 & goto :cleanup_fail )
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" failover "!TEST_TMP!!_BS!topo.json" db-0 >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!constellations!_BS!engine.cmd" failover "!TEST_TMP!!_BS!topo.json" db-0 >nul
 if errorlevel 1 goto :cleanup_fail
 jq -e --arg nid "db-0" --arg st "FENCED" ".nodes[] | select(.id == $nid) | .state == $st" "!LIBSCRIPT_TOPOLOGY_STATE_DIR!!_BS!.topology_state.json" >nul
 if errorlevel 1 ( echo [FAIL] Expected db-0 FENCED after failover 1>&2 & goto :cleanup_fail )
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" upgrade "!TEST_TMP!!_BS!topo.json" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!constellations!_BS!engine.cmd" upgrade "!TEST_TMP!!_BS!topo.json" >nul
 if errorlevel 1 goto :cleanup_fail
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" destroy "!TEST_TMP!!_BS!topo.json" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!constellations!_BS!engine.cmd" destroy "!TEST_TMP!!_BS!topo.json" >nul
+if errorlevel 1 goto :cleanup_fail
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!constellations!_BS!engine.cmd" destroy "!TEST_TMP!!_BS!topo.json" >nul
 if errorlevel 1 goto :cleanup_fail
 
 echo === 3. Test Payload Schedulers (native, nomad, slurm_ray) ===
 > "!TEST_TMP!!_BS!payload.json" echo {"name":"demo-worker","type":"service","artifact":{"format":"oci-image","image":"alpine:3.20","entrypoint":["cmd.exe","/c","echo"]},"resources":{"cpu_cores":2,"memory_mb":512,"gpu_count":1},"scaling":{"replicas":2}}
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!payloads!_BS!schedulers!_BS!native.cmd" compile "!TEST_TMP!!_BS!payload.json" --init sc >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!schedulers!_BS!native.cmd" compile "!TEST_TMP!!_BS!payload.json" --init sc >nul
 if errorlevel 1 goto :cleanup_fail
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!payloads!_BS!schedulers!_BS!nomad.cmd" compile "!TEST_TMP!!_BS!payload.json" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!schedulers!_BS!nomad.cmd" compile "!TEST_TMP!!_BS!payload.json" >nul
 if errorlevel 1 goto :cleanup_fail
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!payloads!_BS!schedulers!_BS!slurm_ray.cmd" compile "!TEST_TMP!!_BS!payload.json" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!workloads!_BS!schedulers!_BS!slurm_ray.cmd" compile "!TEST_TMP!!_BS!payload.json" >nul
 if errorlevel 1 goto :cleanup_fail
 
 echo === 4. Test Experiment Scaffold 2x Idempotency ===
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!cli!_BS!commands!_BS!experiment!_BS!scaffold.cmd" demo-win-suite "--out-root=!TEST_TMP!!_BS!exps" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!experiments!_BS!cli!_BS!scaffold.cmd" demo-win-suite "--out-root=!TEST_TMP!!_BS!exps" >nul
 if errorlevel 1 goto :cleanup_fail
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!cli!_BS!commands!_BS!experiment!_BS!scaffold.cmd" demo-win-suite "--out-root=!TEST_TMP!!_BS!exps" >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!experiments!_BS!cli!_BS!scaffold.cmd" demo-win-suite "--out-root=!TEST_TMP!!_BS!exps" >nul
 if errorlevel 1 goto :cleanup_fail
+
+echo === 5. Test Audit Allowlist ^& MSI Harvest Regex Parity ===
+findstr /C:"_lib/(_common" /C:"web-apps/.*/" /C:"orchestration/distro/" "!LIBSCRIPT_ROOT_DIR!!_BS!devtools!_BS!audit!_BS!audit_standards.ps1" >nul 2>&1
+if not errorlevel 1 ( echo [FAIL] Stale 5-tier allowlist regex found in audit_standards.ps1 1>&2 & goto :cleanup_fail )
+findstr /C:"engine/common/(pkg_mgr|daemonize)" "!LIBSCRIPT_ROOT_DIR!!_BS!devtools!_BS!audit!_BS!audit_standards.ps1" >nul 2>&1
+if errorlevel 1 ( echo [FAIL] Missing engine/common allowlist in audit_standards.ps1 1>&2 & goto :cleanup_fail )
+findstr /C:"workloads/services/" "!LIBSCRIPT_ROOT_DIR!!_BS!devtools!_BS!audit!_BS!audit_standards.ps1" >nul 2>&1
+if errorlevel 1 ( echo [FAIL] Missing workloads/services allowlist in audit_standards.ps1 1>&2 & goto :cleanup_fail )
+findstr /C:"synthesis\msi\/" "!LIBSCRIPT_ROOT_DIR!!_BS!synthesis!_BS!msi!_BS!harvest_payload.cmd" >nul 2>&1
+if not errorlevel 1 ( echo [FAIL] Malformed gawk \m escape found in harvest_payload.cmd 1>&2 & goto :cleanup_fail )
 
 if exist "!TEST_TMP!" rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo [PASS] All Windows standards adherence regression tests succeeded.

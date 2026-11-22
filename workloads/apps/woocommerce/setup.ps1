@@ -29,7 +29,7 @@ if (Test-Path $pluginDir) {
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $libDir = Resolve-Path (Join-Path $scriptDir "..\..\..")
-$wpSetup = Join-Path $libDir "stacks\cms\wordpress\setup.ps1"
+$wpSetup = Join-Path $libDir "workloads\apps\wordpress\setup.ps1"
 
 Write-Host "Running WordPress Setup for WooCommerce..."
 if (Test-Path $wpSetup) {

@@ -939,8 +939,6 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `iis`                   | `web-servers`      | -           | -           | -           | ✅      | -     | -       | -     |
 | `imagemagick`           | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `influxdb`              | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `iptables`              | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `iwd`                   | `networking`       | ✅          | ✅          | -           | -       | -     | -       | -     |
 | `java`                  | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `jboss`                 | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `jetstream`             | `app-servers`      | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
@@ -1007,8 +1005,6 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `nasm`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `nats`                  | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `neo4j`                 | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `networkmanager`        | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `nftables`              | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `nginx`                 | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `nim`                   | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `nimble`                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
@@ -1043,7 +1039,6 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `payara`                | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `pdm`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `perl`                  | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `pf`                    | `networking`       | -           | -           | -           | -       | -     | ✅      | ✅    |
 | `php`                   | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `php-fpm`               | `app-servers`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `pip`                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -1173,7 +1168,6 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `winget`                | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
 | `wireguard`             | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `wix`                   | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
-| `wpa_supplicant`        | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `wsl`                   | `virtualization`   | -           | -           | -           | ❓      | -     | -       | -     |
 | `xbps`                  | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
 | `xmake`                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -1221,6 +1215,8 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `i3`                 | `desktops`         | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
 | `initramfs`          | `kernel`           | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `intel-media-driver` | `graphics`         | -           | -           | -           | -       | -     | -       | -     |
+| `iptables`           | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `iwd`                | `networking`       | ✅          | ✅          | -           | -       | -     | -       | -     |
 | `jack`               | `audio`            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `kde-plasma-6`       | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `kmod`               | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
@@ -1247,6 +1243,8 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `musl`               | `base-system`      | ✅          | ✅          | -           | -       | -     | -       | -     |
 | `nanos`              | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `netctl`             | `networking`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `networkmanager`     | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `nftables`           | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `nssm`               | `init-systems`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `ntp`                | `base-system`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `nvidia`             | `graphics`         | -           | ✅          | ✅          | -       | -     | -       | -     |
@@ -1254,6 +1252,7 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `openrc`             | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `osv`                | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `pam`                | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `pf`                 | `networking`       | -           | -           | -           | -       | -     | ✅      | ✅    |
 | `pipewire`           | `audio`            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `pulseaudio`         | `audio`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `refind`             | `bootloaders`      | ✅          | ❓          | ❓          | -       | -     | ❓      | ❓    |
@@ -1284,6 +1283,7 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `windows-scm`        | `init-systems`     | -           | -           | -           | ❓      | -     | -       | -     |
 | `wireplumber`        | `audio`            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `wlroots`            | `display-servers`  | ✅          | ✅          | -           | -       | -     | ✅      | -     |
+| `wpa_supplicant`     | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `xfce4`              | `desktops`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `xfsprogs`           | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `xorg-server`        | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
@@ -1294,14 +1294,14 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 
 | Component                       | Category  | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 | ------------------------------- | --------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
-| `synthesis/disk/provision_disk` | `disk`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `synthesis/disk/provision_disk` | `disk`    | ✅          | ❓          | ❓          | -       | ✅    | ✅      | ✅    |
 | `synthesis/distro/bento`        | `distro`  | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
 | `synthesis/distro/freebsd`      | `distro`  | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
 | `synthesis/distro/illumos`      | `distro`  | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
-| `synthesis/distro/linux`        | `distro`  | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `synthesis/distro/linux`        | `distro`  | ✅          | ❓          | ❓          | -       | -     | -       | -     |
 | `synthesis/distro/reactos`      | `distro`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `synthesis/repogen`             | `repogen` | ❓          | ❓          | ❓          | -       | -     | -       | -     |
-| `synthesis/vfs/runner`          | `vfs`     | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `synthesis/repogen`             | `repogen` | ✅          | ❓          | ❓          | -       | -     | -       | -     |
+| `synthesis/vfs/runner`          | `vfs`     | ✅          | ❓          | ❓          | -       | -     | -       | -     |
 | `synthesis/vfs/sysroot`         | `vfs`     | ❓          | ❓          | ❓          | -       | -     | -       | -     |
 
 ### T4: Infrastructure Providers & Cluster Substrates
@@ -1311,28 +1311,28 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `infrastructure/clusters/gke-tpu-cluster`   | `clusters`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `infrastructure/clusters/k0s-ha`            | `clusters`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `infrastructure/clusters/k8s-marathon-paas` | `clusters`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `infrastructure/clusters/kubernetes-thw`    | `clusters`  | ❓          | ❓          | ❓          | -       | -     | -       | ❓    |
+| `infrastructure/clusters/kubernetes-thw`    | `clusters`  | ✅          | ❓          | ❓          | -       | -     | -       | ✅    |
 | `infrastructure/clusters/mesos-marathon-ha` | `clusters`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `infrastructure/providers/aws`              | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/azure`            | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/digitalocean`     | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/gcp`              | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/gcp-filestore`    | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/gcp-gpu-vm`       | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/gcp-tpu-vm`       | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/hetzner`          | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/linode`           | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/aws`              | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/azure`            | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/digitalocean`     | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/gcp`              | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/gcp-filestore`    | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/gcp-gpu-vm`       | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/gcp-tpu-vm`       | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/hetzner`          | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/providers/linode`           | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
 | `infrastructure/providers/oci`              | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `infrastructure/providers/ovh`              | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/providers/proxmox`          | `providers` | ❓          | ❓          | ❓          | -       | -     | -       | -     |
-| `infrastructure/providers/vultr`            | `providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/resources/cdn`              | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/resources/cert`             | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/resources/cloudinit`        | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/resources/core`             | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/providers/proxmox`          | `providers` | ✅          | ❓          | ❓          | -       | -     | -       | -     |
+| `infrastructure/providers/vultr`            | `providers` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/resources/cdn`              | `resources` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/resources/cert`             | `resources` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/resources/cloudinit`        | `resources` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/resources/core`             | `resources` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
 | `infrastructure/resources/image-import`     | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/resources/storage`          | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `infrastructure/resources/volume`           | `resources` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `infrastructure/resources/storage`          | `resources` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `infrastructure/resources/volume`           | `resources` | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
 
 ### T5: Declarative Workloads, Application Stacks & Stateful Constellations
 
@@ -1340,20 +1340,20 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | ------------------------------------------------- | ---------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
 | `workloads/ai/inference-router`                   | `ai`             | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `workloads/ai/tpu-trainer`                        | `ai`             | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `workloads/apps/celery`                           | `apps`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `workloads/apps/drupal`                           | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/firecrawl`                        | `apps`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `workloads/apps/joomla`                           | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/jupyterhub`                       | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/magento`                          | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/nextcloud`                        | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/odoo`                             | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/openedx`                          | `apps`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `workloads/apps/phpbb`                            | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/prestashop`                       | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/serve-actix-diesel-auth-scaffold` | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/woocommerce`                      | `apps`           | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `workloads/apps/wordpress`                        | `apps`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `workloads/apps/celery`                           | `apps`           | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/apps/drupal`                           | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/firecrawl`                        | `apps`           | ✅          | ❓          | ❓          | -       | -     | ✅      | ✅    |
+| `workloads/apps/joomla`                           | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/jupyterhub`                       | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/magento`                          | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/nextcloud`                        | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/odoo`                             | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/openedx`                          | `apps`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `workloads/apps/phpbb`                            | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/prestashop`                       | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/serve-actix-diesel-auth-scaffold` | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/woocommerce`                      | `apps`           | ✅          | ❓          | ❓          | ✅      | -     | ✅      | ✅    |
+| `workloads/apps/wordpress`                        | `apps`           | ✅          | ❓          | ❓          | ✅      | ✅    | ✅      | ✅    |
 | `workloads/constellations/iot-mqtt-edge-pod`      | `constellations` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `workloads/constellations/minio-distributed`      | `constellations` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `workloads/constellations/openedx-ha`             | `constellations` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |

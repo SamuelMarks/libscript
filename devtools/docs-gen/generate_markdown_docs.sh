@@ -188,7 +188,7 @@ if [ -f "$ROOT_DIR/engine/common/README.md" ] && grep -q "<!-- BEGIN_VARS -->" "
 fi
 
 # Process each component README without duplicating base_vars.schema.json across 500+ READMEs
-find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|topologies|payloads)" | while IFS= read -r readme; do
+find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|workloads/constellations|workloads/payloads|topologies|payloads)" | while IFS= read -r readme; do
     dir="$(dirname "$readme")"
     case "$dir" in *"engine/common"*) continue ;; esac
     

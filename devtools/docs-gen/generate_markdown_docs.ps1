@@ -91,8 +91,8 @@ Write-Host "Generating markdown docs..."
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 
 $libDir = Join-Path $rootDir '_lib'
-$topologiesDir = Join-Path $rootDir 'topologies'
-$payloadsDir = Join-Path $rootDir 'payloads'
+$topologiesDir = Join-Path $rootDir 'workloads\constellations'
+$payloadsDir = Join-Path $rootDir 'workloads\payloads'
 $libReadmes = if (Test-Path -LiteralPath $libDir) {
     Get-ChildItem -Path $libDir -Filter 'README.md' -Recurse -Depth 2 | Where-Object {
         ($_.DirectoryName -notmatch '[/\\]_lib[/\\]_common([/\\]|$)') -and (Test-Path -LiteralPath (Join-Path $_.DirectoryName 'vars.schema.json'))

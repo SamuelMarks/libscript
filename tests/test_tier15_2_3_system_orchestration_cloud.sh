@@ -86,6 +86,11 @@ verify_component_offline_vm() {
   _bin="$3"
   _ver="$4"
   _prefix=$(printf '%s' "$_comp" | tr 'a-z-' 'A-Z_')
+  if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/${_cat}/${_comp}" ]; then
+    _comp_dir="${LIBSCRIPT_ROOT_DIR}/_lib/${_cat}/${_comp}"
+  else
+    _comp_dir="${LIBSCRIPT_ROOT_DIR}/${_cat}/${_comp}"
+  fi
 
   _arch_name=$(build_mock_tarball "$_comp" "$_ver" "$_bin")
   _dl_url="https://example.invalid/${_comp}/${_arch_name}"
@@ -97,7 +102,7 @@ verify_component_offline_vm() {
     LIBSCRIPT_TARGET_SYSROOT="$FAKE_SYSROOT" \
     "${_prefix}_INSTALL_METHOD=libscript_native" \
     "${_prefix}_DOWNLOAD_URL=${_dl_url}" \
-    "${LIBSCRIPT_ROOT_DIR}/_lib/${_cat}/${_comp}/cli.sh" install "$_comp" "$_ver" >/dev/null 2>&1; then
+    "${_comp_dir}/cli.sh" install "$_comp" "$_ver" >/dev/null 2>&1; then
     if [ -x "${FAKE_LS_HOME}/${_comp}/${_ver}/bin/${_bin}" ]; then
       pass_check "${_cat}/${_comp}: offline install placed ${_bin} in isolated LIBSCRIPT_HOME"
     else
@@ -116,7 +121,7 @@ verify_component_offline_vm() {
     LIBSCRIPT_TARGET_SYSROOT="$FAKE_SYSROOT" \
     "${_prefix}_INSTALL_METHOD=libscript_native" \
     "${_prefix}_DOWNLOAD_URL=${_dl_url}" \
-    "${LIBSCRIPT_ROOT_DIR}/_lib/${_cat}/${_comp}/cli.sh" install "$_comp" "$_ver" 2>&1 || true)
+    "${_comp_dir}/cli.sh" install "$_comp" "$_ver" 2>&1 || true)
   case "$_idem_out" in
     *"already installed"*)
       pass_check "${_cat}/${_comp}: 2x install exited early idempotently"
@@ -130,7 +135,7 @@ verify_component_offline_vm() {
     HOME="$FAKE_HOME" \
     LIBSCRIPT_HOME="$FAKE_LS_HOME" \
     "${_prefix}_VERSION=${_ver}" \
-    "${LIBSCRIPT_ROOT_DIR}/_lib/${_cat}/${_comp}/test.sh" >/dev/null 2>&1; then
+    "${_comp_dir}/test.sh" >/dev/null 2>&1; then
     pass_check "${_cat}/${_comp}: smoke test passed against isolated ${_bin}"
   else
     fail_check "${_cat}/${_comp}: smoke test failed"
@@ -170,27 +175,27 @@ virtualization|lima|limactl|1.0.3
 virtualization|multipass|multipass|1.14.1
 virtualization|utm|utmctl|4.6.4
 virtualization|wsl|wsl|2.4.8
-orchestration|ansible|ansible|2.18.1
-orchestration|buildah|buildah|1.38.0
-orchestration|cilium|cilium|0.16.22
-orchestration|consul|consul|1.20.1
-orchestration|containerd|containerd|2.0.1
-orchestration|cri-o|crio|1.31.3
-orchestration|helm-controller|helm-controller|0.16.5
-orchestration|k3s|k3s|1.31.4
-orchestration|kubeadm|kubeadm|1.32.0
-orchestration|libvirt|virsh|10.10.0
-orchestration|lxc|lxc-ls|6.0.2
-orchestration|lxd|lxd|5.21.2
-orchestration|opensearch-dashboards|opensearch-dashboards|2.18.0
-orchestration|podman|podman|5.3.1
-orchestration|pulumi|pulumi|3.144.1
-orchestration|rancher|rancher|2.10.1
-orchestration|skopeo|skopeo|1.17.0
-orchestration|terraform|terraform|1.10.3
-orchestration|tofu|tofu|1.9.0
-cloud-providers|oci|oci|3.51.4
-cloud-providers|ovh|ovhcloud|0.6.0
+iac|ansible|ansible|2.18.1
+containers|buildah|buildah|1.38.0
+schedulers|cilium|cilium|0.16.22
+schedulers|consul|consul|1.20.1
+containers|containerd|containerd|2.0.1
+containers|cri-o|crio|1.31.3
+schedulers|helm-controller|helm-controller|0.16.5
+schedulers|k3s|k3s|1.31.4
+schedulers|kubeadm|kubeadm|1.32.0
+virtualization|libvirt|virsh|10.10.0
+containers|lxc|lxc-ls|6.0.2
+containers|lxd|lxd|5.21.2
+search|opensearch-dashboards|opensearch-dashboards|2.18.0
+containers|podman|podman|5.3.1
+iac|pulumi|pulumi|3.144.1
+schedulers|rancher|rancher|2.10.1
+containers|skopeo|skopeo|1.17.0
+iac|terraform|terraform|1.10.3
+iac|tofu|tofu|1.9.0
+infrastructure/providers|oci|oci|3.51.4
+infrastructure/providers|ovh|ovhcloud|0.6.0
 '
 
 for row in $COMPONENT_MATRIX; do

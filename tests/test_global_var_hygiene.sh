@@ -81,8 +81,8 @@ grep -q 'JETSTREAM_IMAGE' "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/jetstream/READ
 printf '[PASS] Unrelated component READMEs are completely free of leaked subsystem globals.\n'
 
 WRAP_REF=$(jq -r '."$ref" // empty' "${LIBSCRIPT_ROOT_DIR}/workloads/schemas/libscript.schema.json")
-if [ "$WRAP_REF" != '../libscript.schema.json' ]; then
-  fail_test "workloads/schemas/libscript.schema.json expected \$ref ../libscript.schema.json, got ${WRAP_REF}"
+if [ "$WRAP_REF" != '../../libscript.schema.json' ] || [ ! -f "${LIBSCRIPT_ROOT_DIR}/workloads/schemas/${WRAP_REF}" ]; then
+  fail_test "workloads/schemas/libscript.schema.json expected \$ref ../../libscript.schema.json, got ${WRAP_REF}"
 fi
 
 FAKE_COMP="${TEST_TMP}/fake_comp"

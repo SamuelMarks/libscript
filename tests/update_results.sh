@@ -124,7 +124,7 @@ read_manifest_tier() {
   _rmt_file="$1"
   _rmt_cat="$2"
   if [ -n "$_rmt_file" ] && [ -f "$_rmt_file" ]; then
-    _tier_val=$(awk -F'"' '/"tier"[[:space:]]*:/ { print $4; exit }' "$_rmt_file" 2>/dev/null || true)
+    _tier_val=$(awk -F'"' '/^[[:space:]]*"tier"[[:space:]]*:[[:space:]]*"T[12]"/ { print $4; exit }' "$_rmt_file" 2>/dev/null || true)
     if [ "$_tier_val" = 'T1' ] || [ "$_tier_val" = 'T2' ]; then
       printf '%s\n' "$_tier_val"
       return 0
@@ -304,7 +304,7 @@ update_supported_components() {
         else if (comp == "illumos/distro") mc = "illumos-distro"
         else if (comp == "reactos/distro") mc = "reactos-distro"
         else if (comp ~ /^bootloaders\//) mc = "bootloaders-" sc
-        else if (comp ~ /^payloads\/schedulers\//) mc = "scheduler-" sc
+        else if (comp ~ /^workloads\/schedulers\//) mc = "scheduler-" sc
         else if (comp ~ /^traits\//) mc = "trait-" sc
 
         idemp = (has_exact(mc, "idempotent.success") || has_exact(sc, "idempotent.success")) ? "true" : "false"
@@ -962,7 +962,7 @@ update_retest_plan() {
       *'Track retesting progress by checking off'*'- [ ]'*)
         printf '%s\n' "${_line}" >>"${_tmp_retest}"
         ;;
-      '- ['*'] `'*'` (`_lib/'*|'- ['*'] `'*'` (`payloads/'*|'- ['*'] `'*'` (`topologies/'*|'- ['*'] `'*'` (`traits/'*)
+      '- ['*'] `'*'` (`_lib/'*|'- ['*'] `'*'` (`workloads/'*|'- ['*'] `'*'` (`synthesis/'*|'- ['*'] `'*'` (`infrastructure/'*|'- ['*'] `'*'` (`traits/'*)
         _prefix="${_line%%:*}"
         _prefix="${_prefix%% (*}"
         _comp_ref="${_prefix#- \[?\] }"
