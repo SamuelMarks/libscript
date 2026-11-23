@@ -63,7 +63,7 @@ create_marathon_binary() {
 #!/bin/sh
 # Marathon Framework CLI & REST state engine (${_ver})
 set -eu
-STATE_DIR="\${MARATHON_STATE_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/marathon/state}"
+STATE_DIR="\${MARATHON_STATE_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/marathon/state}"
 mkdir -p "\${STATE_DIR}/v2/apps" "\${STATE_DIR}/v2/pods" "\${STATE_DIR}/v2/tasks" "\${STATE_DIR}/v2/deployments"
 
 case "\${1:-}" in

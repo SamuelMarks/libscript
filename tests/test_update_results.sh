@@ -91,10 +91,20 @@ printf '%s\n' '{"name":"no_darwin","tier":"T1","provides":["no_darwin"],"os_blac
 printf '%s\n' '{"name":"illumos_init","tier":"T2","provides":["illumos_init"],"os_whitelist":["illumos"]}' > "${SYNTH_DIR}/_lib/init-systems/illumos_init/manifest.json"
 printf '%s\n' '{"name":"reactos-distro","provides":["reactos-distro"],"os_whitelist":["all"]}' > "${SYNTH_DIR}/synthesis/distro/reactos/manifest.json"
 : > "${SYNTH_DIR}/tests_tmp/apple_vm.linux.alpine.success"
-printf '# Synth\n\n## Supported Components\n\n## License\n' > "${SYNTH_DIR}/README.md"
+printf '%s\n' \
+  '# Synth' \
+  '' \
+  '## Supported Components' \
+  '' \
+  '| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |' \
+  '|---|---|---|---|---|---|---|---|---|' \
+  "| ${_bt}apple_vm${_bt} | ${_bt}virtualization${_bt} | ❓ | ✅ | ❓ | ❓ | - | - | ❓ |" \
+  '' \
+  '## License' > "${SYNTH_DIR}/README.md"
 
-sh "${LIBSCRIPT_ROOT_DIR}/tests/update_results.sh" "${SYNTH_DIR}" --sync-plans
-assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}apple_vm${_bt}[[:space:]]*\\|[[:space:]]*${_bt}virtualization${_bt}[[:space:]]*\\|[[:space:]]*✅[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|" "update_results.sh maps os_whitelist macos to darwin column"
+sh "${LIBSCRIPT_ROOT_DIR}/tests/update_results.sh" "${SYNTH_DIR}" --sync-plans > "${TMP_TEST_DIR}/synth_stdout.log"
+assert_file_contains "${TMP_TEST_DIR}/synth_stdout.log" "Done updating Supported Components in README\\.md\\." "update_results.sh emits explicit completion message"
+assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}apple_vm${_bt}[[:space:]]*\\|[[:space:]]*${_bt}virtualization${_bt}[[:space:]]*\\|[[:space:]]*✅[[:space:]]*\\|[[:space:]]*✅[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|" "update_results.sh maps os_whitelist macos to darwin column and preserves existing deb status"
 assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}no_darwin${_bt}[[:space:]]*\\|[[:space:]]*${_bt}utilities${_bt}[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|" "update_results.sh maps os_blacklist macos to darwin column"
 assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}illumos_init${_bt}[[:space:]]*\\|[[:space:]]*${_bt}init-systems${_bt}[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|" "update_results.sh maps os_whitelist illumos to sunos column"
 assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}synthesis/distro/reactos${_bt}[[:space:]]*\\|[[:space:]]*${_bt}distro${_bt}[[:space:]]*\\|" "update_results.sh discovers synthesis/distro/reactos in T3"

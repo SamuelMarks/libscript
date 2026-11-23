@@ -260,8 +260,13 @@ for %%Z in ("!_WAVE3!") do if not "%%~zZ"=="0" (
 )
 
 if "!_NEED_GMD!"=="1" (
+    set "_FMT_LOGGED=0"
     for /f "delims=" %%F in ('git ls-files -m 2^>nul') do (
         if /I "%%~nxF"=="README.md" (
+            if "!_FMT_LOGGED!"=="0" (
+                echo Formatting modified README.md files...
+                set "_FMT_LOGGED=1"
+            )
             where npx >nul 2>&1
             if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
                 call npx --yes prettier --write "%%F" >nul 2>&1
@@ -271,18 +276,22 @@ if "!_NEED_GMD!"=="1" (
     )
 )
 
-if "!_NEED_UR!"=="1" if exist "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" (
-    echo Updating Doc Coverage shield in README.md...
-    call "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" --update-readme
+if exist "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" if exist "!HOOK_REPO_ROOT!\README.md" (
+    findstr /C:"badge/doc%%20coverage-100%%25-brightgreen.svg" "!HOOK_REPO_ROOT!\README.md" >nul 2>&1
     if errorlevel 1 (
-        rmdir /s /q "!_PC_WORK!" >nul 2>&1
-        exit /b 1
+        echo Updating Doc Coverage shield in README.md...
+        call "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" --update-readme
+        if errorlevel 1 (
+            rmdir /s /q "!_PC_WORK!" >nul 2>&1
+            exit /b 1
+        )
     )
 )
 
 if exist "README.md" (
     git diff --quiet -- README.md >nul 2>&1
     if errorlevel 1 (
+        echo Formatting README.md...
         where npx >nul 2>&1
         if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
             call npx --yes prettier --write README.md >nul 2>&1
@@ -438,7 +447,7 @@ if not exist "!_CSW_LIST!" exit /b 0
 where cspell >nul 2>&1
 if not errorlevel 1 (
     echo Running spellcheck...
-    call cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "!_CSW_LIST!"
+    call cspell lint --no-progress --no-summary --no-must-find-files --file-list "!_CSW_LIST!" <nul
     if errorlevel 1 (
         echo [ERROR] Spellcheck failed. Fix typos or add words to .cspell.json. 1>&2
         exit /b 1
@@ -448,7 +457,7 @@ if not errorlevel 1 (
 where npx >nul 2>&1
 if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
     echo Running spellcheck...
-    call npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "!_CSW_LIST!"
+    call npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list "!_CSW_LIST!" <nul
     if errorlevel 1 (
         echo [ERROR] Spellcheck failed. Fix typos or add words to .cspell.json. 1>&2
         exit /b 1

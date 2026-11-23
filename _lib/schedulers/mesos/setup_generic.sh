@@ -113,7 +113,7 @@ if [ "\${1:-}" = "--help" ] || [ "\${1:-}" = "-h" ]; then
 ' "${_sub}"
   exit 0
 fi
-WORK_DIR="\${MESOS_WORK_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/mesos/work}"
+WORK_DIR="\${MESOS_WORK_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mesos/work}"
 mkdir -p "\$WORK_DIR"
 printf '{"daemon":"%s","version":"%s","status":"READY"}
 ' "${_sub}" "${_ver}" >> "\$WORK_DIR/${_sub}.log"

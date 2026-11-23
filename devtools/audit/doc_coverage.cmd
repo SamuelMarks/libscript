@@ -89,8 +89,10 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
 )
 where dash >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" (
+    set "LIBSCRIPT_ROOT_DIR=!LIBSCRIPT_ROOT_DIR:\=/!"
+    set "_DC_SH=!SCRIPT_DIR:\=/!/doc_coverage.sh"
     set "STACK="
-    dash "!SCRIPT_DIR!\doc_coverage.sh" %*
+    dash "!_DC_SH!" %*
     exit /b !ERRORLEVEL!
 )
 

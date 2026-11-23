@@ -20,17 +20,17 @@ repos:
           if git diff --no-ext-diff --cached --quiet 2>/dev/null; then
             _del="${_cs_dir}/DEL.TXT"
             git ls-files --deleted > "$_del" 2>/dev/null || : > "$_del"
-            git ls-files --cached --others --exclude-standard | awk -v df="$_del" "BEGIN{while((getline d < df)>0)del[d]=1;close(df)} NF>0 && !(\$0 in del){print}" > "$_cs_tmp"
+            git ls-files --cached --others --exclude-standard | CS_DEL="$_del" awk "BEGIN{df=ENVIRON[\"CS_DEL\"];while((getline d < df)>0)del[d]=1;close(df)} NF>0 && !(\$0 in del){print}" > "$_cs_tmp"
           else
             git diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM | while IFS= read -r _f; do [ -f "$_f" ] && printf "%s\n" "$_f"; done > "$_cs_tmp"
           fi
           [ -s "$_cs_tmp" ] || exit 0
           if [ -x "$ROOT_DIR/node_modules/.bin/cspell" ]; then
-            "$ROOT_DIR/node_modules/.bin/cspell" lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$_cs_tmp"
+            "$ROOT_DIR/node_modules/.bin/cspell" lint --no-progress --no-summary --no-must-find-files --file-list "$_cs_tmp" </dev/null
           elif command -v cspell >/dev/null 2>&1; then
-            cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$_cs_tmp"
+            cspell lint --no-progress --no-summary --no-must-find-files --file-list "$_cs_tmp" </dev/null
           elif [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v npx >/dev/null 2>&1; then
-            npx --yes cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$_cs_tmp"
+            npx --yes cspell lint --no-progress --no-summary --no-must-find-files --file-list "$_cs_tmp" </dev/null
           fi'
         language: system
         pass_filenames: false

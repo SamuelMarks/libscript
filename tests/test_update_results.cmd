@@ -73,12 +73,19 @@ for %%H in ("### T1:" "### T2:" "### T3:" "### T4:" "### T5:" "### Plane A") do 
 echo [PASS] T1..T5 and Plane A headings rendered and verified.
 
 copy /y "%TMP_TEST_DIR%\README.md" "%TMP_TEST_DIR%\README.pass1.md" >nul
-call "%LIBSCRIPT_ROOT_DIR%\tests\update_results.cmd" "%LIBSCRIPT_ROOT_DIR%" --output "%TMP_TEST_DIR%\README.md" --json "%TMP_TEST_DIR%\matrix_results.json"
+call "%LIBSCRIPT_ROOT_DIR%\tests\update_results.cmd" "%LIBSCRIPT_ROOT_DIR%" --output "%TMP_TEST_DIR%\README.md" --json "%TMP_TEST_DIR%\matrix_results.json" > "%TMP_TEST_DIR%\ur_out.log"
 if errorlevel 1 (
     echo [FAIL] 2nd run of update_results.cmd failed >&2
     rmdir /s /q "%TMP_TEST_DIR%" 2>nul
     exit /b 1
 )
+findstr /C:"Done updating Supported Components in README.md." "%TMP_TEST_DIR%\ur_out.log" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] Completion message missing from update_results.cmd output >&2
+    rmdir /s /q "%TMP_TEST_DIR%" 2>nul
+    exit /b 1
+)
+echo [PASS] update_results.cmd emitted completion message.
 fc /b "%TMP_TEST_DIR%\README.pass1.md" "%TMP_TEST_DIR%\README.md" >nul 2>&1
 if errorlevel 1 (
     echo [FAIL] 2x consecutive runs of update_results.cmd produced a diff >&2

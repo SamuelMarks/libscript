@@ -146,8 +146,7 @@ if "!_PAR_OK!"=="0" goto :run_tasks_serial
 
 set "_RT_BASE=%TEMP%"
 if "!_RT_BASE!"=="" set "_RT_BASE=!LIBSCRIPT_ROOT_DIR!\tests_tmp"
-set "_RT_JOB_DIR=!_RT_BASE!\lsp_j_!RANDOM!_!RANDOM!"
-if not exist "!_RT_JOB_DIR!" mkdir "!_RT_JOB_DIR!"
+call :make_unique_dir "!_RT_BASE!" "lsp_j" _RT_JOB_DIR
 
 set /a "_RT_TOTAL=0"
 set /a "_RT_RUNNING=0"
@@ -168,6 +167,32 @@ if exist "!_RT_JOB_DIR!" rmdir /s /q "!_RT_JOB_DIR!" >nul 2>&1
 if "!_RT_FAILED!"=="1" exit /b 1
 exit /b 0
 
+:: ## make_unique_dir
+:: Allocates a collision-free scratch directory under %~1 with prefix %~2 into variable named %~3.
+:make_unique_dir
+set "_MUD_BASE=%~1"
+set "_MUD_PFX=%~2"
+set /a "_PAR_SEQ+=1"
+set "_MUD_TS=!TIME: =0!"
+set "_MUD_TS=!_MUD_TS::=!"
+set "_MUD_TS=!_MUD_TS:.=!"
+set "_MUD_TS=!_MUD_TS:,=!"
+set "_MUD_TAG=%_PAR_PARENT_TAG%"
+if "!_MUD_TAG!"=="" set "_MUD_TAG=r"
+goto :mud_retry
+
+:: ## mud_retry
+:: Retries candidate path generation if the scratch directory already exists.
+:mud_retry
+set "_MUD_CAND=!_MUD_BASE!\!_MUD_PFX!_!_MUD_TAG!_!_PAR_SEQ!_!_MUD_TS!_!RANDOM!"
+if exist "!_MUD_CAND!" (
+    set /a "_PAR_SEQ+=1"
+    goto :mud_retry
+)
+if not exist "!_MUD_CAND!" mkdir "!_MUD_CAND!"
+set "%~3=!_MUD_CAND!"
+exit /b 0
+
 :: ## run_tasks_serial
 :: Sequential fallback runner for MS-DOS, single-core hosts, or LIBSCRIPT_JOBS=1.
 :run_tasks_serial
@@ -186,21 +211,24 @@ if "!_RTS_FAILED!"=="1" exit /b 1
 exit /b 0
 
 :: ## spawn_one_task
-:: Writes an isolated job wrapper script and launches it via start /b with live console output.
+:: Writes an isolated job wrapper script and launches it via start /b with live console output and NUL stdin.
 :spawn_one_task
 set "_SOT_ID=%~1"
+set "_SOT_PTAG=%_PAR_PARENT_TAG%"
+if "!_SOT_PTAG!"=="" set "_SOT_PTAG=r"
 set "_SOT_CMD=!_RT_JOB_DIR!\J!_SOT_ID!.CMD"
 set "_SOT_TMP=!_RT_JOB_DIR!\J!_SOT_ID!.TMP"
 set "_SOT_RC=!_RT_JOB_DIR!\J!_SOT_ID!.RC"
 >"!_SOT_CMD!" echo @echo off
 >>"!_SOT_CMD!" echo set "STACK="
+>>"!_SOT_CMD!" echo set "_PAR_PARENT_TAG=!_SOT_PTAG!_j!_SOT_ID!"
 >>"!_SOT_CMD!" echo.!_RT_LINE!
 >>"!_SOT_CMD!" echo set "_JRC=%%ERRORLEVEL%%"
->>"!_SOT_CMD!" echo echo %%_JRC%% ^> "!_SOT_TMP!"
+>>"!_SOT_CMD!" echo ^>"!_SOT_TMP!" echo %%_JRC%%
 >>"!_SOT_CMD!" echo move /y "!_SOT_TMP!" "!_SOT_RC!" ^>nul 2^>^&1
 >>"!_SOT_CMD!" echo exit /b %%_JRC%%
 set /a "_RT_RUNNING+=1"
-start "" /b "%ComSpec%" /c call "!_SOT_CMD!"
+start "" /b "%ComSpec%" /c call "!_SOT_CMD!" <nul
 exit /b 0
 
 :: ## reap_completed
@@ -259,6 +287,17 @@ set "_RS_CAP=%~3"
 if "!_RS_LIST!"=="" exit /b 0
 if not exist "!_RS_LIST!" exit /b 0
 
+set "_RS_W_INV="!_RS_WORKER!""
+if not exist "!_RS_WORKER!" (
+    if not "!_RS_WORKER:.cmd =!"=="!_RS_WORKER!" (
+        set "_RS_W_TMP=!_RS_WORKER:.cmd =.cmd|!"
+        for /f "tokens=1* delims=|" %%A in ("!_RS_W_TMP!") do set "_RS_W_INV="%%A" %%B"
+    ) else if not "!_RS_WORKER:.bat =!"=="!_RS_WORKER!" (
+        set "_RS_W_TMP=!_RS_WORKER:.bat =.bat|!"
+        for /f "tokens=1* delims=|" %%A in ("!_RS_W_TMP!") do set "_RS_W_INV="%%A" %%B"
+    )
+)
+
 call :resolve_jobs_internal
 if not "!_RS_CAP!"=="" (
     set /a "_RS_CAP_N=!_RS_CAP!" 2>nul
@@ -273,7 +312,7 @@ REM wincheck disable=CMD2003
 if !_PAR_JOBS! leq 1 (
     set "_RS_SAVED_ST=!STACK!"
     set "STACK="
-    call "!_RS_WORKER!" "!_RS_LIST!"
+    call !_RS_W_INV! "!_RS_LIST!"
     set "_RS_RC=!ERRORLEVEL!"
     set "STACK=!_RS_SAVED_ST!"
     exit /b !_RS_RC!
@@ -282,7 +321,7 @@ if !_PAR_JOBS! leq 1 (
 if "!_PAR_OK!"=="0" (
     set "_RS_SAVED_ST=!STACK!"
     set "STACK="
-    call "!_RS_WORKER!" "!_RS_LIST!"
+    call !_RS_W_INV! "!_RS_LIST!"
     set "_RS_RC=!ERRORLEVEL!"
     set "STACK=!_RS_SAVED_ST!"
     exit /b !_RS_RC!
@@ -290,8 +329,7 @@ if "!_PAR_OK!"=="0" (
 
 set "_RS_BASE=%TEMP%"
 if "!_RS_BASE!"=="" set "_RS_BASE=!LIBSCRIPT_ROOT_DIR!\tests_tmp"
-set "_RS_DIR=!_RS_BASE!\lsp_s_!RANDOM!_!RANDOM!"
-if not exist "!_RS_DIR!" mkdir "!_RS_DIR!"
+call :make_unique_dir "!_RS_BASE!" "lsp_s" _RS_DIR
 
 set /a "_RS_CNT=0"
 set /a "_RS_MOD=0"
@@ -316,7 +354,7 @@ set "_RS_TASKS=!_RS_DIR!\TASKS.TXT"
 type nul > "!_RS_TASKS!"
 for /L %%S in (1,1,!_PAR_JOBS!) do (
     if exist "!_RS_DIR!\S%%S.TXT" (
-        >>"!_RS_TASKS!" echo call "!_RS_WORKER!" "!_RS_DIR!\S%%S.TXT"
+        >>"!_RS_TASKS!" echo call !_RS_W_INV! "!_RS_DIR!\S%%S.TXT"
     )
 )
 

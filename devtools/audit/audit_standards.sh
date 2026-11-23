@@ -51,7 +51,11 @@ fi
 ORIG_PWD=$(pwd)
 cd "$REPO_ROOT"
 
-trap 'trap - INT TERM HUP EXIT; exit 130' INT TERM HUP
+AS_ERR_DIR=$(libscript_make_tmpdir 'as_err')
+AS_ERR_LOG="${AS_ERR_DIR}/VIOLATIONS.TXT"
+: > "$AS_ERR_LOG"
+export AS_ERR_LOG
+trap 'rm -rf "$AS_ERR_DIR"; trap - INT TERM HUP EXIT; exit 130' INT TERM HUP
 
 ERRORS=0
 
@@ -63,6 +67,9 @@ log_failure() {
   details="$3"
   printf '[STANDARDS VIOLATION] [%s] %s: %s\n' "$rule_name" "$target_file" "$details" >&2
   ERRORS=$((ERRORS + 1))
+  if [ -n "${AS_ERR_LOG:-}" ]; then
+    printf '1\n' >> "$AS_ERR_LOG"
+  fi
 }
 
 # shellcheck disable=SC2329
@@ -286,7 +293,7 @@ audit_sh_batch() {
 
   _sh_out=$(awk '
     BEGIN {} function reset_sh() {
-      in_heredoc = 0; delim = ""; shebang_count = 0; shebang_lines = ""; first_line = "";
+      in_heredoc = 0; heredoc_quoted = 0; delim = ""; shebang_count = 0; shebang_lines = ""; first_line = "";
       has_this_file = 0; has_stack = 0; has_root_dir = 0; has_zsh_sc = 0;
       has_overview = 0; has_usage = 0; has_set_feu = 0; has_crlf = 0;
       mkdir_hits = ""; ln_hits = ""; eval_hits = ""; git_push_hits = ""; raw_daemon_hits = "";
@@ -430,7 +437,12 @@ audit_sh_batch() {
         sub(/[[:space:]]+$/, "", cur)
         if (cur == delim || cur ~ ("^" delim "[\x27\"][[:space:]<>|/A-Za-z0-9_.-]*$")) {
           in_heredoc = 0
+          heredoc_quoted = 0
           delim = ""
+          next
+        }
+        if (!heredoc_quoted && $0 ~ /\$\{LIBSCRIPT_HOME:-\$(\{HOME\}|HOME)\//) {
+          libscript_home_bare_hits = (libscript_home_bare_hits ? libscript_home_bare_hits "; " : "") FNR ":" $0
         }
         next
       }
@@ -438,12 +450,14 @@ audit_sh_batch() {
       if (idx > 0) {
         rest = substr($0, idx + 2)
         sub(/^[ -]+/, "", rest)
+        hd_q = (rest ~ /^(\\|["\x27])/) ? 1 : 0
         sub(/^\\+/, "", rest)
         sub(/["\x27]/, "", rest)
         sub(/["\x27].*$/, "", rest)
         sub(/[[:space:]].*$/, "", rest)
         if (rest != "") {
           in_heredoc = 1
+          heredoc_quoted = hd_q
           delim = rest
         }
       }
@@ -1195,18 +1209,26 @@ audit_shard_worker() {
 
   _asw_cs="${_asw_dir}/CS.TXT"
   : > "$_asw_cs"
-  awk -v root="${REPO_ROOT}" -v exp="${LIBSCRIPT_AUDIT_EXPLICIT:-0}" -v d="${_asw_dir}" '
+  if ! ASW_ROOT="${REPO_ROOT}" ASW_EXPLICIT="${LIBSCRIPT_AUDIT_EXPLICIT:-0}" ASW_DIR="${_asw_dir}" awk '
+    BEGIN {
+      root = ENVIRON["ASW_ROOT"]
+      gsub(/\\/, "/", root)
+      sub(/\/+$/, "", root)
+      is_explicit = ENVIRON["ASW_EXPLICIT"]
+      d = ENVIRON["ASW_DIR"]
+      gsub(/\\/, "/", d)
+      sub(/\/+$/, "", d)
+    }
     NF == 0 { next }
     {
       f = $0
       sub(/\r$/, "", f)
+      gsub(/\\/, "/", f)
       slash_root = root "/"
-      bs_root = root "\\"
-      if (index(f, slash_root) == 1) f = substr(f, length(slash_root) + 1)
-      else if (index(f, bs_root) == 1) f = substr(f, length(bs_root) + 1)
+      if (root != "" && index(f, slash_root) == 1) f = substr(f, length(slash_root) + 1)
       sub(/^\.\//, "", f)
       if (f ~ /(^|\/)\.git\//) next
-      if (exp != "1" && f ~ /(^|\/)(\.git|gen|cache|tmp|tests_tmp|node_modules|\.vagrant|\.venv|venv|dist|build|\.angular|\.gradle)\//) next
+      if (is_explicit != "1" && f ~ /(^|\/)(\.git|gen|cache|tmp|tests_tmp|node_modules|\.vagrant|\.venv|venv|dist|build|\.angular|\.gradle)\//) next
       if (f == ".githooks/pre-commit" || f ~ /\/\.githooks\/pre-commit$/ || f ~ /\.sh$/) {
         print f >> (d "/SH.TXT")
       } else if (f ~ /\.(cmd|bat)$/) {
@@ -1221,7 +1243,10 @@ audit_shard_worker() {
         print f >> (d "/CS.TXT")
       }
     }
-  ' "$_asw_shard"
+  ' "$_asw_shard"; then
+    rm -rf "$_asw_dir"
+    return 1
+  fi
   for _asw_list_f in "$_asw_sh" "$_asw_cmd" "$_asw_ps1" "$_asw_json" "$_asw_man" "$_asw_sch"; do
     if [ -s "$_asw_list_f" ]; then
       while IFS= read -r _asw_chk || [ -n "$_asw_chk" ]; do
@@ -1503,8 +1528,14 @@ else
   rm -rf "$_as_tmp_dir"
 fi
 
+_total_violations=$(awk 'END { print NR + 0 }' "$AS_ERR_LOG" 2>/dev/null || printf '0\n')
+rm -rf "$AS_ERR_DIR"
+if [ "$_total_violations" -gt 0 ]; then
+  ERRORS="$_total_violations"
+fi
+
 if [ "$ERRORS" -gt 0 ]; then
-  printf '[AUDIT] Standards audit failed.\n' >&2
+  printf '[AUDIT] %d standards violation(s) found.\n' "$ERRORS" >&2
   exit 1
 fi
 

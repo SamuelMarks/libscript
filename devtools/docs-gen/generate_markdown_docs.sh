@@ -302,4 +302,4 @@ if [ -s "$modified_tmp" ]; then
   libscript_batch_exec "$modified_tmp" 40 _run_prettier_batch
 fi
 
-printf '%s\n' 'Done.'
+printf '%s\n' 'Done generating markdown docs.'

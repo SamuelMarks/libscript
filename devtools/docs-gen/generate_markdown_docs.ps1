@@ -224,4 +224,4 @@ if ($modifiedReadmes.Count -gt 0) {
     }
 }
 
-Write-Host "Done."
+Write-Host "Done generating markdown docs."

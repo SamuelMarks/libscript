@@ -81,8 +81,10 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
 )
 where dash >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" (
+    set "LIBSCRIPT_ROOT_DIR=!LIBSCRIPT_ROOT_DIR:\=/!"
+    set "_ASV_SH=!SCRIPT_DIR:\=/!/audit_schema_vars.sh"
     set "STACK="
-    dash "!SCRIPT_DIR!\audit_schema_vars.sh" %*
+    dash "!_ASV_SH!" %*
     exit /b !ERRORLEVEL!
 )
 echo [ERROR] Neither PowerShell nor LibScript dash found. Cannot audit schema variables on Windows. 1>&2

@@ -355,11 +355,11 @@ _pc_wc_shard() { libscript_batch_exec "$1" 80 _pc_wc_chunk; }
 _pc_cspell_shard() {
   _pcs_f="$1"
   if [ "$CSPELL_MODE" = 'global' ]; then
-    cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$_pcs_f"
+    cspell lint --no-progress --no-summary --no-must-find-files --file-list "$_pcs_f" </dev/null
   elif [ "$CSPELL_MODE" = 'local' ]; then
-    "${LIBSCRIPT_ROOT_DIR}/node_modules/.bin/cspell" lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$_pcs_f"
+    "${LIBSCRIPT_ROOT_DIR}/node_modules/.bin/cspell" lint --no-progress --no-summary --no-must-find-files --file-list "$_pcs_f" </dev/null
   else
-    npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$_pcs_f"
+    npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list "$_pcs_f" </dev/null
   fi
 }
 
@@ -520,6 +520,7 @@ if [ "$NEED_GMD" -eq 1 ]; then
   _mod_rm_list="${PC_WORK}/MOD_RM.TXT"
   git ls-files -m | grep 'README\.md$' > "$_mod_rm_list" 2>/dev/null || : > "$_mod_rm_list"
   if [ -s "$_mod_rm_list" ]; then
+    printf '%s\n' 'Formatting modified README.md files...'
     if command -v dos2unix >/dev/null 2>&1; then
       libscript_batch_exec "$_mod_rm_list" 100 _pc_dos2unix_batch
     fi
@@ -531,13 +532,14 @@ if [ "$NEED_GMD" -eq 1 ]; then
 fi
 
 if [ -x "${HOOK_REPO_ROOT}/devtools/audit/doc_coverage.sh" ] && [ -f "${HOOK_REPO_ROOT}/README.md" ]; then
-  if [ "$NEED_UR" -eq 1 ] || ! grep -q '\[!\[Doc Coverage\](https://img\.shields\.io/badge/doc%20coverage-100%25-brightgreen\.svg)' "${HOOK_REPO_ROOT}/README.md" 2>/dev/null; then
+  if ! grep -q '\[!\[Doc Coverage\](https://img\.shields\.io/badge/doc%20coverage-100%25-brightgreen\.svg)' "${HOOK_REPO_ROOT}/README.md" 2>/dev/null; then
     printf '%s\n' 'Updating Doc Coverage shield in README.md...'
     STACK='' "${HOOK_REPO_ROOT}/devtools/audit/doc_coverage.sh" --update-readme
   fi
 fi
 
 if [ -f 'README.md' ] && ! git diff --quiet -- README.md 2>/dev/null; then
+  printf '%s\n' 'Formatting README.md...'
   if command -v dos2unix >/dev/null 2>&1; then
     dos2unix -q README.md 2>/dev/null || true
   fi

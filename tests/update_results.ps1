@@ -1,6 +1,6 @@
 # ## Overview
 # Updates the Supported Components tables in README.md (or custom output file)
-# split into Architectural Tiers (Tier 1, Tier 1.5, Tier 2, Tier 3, Tier 3.5/4/Traits)
+# split into Architectural Tiers (T0-T5 and Orthogonal Planes)
 # with test results from tests_tmp/, updates task completion in TODO_PLAN.md and
 # TESTING_TODO_PLAN.md, and optionally exports an aggregated JSON test results matrix.
 #
@@ -39,7 +39,7 @@ for ($i = 0; $i -lt $args.Count; $i++) {
     if ($arg -eq "--help" -or $arg -eq "-h" -or $arg -eq "/?" -or $arg -eq "-?") {
         Show-Help
         exit 0
-    } elseif ($arg -eq "--sync-plan-checkboxes") {
+    } elseif ($arg -eq "--sync-plan-checkboxes" -or $arg -eq "--sync-plans") {
         $syncPlans = $true
     } elseif ($arg -eq "--output") {
         if ($i + 1 -lt $args.Count) {
@@ -79,6 +79,32 @@ if ($jsonFile -eq "default") {
     $jsonFile = [System.IO.Path]::GetFullPath($jsonFile)
 }
 
+$script:ManifestCache = @{}
+$script:DirFileCache = @{}
+
+# ## Get-CachedManifest
+# Reads and caches a parsed manifest.json object so repeated OS/tier checks avoid redundant disk I/O.
+function Get-CachedManifest {
+    param([string]$ManifestPath)
+    if (-not $ManifestPath) { return $null }
+    if ($script:ManifestCache.ContainsKey($ManifestPath)) {
+        return $script:ManifestCache[$ManifestPath]
+    }
+    if (-not (Test-Path -LiteralPath $ManifestPath)) {
+        $script:ManifestCache[$ManifestPath] = $null
+        return $null
+    }
+    try {
+        $raw = [System.IO.File]::ReadAllText($ManifestPath, [System.Text.Encoding]::UTF8)
+        $parsed = $raw | ConvertFrom-Json
+        $script:ManifestCache[$ManifestPath] = $parsed
+        return $parsed
+    } catch {
+        $script:ManifestCache[$ManifestPath] = $null
+        return $null
+    }
+}
+
 # ## Check-ManifestSupport
 # Checks whether a component manifest supports a specific target operating system.
 function Check-ManifestSupport {
@@ -87,7 +113,8 @@ function Check-ManifestSupport {
         [string]$TargetOs
     )
 
-    if (-not $ManifestPath -or -not (Test-Path -LiteralPath $ManifestPath)) {
+    $manifest = Get-CachedManifest -ManifestPath $ManifestPath
+    if ($null -eq $manifest) {
         return $true
     }
 
@@ -98,13 +125,6 @@ function Check-ManifestSupport {
         'windows' { @('windows') }
         { $_ -in 'sunos', 'illumos', 'solaris' } { @('sunos', 'illumos', 'solaris') }
         default   { @($TargetOs) }
-    }
-
-    try {
-        $raw = Get-Content -LiteralPath $ManifestPath -Raw -Encoding UTF8
-        $manifest = $raw | ConvertFrom-Json
-    } catch {
-        return $true
     }
 
     if ($null -ne $manifest.os_blacklist) {
@@ -139,13 +159,9 @@ function Read-ManifestTier {
         [string]$ManifestPath,
         [string]$Category
     )
-    if ($ManifestPath -and (Test-Path -LiteralPath $ManifestPath)) {
-        try {
-            $m = Get-Content -LiteralPath $ManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
-            if ($m.tier -in @('T1', 'T2')) {
-                return [string]$m.tier
-            }
-        } catch {}
+    $m = Get-CachedManifest -ManifestPath $ManifestPath
+    if ($null -ne $m -and $m.tier -in @('T1', 'T2')) {
+        return [string]$m.tier
     }
     if ($Category -in @('base-system','kernel','bootloaders','init-systems','unikernels','graphics','audio','display-servers','display-managers','desktops')) {
         return 'T2'
@@ -154,17 +170,60 @@ function Read-ManifestTier {
 }
 
 # ## Test-AnyFilePattern
-# Checks whether any files in a directory match a specific glob search pattern.
+# Checks whether any files in a directory match a specific glob search pattern using an in-memory index.
 function Test-AnyFilePattern {
     param(
         [string]$DirectoryPath,
         [string]$SearchPattern
     )
-    if (-not (Test-Path -LiteralPath $DirectoryPath)) {
-        return $false
+    if (-not $script:DirFileCache.ContainsKey($DirectoryPath)) {
+        if (-not (Test-Path -LiteralPath $DirectoryPath)) {
+            $script:DirFileCache[$DirectoryPath] = $null
+            return $false
+        }
+        $exactSet = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+        $byPrefix = @{}
+        $allNames = [System.Collections.Generic.List[string]]::new()
+        foreach ($fp in [System.IO.Directory]::GetFiles($DirectoryPath)) {
+            $fn = [System.IO.Path]::GetFileName($fp)
+            [void]$exactSet.Add($fn)
+            $allNames.Add($fn)
+            $dot = $fn.IndexOf('.')
+            if ($dot -gt 0) {
+                $pfx = $fn.Substring(0, $dot).ToLowerInvariant()
+                if (-not $byPrefix.ContainsKey($pfx)) {
+                    $byPrefix[$pfx] = [System.Collections.Generic.List[string]]::new()
+                }
+                $byPrefix[$pfx].Add($fn)
+            }
+        }
+        $script:DirFileCache[$DirectoryPath] = @{
+            Exact    = $exactSet
+            ByPrefix = $byPrefix
+            All      = $allNames
+        }
     }
-    $matched = [System.IO.Directory]::GetFiles($DirectoryPath, $SearchPattern)
-    return ($matched.Count -gt 0)
+    $idx = $script:DirFileCache[$DirectoryPath]
+    if ($null -eq $idx) { return $false }
+    if ($SearchPattern.IndexOfAny([char[]]@('*', '?')) -lt 0) {
+        return $idx.Exact.Contains($SearchPattern)
+    }
+    $pDot = $SearchPattern.IndexOf('.')
+    if ($pDot -gt 0) {
+        $candPfx = $SearchPattern.Substring(0, $pDot)
+        if ($candPfx.IndexOfAny([char[]]@('*', '?')) -lt 0) {
+            $key = $candPfx.ToLowerInvariant()
+            if (-not $idx.ByPrefix.ContainsKey($key)) { return $false }
+            foreach ($cand in $idx.ByPrefix[$key]) {
+                if ($cand -like $SearchPattern) { return $true }
+            }
+            return $false
+        }
+    }
+    foreach ($cand in $idx.All) {
+        if ($cand -like $SearchPattern) { return $true }
+    }
+    return $false
 }
 
 # ## Normalize-SupportedComponentsSection
@@ -717,3 +776,4 @@ Update-SupportedComponents -RootPath $repoRoot -TargetReadme $outputFile -Export
 if ($syncPlans) {
     Update-TodoPlan -RootPath $repoRoot -TargetReadme $outputFile
 }
+Write-Host "Done updating Supported Components in README.md."

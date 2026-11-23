@@ -61,6 +61,7 @@ handle_interrupt() {
 
 trap 'handle_interrupt' INT TERM HUP
 
+# shellcheck disable=SC2329
 # ## check_manifest_support
 # Checks if a component supports the given OS based on its manifest.json
 check_manifest_support() {
@@ -116,6 +117,7 @@ check_manifest_support() {
   ' "${_m_file}"
 }
 
+# shellcheck disable=SC2329
 # ## read_manifest_tier
 # Reads the explicit "tier" property ("T1" or "T2") from manifest.json, falling back to category family when absent in synthetic fixtures.
 read_manifest_tier() {
@@ -155,8 +157,7 @@ discover_all_entries() {
       case "${_comp}" in _*) continue ;; esac
       _mfile=""
       [ -f "${_dir}/manifest.json" ] && _mfile="${_dir}/manifest.json"
-      _tier=$(read_manifest_tier "${_mfile}" "${_cat}")
-      printf '%s|%s|%s|%s\n' "${_tier}" "${_cat}" "${_comp}" "${_mfile}" >>"${_raw_list}"
+      printf 'LIB|%s|%s|%s\n' "${_cat}" "${_comp}" "${_mfile}" >>"${_raw_list}"
     done
   fi
 
@@ -232,7 +233,33 @@ discover_all_entries() {
   fi
   set -f
 
-  sort -t'|' -k1,1 -k3,3 -u "${_raw_list}"
+  awk -F'|' '
+    {
+      tier = $1; cat = $2; comp = $3; mfile = $4
+      if (tier == "LIB") {
+        tier = "T1"
+        if (cat ~ /^(base-system|kernel|bootloaders|init-systems|unikernels|graphics|audio|display-servers|display-managers|desktops)$/) {
+          tier = "T2"
+        }
+        if (mfile != "") {
+          rc = (getline m_line < mfile)
+          if (rc >= 0) {
+            while (rc > 0) {
+              if (m_line ~ /^[ \t]*"tier"[ \t]*:[ \t]*"T[12]"/) {
+                if (split(m_line, mq, "\"") >= 4 && (mq[4] == "T1" || mq[4] == "T2")) {
+                  tier = mq[4]
+                }
+                break
+              }
+              rc = (getline m_line < mfile)
+            }
+            close(mfile)
+          }
+        }
+      }
+      printf "%s|%s|%s|%s\n", tier, cat, comp, mfile
+    }
+  ' "${_raw_list}" | sort -t'|' -k1,1 -k3,3 -u
   rm -f "${_raw_list}"
 }
 
@@ -266,262 +293,299 @@ update_supported_components() {
   _entries_file=$(mktemp "${TMPDIR:-/tmp}/entries.XXXXXX")
   discover_all_entries "${_repo_root}" >"${_entries_file}"
 
-  _enriched_entries=$(mktemp "${TMPDIR:-/tmp}/entries_enriched.XXXXXX")
   _markers_list=$(mktemp "${TMPDIR:-/tmp}/markers_list.XXXXXX")
   if [ -d "${_tests_tmp_dir}" ]; then
     ls -1 "${_tests_tmp_dir}" >"${_markers_list}" 2>/dev/null || true
   fi
-  if [ -s "${_markers_list}" ]; then
-    awk '
-      function has_exact(c, target) {
-        return ((c "." target) in exact)
+
+  UR_README="${_readme_file}" \
+  UR_MARKERS="${_markers_list}" \
+  UR_T1="${_tmp_t1}" \
+  UR_T2="${_tmp_t2}" \
+  UR_T3="${_tmp_t3}" \
+  UR_T4="${_tmp_t4}" \
+  UR_T5="${_tmp_t5}" \
+  UR_PA="${_tmp_pa}" \
+  UR_JSON="${_tmp_json}" \
+  awk '
+    function has_exact(c, target) {
+      return ((c "." target) in exact)
+    }
+    function has_glob(c, rx,   i, n) {
+      n = cnt[c] + 0
+      for (i = 1; i <= n; i++) {
+        if (sfx[c, i] ~ rx) return 1
       }
-      function has_glob(c, rx,   i, n) {
-        n = cnt[c] + 0
-        for (i = 1; i <= n; i++) {
-          if (sfx[c, i] ~ rx) return 1
+      return 0
+    }
+    function os_matches(line, os, fam) {
+      if (index(line, q os q) > 0) return 1
+      if (fam != "" && index(line, q fam q) > 0) return 1
+      if (fam == "darwin" && (index(line, q "darwin" q) > 0 || index(line, q "macos" q) > 0 || index(line, q "mac" q) > 0)) return 1
+      if (fam == "sunos" && (index(line, q "sunos" q) > 0 || index(line, q "illumos" q) > 0 || index(line, q "solaris" q) > 0)) return 1
+      return 0
+    }
+    BEGIN {
+      readme_file = ENVIRON["UR_README"]
+      markers_file = ENVIRON["UR_MARKERS"]
+      t1_out = ENVIRON["UR_T1"]
+      t2_out = ENVIRON["UR_T2"]
+      t3_out = ENVIRON["UR_T3"]
+      t4_out = ENVIRON["UR_T4"]
+      t5_out = ENVIRON["UR_T5"]
+      pa_out = ENVIRON["UR_PA"]
+      json_out = ENVIRON["UR_JSON"]
+      q = "\""
+      bt = sprintf("%c", 96)
+      first_json = 1
+      row_seq = 0
+
+      if (markers_file != "") {
+        rc = (getline m_entry < markers_file)
+        if (rc >= 0) {
+          while (rc > 0) {
+            sub(/\r$/, "", m_entry)
+            if (m_entry != "") {
+              exact[m_entry] = 1
+              dot = index(m_entry, ".")
+              if (dot > 1) {
+                p = substr(m_entry, 1, dot - 1)
+                s = substr(m_entry, dot + 1)
+                cnt[p]++
+                sfx[p, cnt[p]] = s
+              }
+            }
+            rc = (getline m_entry < markers_file)
+          }
+          close(markers_file)
         }
-        return 0
       }
-      NR == FNR {
-        exact[$0] = 1
-        dot = index($0, ".")
-        if (dot > 1) {
-          p = substr($0, 1, dot - 1)
-          s = substr($0, dot + 1)
-          cnt[p]++
-          sfx[p, cnt[p]] = s
+
+      if (readme_file != "") {
+        rc = (getline rline < readme_file)
+        if (rc >= 0) {
+          while (rc > 0) {
+            sub(/\r$/, "", rline)
+            if (substr(rline, 1, 1) == "|") {
+              trimmed = rline
+              sub(/[ \t]*\|[ \t]*$/, "", trimmed)
+              nf = split(trimmed, rp, "|")
+              if (nf >= 9) {
+                c2 = rp[2]
+                sub(/^[ \t]+/, "", c2); sub(/[ \t]+$/, "", c2)
+                if (length(c2) >= 2 && substr(c2, 1, 1) == bt && substr(c2, length(c2), 1) == bt) {
+                  r_comp = substr(c2, 2, length(c2) - 2)
+                  c3 = rp[3]
+                  sub(/^[ \t]+/, "", c3); sub(/[ \t]+$/, "", c3)
+                  r_cat = ""
+                  if (length(c3) >= 2 && substr(c3, 1, 1) == bt && substr(c3, length(c3), 1) == bt) {
+                    r_cat = substr(c3, 2, length(c3) - 2)
+                  }
+                  row_seq++
+                  if (nf >= 10) {
+                    va = rp[4]; vd = rp[5]; vr = rp[6]; vw = rp[7]; vs = rp[8]; vf = rp[9]; vm = rp[10]
+                  } else {
+                    va = rp[3]; vd = rp[4]; vr = rp[5]; vw = rp[6]; vs = rp[7]; vf = rp[8]; vm = rp[9]
+                  }
+                  gsub(/[ \t]/, "", va); gsub(/[ \t]/, "", vd); gsub(/[ \t]/, "", vr)
+                  gsub(/[ \t]/, "", vw); gsub(/[ \t]/, "", vs); gsub(/[ \t]/, "", vf); gsub(/[ \t]/, "", vm)
+                  if (length(va) >= 2 && substr(va, 1, 1) == bt && substr(va, length(va), 1) == bt) va = ""
+                  ex_apk[row_seq] = va; ex_deb[row_seq] = vd; ex_rpm[row_seq] = vr
+                  ex_win[row_seq] = vw; ex_sun[row_seq] = vs; ex_fbsd[row_seq] = vf; ex_mac[row_seq] = vm
+                  if (!(r_comp in by_comp)) by_comp[r_comp] = row_seq
+                  if (r_cat != "" && !((r_comp "|" r_cat) in by_comp_cat)) by_comp_cat[r_comp "|" r_cat] = row_seq
+                }
+              }
+            }
+            rc = (getline rline < readme_file)
+          }
+          close(readme_file)
         }
-        next
       }
-      {
-        n_f = split($0, f, "|")
-        tier = f[1]; cat = f[2]; comp = f[3]; mfile = f[4]
-        sc = comp
-        sub(/^.*\//, "", sc)
-        mc = sc
-        if (comp == "freebsd/distro") mc = "freebsd-distro"
-        else if (comp == "illumos/distro") mc = "illumos-distro"
-        else if (comp == "reactos/distro") mc = "reactos-distro"
-        else if (comp ~ /^bootloaders\//) mc = "bootloaders-" sc
-        else if (comp ~ /^workloads\/schedulers\//) mc = "scheduler-" sc
-        else if (comp ~ /^traits\//) mc = "trait-" sc
+    }
+    {
+      n_f = split($0, f, "|")
+      tier = f[1]; cat = f[2]; comp = f[3]; mfile = f[4]
+      if (comp == "") next
 
-        idemp = (has_exact(mc, "idempotent.success") || has_exact(sc, "idempotent.success")) ? "true" : "false"
+      sc = comp
+      sub(/^.*\//, "", sc)
+      mc = sc
+      if (comp == "freebsd/distro") mc = "freebsd-distro"
+      else if (comp == "illumos/distro") mc = "illumos-distro"
+      else if (comp == "reactos/distro") mc = "reactos-distro"
+      else if (comp ~ /^bootloaders\//) mc = "bootloaders-" sc
+      else if (comp ~ /^workloads\/schedulers\//) mc = "scheduler-" sc
+      else if (comp ~ /^traits\//) mc = "trait-" sc
 
-        m_apk = ""
-        if (has_exact(mc, "linux.alpine.success") || has_exact(sc, "linux.alpine.success") || has_exact(sc, "alpine.success") || has_exact(sc, "apk.success")) m_apk = "✅"
-        else if (has_exact(mc, "linux.alpine.skipped") || has_exact(sc, "linux.alpine.skipped")) m_apk = "-"
-        else if (has_exact(mc, "linux.alpine.failure") || has_exact(sc, "linux.alpine.failure") || has_exact(sc, "alpine.failure") || has_exact(sc, "apk.failure")) m_apk = "❌"
-
-        m_deb = ""
-        if (has_exact(mc, "linux.debian.success") || has_exact(sc, "linux.debian.success") || has_exact(sc, "linux.ubuntu.success") || has_exact(sc, "debian.success") || has_exact(sc, "ubuntu.success") || has_exact(sc, "deb.success")) m_deb = "✅"
-        else if (has_exact(mc, "linux.debian.skipped") || has_exact(sc, "linux.debian.skipped")) m_deb = "-"
-        else if (has_exact(mc, "linux.debian.failure") || has_exact(sc, "linux.debian.failure") || has_exact(sc, "linux.ubuntu.failure") || has_exact(sc, "debian.failure") || has_exact(sc, "ubuntu.failure") || has_exact(sc, "deb.failure")) m_deb = "❌"
-
-        m_rpm = ""
-        if (has_glob(mc, "^linux\\.rocky.*\\.success$") || has_glob(sc, "^linux\\.(rocky.*|rhel|fedora|almalinux|centos)\\.success$") || has_glob(sc, "^(rhel|fedora|almalinux|centos|rocky|rockylinux|rpm)\\.success$")) m_rpm = "✅"
-        else if (has_exact(mc, "linux.rocky.skipped") || has_exact(sc, "linux.rocky.skipped")) m_rpm = "-"
-        else if (has_glob(mc, "^linux\\.rocky.*\\.failure$") || has_glob(sc, "^linux\\.(rocky.*|rhel|fedora|almalinux|centos)\\.failure$") || has_glob(sc, "^(rhel|fedora|almalinux|centos|rocky|rockylinux|rpm)\\.failure$")) m_rpm = "❌"
-
-        m_win = ""
-        if (has_glob(mc, "^windows.*\\.success$") || has_glob(sc, "^win.*\\.success$")) m_win = "✅"
-        else if (has_glob(mc, "^windows.*\\.skipped$") || has_glob(sc, "^windows.*\\.skipped$")) m_win = "-"
-        else if (has_glob(mc, "^windows.*\\.failure$") || has_glob(sc, "^win.*\\.failure$")) m_win = "❌"
-
-        m_sun = ""
-        if (has_glob(mc, "^sunos.*\\.success$") || has_glob(sc, "^(sunos|solaris|illumos).*\\.success$")) m_sun = "✅"
-        else if (has_glob(mc, "^sunos.*\\.skipped$") || has_glob(sc, "^sunos.*\\.skipped$")) m_sun = "-"
-        else if (has_glob(mc, "^sunos.*\\.failure$") || has_glob(sc, "^(sunos|solaris|illumos).*\\.failure$")) m_sun = "❌"
-
-        m_fbsd = ""
-        if (mc != sc) {
-          if (has_glob(mc, "^freebsd.*\\.success$")) m_fbsd = "✅"
-          else if (has_glob(mc, "^freebsd.*\\.skipped$")) m_fbsd = "-"
-          else if (has_glob(mc, "^freebsd.*\\.failure$")) m_fbsd = "❌"
+      apk_st = "-"; deb_st = "-"; rpm_st = "-"; win_st = "-"; sun_st = "-"; fbsd_st = "-"; mac_st = "-"
+      opened_manifest = 0
+      if (mfile != "") {
+        rc = (getline m_line < mfile)
+        if (rc >= 0) {
+          opened_manifest = 1
+          in_bl = 0; in_wl = 0; has_wl = 0
+          for (k = 1; k <= 7; k++) { bl[k] = 0; wl[k] = 0 }
+          while (rc > 0) {
+            if (m_line ~ /"os_blacklist"[ \t]*:/) {
+              in_bl = 1; in_wl = 0
+              if (os_matches(m_line, "alpine", "linux")) bl[1] = 1
+              if (os_matches(m_line, "debian", "linux")) bl[2] = 1
+              if (os_matches(m_line, "rhel", "linux")) bl[3] = 1
+              if (os_matches(m_line, "windows", "windows")) bl[4] = 1
+              if (os_matches(m_line, "sunos", "sunos")) bl[5] = 1
+              if (os_matches(m_line, "freebsd", "bsd")) bl[6] = 1
+              if (os_matches(m_line, "darwin", "darwin")) bl[7] = 1
+              if (index(m_line, "]") > 0) in_bl = 0
+            } else if (m_line ~ /"os_whitelist"[ \t]*:/) {
+              in_wl = 1; in_bl = 0; has_wl = 1
+              is_all = (index(m_line, q "all" q) > 0)
+              if (is_all || os_matches(m_line, "alpine", "linux")) wl[1] = 1
+              if (is_all || os_matches(m_line, "debian", "linux")) wl[2] = 1
+              if (is_all || os_matches(m_line, "rhel", "linux")) wl[3] = 1
+              if (is_all || os_matches(m_line, "windows", "windows")) wl[4] = 1
+              if (is_all || os_matches(m_line, "sunos", "sunos")) wl[5] = 1
+              if (is_all || os_matches(m_line, "freebsd", "bsd")) wl[6] = 1
+              if (is_all || os_matches(m_line, "darwin", "darwin")) wl[7] = 1
+              if (index(m_line, "]") > 0) in_wl = 0
+            } else if (in_bl) {
+              if (os_matches(m_line, "alpine", "linux")) bl[1] = 1
+              if (os_matches(m_line, "debian", "linux")) bl[2] = 1
+              if (os_matches(m_line, "rhel", "linux")) bl[3] = 1
+              if (os_matches(m_line, "windows", "windows")) bl[4] = 1
+              if (os_matches(m_line, "sunos", "sunos")) bl[5] = 1
+              if (os_matches(m_line, "freebsd", "bsd")) bl[6] = 1
+              if (os_matches(m_line, "darwin", "darwin")) bl[7] = 1
+              if (index(m_line, "]") > 0) in_bl = 0
+            } else if (in_wl) {
+              is_all = (index(m_line, q "all" q) > 0)
+              if (is_all || os_matches(m_line, "alpine", "linux")) wl[1] = 1
+              if (is_all || os_matches(m_line, "debian", "linux")) wl[2] = 1
+              if (is_all || os_matches(m_line, "rhel", "linux")) wl[3] = 1
+              if (is_all || os_matches(m_line, "windows", "windows")) wl[4] = 1
+              if (is_all || os_matches(m_line, "sunos", "sunos")) wl[5] = 1
+              if (is_all || os_matches(m_line, "freebsd", "bsd")) wl[6] = 1
+              if (is_all || os_matches(m_line, "darwin", "darwin")) wl[7] = 1
+              if (index(m_line, "]") > 0) in_wl = 0
+            }
+            rc = (getline m_line < mfile)
+          }
+          close(mfile)
+          if (!bl[1] && (!has_wl || wl[1])) apk_st = "❓"
+          if (!bl[2] && (!has_wl || wl[2])) deb_st = "❓"
+          if (!bl[3] && (!has_wl || wl[3])) rpm_st = "❓"
+          if (!bl[4] && (!has_wl || wl[4])) win_st = "❓"
+          if (!bl[5] && (!has_wl || wl[5])) sun_st = "❓"
+          if (!bl[6] && (!has_wl || wl[6])) fbsd_st = "❓"
+          if (!bl[7] && (!has_wl || wl[7])) mac_st = "❓"
+        }
+      }
+      if (!opened_manifest) {
+        if (cat == "bootloaders") {
+          apk_st = "❓"; deb_st = "❓"; rpm_st = "❓"; fbsd_st = "❓"
         } else {
-          if (has_glob(sc, "^(freebsd|bsd|linux\\.freebsd).*\\.success$")) m_fbsd = "✅"
-          else if (has_glob(sc, "^freebsd.*\\.skipped$")) m_fbsd = "-"
-          else if (has_glob(sc, "^(freebsd|bsd|linux\\.freebsd).*\\.failure$")) m_fbsd = "❌"
+          apk_st = "❓"; deb_st = "❓"; rpm_st = "❓"; win_st = "❓"; sun_st = "❓"; fbsd_st = "❓"; mac_st = "❓"
         }
-
-        m_mac = ""
-        if (mc != sc) {
-          if (has_glob(mc, "^(darwin|macos).*\\.success$")) m_mac = "✅"
-          else if (has_exact(mc, "darwin.unsupported") || has_glob(mc, "^(darwin|macos).*\\.skipped$")) m_mac = "-"
-          else if (has_glob(mc, "^(darwin|macos).*\\.failure$")) m_mac = "❌"
-        } else {
-          if (has_glob(sc, "^(darwin|macos).*\\.success$")) m_mac = "✅"
-          else if (has_exact(sc, "darwin.unsupported") || has_glob(sc, "^(darwin|macos).*\\.skipped$")) m_mac = "-"
-          else if (has_glob(sc, "^(darwin|macos).*\\.failure$")) m_mac = "❌"
-        }
-
-        printf "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s\n", tier, cat, comp, mfile, idemp, m_apk, m_deb, m_rpm, m_win, m_sun, m_fbsd, m_mac
       }
-    ' "${_markers_list}" "${_entries_file}" >"${_enriched_entries}"
-    rm -f "${_markers_list}"
-  else
-    rm -f "${_markers_list}"
-    awk '{ printf "%s|false|||||||\n", $0 }' "${_entries_file}" >"${_enriched_entries}"
-  fi
-  rm -f "${_entries_file}"
 
-  _first_json_entry=1
+      ex_idx = 0
+      if (index(comp, "/") > 0) {
+        i1 = (comp in by_comp) ? by_comp[comp] : 0
+        i2 = ((sc "|" cat) in by_comp_cat) ? by_comp_cat[sc "|" cat] : 0
+        if (i1 > 0 && i2 > 0) ex_idx = (i1 < i2 ? i1 : i2)
+        else if (i1 > 0) ex_idx = i1
+        else if (i2 > 0) ex_idx = i2
+      } else {
+        if (comp in by_comp) ex_idx = by_comp[comp]
+      }
+      if (ex_idx > 0) {
+        if (ex_apk[ex_idx] != "" && apk_st != "-") apk_st = ex_apk[ex_idx]
+        if (ex_deb[ex_idx] != "" && deb_st != "-") deb_st = ex_deb[ex_idx]
+        if (ex_rpm[ex_idx] != "" && rpm_st != "-") rpm_st = ex_rpm[ex_idx]
+        if (ex_win[ex_idx] != "" && win_st != "-") win_st = ex_win[ex_idx]
+        if (ex_sun[ex_idx] != "" && sun_st != "-") sun_st = ex_sun[ex_idx]
+        if (ex_fbsd[ex_idx] != "" && fbsd_st != "-") fbsd_st = ex_fbsd[ex_idx]
+        if (ex_mac[ex_idx] != "" && mac_st != "-") mac_st = ex_mac[ex_idx]
+      }
 
-  while IFS='|' read -r _tier _cat _comp _mfile _m_idemp _m_apk _m_deb _m_rpm _m_win _m_sun _m_fbsd _m_mac; do
-    [ -z "${_comp}" ] && continue
-    _short_comp="${_comp##*/}"
+      idemp = (has_exact(mc, "idempotent.success") || has_exact(sc, "idempotent.success")) ? "true" : "false"
 
-    _existing_line=""
-    if [ -f "${_readme_file}" ]; then
-      case "${_comp}" in
-        */*)
-          _existing_line=$(awk -F'|' -v comp="${_comp}" -v cat="${_cat}" -v scomp="${_short_comp}" '
-            $2 ~ "^[ \t]*`" comp "`[ \t]*$" { print; exit }
-            $2 ~ "^[ \t]*`" scomp "`[ \t]*$" && $3 ~ "^[ \t]*`" cat "`[ \t]*$" { print; exit }
-          ' "${_readme_file}" 2>/dev/null || true)
-          ;;
-        *)
-          _existing_line=$(awk -F'|' -v comp="${_comp}" -v scomp="${_short_comp}" '
-            $2 ~ "^[ \t]*`" comp "`[ \t]*$" { print; exit }
-            $2 ~ "^[ \t]*`" scomp "`[ \t]*$" { print; exit }
-          ' "${_readme_file}" 2>/dev/null || true)
-          ;;
-      esac
-    fi
+      if (has_exact(mc, "linux.alpine.success") || has_exact(sc, "linux.alpine.success") || has_exact(sc, "alpine.success") || has_exact(sc, "apk.success")) apk_st = "✅"
+      else if (has_exact(mc, "linux.alpine.skipped") || has_exact(sc, "linux.alpine.skipped")) apk_st = "-"
+      else if (has_exact(mc, "linux.alpine.failure") || has_exact(sc, "linux.alpine.failure") || has_exact(sc, "alpine.failure") || has_exact(sc, "apk.failure")) apk_st = "❌"
 
-    _apk_status='-'
-    _deb_status='-'
-    _rpm_status='-'
-    _win_status='-'
-    _sunos_status='-'
-    _freebsd_status='-'
-    _macos_status='-'
+      if (has_exact(mc, "linux.debian.success") || has_exact(sc, "linux.debian.success") || has_exact(sc, "linux.ubuntu.success") || has_exact(sc, "debian.success") || has_exact(sc, "ubuntu.success") || has_exact(sc, "deb.success")) deb_st = "✅"
+      else if (has_exact(mc, "linux.debian.skipped") || has_exact(sc, "linux.debian.skipped")) deb_st = "-"
+      else if (has_exact(mc, "linux.debian.failure") || has_exact(sc, "linux.debian.failure") || has_exact(sc, "linux.ubuntu.failure") || has_exact(sc, "debian.failure") || has_exact(sc, "ubuntu.failure") || has_exact(sc, "deb.failure")) deb_st = "❌"
 
-    if [ -n "${_mfile}" ] && [ -f "${_mfile}" ]; then
-      [ "$(check_manifest_support "${_mfile}" "alpine")" = "yes" ] && _apk_status="❓"
-      [ "$(check_manifest_support "${_mfile}" "debian")" = "yes" ] && _deb_status="❓"
-      [ "$(check_manifest_support "${_mfile}" "rhel")" = "yes" ] && _rpm_status="❓"
-      [ "$(check_manifest_support "${_mfile}" "windows")" = "yes" ] && _win_status="❓"
-      [ "$(check_manifest_support "${_mfile}" "sunos")" = "yes" ] && _sunos_status="❓"
-      [ "$(check_manifest_support "${_mfile}" "freebsd")" = "yes" ] && _freebsd_status="❓"
-      [ "$(check_manifest_support "${_mfile}" "darwin")" = "yes" ] && _macos_status="❓"
-    else
-      case "${_cat}" in
-        bootloaders)
-          _apk_status="❓"
-          _deb_status="❓"
-          _rpm_status="❓"
-          _win_status='-'
-          _sunos_status='-'
-          _freebsd_status="❓"
-          _macos_status='-'
-          ;;
-        storage|runtimes|ml-training|topologies|payloads|traits)
-          _apk_status="❓"
-          _deb_status="❓"
-          _rpm_status="❓"
-          _win_status="❓"
-          _sunos_status="❓"
-          _freebsd_status="❓"
-          _macos_status="❓"
-          ;;
-        *)
-          _apk_status="❓"
-          _deb_status="❓"
-          _rpm_status="❓"
-          _win_status="❓"
-          _sunos_status="❓"
-          _freebsd_status="❓"
-          _macos_status="❓"
-          ;;
-      esac
-    fi
+      if (has_glob(mc, "^linux\\.rocky.*\\.success$") || has_glob(sc, "^linux\\.(rocky.*|rhel|fedora|almalinux|centos)\\.success$") || has_glob(sc, "^(rhel|fedora|almalinux|centos|rocky|rockylinux|rpm)\\.success$")) rpm_st = "✅"
+      else if (has_exact(mc, "linux.rocky.skipped") || has_exact(sc, "linux.rocky.skipped")) rpm_st = "-"
+      else if (has_glob(mc, "^linux\\.rocky.*\\.failure$") || has_glob(sc, "^linux\\.(rocky.*|rhel|fedora|almalinux|centos)\\.failure$") || has_glob(sc, "^(rhel|fedora|almalinux|centos|rocky|rockylinux|rpm)\\.failure$")) rpm_st = "❌"
 
-    if [ -n "${_existing_line}" ]; then
-      _old_ifs="${IFS}"
-      IFS='|'
-      # shellcheck disable=SC2086
-      set -- ${_existing_line}
-      IFS="${_old_ifs}"
+      if (has_glob(mc, "^windows.*\\.success$") || has_glob(sc, "^win.*\\.success$")) win_st = "✅"
+      else if (has_glob(mc, "^windows.*\\.skipped$") || has_glob(sc, "^windows.*\\.skipped$")) win_st = "-"
+      else if (has_glob(mc, "^windows.*\\.failure$") || has_glob(sc, "^win.*\\.failure$")) win_st = "❌"
 
-      if [ $# -ge 10 ]; then
-        _e_apk=$(printf '%s' "${4:-}" | tr -d ' ')
-        _e_deb=$(printf '%s' "${5:-}" | tr -d ' ')
-        _e_rpm=$(printf '%s' "${6:-}" | tr -d ' ')
-        _e_win=$(printf '%s' "${7:-}" | tr -d ' ')
-        _e_sunos=$(printf '%s' "${8:-}" | tr -d ' ')
-        _e_freebsd=$(printf '%s' "${9:-}" | tr -d ' ')
-        _e_macos=$(printf '%s' "${10:-}" | tr -d ' ')
-      else
-        _e_apk=$(printf '%s' "${3:-}" | tr -d ' ')
-        _e_deb=$(printf '%s' "${4:-}" | tr -d ' ')
-        _e_rpm=$(printf '%s' "${5:-}" | tr -d ' ')
-        _e_win=$(printf '%s' "${6:-}" | tr -d ' ')
-        _e_sunos=$(printf '%s' "${7:-}" | tr -d ' ')
-        _e_freebsd=$(printf '%s' "${8:-}" | tr -d ' ')
-        _e_macos=$(printf '%s' "${9:-}" | tr -d ' ')
-      fi
+      if (has_glob(mc, "^sunos.*\\.success$") || has_glob(sc, "^(sunos|solaris|illumos).*\\.success$")) sun_st = "✅"
+      else if (has_glob(mc, "^sunos.*\\.skipped$") || has_glob(sc, "^sunos.*\\.skipped$")) sun_st = "-"
+      else if (has_glob(mc, "^sunos.*\\.failure$") || has_glob(sc, "^(sunos|solaris|illumos).*\\.failure$")) sun_st = "❌"
 
-      case "${_e_apk}" in '`'*'`') _e_apk="" ;; esac
+      if (mc != sc) {
+        if (has_glob(mc, "^freebsd.*\\.success$")) fbsd_st = "✅"
+        else if (has_glob(mc, "^freebsd.*\\.skipped$")) fbsd_st = "-"
+        else if (has_glob(mc, "^freebsd.*\\.failure$")) fbsd_st = "❌"
+      } else {
+        if (has_glob(sc, "^(freebsd|bsd|linux\\.freebsd).*\\.success$")) fbsd_st = "✅"
+        else if (has_glob(sc, "^freebsd.*\\.skipped$")) fbsd_st = "-"
+        else if (has_glob(sc, "^(freebsd|bsd|linux\\.freebsd).*\\.failure$")) fbsd_st = "❌"
+      }
 
-      [ -n "${_e_apk}" ] && [ "${_apk_status}" != "-" ] && _apk_status="${_e_apk}"
-      [ -n "${_e_deb}" ] && [ "${_deb_status}" != "-" ] && _deb_status="${_e_deb}"
-      [ -n "${_e_rpm}" ] && [ "${_rpm_status}" != "-" ] && _rpm_status="${_e_rpm}"
-      [ -n "${_e_win}" ] && [ "${_win_status}" != "-" ] && _win_status="${_e_win}"
-      [ -n "${_e_sunos}" ] && [ "${_sunos_status}" != "-" ] && _sunos_status="${_e_sunos}"
-      [ -n "${_e_freebsd}" ] && [ "${_freebsd_status}" != "-" ] && _freebsd_status="${_e_freebsd}"
-      [ -n "${_e_macos}" ] && [ "${_macos_status}" != "-" ] && _macos_status="${_e_macos}"
-    fi
+      if (mc != sc) {
+        if (has_glob(mc, "^(darwin|macos).*\\.success$")) mac_st = "✅"
+        else if (has_exact(mc, "darwin.unsupported") || has_glob(mc, "^(darwin|macos).*\\.skipped$")) mac_st = "-"
+        else if (has_glob(mc, "^(darwin|macos).*\\.failure$")) mac_st = "❌"
+      } else {
+        if (has_glob(sc, "^(darwin|macos).*\\.success$")) mac_st = "✅"
+        else if (has_exact(sc, "darwin.unsupported") || has_glob(sc, "^(darwin|macos).*\\.skipped$")) mac_st = "-"
+        else if (has_glob(sc, "^(darwin|macos).*\\.failure$")) mac_st = "❌"
+      }
 
-    _idempotent="${_m_idemp:-false}"
-    [ -n "${_m_apk:-}" ] && _apk_status="${_m_apk}"
-    [ -n "${_m_deb:-}" ] && _deb_status="${_m_deb}"
-    [ -n "${_m_rpm:-}" ] && _rpm_status="${_m_rpm}"
-    [ -n "${_m_win:-}" ] && _win_status="${_m_win}"
-    [ -n "${_m_sun:-}" ] && _sunos_status="${_m_sun}"
-    [ -n "${_m_fbsd:-}" ] && _freebsd_status="${_m_fbsd}"
-    [ -n "${_m_mac:-}" ] && _macos_status="${_m_mac}"
+      row_str = sprintf("| %s%s%s | %s%s%s | %s | %s | %s | %s | %s | %s | %s |", bt, comp, bt, bt, cat, bt, apk_st, deb_st, rpm_st, win_st, sun_st, fbsd_st, mac_st)
+      if (tier == "T2") print row_str >> t2_out
+      else if (tier == "T3") print row_str >> t3_out
+      else if (tier == "T4") print row_str >> t4_out
+      else if (tier == "T5") print row_str >> t5_out
+      else if (tier == "PlaneA") print row_str >> pa_out
+      else print row_str >> t1_out
 
-    # shellcheck disable=SC2016
-    _row_str=$(printf '| `%s` | `%s` | %s | %s | %s | %s | %s | %s | %s |
-' "${_comp}" "${_cat}" "${_apk_status}" "${_deb_status}" "${_rpm_status}" "${_win_status}" "${_sunos_status}" "${_freebsd_status}" "${_macos_status}")
+      if (json_out != "") {
+        if (first_json) {
+          first_json = 0
+        } else {
+          printf ",\n" >> json_out
+        }
+        printf "  {\n" >> json_out
+        printf "    \"tier\": \"%s\",\n", tier >> json_out
+        printf "    \"category\": \"%s\",\n", cat >> json_out
+        printf "    \"component\": \"%s\",\n", comp >> json_out
+        printf "    \"idempotent\": %s,\n", idemp >> json_out
+        printf "    \"apk\": \"%s\",\n", apk_st >> json_out
+        printf "    \"deb\": \"%s\",\n", deb_st >> json_out
+        printf "    \"rpm\": \"%s\",\n", rpm_st >> json_out
+        printf "    \"windows\": \"%s\",\n", win_st >> json_out
+        printf "    \"sunos\": \"%s\",\n", sun_st >> json_out
+        printf "    \"freebsd\": \"%s\",\n", fbsd_st >> json_out
+        printf "    \"macos\": \"%s\"\n", mac_st >> json_out
+        printf "  }" >> json_out
+      }
+    }
+    END {
+      close(t1_out); close(t2_out); close(t3_out); close(t4_out); close(t5_out); close(pa_out)
+      if (json_out != "") close(json_out)
+    }
+  ' "${_entries_file}"
 
-    case "${_tier}" in
-      T1)     printf '%s\n' "${_row_str}" >>"${_tmp_t1}" ;;
-      T2)     printf '%s\n' "${_row_str}" >>"${_tmp_t2}" ;;
-      T3)     printf '%s\n' "${_row_str}" >>"${_tmp_t3}" ;;
-      T4)     printf '%s\n' "${_row_str}" >>"${_tmp_t4}" ;;
-      T5)     printf '%s\n' "${_row_str}" >>"${_tmp_t5}" ;;
-      PlaneA) printf '%s\n' "${_row_str}" >>"${_tmp_pa}" ;;
-      *)      printf '%s\n' "${_row_str}" >>"${_tmp_t1}" ;;
-    esac
-
-    if [ -n "${_tmp_json}" ]; then
-      if [ "${_first_json_entry}" -eq 1 ]; then
-        _first_json_entry=0
-      else
-        printf ',\n' >>"${_tmp_json}"
-      fi
-      cat <<JSON_ROW >>"${_tmp_json}"
-  {
-    "tier": "${_tier}",
-    "category": "${_cat}",
-    "component": "${_comp}",
-    "idempotent": ${_idempotent},
-    "apk": "${_apk_status}",
-    "deb": "${_deb_status}",
-    "rpm": "${_rpm_status}",
-    "windows": "${_win_status}",
-    "sunos": "${_sunos_status}",
-    "freebsd": "${_freebsd_status}",
-    "macos": "${_macos_status}"
-  }
-JSON_ROW
-    fi
-  done <"${_enriched_entries}"
-
-  rm -f "${_enriched_entries}"
+  rm -f "${_markers_list}" "${_entries_file}"
 
   {
     cat <<'HDR_MAIN'
@@ -1063,7 +1127,7 @@ main() {
         show_help
         exit 0
         ;;
-      --sync-plan-checkboxes)
+      --sync-plan-checkboxes|--sync-plans)
         _sync_plans=1
         shift
         ;;
@@ -1107,6 +1171,7 @@ main() {
     update_testing_todo_plan "${_repo}" "${_output}"
     update_retest_plan "${_repo}" "${_output}"
   fi
+  printf '%s\n' 'Done updating Supported Components in README.md.'
 }
 
 main "$@"

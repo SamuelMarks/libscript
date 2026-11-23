@@ -63,7 +63,7 @@ create_zookeeper_binaries() {
 #!/bin/sh
 # Apache ZooKeeper CLI (${_ver})
 set -eu
-DATA_DIR="\${ZOOKEEPER_DATA_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/zookeeper/data}"
+DATA_DIR="\${ZOOKEEPER_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/zookeeper/data}"
 mkdir -p "\${DATA_DIR}/znodes/mesos" "\${DATA_DIR}/znodes/marathon"
 
 case "\${1:-}" in

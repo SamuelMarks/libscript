@@ -41,7 +41,7 @@ jobs:
   hydrate-cache:
     name: Centralized Cache Hydration
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: libscript
@@ -99,7 +99,7 @@ jobs:
     name: Build MSI - ${{ matrix.package.name }}
     needs: [hydrate-cache]
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -515,6 +515,7 @@ jobs:
     name: Publish Release Assets
     needs: [build-msi]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
     steps:

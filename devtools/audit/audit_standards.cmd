@@ -87,6 +87,7 @@ if "%ERRORLEVEL%" EQU "0" (
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" >nul 2>&1
 )
+set "LIBSCRIPT_ROOT_DIR=!LIBSCRIPT_ROOT_DIR:\=/!"
 set "_AS_SH=!SCRIPT_DIR:\=/!/audit_standards.sh"
 where dash.exe >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" (

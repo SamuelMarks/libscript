@@ -184,7 +184,11 @@ libscript_parallel_shards() {
   fi
 
   _lps_dir=$(libscript_make_tmpdir 'shards')
-  awk -v n="$_lps_jobs" -v d="$_lps_dir" '
+  LPS_DIR="$_lps_dir" awk -v n="$_lps_jobs" '
+    BEGIN {
+      d = ENVIRON["LPS_DIR"]
+      gsub(/\\/, "/", d)
+    }
     NF > 0 {
       idx = (c % n) + 1
       c++

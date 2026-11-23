@@ -111,11 +111,11 @@ MIT
     if ($updatedReadme -notmatch "\|\s*``illumos_init``\s*\|\s*``init-systems``\s*\|\s*-\s*\|\s*-\s*\|\s*-\s*\|\s*-\s*\|\s*$symQuest\s*\|\s*-\s*\|\s*-\s*\|") {
         throw "Error: illumos_init os_whitelist ['illumos'] did not map to sunos column in README.md"
     }
-    if ($updatedReadme -notmatch "\|\s*``reactos/distro``\s*\|\s*``reactos``\s*\|") {
-        throw "Error: reactos/distro was not disambiguated in README.md"
+    if ($updatedReadme -notmatch "\|\s*``synthesis/distro/reactos``\s*\|\s*``distro``\s*\|") {
+        throw "Error: synthesis/distro/reactos was not discovered in T3 in README.md"
     }
-    if ($updatedReadme -notmatch "\|\s*``tpu-trainer``\s*\|\s*``ml-training``\s*\|") {
-        throw "Error: tpu-trainer component not discovered in README.md"
+    if ($updatedReadme -notmatch "\|\s*``workloads/ai/tpu-trainer``\s*\|\s*``ai``\s*\|") {
+        throw "Error: workloads/ai/tpu-trainer component not discovered in T5 in README.md"
     }
     if ($updatedReadme -match "\|\s*``ml-training``\s*\|\s*``ml-training``\s*\|") {
         throw "Error: spurious synthetic ml-training row emitted in README.md"
