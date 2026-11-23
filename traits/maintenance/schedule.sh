@@ -46,7 +46,7 @@ install_maintenance_schedule() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 [cron_expr]"
+  printf '%s\n' "Usage: ${THIS_FILE} [cron_expr]"
   exit 0
 fi
 

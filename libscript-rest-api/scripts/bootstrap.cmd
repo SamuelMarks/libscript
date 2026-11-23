@@ -75,7 +75,7 @@ where git >nul 2>&1
 if errorlevel 1 (
     echo [INFO] Git not found. Attempting to install via libscript...
     call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install git latest
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\git-servers\git\env.cmd" call "%LIBSCRIPT_ROOT_DIR%\_lib\git-servers\git\env.cmd"
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\utilities\git\env.cmd" call "%LIBSCRIPT_ROOT_DIR%\_lib\utilities\git\env.cmd"
 ) else (
     echo [INFO] Git is already installed.
 )

@@ -95,7 +95,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/deno-pm/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/deno-pm/${EXACT_VERSION}"
       if [ "${TARGET_OS:-}" = "alpine" ] || [ "$UNAME_LOWER" = "freebsd" ]; then
         log_info "Configuring deno-pm for ${TARGET_OS:-$UNAME_LOWER}..."
         libscript_depends 'deno' || true

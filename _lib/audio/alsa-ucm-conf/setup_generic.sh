@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.alsa-ucm-conf"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/alsa-ucm-conf/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/alsa-ucm-conf/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/alsa-ucm-conf" ]; then
   log_info "alsa-ucm-conf ${VERSION} is already installed at ${TARGET_DIR}."

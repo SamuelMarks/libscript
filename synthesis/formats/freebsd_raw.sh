@@ -36,7 +36,7 @@ ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --help|-h)
-      printf 'Usage: %s [--fs=ufs2|zfs] [--strict | --allow-stub] [sysroot_path] [output_raw] [size_gib]\n' "$0"
+      printf 'Usage: %s [--fs=ufs2|zfs] [--strict | --allow-stub] [sysroot_path] [output_raw] [size_gib]\n' "${THIS_FILE}"
       exit 0
       ;;
     --fs=*) FS_TYPE="${1#*=}"; shift ;;

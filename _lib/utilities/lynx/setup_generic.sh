@@ -64,7 +64,7 @@ case "$ACTION" in
     if [ "${LYNX_INSTALL_METHOD}" = "system" ]; then
       lynx -version 2>/dev/null | head -n 1 || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/lynx/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/lynx/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
       exit 0
     fi
     resolve_exact_version
-    TARGET_DIR="${LYNX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/lynx/${EXACT_VERSION}}"
+    TARGET_DIR="${LYNX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/lynx/${EXACT_VERSION}}"
     if [ -x "${TARGET_DIR}/bin/lynx" ]; then
       log_info "lynx ${EXACT_VERSION} is already installed at ${TARGET_DIR}."
       libscript_symlink_alias "lynx" "${LYNX_VERSION}" "${EXACT_VERSION}"

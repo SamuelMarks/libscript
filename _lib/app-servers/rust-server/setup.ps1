@@ -14,7 +14,11 @@ Execute this script to install and configure rust-server on the local system.
 
 $ErrorActionPreference = "Stop"
 
-Get-ChildItem "$PSScriptRoot\..\rust\setup.cmd" | ForEach-Object { & $_.FullName }
+$LibscriptRootDir = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+$rootCmd = Join-Path $LibscriptRootDir "libscript.cmd"
+if ((-not (Get-Command cargo -ErrorAction SilentlyContinue)) -and (Test-Path $rootCmd)) {
+    & $rootCmd install rust latest
+}
 
 if (Test-Path "$env:RUST_SERVER_DEST\Cargo.toml") {
     Write-Host "[INFO] Building Rust project..."

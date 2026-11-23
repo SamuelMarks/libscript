@@ -32,7 +32,7 @@ export PACKAGE_NAME='slurm'
 
 for _arg in "$@"; do
   if [ "$_arg" = "--purge-data" ]; then
-    rm -rf "${SLURM_STATE_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/slurm/state}"
+    rm -rf "${SLURM_STATE_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/slurm/state}"
   fi
 done
 

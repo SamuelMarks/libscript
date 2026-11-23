@@ -138,7 +138,7 @@ if "%LIBSCRIPT_CLOUD%"=="" (
 )
 
 if "%CMD%"=="list" (
-    call "%~dp0api.cmd" :libscript_cert_list "%LIBSCRIPT_CLOUD%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_cert_list "%LIBSCRIPT_CLOUD%"
     exit /b !ERRORLEVEL!
 )
 
@@ -148,11 +148,11 @@ if "%LIBSCRIPT_DOMAIN%"=="" (
 )
 
 if "%CMD%"=="create" (
-    call "%~dp0api.cmd" :libscript_cert_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DOMAIN%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_cert_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DOMAIN%"
     exit /b !ERRORLEVEL!
 )
 if "%CMD%"=="delete" (
-    call "%~dp0api.cmd" :libscript_cert_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DOMAIN%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_cert_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DOMAIN%"
     exit /b !ERRORLEVEL!
 )
 

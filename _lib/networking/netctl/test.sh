@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s
-' "Usage: $(basename "$0")"
+' "Usage: $(basename "${THIS_FILE}")"
   printf '%s
 ' "Implements automated tests to verify the correctness of the component 'netctl' stack."
   printf '

@@ -85,7 +85,7 @@ case "$ACTION" in
         libscript_depends 'curl'
         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/cargo-bins/cargo-binstall/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cargo-binstall/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cargo-binstall/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "cargo-binstall ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -121,7 +121,7 @@ case "$ACTION" in
         libscript_depends 'curl'
         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/cargo-bins/cargo-binstall/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cargo-binstall/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cargo-binstall/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing cargo-binstall ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends 'curl' 'tar'

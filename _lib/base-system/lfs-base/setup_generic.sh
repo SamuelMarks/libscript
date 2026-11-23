@@ -42,7 +42,7 @@ for arg in "$@"; do
       HOSTNAME="${arg#*=}"
       ;;
     -h|--help)
-      printf 'Usage: %s [install|clean|status] [--hostname=name]\n' "$0"
+      printf 'Usage: %s [install|clean|status] [--hostname=name]\n' "${THIS_FILE}"
       exit 0
       ;;
     *)

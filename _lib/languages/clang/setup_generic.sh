@@ -85,7 +85,7 @@ stage_host_clang_shim() {
 # ## install_clang_component
 # Installs or builds LLVM Clang according to CLANG_INSTALL_METHOD and stages it under LIBSCRIPT_HOME.
 install_clang_component() {
-  TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/${EXACT_VERSION}"
+  TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/${EXACT_VERSION}"
   if [ "${CLANG_INSTALL_METHOD}" != "from-source" ] && [ -x "${TARGET_DIR}/bin/clang" ] && [ "${FORCE_REBUILD:-0}" != "1" ]; then
     libscript_symlink_alias "clang" "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias "clang" "default" "${EXACT_VERSION}"
@@ -205,7 +205,7 @@ EOF
 
 case "${ACTION}" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/" 2>/dev/null || true
     ;;
   ls-remote)
     printf '16.0.6
@@ -231,8 +231,8 @@ case "${ACTION}" in
     install_clang_component
     ;;
   uninstall)
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/${VERSION}"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/${EXACT_VERSION}"
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/${VERSION}"
     ;;
   *)
     install_clang_component

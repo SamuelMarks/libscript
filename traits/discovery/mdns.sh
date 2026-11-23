@@ -38,7 +38,7 @@ publish_mdns() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <service_name> <port>"
+  printf '%s\n' "Usage: ${THIS_FILE} <service_name> <port>"
   exit 0
 fi
 

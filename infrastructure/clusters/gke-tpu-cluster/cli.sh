@@ -40,7 +40,7 @@ unset SCRIPT_NAME || true
 # ## print_usage
 # Prints usage instructions for gke-tpu-cluster cli.sh.
 print_usage() {
-  printf '%s\n' "Usage: $0 <create|delete|status> [cluster_name]"
+  printf '%s\n' "Usage: ${THIS_FILE} <create|delete|status> [cluster_name]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

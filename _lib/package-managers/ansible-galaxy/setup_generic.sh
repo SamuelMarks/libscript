@@ -94,7 +94,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ansible-galaxy/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ansible-galaxy/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/ansible-galaxy" ]; then
         log_info "Installing ansible-galaxy ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -105,7 +105,7 @@ case "$ACTION" in
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+              unzip -q -o "$cache_file" -d "${TARGET_DIR}" || true
             else
               cp "$cache_file" "${TARGET_DIR}/bin/ansible-galaxy" || true
               chmod +x "${TARGET_DIR}/bin/ansible-galaxy" || true
@@ -118,7 +118,7 @@ case "$ACTION" in
             if case "${ANSIBLE_GALAXY_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "${ANSIBLE_GALAXY_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              unzip -q -o "${TEMP_FILE}" -d "${TARGET_DIR}" || true
             else
               cp "${TEMP_FILE}" "${TARGET_DIR}/bin/ansible-galaxy" || true
               chmod +x "${TARGET_DIR}/bin/ansible-galaxy" || true
@@ -142,8 +142,8 @@ case "$ACTION" in
               fi
               if command -v ansible-galaxy >/dev/null 2>&1; then
                 ln -sf "$(command -v ansible-galaxy)" "${TARGET_DIR}/bin/ansible-galaxy"
-              elif [ -x "${HOME}/.local/bin/ansible-galaxy" ]; then
-                ln -sf "${HOME}/.local/bin/ansible-galaxy" "${TARGET_DIR}/bin/ansible-galaxy"
+              elif [ -x "${HOME:-/root}/.local/bin/ansible-galaxy" ]; then
+                ln -sf "${HOME:-/root}/.local/bin/ansible-galaxy" "${TARGET_DIR}/bin/ansible-galaxy"
               fi
             else
               log_warn "No download URL provided for ansible-galaxy ${VERSION}."

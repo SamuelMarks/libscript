@@ -59,7 +59,7 @@ case "$ACTION" in
     if [ "${CABAL_INSTALL_METHOD:-}" = "system" ]; then
       printf '%s\n' 'System packages do not support ls here.'
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cabal/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -75,7 +75,7 @@ case "$ACTION" in
       libscript_symlink_alias "cabal" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "cabal" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cabal/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "cabal ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -102,12 +102,12 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${VERSION:-latest}/bin/cabal" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cabal/${VERSION:-latest}/bin/cabal" ]; then
       log_info "cabal ${VERSION:-latest} is already installed."
       exit 0
     fi
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${EXACT_VERSION}"
+    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cabal/${EXACT_VERSION}"
     if [ "$CABAL_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'cabal'
     elif [ "$CABAL_INSTALL_METHOD" = "libscript_native" ]; then
@@ -122,14 +122,14 @@ case "$ACTION" in
           if ! command -v cabal >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh" ]; then
             unset SCRIPT_NAME || true
             "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh"
-            GHCUP_BIN="$HOME/.ghcup/bin/ghcup"
-            [ ! -x "$GHCUP_BIN" ] && GHCUP_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/ghcup/latest/bin/ghcup"
+            GHCUP_BIN="${HOME:-/root}/.ghcup/bin/ghcup"
+            [ ! -x "$GHCUP_BIN" ] && GHCUP_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ghcup/latest/bin/ghcup"
             if [ -x "$GHCUP_BIN" ]; then
               "$GHCUP_BIN" install cabal || true
               "$GHCUP_BIN" set cabal || true
             fi
-            if [ -x "$HOME/.ghcup/bin/cabal" ]; then
-              export PATH="$HOME/.ghcup/bin:$PATH"
+            if [ -x "${HOME:-/root}/.ghcup/bin/cabal" ]; then
+              export PATH="${HOME:-/root}/.ghcup/bin:$PATH"
             fi
           fi
         fi

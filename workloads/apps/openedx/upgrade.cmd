@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 if "%OPENEDX_INSTALL_DIR%"=="" (
@@ -122,7 +122,7 @@ set "MANAGE_PY=%CODEBASE_DIR%\manage.py"
 if not exist "%MANAGE_PY%" set "MANAGE_PY=%OPENEDX_INSTALL_DIR%\manage.py"
 
 echo [INFO] Step 1/8: Creating pre-upgrade state backup...
-if exist "%~dp0backup.cmd" call "%~dp0backup.cmd" create
+if exist "!SCRIPT_DIR!\backup.cmd" call "!SCRIPT_DIR!\backup.cmd" create
 
 echo [INFO] Step 2/8: Updating openedx-platform repository to %TO_REL%...
 if exist "%CODEBASE_DIR%\.git" (
@@ -152,8 +152,8 @@ if exist "%CODEBASE_DIR%\package.json" (
 if exist "%MANAGE_PY%" (
     "%PYTHON_BIN%" "%MANAGE_PY%" lms collectstatic --noinput 2>nul
 )
-if exist "%~dp0mfe.cmd" (
-    if exist "%OPENEDX_INSTALL_DIR%\mfes" call "%~dp0mfe.cmd" build all 2>nul
+if exist "!SCRIPT_DIR!\mfe.cmd" (
+    if exist "%OPENEDX_INSTALL_DIR%\mfes" call "!SCRIPT_DIR!\mfe.cmd" build all 2>nul
 )
 
 echo [INFO] Step 6/8: Flushing cache stores...
@@ -168,9 +168,9 @@ if exist "%MANAGE_PY%" (
 )
 
 echo [INFO] Step 8/8: Restarting services, background workers, and validating diagnostics...
-if exist "%~dp0service.cmd" call "%~dp0service.cmd" restart
-if exist "%~dp0workers.cmd" call "%~dp0workers.cmd" restart
-if exist "%~dp0healthcheck.cmd" call "%~dp0healthcheck.cmd"
+if exist "!SCRIPT_DIR!\service.cmd" call "!SCRIPT_DIR!\service.cmd" restart
+if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" restart
+if exist "!SCRIPT_DIR!\healthcheck.cmd" call "!SCRIPT_DIR!\healthcheck.cmd"
 
 echo [SUCCESS] Open edX platform upgrade to '%TO_REL%' completed successfully.
 exit /b 0

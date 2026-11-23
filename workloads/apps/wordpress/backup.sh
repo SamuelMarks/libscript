@@ -33,7 +33,7 @@ export DIR="${SCRIPT_DIR}"
 WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
 DBSHELL="${SCRIPT_DIR}/dbshell.sh"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
-OUT_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/wordpress/backups"
+OUT_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/wordpress/backups"
 OUT_FILE=""
 
 while [ $# -gt 0 ]; do

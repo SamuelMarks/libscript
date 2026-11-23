@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 if "!OPENEDX_INSTALL_DIR!"=="" (
@@ -68,7 +68,7 @@ if "!OPENEDX_INSTALL_DIR:~-1!"=="\" set "OPENEDX_INSTALL_DIR=!OPENEDX_INSTALL_DI
 set "CONF_DIR=!OPENEDX_INSTALL_DIR!\config"
 set "LMS_CONF=!CONF_DIR!\lms.env.json"
 set "CMS_CONF=!CONF_DIR!\cms.env.json"
-set "SCHEMA_FILE=%~dp0vars.schema.json"
+set "SCHEMA_FILE=!SCRIPT_DIR!\vars.schema.json"
 
 set "CMD=%~1"
 if "%CMD%"=="" goto show_help
@@ -105,7 +105,7 @@ if "%KEY%"=="" (
     echo [ERROR] Key parameter is required. >&2
     exit /b 1
 )
-call "%~dp0config_helper.cmd" get "%LMS_CONF%" "%KEY%"
+call "!SCRIPT_DIR!\config_helper.cmd" get "%LMS_CONF%" "%KEY%"
 if errorlevel 1 exit /b 1
 exit /b 0
 
@@ -119,7 +119,7 @@ if "%KEY%"=="" (
     echo [ERROR] Key parameter is required. >&2
     exit /b 1
 )
-call "%~dp0config_helper.cmd" set "%LMS_CONF%" "%CMS_CONF%" "%KEY%" "%VAL%"
+call "!SCRIPT_DIR!\config_helper.cmd" set "%LMS_CONF%" "%CMS_CONF%" "%KEY%" "%VAL%"
 if errorlevel 1 exit /b 1
 exit /b 0
 
@@ -139,7 +139,7 @@ exit /b 0
 :: Generates baseline LMS and CMS JSON configurations.
 :do_generate
 if not exist "%CONF_DIR%" mkdir "%CONF_DIR%"
-call "%~dp0config_helper.cmd" generate "%LMS_CONF%" "%CMS_CONF%"
+call "!SCRIPT_DIR!\config_helper.cmd" generate "%LMS_CONF%" "%CMS_CONF%"
 if errorlevel 1 exit /b 1
 exit /b 0
 
@@ -162,7 +162,7 @@ if /i "%SUB%"=="list" (
 )
 if /i "%SUB%"=="show" (
     call :ensure_conf
-    call "%~dp0config_helper.cmd" get "%LMS_CONF%" "PATCHES.%~3"
+    call "!SCRIPT_DIR!\config_helper.cmd" get "%LMS_CONF%" "PATCHES.%~3"
     exit /b 0
 )
 echo [ERROR] Unknown patches subcommand: %SUB% >&2
@@ -173,7 +173,7 @@ exit /b 1
 :do_validate
 call :ensure_conf
 echo [INFO] Validating %LMS_CONF%...
-call "%~dp0config_helper.cmd" validate "%LMS_CONF%" "%SCHEMA_FILE%"
+call "!SCRIPT_DIR!\config_helper.cmd" validate "%LMS_CONF%" "%SCHEMA_FILE%"
 if errorlevel 1 exit /b 1
 exit /b 0
 

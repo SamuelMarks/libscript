@@ -88,7 +88,7 @@ case "$SUBCMD" in
 esac
 
 case "${pkg_type:-}" in
-  docker|dockerfile) source_format_driver "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dockerfile.sh" "$@" ;;
+  docker|dockerfile) source_format_driver "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/docker.sh" "$@" ;;
   docker_compose|docker-compose) source_format_driver "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/docker_compose.sh" "$@" ;;
   msi)
     case "${1:-}" in

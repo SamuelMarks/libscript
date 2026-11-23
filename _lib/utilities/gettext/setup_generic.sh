@@ -30,11 +30,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/env.sh"
+if [ -f "${SCRIPT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${SCRIPT_DIR}/env.sh"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
 fi
 
 for LIB in "engine/common/pkg_mgr.sh" "engine/common/versioning.sh" "engine/common/source_builder.sh"; do
@@ -64,7 +65,7 @@ case "$ACTION" in
     if [ "${GETTEXT_INSTALL_METHOD}" = "system" ]; then
       msgfmt --version 2>/dev/null | head -n 1 || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/gettext/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gettext/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -95,7 +96,7 @@ case "$ACTION" in
       exit 0
     fi
     resolve_exact_version
-    TARGET_DIR="${GETTEXT_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/gettext/${EXACT_VERSION}}"
+    TARGET_DIR="${GETTEXT_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gettext/${EXACT_VERSION}}"
     if [ -x "${TARGET_DIR}/bin/msgfmt" ] && [ -x "${TARGET_DIR}/bin/xgettext" ]; then
       log_info "gettext ${EXACT_VERSION} is already installed at ${TARGET_DIR}."
       libscript_symlink_alias "gettext" "${GETTEXT_VERSION}" "${EXACT_VERSION}"
@@ -115,7 +116,7 @@ case "$ACTION" in
     if [ -n "${GETTEXT_DOWNLOAD_URL:-}" ]; then
       TEMP_FILE=$(mktemp)
       libscript_download "${GETTEXT_DOWNLOAD_URL}" "${TEMP_FILE}"
-      tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" 2>/dev/null || true
+      tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || unzip -q -o "${TEMP_FILE}" -d "${TARGET_DIR}" 2>/dev/null || true
       rm -f "${TEMP_FILE}"
     else
       for _tool in msgfmt xgettext msginit msgmerge; do

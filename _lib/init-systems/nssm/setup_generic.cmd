@@ -92,7 +92,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\nssm\%NSSM_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\nssm\latest"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%" >nul 2>&1
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -157,7 +158,8 @@ if exist "%TARGET_DIR%\nssm-2.24\win64\nssm.exe" (
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\nssm\latest"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%" >nul 2>&1
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 

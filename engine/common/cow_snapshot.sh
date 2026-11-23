@@ -39,7 +39,7 @@ execute_cow_op() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <create|rollback|send> <dataset_or_subvol> <snapshot_tag>"
+  printf '%s\n' "Usage: ${THIS_FILE} <create|rollback|send> <dataset_or_subvol> <snapshot_tag>"
   exit 0
 fi
 

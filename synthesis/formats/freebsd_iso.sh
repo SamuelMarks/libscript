@@ -35,7 +35,7 @@ ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --help|-h)
-      printf 'Usage: %s [--strict | --allow-stub] [sysroot_path] [output_iso]\n' "$0"
+      printf 'Usage: %s [--strict | --allow-stub] [sysroot_path] [output_iso]\n' "${THIS_FILE}"
       printf 'Generates FreeBSD bootable ISO.\n'
       exit 0
       ;;

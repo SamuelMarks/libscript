@@ -94,16 +94,16 @@ case "$ACTION" in
       libscript_depends 'pip' || true
       if ! pip --version >/dev/null 2>&1; then
         if command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
-          mkdir -p "${LIBSCRIPT_HOME:-$HOME/.libscript}/pip/latest/bin"
-          printf '#!/bin/sh\nexec python3 -m pip "$@"\n' > "${LIBSCRIPT_HOME:-$HOME/.libscript}/pip/latest/bin/pip"
-          chmod +x "${LIBSCRIPT_HOME:-$HOME/.libscript}/pip/latest/bin/pip"
+          mkdir -p "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pip/latest/bin"
+          printf '#!/bin/sh\nexec python3 -m pip "$@"\n' > "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pip/latest/bin/pip"
+          chmod +x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pip/latest/bin/pip"
           libscript_symlink_alias "pip" "latest" "latest" || true
         fi
       fi
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pip/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pip/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing pip ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -114,7 +114,7 @@ case "$ACTION" in
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+              unzip -q -o "$cache_file" -d "${TARGET_DIR}" || true
             else
               cp "$cache_file" "${TARGET_DIR}/bin/pip" || true
               chmod +x "${TARGET_DIR}/bin/pip" || true
@@ -127,7 +127,7 @@ case "$ACTION" in
             if case "${PIP_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "${PIP_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              unzip -q -o "${TEMP_FILE}" -d "${TARGET_DIR}" || true
             else
               cp "${TEMP_FILE}" "${TARGET_DIR}/bin/pip" || true
               chmod +x "${TARGET_DIR}/bin/pip" || true

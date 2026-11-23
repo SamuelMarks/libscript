@@ -41,7 +41,7 @@ read_env_secret_file() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <env_file_path>"
+  printf '%s\n' "Usage: ${THIS_FILE} <env_file_path>"
   exit 0
 fi
 

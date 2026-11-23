@@ -73,13 +73,13 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${VERSION:-latest}/bin/uwsgi" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uwsgi/${VERSION:-latest}/bin/uwsgi" ]; then
       log_info "uwsgi ${VERSION:-latest} is already installed."
       exit 0
     fi
     resolve_exact_version
     log_info "Installing uWSGI (${VERSION}) via ${UWSGI_INSTALL_METHOD}..."
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
+    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uwsgi/${EXACT_VERSION}"
     mkdir -p "${TARGET_DIR}/bin"
     if [ "$UWSGI_INSTALL_METHOD" != "from-source" ] && command -v uwsgi >/dev/null 2>&1; then
       ln -sf "$(command -v uwsgi)" "${TARGET_DIR}/bin/uwsgi"
@@ -118,7 +118,7 @@ case "$ACTION" in
       elif [ -f /etc/redhat-release ] || [ -f /etc/rocky-release ]; then
         libscript_depends 'python3-devel' || true
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uwsgi/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"
       export UWSGI_PROFILE_OVERRIDE="xml=no"
       libscript_python_venv "${TARGET_DIR}"

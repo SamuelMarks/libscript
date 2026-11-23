@@ -28,11 +28,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+if [ -f "${SCRIPT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${SCRIPT_DIR}"'/env.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
 fi
 
 for LIB in "engine/common/pkg_mgr.sh" "engine/common/os_info.sh" "engine/common/versioning.sh" "engine/common/python_env.sh"; do
@@ -73,7 +74,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${VERSION:-latest}/bin/gunicorn" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gunicorn/${VERSION:-latest}/bin/gunicorn" ]; then
       log_info "gunicorn ${VERSION:-latest} is already installed."
       exit 0
     fi
@@ -81,7 +82,7 @@ case "$ACTION" in
     log_info "Installing Gunicorn (${VERSION}) via ${GUNICORN_INSTALL_METHOD}..."
     if [ "$GUNICORN_INSTALL_METHOD" = "libscript_native" ]; then
       libscript_python_ensure_runtime
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gunicorn/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"
       if [ "${UNAME:-}" = "FreeBSD" ]; then
         libscript_depends 'gunicorn'

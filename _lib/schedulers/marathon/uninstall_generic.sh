@@ -32,7 +32,7 @@ export PACKAGE_NAME='marathon'
 
 for _arg in "$@"; do
   if [ "$_arg" = "--purge-data" ]; then
-    rm -rf "${MARATHON_STATE_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/marathon/state}"
+    rm -rf "${MARATHON_STATE_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/marathon/state}"
   fi
 done
 

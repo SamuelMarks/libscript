@@ -49,7 +49,7 @@ for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 USER_HELPER="${SCRIPT_DIR}/user_helper.sh"
 
 # ## user_create
@@ -64,7 +64,7 @@ USER_HELPER="${SCRIPT_DIR}/user_helper.sh"
 #     --superuser
 user_create() {
   if [ $# -lt 2 ]; then
-    log_err "Usage: $0 create <username> <email> [--password <password>] [--staff] [--superuser]"
+    log_err "Usage: ${THIS_FILE} create <username> <email> [--password <password>] [--staff] [--superuser]"
     return 1
   fi
 
@@ -125,7 +125,7 @@ user_create() {
 #   $2 - password
 user_set_password() {
   if [ $# -lt 2 ]; then
-    log_err "Usage: $0 set_password <username> <password>"
+    log_err "Usage: ${THIS_FILE} set_password <username> <password>"
     return 1
   fi
   _username="$1"

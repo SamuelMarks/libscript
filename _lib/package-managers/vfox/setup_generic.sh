@@ -74,7 +74,7 @@ case "$ACTION" in
     elif [ "$VFOX_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' 'System packages do not support ls here.'
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vfox/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -114,7 +114,7 @@ case "$ACTION" in
       libscript_symlink_alias "vfox" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "vfox" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vfox/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "vfox ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -155,7 +155,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vfox/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/vfox" ]; then
         log_info "Installing vfox ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends 'curl'

@@ -1200,7 +1200,7 @@ case "$ACTION" in
     TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${EXACT_VERSION}"
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
-      ACTION='install' "$0"
+      STACK='' ACTION='install' "${THIS_FILE}"
     fi
     libscript_symlink_alias '__SCAF_NAME__' "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias '__SCAF_NAME__' 'default' "${EXACT_VERSION}"
@@ -1425,8 +1425,9 @@ call :resolve_version
 set "TARGET_DIR=%LIBSCRIPT_HOME%\__SCAF_NAME__\!EXACT_VERSION!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
+    set "STACK="
     set "ACTION=install"
-    call "%~f0"
+    call "!THIS_FILE!"
 )
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"

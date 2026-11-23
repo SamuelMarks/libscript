@@ -142,12 +142,12 @@ if "%LIBSCRIPT_CLOUD%"=="" (
 )
 
 if "%CMD%"=="list" (
-    call "%~dp0api.cmd" :libscript_volume_list "%LIBSCRIPT_CLOUD%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_volume_list "%LIBSCRIPT_CLOUD%"
     exit /b !ERRORLEVEL!
 )
 
 if "%CMD%"=="create" (
-    call "%~dp0api.cmd" :libscript_volume_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_SIZE%" "%LIBSCRIPT_VOLUME_ZONE%" "%LIBSCRIPT_VOLUME_TYPE%" "%LIBSCRIPT_VOLUME_NAME%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_volume_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_SIZE%" "%LIBSCRIPT_VOLUME_ZONE%" "%LIBSCRIPT_VOLUME_TYPE%" "%LIBSCRIPT_VOLUME_NAME%"
     exit /b !ERRORLEVEL!
 )
 
@@ -156,7 +156,7 @@ if "%CMD%"=="delete" (
         echo Error: --volume-id ^(or LIBSCRIPT_VOLUME_ID^) is required for %CMD%. >&2
         exit /b 1
     )
-    call "%~dp0api.cmd" :libscript_volume_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_volume_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%"
     exit /b !ERRORLEVEL!
 )
 
@@ -165,7 +165,7 @@ if "%CMD%"=="attach" (
         echo Error: --volume-id ^(or LIBSCRIPT_VOLUME_ID^) is required for %CMD%. >&2
         exit /b 1
     )
-    call "%~dp0api.cmd" :libscript_volume_attach "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%" "%LIBSCRIPT_NODE_ID%" "%LIBSCRIPT_DEVICE%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_volume_attach "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%" "%LIBSCRIPT_NODE_ID%" "%LIBSCRIPT_DEVICE%"
     exit /b !ERRORLEVEL!
 )
 
@@ -174,7 +174,7 @@ if "%CMD%"=="detach" (
         echo Error: --volume-id ^(or LIBSCRIPT_VOLUME_ID^) is required for %CMD%. >&2
         exit /b 1
     )
-    call "%~dp0api.cmd" :libscript_volume_detach "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%" "%LIBSCRIPT_NODE_ID%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_volume_detach "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%" "%LIBSCRIPT_NODE_ID%"
     exit /b !ERRORLEVEL!
 )
 

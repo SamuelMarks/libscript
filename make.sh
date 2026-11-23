@@ -57,6 +57,11 @@ case "$target" in
     "$SCRIPT_DIR/tests/run_local_tests.sh" databases
     ;;
   audit)
+    if command -v git >/dev/null 2>&1 && [ -d "$SCRIPT_DIR/.git" ]; then
+      if [ "$(git -C "$SCRIPT_DIR" config --get core.hooksPath 2>/dev/null || true)" != ".githooks" ]; then
+        git -C "$SCRIPT_DIR" config core.hooksPath .githooks 2>/dev/null || true
+      fi
+    fi
     "$SCRIPT_DIR/devtools/audit/audit_standards.sh" --all
     "$SCRIPT_DIR/devtools/audit/audit_posix.sh"
     "$SCRIPT_DIR/devtools/audit/audit_tiers.sh" --all

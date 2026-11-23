@@ -32,7 +32,7 @@ export PACKAGE_NAME='mesos'
 
 for _arg in "$@"; do
   if [ "$_arg" = "--purge-data" ]; then
-    rm -rf "${MESOS_WORK_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/mesos/work}"
+    rm -rf "${MESOS_WORK_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mesos/work}"
   fi
 done
 

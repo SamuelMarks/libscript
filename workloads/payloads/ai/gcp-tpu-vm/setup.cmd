@@ -52,7 +52,8 @@ goto :find_root
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 
-call "!LIBSCRIPT_ROOT_DIR!\workloads\ai\setup.cmd" %*
+set "STACK="
+call "!SCRIPT_DIR!\deploy.cmd" %*
 exit /b %errorlevel%
 
 :: ## help

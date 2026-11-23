@@ -65,7 +65,7 @@ case "$ACTION" in
     if [ "${HTTPD_INSTALL_METHOD}" = "system" ]; then
       httpd --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/httpd/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/httpd/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -85,7 +85,7 @@ case "$ACTION" in
       libscript_symlink_alias "httpd" "${HTTPD_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "httpd" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/httpd/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/httpd/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "httpd ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -112,7 +112,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/httpd/${VERSION:-latest}/bin/httpd" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/httpd/${VERSION:-latest}/bin/httpd" ]; then
       log_info "httpd ${VERSION:-latest} is already installed."
       exit 0
     fi
@@ -121,7 +121,7 @@ case "$ACTION" in
       libscript_depends 'httpd'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/httpd/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/httpd/${EXACT_VERSION}"
       
       if [ -x "${TARGET_DIR}/bin/httpd" ]; then
         libscript_symlink_alias "httpd" "${HTTPD_VERSION}" "${EXACT_VERSION}"

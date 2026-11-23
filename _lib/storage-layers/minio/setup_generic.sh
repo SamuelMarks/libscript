@@ -80,7 +80,7 @@ case "$ACTION" in
       resolve_exact_version
       libscript_symlink_alias "minio" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/minio/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/minio/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "minio ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -112,7 +112,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/minio/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/minio/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing minio ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"

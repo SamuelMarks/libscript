@@ -46,7 +46,7 @@ for arg in "$@"; do
       TARGET_ARCH="${arg#*=}"
       ;;
     -h|--help)
-      printf 'Usage: %s [install|clean|status] [--libc=glibc|musl] [--arch=x86_64|aarch64]\n' "$0"
+      printf 'Usage: %s [install|clean|status] [--libc=glibc|musl] [--arch=x86_64|aarch64]\n' "${THIS_FILE}"
       exit 0
       ;;
     *)

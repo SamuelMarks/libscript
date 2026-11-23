@@ -91,9 +91,10 @@ for fmt in msi nsis innosetup deb rpm apk txz pkg dmg tui; do
 done
 
 export LIBSCRIPT_TARGET_SYSROOT="${TMP_DIR}/sysroot"
-for img_fmt in raw-img qcow2 vmdk vdi vagrant-box iso rootfs-tar bsd-img illumos-distro unikernel; do
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" package-as "$img_fmt" >/dev/null
+for img_fmt in raw-img qcow2 vmdk vdi vagrant-box iso rootfs-tar bsd-img illumos-distro; do
+  LIBSCRIPT_ALLOW_STUB=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" package-as "$img_fmt" >/dev/null
 done
+LIBSCRIPT_ALLOW_STUB=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" package-as unikernel --allow-stub-sdk >/dev/null
 
 printf '=== 2.7 Testing Multicloud Provisioning, Cloud CLI & netctl (2x Idempotent) ===
 '

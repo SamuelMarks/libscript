@@ -519,11 +519,11 @@ build_single_variant() {
   mkdir -p "$_target_dir" "$OUT_DIR"
 
   # Ensure msi-rs is available via libscript mechanisms
-  if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
-    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+  if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default/bin:${PATH}"
     export PATH
-  elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin" ]; then
-    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
+  elif [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/v0.0.1/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
     export PATH
   fi
   if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then

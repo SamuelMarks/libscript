@@ -42,7 +42,7 @@ fi
 
 VERSION="${APK_VERSION:-latest}"
 SYS_VER=$(apk --version 2>&1 | awk '{print $2}' | tr -d ',' || printf 'latest')
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/apk/${SYS_VER}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/apk/${SYS_VER}"
 
 mkdir -p "${TARGET_DIR}/bin"
 ln -sf "$APK_BIN" "${TARGET_DIR}/bin/apk"

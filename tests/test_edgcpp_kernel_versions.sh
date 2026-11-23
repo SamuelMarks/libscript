@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 ' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-TEST_HOME="${LIBSCRIPT_HOME:-${HOME}/.libscript}"
+TEST_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
 export LIBSCRIPT_HOME="${TEST_HOME}"
 TEST_SYSROOT="${LIBSCRIPT_ROOT_DIR}/build/test-edgcpp-kernel-versions-sysroot"
 export LIBSCRIPT_TARGET_SYSROOT="${TEST_SYSROOT}"

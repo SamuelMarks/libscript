@@ -29,6 +29,6 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cdn/latest"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cdn/latest"
 mkdir -p "$TARGET_DIR"
 exit 0

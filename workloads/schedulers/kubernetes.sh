@@ -111,7 +111,7 @@ compile_k8s_yaml() {
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s
-' "Usage: $0 <compile|submit|status|logs|stop|destroy> <payload.json_or_id>"
+' "Usage: ${THIS_FILE} <compile|submit|status|logs|stop|destroy> <payload.json_or_id>"
   exit 0
 fi
 

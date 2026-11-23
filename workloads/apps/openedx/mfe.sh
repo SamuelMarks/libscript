@@ -42,7 +42,7 @@ for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 MFE_ROOT_DIR="${OPENEDX_INSTALL_DIR}/mfes"
 MFE_DIST_DIR="${OPENEDX_INSTALL_DIR}/mfe_dist"
 MFE_HELPER="${SCRIPT_DIR}/mfe_helper.sh"
@@ -57,7 +57,7 @@ mkdir -p "${MFE_ROOT_DIR}" "${MFE_DIST_DIR}"
 #   --version <version>
 mfe_build() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 build <mfe_name> [--version <version>]"
+    log_err "Usage: ${THIS_FILE} build <mfe_name> [--version <version>]"
     return 1
   fi
   _name="$1"
@@ -90,7 +90,7 @@ mfe_build() {
 #   --dest <path>
 mfe_deploy() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 deploy <mfe_name> [--dest <path>]"
+    log_err "Usage: ${THIS_FILE} deploy <mfe_name> [--dest <path>]"
     return 1
   fi
   _name="$1"

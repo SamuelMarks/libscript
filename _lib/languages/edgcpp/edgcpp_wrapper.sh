@@ -81,7 +81,7 @@ resolve_edgcpp_binaries() {
   esac
   EDGCPP_ACTIVE_FLAVOR="${_req_flavor:-edgcpp+llvm+gcc}"
 
-  _edg_base="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp"
+  _edg_base="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp"
   if [ -n "${EDG_REPO:-}" ] && [ -x "${EDG_REPO}/build-rel/src/cpfe" ] && [ -z "${EDGCPP_HOME:-}" ] && [ -z "${CPFE_BIN:-}" ]; then
     _edg_home="${EDG_REPO}/build-rel"
   elif [ -n "${EDGCPP_SOURCE_DIR:-}" ] && [ -x "${EDGCPP_SOURCE_DIR}/build-rel/src/cpfe" ] && [ -z "${EDGCPP_HOME:-}" ] && [ -z "${CPFE_BIN:-}" ]; then
@@ -433,7 +433,7 @@ record_edgcpp_event() {
   _ev_flavor="${EDGCPP_ACTIVE_FLAVOR:-edgcpp+llvm+gcc}"
   _ev_diag="${LAST_FAILURE_LOG_PATH:-}"
   _ev_repro="${LAST_REPRODUCER_DIR:-}"
-  _log_file="${EDGCPP_LOG_FILE:-${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/compile_events.jsonl}"
+  _log_file="${EDGCPP_LOG_FILE:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/compile_events.jsonl}"
   mkdir -p "$(dirname -- "${_log_file}")"
   _safe_src=$(printf '%s' "${_ev_src}" | tr '"' "'" | tr -d '[:cntrl:]')
   _safe_diag=$(printf '%s' "${_ev_diag}" | tr '"' "'" | tr -d '[:cntrl:]')
@@ -762,7 +762,7 @@ REPRO_CMD
     printf 'CPFE Binary         : %s\n' "${EDGCPP_RESOLVED_CPFE}"
     printf 'Dialect / Opt       : %s / %s (kernel_mode=%s)\n' "${CPFE_STD_DIALECT}" "${ACTIVE_OPT_FLAG}" "${IS_KERNEL_MODE}"
     printf 'Translation Unit    : %s\n' "${_ff_src}"
-    printf 'Wrapper Invocation  : %s %s\n' "${0}" "${SAVED_DRIVER_ARGS}"
+    printf 'Wrapper Invocation  : %s %s\n' "${THIS_FILE}" "${SAVED_DRIVER_ARGS}"
     printf 'Frontend Exit Code  : %s\n' "${_ff_fe_rc}"
     printf 'Backend Exit Code   : %s\n' "${_ff_be_rc}"
     printf '1. CPFE FRONTEND COMMAND:\n  %s\n' "${_ff_fe_cmd}"

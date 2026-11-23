@@ -51,4 +51,4 @@ goto :find_root
 :root_found
 
 set ACTION=uninstall
-call "%~dp0setup_generic.cmd" %*
+call "!SCRIPT_DIR!\setup_generic.cmd" %*

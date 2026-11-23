@@ -34,7 +34,7 @@ ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --help|-h)
-      printf 'Usage: %s [--strict | --allow-stub] [target_sysroot] [output_image] [size_gib]\n' "$0"
+      printf 'Usage: %s [--strict | --allow-stub] [target_sysroot] [output_image] [size_gib]\n' "${THIS_FILE}"
       exit 0
       ;;
     --strict) STRICT_BUILD=1; shift ;;

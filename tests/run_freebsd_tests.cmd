@@ -49,7 +49,7 @@ goto :find_root
 :root_found
 
 
-set "THIS_DIR=%~dp0"
+set "THIS_DIR=!SCRIPT_DIR!\"
 if "%THIS_DIR:~-1%"=="\" set "THIS_DIR=%THIS_DIR:~0,-1%"
 set "REPO_ROOT=%THIS_DIR%\.."
 for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"

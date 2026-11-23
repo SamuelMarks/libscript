@@ -187,7 +187,7 @@ if "%LIBSCRIPT_CLOUD%"=="" (
 )
 
 if "%CMD%"=="list" (
-    call "%~dp0api.cmd" :libscript_cdn_list "%LIBSCRIPT_CLOUD%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_cdn_list "%LIBSCRIPT_CLOUD%"
     exit /b !ERRORLEVEL!
 )
 
@@ -196,7 +196,7 @@ if "%CMD%"=="create" (
         echo Error: --bucket ^(or LIBSCRIPT_BUCKET^) is required for %CMD%. >&2
         exit /b 1
     )
-    call "%~dp0api.cmd" :libscript_cdn_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_DOMAIN%" "%LIBSCRIPT_CERT_ID%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_cdn_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_DOMAIN%" "%LIBSCRIPT_CERT_ID%"
     exit /b !ERRORLEVEL!
 )
 
@@ -205,7 +205,7 @@ if "%CMD%"=="delete" (
         echo Error: --dist-id ^(or LIBSCRIPT_DIST_ID^) is required for %CMD%. >&2
         exit /b 1
     )
-    call "%~dp0api.cmd" :libscript_cdn_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DIST_ID%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_cdn_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DIST_ID%"
     exit /b !ERRORLEVEL!
 )
 
@@ -214,7 +214,7 @@ if "%CMD%"=="invalidate" (
         echo Error: --dist-id ^(or LIBSCRIPT_DIST_ID^) is required for %CMD%. >&2
         exit /b 1
     )
-    call "%~dp0api.cmd" :libscript_cdn_invalidate "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DIST_ID%" "%LIBSCRIPT_PATHS%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_cdn_invalidate "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DIST_ID%" "%LIBSCRIPT_PATHS%"
     exit /b !ERRORLEVEL!
 )
 

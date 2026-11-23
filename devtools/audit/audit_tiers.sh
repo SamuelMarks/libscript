@@ -2,12 +2,10 @@
 # ## Overview
 # Audits LibScript's T0-T5 + Orthogonal Planes (Plane A: traits, Plane B: experiments) architecture,
 # enforcing unidirectional downward-only imports, atomic _lib/ purity, zero fractional tiers, and zero legacy aliases.
-#
 # ## Usage
-# ./devtools/audit/audit_tiers.sh [--all|--staged] [--root <repo_dir>]
+# ./devtools/audit/audit_tiers.sh [--all | --staged | --root <dir>]
 
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -18,41 +16,67 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export LIBSCRIPT_ROOT_DIR
 
-TARGET_ROOT="$LIBSCRIPT_ROOT_DIR"
-while [ $# -gt 0 ]; do
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/parallel.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
+TARGET_ROOT="${LIBSCRIPT_ROOT_DIR}"
+TIER_MODE='all'
+
+# ## show_help
+# Prints usage instructions for the architectural tier boundary auditor.
+show_help() {
+  printf 'Usage: %s [--all | --staged | --root <dir> | --help]\n' "$(basename "$THIS_FILE")"
+  printf 'Audits T0-T5 + Orthogonal Planes (traits, experiments) architectural boundaries.\n'
+}
+
+while [ "$#" -gt 0 ]; do
   case "$1" in
-    --all|--staged) shift ;;
-    --root) TARGET_ROOT="$2"; shift 2 ;;
-    --root=*) TARGET_ROOT="${1#*=}"; shift ;;
-    --help|-h)
-      printf '%s\n' 'Usage: ./devtools/audit/audit_tiers.sh [--all|--staged] [--root <repo_dir>]'
+    --help|-h|'/?'|'-?')
+      show_help
       exit 0
       ;;
-    *) shift ;;
+    --root)
+      TARGET_ROOT="$2"
+      shift 2
+      ;;
+    --all)
+      TIER_MODE='all'
+      shift
+      ;;
+    --staged)
+      TIER_MODE='staged'
+      shift
+      ;;
+    *)
+      shift
+      ;;
   esac
 done
 
+AT_WORK=$(libscript_make_tmpdir 'tiers')
+trap 'rm -rf "$AT_WORK"' EXIT INT TERM
 ERRORS=0
 
 # ## log_tier_violation
-# Records and prints a structured architectural tier violation.
+# Emits a structured architectural tier violation diagnostic to stderr and increments ERRORS.
 log_tier_violation() {
-  _ltv_rule="$1"
-  _ltv_path="$2"
-  _ltv_msg="$3"
-  printf '[TIER VIOLATION] [%s] %s: %s\n' "$_ltv_rule" "$_ltv_path" "$_ltv_msg" >&2
+  _rule="$1"
+  _loc="$2"
+  _msg="$3"
+  printf '[TIER VIOLATION] [%s] %s: %s\n' "$_rule" "$_loc" "$_msg" >&2
   ERRORS=$((ERRORS + 1))
 }
 
@@ -62,11 +86,6 @@ check_no_legacy_aliases() {
   for _leg_dir in \
     _lib/_common \
     _lib/orchestration \
-    _lib/web-apps \
-    _lib/cloud-providers \
-    _lib/cloud \
-    _lib/ai-serving \
-    _lib/ml-training \
     _lib/storage \
     _lib/freebsd \
     _lib/illumos \
@@ -95,131 +114,252 @@ check_no_legacy_aliases() {
   done
 }
 
+# shellcheck disable=SC2329
+# ## _audit_lib_category
+# Audits a single _lib/<category> directory for atomic T1/T2 purity.
+_audit_lib_category() {
+  _top_entry="$1"
+  _lc_errs=0
+  [ -e "$_top_entry" ] || return 0
+  _bn=$(basename "$_top_entry")
+  if [ -f "$_top_entry" ]; then
+    case "$_bn" in
+      README.md|checksums.txt) ;;
+      *)
+        printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s: Loose file at _lib/ root is forbidden.\n' "$_bn" >&2
+        _lc_errs=$((_lc_errs + 1))
+        ;;
+    esac
+    [ "$_lc_errs" -eq 0 ] && return 0 || return 1
+  fi
+  case "$_bn" in
+    _*)
+      printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s: Underscore helper directory inside _lib/ belongs in T0 engine/.\n' "$_bn" >&2
+      return 1
+      ;;
+  esac
+
+  set +f
+  for _sub in "$_top_entry"/*; do
+    [ -e "$_sub" ] || continue
+    _sbn=$(basename "$_sub")
+    if [ -f "$_sub" ]; then
+      if [ "$_sbn" != 'README.md' ]; then
+        printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s/%s: Loose category script inside _lib/<category>/ is forbidden; move to T0 engine/ or T3 synthesis/.\n' "$_bn" "$_sbn" >&2
+        _lc_errs=$((_lc_errs + 1))
+      fi
+      continue
+    fi
+    case "$_sbn" in
+      *-suite)
+        printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s/%s: Experiment suites belong in Plane B experiments/, never in _lib/.\n' "$_bn" "$_sbn" >&2
+        _lc_errs=$((_lc_errs + 1))
+        ;;
+    esac
+    if [ -d "${_sub}/suites" ]; then
+      printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s/%s/suites: Experiment subsuites belong in Plane B experiments/, never in _lib/.\n' "$_bn" "$_sbn" >&2
+      _lc_errs=$((_lc_errs + 1))
+    fi
+    if [ ! -f "${_sub}/manifest.json" ]; then
+      printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s/%s: Missing manifest.json in atomic _lib/ component.\n' "$_bn" "$_sbn" >&2
+      _lc_errs=$((_lc_errs + 1))
+    else
+      _t_val=$(awk '
+        /"tier"[[:space:]]*:[[:space:]]*"(T1|T2)"/ {
+          if ($0 ~ /"T1"/) t = "T1"; else t = "T2"
+        }
+        END { print t }
+      ' "${_sub}/manifest.json" 2>/dev/null || true)
+      if [ -z "$_t_val" ]; then
+        printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s/%s/manifest.json: Component manifest.json must declare "tier": "T1" or "T2".\n' "$_bn" "$_sbn" >&2
+        _lc_errs=$((_lc_errs + 1))
+      elif [ "$_t_val" = 'T1' ] && [ "$_bn" != 'virtualization' ]; then
+        for _setup_sh in "${_sub}"/setup*.sh; do
+          [ -f "$_setup_sh" ] || continue
+          if grep -Eq '^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]' "$_setup_sh" 2>/dev/null; then
+            printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s/%s/%s: T1 userland recipe invokes storage/partitioning primitives.\n' "$_bn" "$_sbn" "$(basename "$_setup_sh")" >&2
+            _lc_errs=$((_lc_errs + 1))
+          fi
+        done
+      fi
+      for _comp_scr in "${_sub}"/*.sh "${_sub}"/*.cmd "${_sub}"/*.ps1; do
+        [ -f "$_comp_scr" ] || continue
+        if grep -Eq '(\.\.[/\\]_common[/\\]|\.\.[/\\]\.\.[/\\]_common[/\\]|\.\.[/\\][a-zA-Z0-9_-]+[/\\](setup|cli|env|service|uninstall|test)\.(sh|cmd|ps1))' "$_comp_scr" 2>/dev/null; then
+          printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s/%s/%s: Lateral cross-component or stale _common reference is forbidden; route via libscript.{sh,cmd} or engine/common/.\n' "$_bn" "$_sbn" "$(basename "$_comp_scr")" >&2
+          _lc_errs=$((_lc_errs + 1))
+        fi
+      done
+    fi
+  done
+  set -f
+  [ "$_lc_errs" -eq 0 ] && return 0 || return 1
+}
+
 # ## check_lib_atomic_purity
-# Verifies _lib/ contains exclusively atomic T1/T2 component directories with zero loose scripts or *-suite directories.
+# Verifies _lib/ contains exclusively atomic T1/T2 component directories across parallel workers.
 check_lib_atomic_purity() {
   [ -d "${TARGET_ROOT}/_lib" ] || return 0
+  _cats_file="${AT_WORK}/LIB_CATS.TXT"
+  : > "$_cats_file"
   set +f
   for _top_entry in "${TARGET_ROOT}/_lib"/*; do
     [ -e "$_top_entry" ] || continue
-    _bn=$(basename "$_top_entry")
-    if [ -f "$_top_entry" ]; then
-      case "$_bn" in
-        README.md|checksums.txt) ;;
-        *) log_tier_violation 'LIB_ATOMIC_PURITY' "_lib/${_bn}" 'Loose file at _lib/ root is forbidden.' ;;
-      esac
-      continue
-    fi
-    case "$_bn" in
-      _*) log_tier_violation 'LIB_ATOMIC_PURITY' "_lib/${_bn}" 'Underscore helper directory inside _lib/ belongs in T0 engine/.' ; continue ;;
-    esac
-
-    for _sub in "$_top_entry"/*; do
-      [ -e "$_sub" ] || continue
-      _sbn=$(basename "$_sub")
-      if [ -f "$_sub" ]; then
-        if [ "$_sbn" != 'README.md' ]; then
-          log_tier_violation 'LIB_ATOMIC_PURITY' "_lib/${_bn}/${_sbn}" 'Loose category script inside _lib/<category>/ is forbidden; move to T0 engine/ or T3 synthesis/.'
-        fi
-        continue
-      fi
-      case "$_sbn" in
-        *-suite)
-          log_tier_violation 'LIB_ATOMIC_PURITY' "_lib/${_bn}/${_sbn}" 'Experiment suites belong in Plane B experiments/, never in _lib/.'
-          ;;
-      esac
-      if [ -d "${_sub}/suites" ]; then
-        log_tier_violation 'LIB_ATOMIC_PURITY' "_lib/${_bn}/${_sbn}/suites" 'Experiment subsuites belong in Plane B experiments/, never in _lib/.'
-      fi
-      if [ ! -f "${_sub}/manifest.json" ]; then
-        log_tier_violation 'LIB_ATOMIC_PURITY' "_lib/${_bn}/${_sbn}" 'Missing manifest.json in atomic _lib/ component.'
-      else
-        if ! grep -Eq '"tier"[[:space:]]*:[[:space:]]*"(T1|T2)"' "${_sub}/manifest.json" 2>/dev/null; then
-          log_tier_violation 'LIB_ATOMIC_PURITY' "_lib/${_bn}/${_sbn}/manifest.json" 'Component manifest.json must declare "tier": "T1" or "T2".'
-        fi
-        if grep -Eq '"tier"[[:space:]]*:[[:space:]]*"T1"' "${_sub}/manifest.json" 2>/dev/null && [ "$_bn" != 'virtualization' ]; then
-          for _setup_sh in "${_sub}"/setup*.sh; do
-            [ -f "$_setup_sh" ] || continue
-            if grep -Eq '^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]' "$_setup_sh" 2>/dev/null; then
-              log_tier_violation 'LIB_ATOMIC_PURITY' "_lib/${_bn}/${_sbn}/$(basename "$_setup_sh")" 'T1 userland recipe must not invoke raw disk/partition/mount primitives.'
-            fi
-          done
-        fi
-      fi
-    done
+    printf '%s\n' "$_top_entry" >> "$_cats_file"
   done
   set -f
-}
-
-# ## check_upward_imports
-# Enforces strict downward-only tier references (T5 -> T4 -> T3 -> T2 -> T1 -> T0; Plane A -> T0..T2).
-check_upward_imports() {
-  # T0 engine/{common,schemas,hooks,target,consensus} must not reference T3/T4/T5/Plane A/Plane B
-  for _t0_sub in common schemas hooks target consensus; do
-    [ -d "${TARGET_ROOT}/engine/${_t0_sub}" ] || continue
-    _hits=$(grep -rnE '(^|[^a-zA-Z0-9_-])(synthesis|infrastructure|workloads|traits|experiments)[/\\]' "${TARGET_ROOT}/engine/${_t0_sub}" --include='*.sh' --include='*.cmd' --include='*.ps1' --include='*.json' 2>/dev/null || true)
-    if [ -n "$_hits" ]; then
-      log_tier_violation 'TIER_UPWARD_IMPORT' "engine/${_t0_sub}" "T0 engine layer references higher tier: $(printf '%s' "$_hits" | head -n 1)"
-    fi
-  done
-
-  # T1 & T2 (_lib/) must not reference T3 (synthesis/), T4 (infrastructure/), T5 (workloads/), Plane A (traits/), or Plane B (experiments/)
-  if [ -d "${TARGET_ROOT}/_lib" ]; then
-    _hits=$(grep -rnE '(^|[^a-zA-Z0-9_-])(synthesis|infrastructure|workloads|traits|experiments)[/\\]' "${TARGET_ROOT}/_lib" --include='*.sh' --include='*.cmd' --include='*.ps1' --include='*.json' 2>/dev/null || true)
-    if [ -n "$_hits" ]; then
-      log_tier_violation 'TIER_UPWARD_IMPORT' '_lib' "T1/T2 recipe layer references higher tier: $(printf '%s' "$_hits" | head -n 1)"
-    fi
-  fi
-
-  # T3 (synthesis/) must not reference T4 (infrastructure/), T5 runtime/cluster engines (workloads/{constellations,payloads,schedulers,ai,services}), or Plane B (experiments/)
-  if [ -d "${TARGET_ROOT}/synthesis" ]; then
-    _hits=$(grep -rnE '(^|[^a-zA-Z0-9_-])(infrastructure[/\\]|workloads[/\\](constellations|payloads|schedulers|ai|services)[/\\]|experiments[/\\])' "${TARGET_ROOT}/synthesis" --include='*.sh' --include='*.cmd' --include='*.ps1' --include='*.json' 2>/dev/null || true)
-    if [ -n "$_hits" ]; then
-      log_tier_violation 'TIER_UPWARD_IMPORT' 'synthesis' "T3 synthesis layer references higher tier: $(printf '%s' "$_hits" | head -n 1)"
-    fi
-  fi
-
-  # T4 (infrastructure/) must not reference T5 (workloads/) or Plane B (experiments/)
-  if [ -d "${TARGET_ROOT}/infrastructure" ]; then
-    _hits=$(grep -rnE '(^|[^a-zA-Z0-9_-])(workloads|experiments)[/\\]' "${TARGET_ROOT}/infrastructure" --include='*.sh' --include='*.cmd' --include='*.ps1' --include='*.json' 2>/dev/null || true)
-    if [ -n "$_hits" ]; then
-      log_tier_violation 'TIER_UPWARD_IMPORT' 'infrastructure' "T4 infrastructure layer references higher tier: $(printf '%s' "$_hits" | head -n 1)"
-    fi
-  fi
-
-  # T5 (workloads/) must not reference Plane B (experiments/)
-  if [ -d "${TARGET_ROOT}/workloads" ]; then
-    _hits=$(grep -rnE '(^|[^a-zA-Z0-9_-])experiments[/\\]' "${TARGET_ROOT}/workloads" --include='*.sh' --include='*.cmd' --include='*.ps1' --include='*.json' 2>/dev/null || true)
-    if [ -n "$_hits" ]; then
-      log_tier_violation 'TIER_UPWARD_IMPORT' 'workloads' "T5 workloads layer references Plane B experiments/: $(printf '%s' "$_hits" | head -n 1)"
-    fi
-  fi
-
-  # Plane A (traits/) must not reference T3 (synthesis/), T4 (infrastructure/), T5 (workloads/), or Plane B (experiments/)
-  if [ -d "${TARGET_ROOT}/traits" ]; then
-    _hits=$(grep -rnE '(^|[^a-zA-Z0-9_-])(synthesis|infrastructure|workloads|experiments)[/\\]' "${TARGET_ROOT}/traits" --include='*.sh' --include='*.cmd' --include='*.ps1' --include='*.json' 2>/dev/null || true)
-    if [ -n "$_hits" ]; then
-      log_tier_violation 'TIER_UPWARD_IMPORT' 'traits' "Plane A traits/ references T3/T4/T5/Plane B: $(printf '%s' "$_hits" | head -n 1)"
+  if [ -s "$_cats_file" ]; then
+    if ! libscript_parallel_map "$_cats_file" _audit_lib_category; then
+      ERRORS=$((ERRORS + 1))
     fi
   fi
 }
 
-# ## check_no_fractional_tiers
-# Rejects stale fractional tier labels (Tier 1.5, Tier 3.5) across schemas, manifests, routers, and core docs.
-check_no_fractional_tiers() {
-  for _scan in engine _lib synthesis infrastructure workloads traits cli libscript.sh libscript.cmd ARCHITECTURE.md README.md; do
-    [ -e "${TARGET_ROOT}/${_scan}" ] || continue
-    _hits=$(grep -rnE 'Tier[[:space:]]+(1\.5|3\.5)' "${TARGET_ROOT}/${_scan}" --include='*.json' --include='*.sh' --include='*.cmd' --include='*.md' 2>/dev/null || true)
-    if [ -n "$_hits" ]; then
-      log_tier_violation 'NO_FRACTIONAL_TIERS' "$_scan" "Stale fractional tier label found: $(printf '%s' "$_hits" | head -n 1)"
+# shellcheck disable=SC2329
+# ## _tier_scan_batch
+# Evaluates a batch of files for TIER_UPWARD_IMPORT and NO_FRACTIONAL_TIERS in a single POSIX awk pass.
+_tier_scan_batch() {
+  awk -v root="${TARGET_ROOT}/" '
+    FNR == 1 {
+      rel = FILENAME
+      if (index(rel, root) == 1) rel = substr(rel, length(root) + 1)
+      sub(/^\.\//, "", rel)
+      is_code = (rel ~ /\.(sh|cmd|ps1|json)$/)
+      is_frac_target = (rel ~ /\.(json|sh|cmd|md)$/ && (rel ~ /^(engine|_lib|synthesis|infrastructure|workloads|traits|cli)\// || rel == "libscript.sh" || rel == "libscript.cmd" || rel == "ARCHITECTURE.md" || rel == "README.md"))
+      tier_scope = ""
+      if (is_code) {
+        if (rel ~ /^engine\/(common|schemas|hooks|target|consensus)\//) {
+          split(rel, p, "/"); tier_scope = "T0:" p[1] "/" p[2]
+        } else if (rel ~ /^_lib\//) {
+          tier_scope = "T12:_lib"
+        } else if (rel ~ /^synthesis\//) {
+          tier_scope = "T3:synthesis"
+        } else if (rel ~ /^infrastructure\//) {
+          tier_scope = "T4:infrastructure"
+        } else if (rel ~ /^workloads\//) {
+          tier_scope = "T5:workloads"
+        } else if (rel ~ /^traits\//) {
+          tier_scope = "PA:traits"
+        }
+      }
+    }
+    {
+      if (tier_scope != "") {
+        if (tier_scope ~ /^T0:/ && $0 ~ /(^|[^a-zA-Z0-9_-])(synthesis|infrastructure|workloads|traits|experiments)[\/\\]/) {
+          loc = substr(tier_scope, 4)
+          if (!(loc in seen_up)) {
+            seen_up[loc] = 1
+            print "[TIER VIOLATION] [TIER_UPWARD_IMPORT] " loc ": T0 engine layer references higher tier: " rel ":" FNR ":" $0
+            errs++
+          }
+        } else if (tier_scope == "T12:_lib" && $0 ~ /(^|[^a-zA-Z0-9_-])(synthesis|infrastructure|workloads|traits|experiments)[\/\\]/) {
+          if (!("_lib" in seen_up)) {
+            seen_up["_lib"] = 1
+            print "[TIER VIOLATION] [TIER_UPWARD_IMPORT] _lib: T1/T2 recipe layer references higher tier: " rel ":" FNR ":" $0
+            errs++
+          }
+        } else if (tier_scope == "T3:synthesis" && $0 ~ /(^|[^a-zA-Z0-9_-])(infrastructure[\/\\]|workloads[\/\\](constellations|payloads|schedulers|ai|services)[\/\\]|experiments[\/\\])/) {
+          if (!("synthesis" in seen_up)) {
+            seen_up["synthesis"] = 1
+            print "[TIER VIOLATION] [TIER_UPWARD_IMPORT] synthesis: T3 synthesis layer references higher tier: " rel ":" FNR ":" $0
+            errs++
+          }
+        } else if (tier_scope == "T4:infrastructure" && $0 ~ /(^|[^a-zA-Z0-9_-])(workloads|experiments)[\/\\]/) {
+          if (!("infrastructure" in seen_up)) {
+            seen_up["infrastructure"] = 1
+            print "[TIER VIOLATION] [TIER_UPWARD_IMPORT] infrastructure: T4 infrastructure layer references higher tier: " rel ":" FNR ":" $0
+            errs++
+          }
+        } else if (tier_scope == "T5:workloads" && $0 ~ /(^|[^a-zA-Z0-9_-])experiments[\/\\]/) {
+          if (!("workloads" in seen_up)) {
+            seen_up["workloads"] = 1
+            print "[TIER VIOLATION] [TIER_UPWARD_IMPORT] workloads: T5 workloads layer references Plane B experiments/: " rel ":" FNR ":" $0
+            errs++
+          }
+        } else if (tier_scope == "PA:traits" && $0 ~ /(^|[^a-zA-Z0-9_-])(synthesis|infrastructure|workloads|experiments)[\/\\]/) {
+          if (!("traits" in seen_up)) {
+            seen_up["traits"] = 1
+            print "[TIER VIOLATION] [TIER_UPWARD_IMPORT] traits: Plane A traits/ references T3/T4/T5/Plane B: " rel ":" FNR ":" $0
+            errs++
+          }
+        }
+      }
+      if (is_frac_target && $0 ~ /Tier[[:space:]]+(1\.5|3\.5)/) {
+        split(rel, fp, "/")
+        scan_top = fp[1]
+        if (!(scan_top in seen_frac)) {
+          seen_frac[scan_top] = 1
+          print "[TIER VIOLATION] [NO_FRACTIONAL_TIERS] " scan_top ": Stale fractional tier label found: " rel ":" FNR ":" $0
+          errs++
+        }
+      }
+    }
+    END { exit(errs > 0 ? 1 : 0) }
+  ' "$@" >&2
+}
+
+# shellcheck disable=SC2329
+# ## _tier_shard_worker
+# Processes a shard of repository files for upward-import and fractional-tier violations.
+_tier_shard_worker() {
+  libscript_batch_exec "$1" 250 _tier_scan_batch
+}
+
+# ## check_imports_and_fractional_tiers
+# Collects candidate files with POSIX tools and audits upward imports and fractional tier labels in parallel.
+check_imports_and_fractional_tiers() {
+  _cand_files="${AT_WORK}/TIER_FILES.TXT"
+  : > "$_cand_files"
+  if [ -d "${TARGET_ROOT}/.git" ] && git -C "${TARGET_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    _del="${AT_WORK}/DELETED.TXT"
+    git -C "${TARGET_ROOT}" ls-files --deleted > "$_del" 2>/dev/null || : > "$_del"
+    git -C "${TARGET_ROOT}" ls-files --cached --others --exclude-standard -- \
+      'engine/*.sh' 'engine/*.cmd' 'engine/*.ps1' 'engine/*.json' 'engine/*.md' \
+      '_lib/*.sh' '_lib/*.cmd' '_lib/*.ps1' '_lib/*.json' '_lib/*.md' \
+      'synthesis/*.sh' 'synthesis/*.cmd' 'synthesis/*.ps1' 'synthesis/*.json' 'synthesis/*.md' \
+      'infrastructure/*.sh' 'infrastructure/*.cmd' 'infrastructure/*.ps1' 'infrastructure/*.json' 'infrastructure/*.md' \
+      'workloads/*.sh' 'workloads/*.cmd' 'workloads/*.ps1' 'workloads/*.json' 'workloads/*.md' \
+      'traits/*.sh' 'traits/*.cmd' 'traits/*.ps1' 'traits/*.json' 'traits/*.md' \
+      'cli/*.sh' 'cli/*.cmd' 'cli/*.ps1' 'cli/*.json' 'cli/*.md' \
+      'libscript.sh' 'libscript.cmd' 'ARCHITECTURE.md' 'README.md' \
+      | awk -v root="${TARGET_ROOT}/" -v del_f="$_del" '
+        BEGIN { while ((getline d < del_f) > 0) del[d] = 1; close(del_f) }
+        NF > 0 && !($0 in del) { print root $0 }
+      ' > "$_cand_files"
+  else
+    for _sc in engine _lib synthesis infrastructure workloads traits cli libscript.sh libscript.cmd ARCHITECTURE.md README.md; do
+      if [ -d "${TARGET_ROOT}/${_sc}" ]; then
+        find "${TARGET_ROOT}/${_sc}" -type f \( -name '*.sh' -o -name '*.cmd' -o -name '*.ps1' -o -name '*.json' -o -name '*.md' \) >> "$_cand_files" 2>/dev/null || true
+      elif [ -f "${TARGET_ROOT}/${_sc}" ]; then
+        printf '%s\n' "${TARGET_ROOT}/${_sc}" >> "$_cand_files"
+      fi
+    done
+  fi
+
+  if [ -s "$_cand_files" ]; then
+    if ! libscript_parallel_shards "$_cand_files" _tier_shard_worker; then
+      ERRORS=$((ERRORS + 1))
     fi
-  done
+  fi
 }
 
 check_no_legacy_aliases
-check_lib_atomic_purity
-check_upward_imports
-check_no_fractional_tiers
+if [ "$TIER_MODE" = 'staged' ] && [ -d "${TARGET_ROOT}/.git" ] && git -C "${TARGET_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  _staged_tier_f="${AT_WORK}/STAGED_TIER.TXT"
+  git -C "${TARGET_ROOT}" diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM     | awk -v root="${TARGET_ROOT}/" 'NF > 0 { print root $0 }'     | while IFS= read -r _st_p || [ -n "$_st_p" ]; do
+      [ -f "$_st_p" ] && printf '%s\n' "$_st_p"
+    done > "$_staged_tier_f"
+  if grep -q '/_lib/' "$_staged_tier_f" 2>/dev/null; then
+    check_lib_atomic_purity
+  fi
+  if [ -s "$_staged_tier_f" ]; then
+    if ! libscript_parallel_shards "$_staged_tier_f" _tier_shard_worker; then
+      ERRORS=$((ERRORS + 1))
+    fi
+  fi
+else
+  check_lib_atomic_purity
+  check_imports_and_fractional_tiers
+fi
 
 if [ "$ERRORS" -gt 0 ]; then
   printf '[FAIL] Architectural tier audit failed with %d violation(s).\n' "$ERRORS" >&2

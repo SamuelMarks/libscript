@@ -17,12 +17,13 @@ $ErrorActionPreference = "Stop"
 #!/usr/bin/env pwsh
 
 $PSScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LibscriptRootDir = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
 
-# 1. Ensure Node.js is installed
-$nodejsSetup = "$PSScriptRoot\..\nodejs\setup.ps1"
-if (Test-Path $nodejsSetup) {
+# 1. Ensure Node.js is installed via root orchestrator
+$rootCmd = Join-Path $LibscriptRootDir "libscript.cmd"
+if ((-not (Get-Command node -ErrorAction SilentlyContinue)) -and (Test-Path $rootCmd)) {
     Write-Host "Ensuring Node.js is installed..."
-    & $nodejsSetup
+    & $rootCmd install nodejs latest
 }
 
 # 2. Determine DEST

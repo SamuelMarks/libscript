@@ -94,7 +94,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/awscli/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/awscli/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing awscli ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -105,7 +105,7 @@ case "$ACTION" in
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+              unzip -q -o "$cache_file" -d "${TARGET_DIR}" || true
             else
               cp "$cache_file" "${TARGET_DIR}/bin/awscli" || true
               chmod +x "${TARGET_DIR}/bin/awscli" || true
@@ -118,7 +118,7 @@ case "$ACTION" in
             if case "${AWSCLI_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "${AWSCLI_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              unzip -q -o "${TEMP_FILE}" -d "${TARGET_DIR}" || true
             else
               cp "${TEMP_FILE}" "${TARGET_DIR}/bin/awscli" || true
               chmod +x "${TARGET_DIR}/bin/awscli" || true
@@ -136,9 +136,9 @@ case "$ACTION" in
               if command -v aws >/dev/null 2>&1; then
                 ln -sf "$(command -v aws)" "${TARGET_DIR}/bin/aws"
                 ln -sf "$(command -v aws)" "${TARGET_DIR}/bin/awscli"
-              elif [ -x "${HOME}/.local/bin/aws" ]; then
-                ln -sf "${HOME}/.local/bin/aws" "${TARGET_DIR}/bin/aws"
-                ln -sf "${HOME}/.local/bin/aws" "${TARGET_DIR}/bin/awscli"
+              elif [ -x "${HOME:-/root}/.local/bin/aws" ]; then
+                ln -sf "${HOME:-/root}/.local/bin/aws" "${TARGET_DIR}/bin/aws"
+                ln -sf "${HOME:-/root}/.local/bin/aws" "${TARGET_DIR}/bin/awscli"
               fi
             else
               log_warn "No download URL provided for awscli ${VERSION}."

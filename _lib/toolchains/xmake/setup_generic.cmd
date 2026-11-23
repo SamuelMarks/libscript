@@ -93,7 +93,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\xmake\!EXACT_VERSION!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
-    call "%~f0"
+    set "STACK="
+    call "!THIS_FILE!"
 )
 if exist "%LIBSCRIPT_HOME%\xmake\%XMAKE_VERSION%" rmdir "%LIBSCRIPT_HOME%\xmake\%XMAKE_VERSION%" 2>nul
 mklink /J "%LIBSCRIPT_HOME%\xmake\%XMAKE_VERSION%" "!TARGET_DIR!" >nul

@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.libxkbcommon"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/libxkbcommon/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/libxkbcommon/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/libxkbcommon" ]; then
   log_info "libxkbcommon ${VERSION} is already installed at ${TARGET_DIR}."

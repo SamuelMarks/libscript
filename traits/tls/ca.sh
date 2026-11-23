@@ -56,7 +56,7 @@ LIBSCRIPT_CA_CERT_%s
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 [cluster_name]"
+  printf '%s\n' "Usage: ${THIS_FILE} [cluster_name]"
   exit 0
 fi
 

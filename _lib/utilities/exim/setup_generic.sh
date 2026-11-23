@@ -64,7 +64,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/exim/${VERSION:-latest}/bin/exim" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/exim/${VERSION:-latest}/bin/exim" ]; then
       log_info "exim ${VERSION:-latest} is already installed."
       exit 0
     fi

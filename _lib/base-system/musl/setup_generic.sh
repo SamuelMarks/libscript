@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.musl"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/musl/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/musl/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/musl" ]; then
   log_info "musl ${VERSION} is already installed at ${TARGET_DIR}."

@@ -80,7 +80,7 @@ case "$ACTION" in
       resolve_exact_version
       libscript_symlink_alias "pub" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pub/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pub/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "pub ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -112,7 +112,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pub/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pub/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing pub ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -132,7 +132,7 @@ case "$ACTION" in
           rm -f "$TEMP_FILE.zip"
           exit 1
         fi
-        unzip -q "$TEMP_FILE.zip" -d "${TARGET_DIR}" || true
+        unzip -q -o "$TEMP_FILE.zip" -d "${TARGET_DIR}" || true
         # Create a wrapper for pub
         cat << 'WRAPPER' > "${TARGET_DIR}/bin/pub"
 #!/bin/sh

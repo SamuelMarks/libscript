@@ -49,12 +49,12 @@ VERSION="${DUCKDB_VERSION:-latest}"
 # ## find_existing_duckdb
 # Searches LIBSCRIPT_HOME and system PATH for an existing duckdb CLI binary.
 find_existing_duckdb() {
-  _fed_home="${LIBSCRIPT_HOME:-$HOME/.libscript}"
+  _fed_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
   for _fed_cand in \
     "${_fed_home}/duckdb/${VERSION}/bin/duckdb" \
     "${_fed_home}/duckdb/default/bin/duckdb" \
-    "${REMOTE_HOME:-$HOME}/.local/bin/duckdb" \
-    "${HOME}/.local/bin/duckdb" \
+    "${REMOTE_HOME:-${HOME:-/root}}/.local/bin/duckdb" \
+    "${HOME:-/root}/.local/bin/duckdb" \
     "/usr/local/bin/duckdb" \
     "$(command -v duckdb 2>/dev/null || true)"; do
     if [ -n "$_fed_cand" ] && [ -x "$_fed_cand" ] && "$_fed_cand" --version >/dev/null 2>&1; then
@@ -213,7 +213,7 @@ case "$ACTION" in
   install)
     if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_dk=$(find_existing_duckdb 2>/dev/null); then
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/duckdb/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/duckdb/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
       if [ "$_existing_dk" != "${TARGET_DIR}/bin/duckdb" ]; then
         ln -sf "$_existing_dk" "${TARGET_DIR}/bin/duckdb" 2>/dev/null || true
@@ -234,7 +234,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/duckdb/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/duckdb/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/duckdb" ]; then
         log_info "Installing duckdb ${VERSION} (${EXACT_VERSION}) natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"

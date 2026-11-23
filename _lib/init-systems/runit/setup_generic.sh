@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.runit"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/runit/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/runit/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/runit" ]; then
   log_info "runit ${VERSION} is already installed at ${TARGET_DIR}."

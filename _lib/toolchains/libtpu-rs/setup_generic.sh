@@ -111,7 +111,7 @@ case "$ACTION" in
     resolve_exact_version
     TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/libtpu-rs/${EXACT_VERSION}"
     if [ ! -d "${TARGET_DIR}" ]; then
-      ACTION='install' "$0"
+      STACK='' ACTION='install' "${THIS_FILE}"
     fi
     libscript_symlink_alias 'libtpu-rs' "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias 'libtpu-rs' 'default' "${EXACT_VERSION}"

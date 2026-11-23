@@ -48,14 +48,14 @@ discover_environment() {
   fi
   : "${SSH_PORT:=50523}"
 
-  SSH_KEY="${HOME}/.vagrant.d/insecure_private_key"
+  SSH_KEY="${HOME:-/root}/.vagrant.d/insecure_private_key"
   SSH_CMD="ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i ${SSH_KEY} vagrant@127.0.0.1"
 
   MONITOR_SOCK=""
   # shellcheck disable=SC2009
   MONITOR_SOCK=$(ps auxww | grep -i 'qemu.*windows-11' | grep -v grep | sed -n 's/.*path=\([^,]*qemu_socket\).*/\1/p' | head -n 1 || true)
   if [ -z "$MONITOR_SOCK" ] || [ ! -S "$MONITOR_SOCK" ]; then
-    MONITOR_SOCK=$(find "${HOME}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null | head -n 1 || true)
+    MONITOR_SOCK=$(find "${HOME:-/root}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null | head -n 1 || true)
   fi
 
   DISK_IMG=$(find -L "${VAGRANT_DIR}/.vagrant" -name "linked-box.img" 2>/dev/null | head -n 1 || true)

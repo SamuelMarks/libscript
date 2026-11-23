@@ -51,6 +51,11 @@ function Test-InternalRuntimeVar {
             $VarName -eq "LIBSCRIPT_HW_PHYS_CORES" -or
             $VarName -eq "LIBSCRIPT_HW_PERF_CORES" -or
             $VarName -eq "LIBSCRIPT_HW_NUMA_NODES" -or
+            $VarName -eq "LIBSCRIPT_RESOLVED_JOBS" -or
+            $VarName -eq "LIBSCRIPT_BG_SUPPORTED" -or
+            $VarName -eq "LIBSCRIPT_PARALLEL_SUPPORTED" -or
+            $VarName -eq "LIBSCRIPT_PARALLEL_PROBED" -or
+            $VarName -eq "LIBSCRIPT_MAP_FN" -or
             $VarName -eq "LIBSCRIPT_BENCH_CLOCK_NS_BIN" -or
             $VarName -eq "LIBSCRIPT_BENCH_PROBE_BIN" -or
             $VarName -eq "LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA" -or

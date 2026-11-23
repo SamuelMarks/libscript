@@ -195,7 +195,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/qemu/${VERSION:-latest}/bin/qemu" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/qemu/${VERSION:-latest}/bin/qemu" ]; then
       log_info "qemu ${VERSION:-latest} is already installed."
       exit 0
     fi

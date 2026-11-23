@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.vulkan-loader"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vulkan-loader/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vulkan-loader/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/vulkan-loader" ]; then
   log_info "vulkan-loader ${VERSION} is already installed at ${TARGET_DIR}."

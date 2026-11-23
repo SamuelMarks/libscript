@@ -54,8 +54,8 @@ goto :find_root
 set "ACTION=%~1"
 if "!ACTION!"=="" set "ACTION=status"
 if /I "!ACTION!"=="validate" (
-    jq -e --slurpfile sch "!SCRIPT_DIR!\..\topology.schema.json" "($sch[0].required - keys) | length == 0" "!SCRIPT_DIR!\topology.json" >nul || exit /b 1
-    echo [OK] Verified topology.json conforms to topology.schema.json
+    jq -e --slurpfile sch "!SCRIPT_DIR!\..\constellation.schema.json" "($sch[0].required - keys) | length == 0" "!SCRIPT_DIR!\topology.json" >nul || exit /b 1
+    echo [OK] Verified topology.json conforms to constellation.schema.json
     exit /b 0
 )
 call "!LIBSCRIPT_ROOT_DIR!\workloads\constellations\engine.cmd" "!ACTION!" "!SCRIPT_DIR!\topology.json"

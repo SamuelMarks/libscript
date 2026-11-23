@@ -245,29 +245,38 @@ if "!is_json!"=="1" (
             if "!ver!"=="null" set "ver=latest"
             set "LIBSCRIPT_INTERNAL_START=1"
             if /i "!action!"=="health" (
-                call "%~f0" !action! !pkg! !ver!
+                set "STACK="
+                call "!THIS_FILE!" !action! !pkg! !ver!
                 if errorlevel 1 (
                     if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
                     exit /b 1
                 )
             ) else if /i "!action!"=="start" (
                 if /i "!pkg!"=="postgres" (
-                    call "%~f0" !action! !pkg! !ver!
+                    set "STACK="
+                    call "!THIS_FILE!" !action! !pkg! !ver!
                 ) else if /i "!pkg!"=="postgresql" (
-                    call "%~f0" !action! !pkg! !ver!
+                    set "STACK="
+                    call "!THIS_FILE!" !action! !pkg! !ver!
                 ) else if /i "!pkg!"=="mariadb" (
-                    call "%~f0" !action! !pkg! !ver!
+                    set "STACK="
+                    call "!THIS_FILE!" !action! !pkg! !ver!
                 ) else if /i "!pkg!"=="mysql" (
-                    call "%~f0" !action! !pkg! !ver!
+                    set "STACK="
+                    call "!THIS_FILE!" !action! !pkg! !ver!
                 ) else if /i "!pkg!"=="valkey" (
-                    call "%~f0" !action! !pkg! !ver!
+                    set "STACK="
+                    call "!THIS_FILE!" !action! !pkg! !ver!
                 ) else if /i "!pkg!"=="redis" (
-                    call "%~f0" !action! !pkg! !ver!
+                    set "STACK="
+                    call "!THIS_FILE!" !action! !pkg! !ver!
                 ) else (
-                    start "" /b cmd /c call "%~f0" !action! !pkg! !ver!
+                    set "STACK="
+                    start "" /b cmd /c call "!THIS_FILE!" !action! !pkg! !ver!
                 )
             ) else (
-                start "" /b cmd /c call "%~f0" !action! !pkg! !ver!
+                set "STACK="
+                start "" /b cmd /c call "!THIS_FILE!" !action! !pkg! !ver!
             )
         )
         if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"

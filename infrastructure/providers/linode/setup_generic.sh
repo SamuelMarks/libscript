@@ -88,7 +88,7 @@ case "$ACTION" in
     SUBACTION=${1:-status}
     case "$SUBACTION" in
       login) linode_cli_exec configure ;;
-      logout) rm -f "${HOME}/.config/linode-cli" ;;
+      logout) rm -f "${HOME:-/root}/.config/linode-cli" ;;
       status) linode_cli_exec account view ;;
       *) printf 'Unknown auth sub-action: %s
 ' "$SUBACTION"; exit 1 ;;
@@ -265,7 +265,7 @@ case "$ACTION" in
     exit 0
     ;;
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/linode/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/linode/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -288,7 +288,7 @@ case "$ACTION" in
       libscript_depends 'linode-cli' || true
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/linode/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/linode/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
       libscript_symlink_alias "linode" "$VERSION" "${EXACT_VERSION}"
     fi
@@ -299,8 +299,8 @@ case "$ACTION" in
     ;;
   uninstall)
     resolve_exact_version
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/linode/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/linode/$VERSION"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/linode/${EXACT_VERSION}"
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/linode/$VERSION"
     exit 0
     ;;
 esac

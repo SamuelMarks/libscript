@@ -35,7 +35,7 @@ v1="${1:-}"
 op="${2:-}"
 v2="${3:-}"
 if [ -z "$v1" ] || [ -z "$op" ] || [ -z "$v2" ]; then
-  printf '%s\n' "Usage: $0 [semver] <v1> <operator> <v2>" >&2
+  printf '%s\n' "Usage: ${THIS_FILE} [semver] <v1> <operator> <v2>" >&2
   printf '%s\n' 'Operators: = != > < >= <=' >&2
   exit 1
 fi

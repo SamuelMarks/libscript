@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 set "STACK="
-call "%~dp0env.cmd"
+call "!SCRIPT_DIR!\env.cmd"
 set "STACK="
 call uvicorn --version
 exit /b %ERRORLEVEL%

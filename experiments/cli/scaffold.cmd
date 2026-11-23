@@ -18,7 +18,8 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -212,7 +213,8 @@ setlocal DisableDelayedExpansion
     echo if defined STACK ^( echo "!STACK!" ^| findstr /I /C:":!THIS_FILE!:" ^>nul 2^>^&1 ^&^& exit /b 0 ^)
     REM wincheck disable=CMD2002
     echo set "STACK=%%STACK%%:!THIS_FILE!:"
-    echo for %%%%I in ^("%%~dp0."^) do set "SCRIPT_DIR=%%%%~fI"
+    echo set "SCRIPT_DIR=%%~dp0"
+    echo if "%%SCRIPT_DIR:~-1%%"=="\" set "SCRIPT_DIR=%%SCRIPT_DIR:~0,-1%%"
     REM wincheck disable=CMD2002
     echo if not defined LIBSCRIPT_ROOT_DIR ^( set "d=!SCRIPT_DIR!" ^& call :find_root ^)
     echo goto :root_found
@@ -296,7 +298,8 @@ setlocal DisableDelayedExpansion
     echo if defined STACK ^( echo "!STACK!" ^| findstr /I /C:":!THIS_FILE!:" ^>nul 2^>^&1 ^&^& exit /b 0 ^)
     REM wincheck disable=CMD2002
     echo set "STACK=%%STACK%%:!THIS_FILE!:"
-    echo for %%%%I in ^("%%~dp0."^) do set "SCRIPT_DIR=%%%%~fI"
+    echo set "SCRIPT_DIR=%%~dp0"
+    echo if "%%SCRIPT_DIR:~-1%%"=="\" set "SCRIPT_DIR=%%SCRIPT_DIR:~0,-1%%"
     REM wincheck disable=CMD2002
     echo if not defined LIBSCRIPT_ROOT_DIR ^( set "d=!SCRIPT_DIR!" ^& call :find_root ^)
     echo goto :root_found

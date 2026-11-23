@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.e2fsprogs"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/e2fsprogs/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/e2fsprogs/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/e2fsprogs" ]; then
   log_info "e2fsprogs ${VERSION} is already installed at ${TARGET_DIR}."

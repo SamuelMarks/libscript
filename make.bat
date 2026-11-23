@@ -1,12 +1,13 @@
 @echo off
 :: # make.bat
 :: ## Overview
-:: Entry point for common make tasks in Windows batch environment.
+:: Legacy `.bat` entrypoint delegating all targets and arguments to `make.cmd` for 100% parity.
 :: ## Usage
-:: make.bat <target> [component_name] Targets: test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases
+:: make.bat <target> [component_name]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
@@ -48,166 +49,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
-if "%~1"=="--help" goto show_help
-if "%~1"=="-h" goto show_help
-if "%~1"=="/?" goto show_help
-if "%~1"=="-?" goto show_help
-
-if "%~1"=="test" goto local_tests_all
-if "%~1"=="local_tests_all" goto local_tests_all
-if "%~1"=="test_component" goto test_component
-if "%~1"=="local_tests_toolchain" goto local_tests_toolchain
-if "%~1"=="local_tests_languages" goto local_tests_languages
-if "%~1"=="local_tests_databases" goto local_tests_databases
-if "%~1"=="audit" goto audit
-if "%~1"=="update_results" goto update_results
-if "%~1"=="register_bento_boxes" goto register_bento_boxes
-if "%~1"=="test_canary_6os" goto test_canary_6os
-if "%~1"=="test_matrix_6os" goto test_matrix_6os
-
-echo Unknown target %1 >&2
-echo Usage: make.bat ^<target^> [component_name] >&2
-exit /b 1
-
-:: ## show_help
-:: Displays available targets.
-:show_help
-echo Usage: make.bat ^<target^> [component_name]
-echo Targets: audit, update_results, register_bento_boxes, test_canary_6os, test_matrix_6os, test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases
-exit /b 0
-
-:: ## audit
-:: Executes the full static and behavioral standards audit suite.
-:audit
-call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_standards.cmd" --all
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_posix.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_cmd.cmd" --all
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_version_manager.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_schema_vars.cmd" --all
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\doc_coverage.cmd" --strict
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_doc_coverage.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_vm_contract.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_global_var_hygiene.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_var_aliases_and_env_printer.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_os_info_matrix.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_pkg_mapper_parity.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_cli_arg_forwarding.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_rest_api.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_shellcheck_vm_and_hooks.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_win_cmd_rs_vm_and_hooks.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_cloud_experiment_lifecycle.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_experiment_harness.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_libtpu_experiments.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_win_port_experiments.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_edgcpp_backends_experiments.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_tfrc_guard.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_gcp_tpu_vm_qr_multihost.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_gemma_tpu_matrix.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_languages_and_package_managers.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_data_and_server_components.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_utilities_security_logging_storage.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier15_2_3_system_orchestration_cloud.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_standards_remediation.cmd"
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_win_dos_component_pm.cmd"
-exit /b %ERRORLEVEL%
-
-:: ## update_results
-:: Regenerates the tiered Supported Components tables in README.md and matrix_results.json.
-:update_results
-call "%LIBSCRIPT_ROOT_DIR%\tests\update_results.cmd" --json
-exit /b %ERRORLEVEL%
-
-:: ## register_bento_boxes
-:: Registers all 6 target OS Vagrant boxes from ..\bento\builds\build_complete\.
-:register_bento_boxes
-call "%LIBSCRIPT_ROOT_DIR%\tests\register_bento_boxes.cmd"
-exit /b %ERRORLEVEL%
-
-:: ## test_canary_6os
-:: Runs the 10 canary components across all 6 Vagrant OS VMs.
-:test_canary_6os
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_omnios_tests.cmd" jq curl sqlite c cmake nodejs python rust postgres nginx
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_alpine_tests.cmd" jq curl sqlite c cmake nodejs python rust postgres nginx
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_debian_tests.cmd" jq curl sqlite c cmake nodejs python rust postgres nginx
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_rockylinux_tests.cmd" jq curl sqlite c cmake nodejs python rust postgres nginx
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_freebsd_tests.cmd" jq curl sqlite c cmake nodejs python rust postgres nginx
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_windows_tests.cmd" jq curl sqlite c cmake nodejs python rust postgres nginx
-exit /b %ERRORLEVEL%
-
-:: ## test_matrix_6os
-:: Runs the full Vagrant 6-OS test matrix.
-:test_matrix_6os
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_vagrant_matrix.cmd"
-exit /b %ERRORLEVEL%
-
-:: ## local_tests_all
-:: Executes all local component tests via run_local_tests.cmd.
-:local_tests_all
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" all
-exit /b
-
-:: ## test_component
-:: Executes installation and smoke tests for a single specified component.
-:test_component
-if "%~2"=="" (
-    echo Usage: make.bat test_component ^<component_name^> >&2
-    exit /b 1
-)
-if "%LIBSCRIPT_USE_VAGRANT%"=="1" (
-    call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" %2
-    exit /b !ERRORLEVEL!
-)
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install %2 latest
-if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" test %2
+call "!SCRIPT_DIR!\make.cmd" %*
 exit /b !ERRORLEVEL!
-
-:: ## local_tests_toolchain
-:: Executes local tests for all toolchain components.
-:local_tests_toolchain
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" toolchains
-exit /b
-
-:: ## local_tests_languages
-:: Executes local tests for all programming language components.
-:local_tests_languages
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" languages
-exit /b
-
-:: ## local_tests_databases
-:: Executes local tests for all database components.
-:local_tests_databases
-call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" databases
-exit /b

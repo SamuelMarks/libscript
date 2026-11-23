@@ -41,6 +41,10 @@
     "LIBSCRIPT_HW_SIMD": {
       "type": "string",
       "description": "Detected or overridden CPU SIMD instruction set capabilities (e.g., avx2, avx512, neon)."
+    },
+    "LIBSCRIPT_JOBS": {
+      "type": "string",
+      "description": "Explicit positive integer worker count overriding auto-detected CPU concurrency for parallel pre-commit hooks, static audits, and sharded batch tasks (set to 1 for sequential execution)."
     }
   }
 }

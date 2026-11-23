@@ -50,6 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0env.cmd"
+call "!SCRIPT_DIR!\env.cmd"
 meilisearch --version
 exit /b %ERRORLEVEL%

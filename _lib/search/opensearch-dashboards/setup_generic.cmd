@@ -93,7 +93,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\opensearch-dashboards\!EXACT_VERSION!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
-    call "%~f0"
+    set "STACK="
+    call "!THIS_FILE!"
 )
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "opensearch-dashboards" "%OPENSEARCH_DASHBOARDS_VERSION%" "!EXACT_VERSION!"
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "opensearch-dashboards" "default" "!EXACT_VERSION!"

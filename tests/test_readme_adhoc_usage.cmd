@@ -64,7 +64,7 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\postgres\cli.cmd" ls >nul
 call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" config os --profile=linux-desktop-sway-wayland --export="%TMP_DIR%\sway.json" >nul
 if errorlevel 1 exit /b 1
 
-call "%LIBSCRIPT_ROOT_DIR%\netctl.cmd" --listen 80 --listen 443 --proxy /api http://localhost:8080 --static / /var/www --emit nginx >nul
+call "%LIBSCRIPT_ROOT_DIR%\_lib\networking\netctl\cli.cmd" --listen 80 --listen 443 --proxy /api http://localhost:8080 --static / /var/www --emit nginx >nul
 if errorlevel 1 exit /b 1
 
 if exist "%TMP_DIR%" rmdir /s /q "%TMP_DIR%" 2>nul

@@ -92,8 +92,8 @@ case "$ACTION" in
   install)
     if [ "$POETRY_INSTALL_METHOD" = "system" ]; then
       if libscript_depends "poetry" 2>/dev/null && command -v poetry >/dev/null 2>&1; then
-        mkdir -p "${LIBSCRIPT_HOME:-$HOME/.libscript}/poetry/${VERSION}/bin"
-        ln -sf "$(command -v poetry)" "${LIBSCRIPT_HOME:-$HOME/.libscript}/poetry/${VERSION}/bin/poetry"
+        mkdir -p "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/poetry/${VERSION}/bin"
+        ln -sf "$(command -v poetry)" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/poetry/${VERSION}/bin/poetry"
         libscript_symlink_alias "poetry" "latest" "${VERSION}"
         libscript_symlink_alias "poetry" "default" "${VERSION}"
       else
@@ -105,7 +105,7 @@ case "$ACTION" in
     if [ "$POETRY_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/poetry/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/poetry/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/poetry" ] && [ ! -x "${TARGET_DIR}/venv/bin/poetry" ]; then
         log_info "Installing poetry ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -116,7 +116,7 @@ case "$ACTION" in
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+              unzip -q -o "$cache_file" -d "${TARGET_DIR}" || true
             else
               cp "$cache_file" "${TARGET_DIR}/bin/poetry" || true
               chmod +x "${TARGET_DIR}/bin/poetry" || true

@@ -145,7 +145,7 @@ case "$ACTION" in
         arch='arm64'
       fi
 
-      target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/packer/${ver}/bin"
+      target_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/packer/${ver}/bin"
       if [ -x "$target_dir/packer" ]; then
         log_info "Packer ${ver} is already installed at $target_dir/packer"
         libscript_symlink_alias "packer" "$PACKER_VERSION" "$ver"

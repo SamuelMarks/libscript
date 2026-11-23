@@ -56,34 +56,36 @@ if "%VERSION%"=="" set "VERSION=%GUNICORN_VERSION%"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
 if "%ACTION%"=="install" (
-    if exist "%LIBSCRIPT_HOME%\gunicorn\%VERSION%" (
-        echo [INFO] gunicorn %VERSION% is already installed.
+    set "TARGET_DIR=!LIBSCRIPT_HOME!\gunicorn\!VERSION!"
+    if exist "!TARGET_DIR!\bin\gunicorn.cmd" (
+        echo [INFO] gunicorn !VERSION! is already installed.
         exit /b 0
     )
-    echo [INFO] Gunicorn uses POSIX fork^(^). On Windows, installing Waitress and Uvicorn for native WSGI/ASGI execution...
-    call "!SCRIPT_DIR!\..\waitress\setup.cmd" install
-    call "!SCRIPT_DIR!\..\uvicorn\setup.cmd" install
-    where gunicorn >nul 2>&1
-    if not errorlevel 1 (
-        echo [INFO] gunicorn is also installed on the system.
-        exit /b 0
+    echo [INFO] Gunicorn uses POSIX fork^(^). On Windows, installing Waitress and Uvicorn via root orchestrator...
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install waitress latest
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install uvicorn latest
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\python_env.cmd" :libscript_python_venv "!TARGET_DIR!" gunicorn
+    if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
+    if exist "!TARGET_DIR!\Scripts\gunicorn.exe" (
+        > "!TARGET_DIR!\bin\gunicorn.cmd" echo @echo off
+        >> "!TARGET_DIR!\bin\gunicorn.cmd" echo "%%~dp0..\Scripts\gunicorn.exe" %%*
+    ) else if exist "%LIBSCRIPT_HOME%\waitress\latest\Scripts\waitress-serve.exe" (
+        > "!TARGET_DIR!\bin\gunicorn.cmd" echo @echo off
+        >> "!TARGET_DIR!\bin\gunicorn.cmd" echo "%LIBSCRIPT_HOME%\waitress\latest\Scripts\waitress-serve.exe" %%*
     )
-    where uv >nul 2>&1
-    if not errorlevel 1 (
-        uv pip install gunicorn >nul 2>&1
-        exit /b 0
-    )
-    where pip >nul 2>&1
-    if not errorlevel 1 (
-        pip install --user gunicorn >nul 2>&1
-        exit /b 0
-    )
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "gunicorn" "!VERSION!" "!VERSION!"
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "gunicorn" "default" "!VERSION!"
     exit /b 0
 ) else if "%ACTION%"=="uninstall" (
-    where uv >nul 2>&1 && uv tool uninstall gunicorn >nul 2>&1
-    where pip >nul 2>&1 && pip uninstall -y gunicorn >nul 2>&1
+    if exist "!LIBSCRIPT_HOME!\gunicorn\!VERSION!" rmdir /s /q "!LIBSCRIPT_HOME!\gunicorn\!VERSION!"
     exit /b 0
 ) else if "%ACTION%"=="test" (
+    if exist "!LIBSCRIPT_HOME!\gunicorn\!VERSION!\bin\gunicorn.cmd" (
+        call "!LIBSCRIPT_HOME!\gunicorn\!VERSION!\bin\gunicorn.cmd" --version
+        exit /b !ERRORLEVEL!
+    )
     gunicorn --version
     exit /b !ERRORLEVEL!
 )

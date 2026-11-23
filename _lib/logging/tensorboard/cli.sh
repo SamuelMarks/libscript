@@ -38,7 +38,7 @@ done
 SCRIPT_DIR="$COMP_DIR"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <action> [args...]"
+  printf '%s\n' "Usage: ${THIS_FILE} <action> [args...]"
   printf '%s\n' 'See README.md for details.'
   exit 0
 fi

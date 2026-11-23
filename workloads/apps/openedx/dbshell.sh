@@ -42,7 +42,7 @@ for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 CONFIG_JSON="${OPENEDX_INSTALL_DIR}/config/lms.env.json"
 
 # Read database parameters with configuration file fallbacks
@@ -153,7 +153,7 @@ run_redis() {
 #   $1 - SQL statement
 run_query() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 query <sql_statement>"
+    log_err "Usage: ${THIS_FILE} query <sql_statement>"
     return 1
   fi
   _sql="$1"

@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.xorg-server"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/xorg-server/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/xorg-server/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/xorg-server" ]; then
   log_info "xorg-server ${VERSION} is already installed at ${TARGET_DIR}."

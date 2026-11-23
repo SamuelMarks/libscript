@@ -32,7 +32,7 @@ export LIBSCRIPT_ROOT_DIR
 # ## print_usage
 # Prints usage instructions for gcp-tpu-vm setup.sh.
 print_usage() {
-  printf '%s\n' "Usage: $0 [--help]"
+  printf '%s\n' "Usage: ${THIS_FILE} [--help]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
@@ -40,4 +40,4 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-exec "${LIBSCRIPT_ROOT_DIR}/workloads/ai/setup.sh" "$@"
+STACK='' exec "${SCRIPT_DIR}/deploy.sh" "$@"

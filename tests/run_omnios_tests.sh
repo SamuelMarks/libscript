@@ -71,7 +71,7 @@ find_qemu_socket() {
     for _id_file in "$VAGRANT_DIR"/.vagrant/machines/omnios-test-sqlite/qemu/id "$VAGRANT_DIR"/.vagrant/machines/*/qemu/id; do
         if [ -f "$_id_file" ]; then
             _id=$(cat "$_id_file")
-            _sock="$HOME/.vagrant.d/tmp/vagrant-qemu/$_id/qemu_socket"
+            _sock="${HOME:-/root}/.vagrant.d/tmp/vagrant-qemu/$_id/qemu_socket"
             if [ -S "$_sock" ]; then
                 printf '%s\n' "$_sock"
                 return 0

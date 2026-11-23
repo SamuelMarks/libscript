@@ -59,6 +59,8 @@ compute_sha256() {
     sha256sum "$_target" | awk '{print $1}'
   elif command -v shasum >/dev/null 2>&1; then
     shasum -a 256 "$_target" | awk '{print $1}'
+  elif command -v sha256 >/dev/null 2>&1; then
+    sha256 -q "$_target" 2>/dev/null || sha256 "$_target" | awk '{print $NF}'
   elif command -v openssl >/dev/null 2>&1; then
     openssl dgst -sha256 "$_target" | awk '{print $NF}'
   else

@@ -54,5 +54,5 @@ if "%ERRORLEVEL%" NEQ "0" (
     exit /b 1
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\setup.ps1"
 if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!

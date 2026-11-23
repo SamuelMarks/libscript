@@ -1,10 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Updates the Supported Components tables in README.md (or custom output file) split into Architectural Tiers (Tier 1, Tier 1.5, Tier 2, Tier 3, Tier 3.5/4/Traits) with test results from tests_tmp/, updates task completion in TODO_PLAN.md and TESTING_TODO_PLAN.md, and optionally exports an aggregated JSON test results matrix.
+# Updates the Supported Components tables in README.md (or custom output file) split into Architectural Tiers (T0-T5 and Orthogonal Planes) with test results from tests_tmp/, updates task completion in TODO_PLAN.md and TESTING_TODO_PLAN.md, and optionally exports an aggregated JSON test results matrix.
 # ## Usage
 # ./tests/update_results.sh [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]
 set -feu
-set +f
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -27,7 +26,6 @@ THIS_DIR="${SCRIPT_DIR}"
 : "${THIS_DIR}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
-set +f
 
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
@@ -145,6 +143,7 @@ read_manifest_tier() {
 discover_all_entries() {
   _repo_root="$1"
   _raw_list=$(mktemp "${TMPDIR:-/tmp}/discover_raw.XXXXXX")
+  set +f
 
   if [ -d "${_repo_root}/_lib" ]; then
     for _dir in "${_repo_root}/_lib"/*/*; do
@@ -231,6 +230,7 @@ discover_all_entries() {
       printf 'PlaneA|traits|traits/%s|\n' "${_trname}" >>"${_raw_list}"
     done
   fi
+  set -f
 
   sort -t'|' -k1,1 -k3,3 -u "${_raw_list}"
   rm -f "${_raw_list}"

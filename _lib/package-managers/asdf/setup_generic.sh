@@ -73,7 +73,7 @@ case "$ACTION" in
     elif [ "$ASDF_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' 'System packages do not support ls here.'
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/asdf/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -117,7 +117,7 @@ case "$ACTION" in
         libscript_depends 'curl'
         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/asdf-vm/asdf/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/asdf/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "asdf ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -144,7 +144,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/${VERSION:-latest}/bin/asdf" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/asdf/${VERSION:-latest}/bin/asdf" ]; then
       log_info "asdf ${VERSION:-latest} is already installed."
       exit 0
     fi
@@ -166,7 +166,7 @@ case "$ACTION" in
         libscript_depends 'curl'
         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/asdf-vm/asdf/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/asdf/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         libscript_depends 'curl' 'tar'
         log_info "Installing asdf ${VERSION} natively to ${TARGET_DIR}..."

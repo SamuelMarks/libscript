@@ -92,9 +92,9 @@ if [ ! -d "${PRESTASHOP_WWWROOT}/classes" ] && [ ! -d "${PRESTASHOP_WWWROOT}/ins
   libscript_download "${dl_url:-}" "${tmp_zip}"
 
   tmp_dir=$(mktemp -d)
-  priv unzip -q "${tmp_zip}" -d "${tmp_dir}"
+  priv unzip -q -o "${tmp_zip}" -d "${tmp_dir}"
   if [ -f "${tmp_dir}/prestashop.zip" ]; then
-    priv unzip -q "${tmp_dir}/prestashop.zip" -d "${PRESTASHOP_WWWROOT}"
+    priv unzip -q -o "${tmp_dir}/prestashop.zip" -d "${PRESTASHOP_WWWROOT}"
   else
     priv cp -r "${tmp_dir}/"* "${PRESTASHOP_WWWROOT}/"
   fi

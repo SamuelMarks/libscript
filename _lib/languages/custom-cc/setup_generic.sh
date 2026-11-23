@@ -80,7 +80,7 @@ EOF
 # ## install_custom_cc_component
 # Provisions or compiles custom-cc according to CUSTOM_CC_INSTALL_METHOD and updates version aliases.
 install_custom_cc_component() {
-  TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/${EXACT_VERSION}"
+  TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/${EXACT_VERSION}"
   if [ -x "${TARGET_DIR}/bin/custom-cc" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ -z "${CUSTOM_CC_BIN:-}" ]; then
     libscript_symlink_alias "custom-cc" "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias "custom-cc" "default" "${EXACT_VERSION}"
@@ -129,7 +129,7 @@ install_custom_cc_component() {
 
 case "${ACTION}" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/" 2>/dev/null || true
     ;;
   ls-remote)
     printf '1.0.0
@@ -152,8 +152,8 @@ latest
     install_custom_cc_component
     ;;
   uninstall)
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/${VERSION}"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/${EXACT_VERSION}"
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/${VERSION}"
     ;;
   *)
     install_custom_cc_component

@@ -31,8 +31,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 ACTION="${1:-status}"
 shift 1 2>/dev/null || true
 if [ "$ACTION" = "validate" ]; then
-  jq -e --slurpfile sch "${SCRIPT_DIR}/../topology.schema.json" '($sch[0].required - keys) | length == 0' "${SCRIPT_DIR}/topology.json" >/dev/null
-  printf '[OK] Verified topology.json conforms to topology.schema.json\n'
+  jq -e --slurpfile sch "${SCRIPT_DIR}/../constellation.schema.json" '($sch[0].required - keys) | length == 0' "${SCRIPT_DIR}/topology.json" >/dev/null
+  printf '[OK] Verified topology.json conforms to constellation.schema.json\n'
   exit 0
 fi
 exec "${LIBSCRIPT_ROOT_DIR}/workloads/constellations/engine.sh" "$ACTION" "${SCRIPT_DIR}/topology.json" "$@"

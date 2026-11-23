@@ -112,7 +112,7 @@ case "$ACTION" in
     TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/opensearch/${EXACT_VERSION}"
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
-      ACTION='install' "$0"
+      STACK='' ACTION='install' "${THIS_FILE}"
     fi
     libscript_symlink_alias 'opensearch' "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias 'opensearch' 'default' "${EXACT_VERSION}"

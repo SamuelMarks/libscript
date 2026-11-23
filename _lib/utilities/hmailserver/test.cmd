@@ -50,7 +50,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0env.cmd"
+call "!SCRIPT_DIR!\env.cmd"
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\engine\common\service.cmd" is-active hMailServer >nul 2>&1
 if not errorlevel 1 (

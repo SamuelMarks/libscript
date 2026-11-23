@@ -154,7 +154,7 @@ hydrate_frontend_node_env() {
       STACK="" SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" >/dev/null 2>&1 || true
     fi
   fi
-  PATH="${PATH}:${SERVICE_EXTRA_PATH:-$HOME/.local/bin}"
+  PATH="${PATH}:${SERVICE_EXTRA_PATH:-${HOME:-/root}/.local/bin}"
   export PATH
 }
 

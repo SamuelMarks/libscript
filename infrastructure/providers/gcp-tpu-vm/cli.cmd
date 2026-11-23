@@ -59,11 +59,11 @@ if "%~1"=="/?" goto :show_help
 if "%~1"=="-?" goto :show_help
 
 if /i "%~1"=="install" (
-    call "%~dp0setup.cmd" %*
+    call "!SCRIPT_DIR!\setup.cmd" %*
     exit /b !errorlevel!
 )
 if /i "%~1"=="test" (
-    call "%~dp0test.cmd" %*
+    call "!SCRIPT_DIR!\test.cmd" %*
     exit /b !errorlevel!
 )
 for %%V in (logs use env ls ls-remote download uninstall install-service uninstall-service which exec run) do (

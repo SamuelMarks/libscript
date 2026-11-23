@@ -62,8 +62,8 @@ verify_mode2_source_default_toolchain() {
       return 1
       ;;
   esac
-  [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/3.46.1/bin/sqlite3" ]
-  [ -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/3.46.1/build-metrics.json" ]
+  [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/3.46.1/bin/sqlite3" ]
+  [ -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/3.46.1/build-metrics.json" ]
 }
 
 # ## verify_mode3_source_custom_toolchain
@@ -80,8 +80,8 @@ verify_mode3_source_custom_toolchain() {
       return 1
       ;;
   esac
-  [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/3.46.1-custom-cc/bin/sqlite3" ]
-  [ -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/3.46.1-custom-cc/build-metrics.json" ]
+  [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/3.46.1-custom-cc/bin/sqlite3" ]
+  [ -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/3.46.1-custom-cc/build-metrics.json" ]
 }
 
 verify_mode1_specific_pkg_mgr

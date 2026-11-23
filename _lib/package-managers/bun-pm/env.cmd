@@ -63,8 +63,8 @@ if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "bun-pm" "%BUN_PM_VERSION%"
 
-if exist "%~dp0..\..\languages\bun\env.cmd" (
-    call "%~dp0..\..\languages\bun\env.cmd"
+if exist "!SCRIPT_DIR!\..\..\languages\bun\env.cmd" (
+    call "!SCRIPT_DIR!\..\..\languages\bun\env.cmd"
 ) else (
     set "_CAND_P=%USERPROFILE%\.bun\bin"
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1

@@ -146,7 +146,7 @@ main() {
   _lms=$(test_http "http://${_lms_h}:${_lms_p}/" || true)
   _cms=$(test_http "http://${_cms_h}:${_cms_p}/signin" || true)
   _workers="WARN (inactive)"
-  _open_edx_dir="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+  _open_edx_dir="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
   if [ -f "${SCRIPT_DIR}/workers.sh" ]; then
     if OPENEDX_INSTALL_DIR="${_open_edx_dir}" "${SCRIPT_DIR}/workers.sh" status 2>/dev/null | grep -q "RUNNING"; then
       _workers='OK'

@@ -73,7 +73,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${VERSION:-latest}/bin/mysql" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mysql/${VERSION:-latest}/bin/mysql" ]; then
       log_info "mysql ${VERSION:-latest} is already installed."
       exit 0
     fi
@@ -102,7 +102,7 @@ case "$ACTION" in
         fi
       fi
     else
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mysql/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
       if ! command -v mysql >/dev/null 2>&1; then
         libscript_depends 'mysql' || {
@@ -122,7 +122,7 @@ case "$ACTION" in
     fi
 
     # Initialize database if mysqld is available and data dir is specified/empty
-    DATA_DIR="${MYSQL_DATA_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/data}"
+    DATA_DIR="${MYSQL_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mysql/data}"
     if [ ! -d "${DATA_DIR}" ] && command -v mysqld >/dev/null 2>&1; then
       log_info "Initializing MySQL data directory at ${DATA_DIR}..."
       mkdir -p "${DATA_DIR}"

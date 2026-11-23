@@ -46,7 +46,7 @@ sync_kv_discovery() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <register|deregister> <service_name> <endpoint>"
+  printf '%s\n' "Usage: ${THIS_FILE} <register|deregister> <service_name> <endpoint>"
   exit 0
 fi
 

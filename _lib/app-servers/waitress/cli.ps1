@@ -10,4 +10,4 @@
 #>
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-& (Join-Path $ScriptDir "..\..\_common\cli.ps1") @Args
+& (Join-Path $ScriptDir "..\..\..\engine\common\cli.ps1") @Args

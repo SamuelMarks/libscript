@@ -94,7 +94,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/spack/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/spack/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing spack ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends 'git'
@@ -103,7 +103,7 @@ case "$ACTION" in
         if [ "${EXACT_VERSION}" = "latest" ]; then
            EXACT_VERSION=$(git ls-remote --tags "https://github.com/spack/spack.git" | awk -F/ '{print $3}' | grep -v '\^{}' | grep '^v' | libscript_sort_versions | tail -n1)
         fi
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/spack/${EXACT_VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/spack/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
            git clone --depth 1 -b "${EXACT_VERSION}" -c feature.manyFiles=true https://github.com/spack/spack.git "${TARGET_DIR}"
         fi

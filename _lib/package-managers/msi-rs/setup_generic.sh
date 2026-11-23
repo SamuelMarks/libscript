@@ -79,8 +79,8 @@ ensure_c_toolchain() {
 # Verifies presence of cargo and rustc or installs the Rust toolchain via libscript languages/rust.
 ensure_rust_toolchain() {
   # shellcheck disable=SC1090,SC1091
-  [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
-  [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
+  [ -f "${HOME:-/root}/.cargo/env" ] && . "${HOME:-/root}/.cargo/env"
+  [ -d "${HOME:-/root}/.cargo/bin" ] && export PATH="${HOME:-/root}/.cargo/bin:${PATH}"
   [ -d "/opt/ooce/bin" ] && export PATH="/opt/ooce/bin:${PATH}"
 
   if ! command -v cargo >/dev/null 2>&1 || ! command -v rustc >/dev/null 2>&1; then
@@ -89,14 +89,14 @@ ensure_rust_toolchain() {
       unset SCRIPT_NAME || true
       ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh" install rust latest || true
       # shellcheck disable=SC1090,SC1091
-      [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
-      [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
+      [ -f "${HOME:-/root}/.cargo/env" ] && . "${HOME:-/root}/.cargo/env"
+      [ -d "${HOME:-/root}/.cargo/bin" ] && export PATH="${HOME:-/root}/.cargo/bin:${PATH}"
     elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rustup/setup.sh" ]; then
       unset SCRIPT_NAME || true
       ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rustup/setup.sh" install rustup latest || true
       # shellcheck disable=SC1090,SC1091
-      [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
-      [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
+      [ -f "${HOME:-/root}/.cargo/env" ] && . "${HOME:-/root}/.cargo/env"
+      [ -d "${HOME:-/root}/.cargo/bin" ] && export PATH="${HOME:-/root}/.cargo/bin:${PATH}"
     elif type libscript_depends >/dev/null 2>&1; then
       libscript_depends 'rust' || true
     fi
@@ -132,7 +132,7 @@ case "$ACTION" in
     if [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' 'System packages do not support ls here.'
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -157,7 +157,7 @@ case "$ACTION" in
       libscript_symlink_alias "msi-rs" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "msi-rs" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "msi-rs ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -194,7 +194,7 @@ case "$ACTION" in
     else
       # libscript_native or from-source implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/${EXACT_VERSION}"
       
       # Idempotency check: skip compilation if already built
       if [ -x "${TARGET_DIR}/bin/msi-cli" ] || [ -x "${TARGET_DIR}/bin/msi-rs" ]; then
@@ -291,7 +291,7 @@ case "$ACTION" in
         log_info "Fetching prebuilt binary release from ${MSI_RS_DOWNLOAD_URL}..."
         tmp_archive=$(mktemp)
         libscript_download "${MSI_RS_DOWNLOAD_URL}" "${tmp_archive}"
-        tar -xzf "${tmp_archive}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || unzip -q "${tmp_archive}" -d "${TARGET_DIR}" || true
+        tar -xzf "${tmp_archive}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || unzip -q -o "${tmp_archive}" -d "${TARGET_DIR}" || true
         rm -f "${tmp_archive}"
         libscript_symlink_alias "msi-rs" "$VERSION" "${EXACT_VERSION}"
         libscript_symlink_alias "msi-rs" "default" "${EXACT_VERSION}"
@@ -335,7 +335,7 @@ case "$ACTION" in
         log_info "Fetching prebuilt binary release from ${MSI_RS_DOWNLOAD_URL}..."
         tmp_archive=$(mktemp)
         libscript_download "${MSI_RS_DOWNLOAD_URL}" "${tmp_archive}"
-        tar -xzf "${tmp_archive}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || unzip -q "${tmp_archive}" -d "${TARGET_DIR}" || true
+        tar -xzf "${tmp_archive}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || unzip -q -o "${tmp_archive}" -d "${TARGET_DIR}" || true
         rm -f "${tmp_archive}"
       else
         log_info "Cloning upstream repository from ${REPO_URL} at ${EXACT_VERSION}..."
@@ -389,8 +389,8 @@ case "$ACTION" in
   uninstall)
     if [ "$MSI_RS_INSTALL_METHOD" = "libscript_native" ]; then
       resolve_exact_version
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/$VERSION"
+      rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/$VERSION"
       log_info "msi-rs ${EXACT_VERSION} removed."
     else
       log_info "Uninstall not implemented or supported for $MSI_RS_INSTALL_METHOD."

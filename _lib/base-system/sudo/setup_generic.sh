@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.sudo"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sudo/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sudo/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/sudo" ]; then
   log_info "sudo ${VERSION} is already installed at ${TARGET_DIR}."

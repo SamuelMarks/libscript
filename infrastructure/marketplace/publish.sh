@@ -62,6 +62,8 @@ if command -v sha256sum >/dev/null 2>&1; then
   OFFER_SHA=$(sha256sum "$OFFER_FILE" | awk '{print $1}')
 elif command -v shasum >/dev/null 2>&1; then
   OFFER_SHA=$(shasum -a 256 "$OFFER_FILE" | awk '{print $1}')
+elif command -v sha256 >/dev/null 2>&1; then
+  OFFER_SHA=$(sha256 -q "$OFFER_FILE" 2>/dev/null || sha256 "$OFFER_FILE" | awk '{print $NF}')
 else
   OFFER_SHA=$(cksum "$OFFER_FILE" | awk '{print $1}')
 fi

@@ -42,7 +42,7 @@ for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 CONF_DIR="${OPENEDX_INSTALL_DIR}/config"
 LMS_CONF="${CONF_DIR}/lms.env.json"
 CMS_CONF="${CONF_DIR}/cms.env.json"

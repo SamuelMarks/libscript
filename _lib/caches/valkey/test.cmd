@@ -62,7 +62,7 @@ if "%errorlevel%" equ "0" (
   exit /b 0
 )
 
-if exist "%~dp0cli.cmd" (
-    call "%~dp0cli.cmd" --help >nul
+if exist "!SCRIPT_DIR!\cli.cmd" (
+    call "!SCRIPT_DIR!\cli.cmd" --help >nul
 )
 exit /b 0

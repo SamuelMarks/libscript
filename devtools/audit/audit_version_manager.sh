@@ -1,12 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Audits all LibScript components in `_lib/<category>/<component>/` for strict compliance with the Version Manager Contract.
-#
 # ## Usage
 # ./devtools/audit/audit_version_manager.sh [component_dir ...]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -17,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -27,26 +23,138 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export LIBSCRIPT_ROOT_DIR
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/parallel.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
+VM_WORK=$(libscript_make_tmpdir 'avm')
+CAPS_CACHE="${VM_WORK}/CAPS.TSV"
+: > "$CAPS_CACHE"
+trap 'rm -rf "$VM_WORK"' EXIT INT TERM
 ERRORS=0
 AUDITED=0
 
 # ## log_vm_violation
-# Reports a Version Manager Contract violation and increments ERRORS.
+# Emits a structured Version Manager Contract violation diagnostic and increments ERRORS.
 log_vm_violation() {
-  _target="$1"
-  _rule="$2"
-  _msg="$3"
-  printf '[VM CONTRACT VIOLATION] [%s] %s: %s
-' "$_rule" "$_target" "$_msg" >&2
+  _v_target="$1"
+  _v_rule="$2"
+  _v_msg="$3"
+  printf '[VM CONTRACT VIOLATION] [%s] %s: %s\n' "$_v_rule" "$_v_target" "$_v_msg" >&2
   ERRORS=$((ERRORS + 1))
 }
 
-# ## audit_component_dir
-# Verifies that a single _lib/<category>/<component> directory satisfies the Version Manager Contract.
-audit_component_dir() {
-  _comp_dir="$1"
+# ## lookup_comp_caps
+# Resolves manifest capabilities for a component directory from CAPS_CACHE or jq fallback.
+lookup_comp_caps() {
+  _lcc_dir="$1"
+  _lcc_mf="${_lcc_dir}/manifest.json"
+  if [ -s "$CAPS_CACHE" ]; then
+    _lcc_hit=$(awk -F '\t' -v p="$_lcc_mf" '$1 == p { print $2; found=1; exit } END { exit(found ? 0 : 1) }' "$CAPS_CACHE" 2>/dev/null || true)
+    if [ -n "$_lcc_hit" ]; then
+      printf '%s\n' "$_lcc_hit"
+      return 0
+    fi
+  fi
+  if [ -f "$_lcc_mf" ] && command -v jq >/dev/null 2>&1; then
+    printf ' %s \n' "$(jq -r '.capabilities[]? // empty' "$_lcc_mf" 2>/dev/null | tr '\n' ' ')"
+  else
+    printf '%s\n' ' userland-package '
+  fi
+}
+
+# shellcheck disable=SC2329
+# ## _vm_content_batch
+# Evaluates cli.sh, cli.cmd, setup.sh, setup_generic.sh, env.sh, and env.cmd across a batch of files in one awk pass.
+_vm_content_batch() {
+  awk -v root="${LIBSCRIPT_ROOT_DIR}/" '
+    BEGIN {} function emit_v(t, r, m) {
+      print "[VM CONTRACT VIOLATION] [" r "] " t ": " m
+      errs++
+    }
+    BEGIN {} function flush_vm(f,   rel, bn, comp) {
+      if (f == "") return
+      rel = f
+      if (index(rel, root) == 1) rel = substr(rel, length(root) + 1)
+      bn = rel; sub(/^.*\//, "", bn)
+      comp = rel; sub(/\/[^\/]+$/, "", comp)
+
+      if (bn == "cli.sh") {
+        if (!has_comp_core_sh && !has_ls_remote_sh) {
+          emit_v(rel, "CLI_ROUTER", "Must delegate to engine/common/component_core.sh or expose mandatory version manager verbs.")
+        }
+      } else if (bn == "cli.cmd") {
+        if (!has_comp_core_cmd && !has_ls_remote_cmd) {
+          emit_v(rel, "CLI_ROUTER_WIN", "Must delegate to engine/common/component_core.cmd or expose mandatory version manager verbs.")
+        }
+      } else if (bn == "setup.sh") {
+        if (!has_setup_target) {
+          emit_v(rel, "SETUP_DELEGATION", "setup.sh must delegate to engine/common/setup_base.sh or component setup_generic.sh.")
+        }
+      } else if (bn == "env.cmd") {
+        if (has_setlocal && !has_endlocal) {
+          emit_v(rel, "ENV_CMD_ENDLOCAL", "env.cmd uses setlocal without endlocal; environment mutations will be lost on return.")
+        }
+        if (has_bare_env_base && !has_caller_sdir) {
+          emit_v(rel, "ENV_BASE_CALLER_CONTEXT", "env.cmd calls env_base.cmd without CALLER_SCRIPT_DIR or explicit component name argument.")
+        }
+        if (has_bad_path_cmd) {
+          emit_v(rel, "NON_IDEMPOTENT_PATH_CMD", "env.cmd prepends to PATH unconditionally; guard with findstr or delegate to env_base.cmd.")
+        }
+      } else if (bn == "env.sh") {
+        if (has_bad_path_sh) {
+          emit_v(rel, "NON_IDEMPOTENT_PATH_SH", "env.sh prepends to PATH without idempotency guard; use libscript_path_prepend or a case check.")
+        }
+      } else if (bn == "setup_generic.sh") {
+        if (has_part_prim && comp !~ /^(_lib\/(orchestration|unikernels|kernel|bootloaders|freebsd|illumos|reactos|base-system|virtualization)|synthesis\/disk|infrastructure\/(resources|providers))\//) {
+          emit_v(rel, "RECIPE_BOUNDARY", "Tier 1 leaf recipe must not invoke disk/VFS partitioning primitives.")
+        }
+      }
+    }
+    FNR == 1 {
+      if (prev_f != "") flush_vm(prev_f)
+      prev_f = FILENAME
+      has_comp_core_sh = 0; has_ls_remote_sh = 0;
+      has_comp_core_cmd = 0; has_ls_remote_cmd = 0;
+      has_setup_target = 0; has_setlocal = 0; has_endlocal = 0;
+      has_bare_env_base = 0; has_caller_sdir = 0;
+      has_bad_path_cmd = 0; has_bad_path_sh = 0; has_part_prim = 0;
+    }
+    {
+      sub(/\r$/, "", $0)
+      lc = tolower($0)
+      if (index($0, "component_core.sh") > 0) has_comp_core_sh = 1
+      if (index($0, "ls-remote") > 0) has_ls_remote_sh = 1
+      if (index(lc, "component_core.cmd") > 0) has_comp_core_cmd = 1
+      if (index(lc, "ls-remote") > 0) has_ls_remote_cmd = 1
+      if ($0 ~ /setup_base\.sh|setup_generic\.sh/) has_setup_target = 1
+      if (index(lc, "setlocal") > 0) has_setlocal = 1
+      if (index(lc, "endlocal") > 0) has_endlocal = 1
+      if ($0 ~ /^[[:space:]]*call "%LIBSCRIPT_ROOT_DIR%\\engine\\common\\env_base\.cmd"[[:space:]]*$/) has_bare_env_base = 1
+      if (index($0, "CALLER_SCRIPT_DIR") > 0) has_caller_sdir = 1
+      if (lc ~ /^[[:space:]]*set[[:space:]]+"?path=[^;]+;%path%"?[[:space:]]*$/) has_bad_path_cmd = 1
+      if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?PATH="[^"]+:\$\{?PATH\}?"/) has_bad_path_sh = 1
+      if ($0 ~ /^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]/) has_part_prim = 1
+    }
+    END {
+      if (prev_f != "") flush_vm(prev_f)
+      exit(errs > 0 ? 1 : 0)
+    }
+  ' "$@" >&2
+}
+
+# ## audit_component_structure
+# Audits mandatory files and appends existing lifecycle scripts to the worker content-scan list.
+audit_component_structure() {
+  _comp_dir="${1%/}"
+  _files_out="$2"
+  case "$_comp_dir" in
+    /*) ;;
+    *) _comp_dir="${LIBSCRIPT_ROOT_DIR}/${_comp_dir#./}" ;;
+  esac
   [ -d "$_comp_dir" ] || return 0
   case "$_comp_dir" in
     */_common|*/_common/*) return 0 ;;
@@ -57,34 +165,35 @@ audit_component_dir() {
 
   case "$_rel_dir" in
     _lib/*/*-suite)
-      log_vm_violation "$_rel_dir" "EXP_IN_LIB" "Empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
+      log_vm_violation "$_rel_dir" 'EXP_IN_LIB' 'Empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/.'
       ;;
   esac
   if [ -d "${_comp_dir}/suites" ]; then
-    log_vm_violation "$_rel_dir" "EXP_IN_LIB" "Empirical subsuites belong in experiments/<suite-id>/, not inside ${_rel_dir}/suites/."
+    log_vm_violation "$_rel_dir" 'EXP_IN_LIB' "Empirical subsuites belong in experiments/<suite-id>/, not inside ${_rel_dir}/suites/."
   fi
 
-  # 1. Mandatory contract files gated by manifest capabilities
   for _req in cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
     if [ ! -f "${_comp_dir}/${_req}" ]; then
-      log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required component contract file '${_req}'."
+      log_vm_violation "$_rel_dir" 'MISSING_CONTRACT_FILE' "Missing required component contract file '${_req}'."
     fi
   done
 
-  _caps_space=''
-  if [ -f "${_comp_dir}/manifest.json" ] && command -v jq >/dev/null 2>&1; then
-    _caps_space=" $(jq -r '.capabilities[]? // empty' "${_comp_dir}/manifest.json" 2>/dev/null | tr '\n' ' ') "
-  else
-    _caps_space=' userland-package '
-  fi
+  _caps_space=$(lookup_comp_caps "$_comp_dir")
 
   case "$_caps_space" in
     *' userland-package '*|*' sysroot-package '*)
       for _req in setup.sh setup.cmd env.sh env.cmd uninstall.sh uninstall.cmd; do
         if [ ! -f "${_comp_dir}/${_req}" ]; then
-          log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required package lifecycle file '${_req}'."
+          log_vm_violation "$_rel_dir" 'MISSING_CONTRACT_FILE' "Missing required package lifecycle file '${_req}'."
         fi
       done
+      case "$_rel_dir" in
+        _lib/unikernels/*|_lib/containers/*|_lib/schedulers/*|_lib/iac/*|_lib/virtualization/*) ;;
+        *)
+          [ -f "${_comp_dir}/cli.sh" ] && printf '%s\n' "${_comp_dir}/cli.sh" >> "$_files_out"
+          [ -f "${_comp_dir}/cli.cmd" ] && printf '%s\n' "${_comp_dir}/cli.cmd" >> "$_files_out"
+          ;;
+      esac
       ;;
   esac
 
@@ -92,213 +201,169 @@ audit_component_dir() {
     *' service-daemon '*)
       for _req in service.sh service.cmd; do
         if [ ! -f "${_comp_dir}/${_req}" ]; then
-          log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required service-daemon file '${_req}'."
+          log_vm_violation "$_rel_dir" 'MISSING_CONTRACT_FILE' "Missing required service-daemon file '${_req}'."
         fi
       done
       ;;
     *)
       for _forbid in service.sh service.cmd; do
         if [ -f "${_comp_dir}/${_forbid}" ]; then
-          log_vm_violation "$_rel_dir" "UNDECLARED_SERVICE_STUB" "Component defines '${_forbid}' without declaring 'service-daemon' capability in manifest.json."
+          log_vm_violation "$_rel_dir" 'UNDECLARED_SERVICE_STUB' "Component defines '${_forbid}' without declaring 'service-daemon' capability in manifest.json."
         fi
       done
       ;;
   esac
 
-  # 2. Verify cli.sh and cli.cmd route via component_core or implement mandatory verbs
-  case "$_caps_space" in
-    *' userland-package '*|*' sysroot-package '*)
-      case "$_rel_dir" in
-        _lib/unikernels/*|_lib/containers/*|_lib/schedulers/*|_lib/iac/*|_lib/virtualization/*)
-          ;;
-        *)
-          if [ -f "${_comp_dir}/cli.sh" ]; then
-            if ! grep -q "component_core.sh" "${_comp_dir}/cli.sh" && ! grep -q "ls-remote" "${_comp_dir}/cli.sh"; then
-              log_vm_violation "${_rel_dir}/cli.sh" "CLI_ROUTER" "Must delegate to engine/common/component_core.sh or expose mandatory version manager verbs."
-            fi
-          fi
-          if [ -f "${_comp_dir}/cli.cmd" ]; then
-            if ! grep -qi "component_core.cmd" "${_comp_dir}/cli.cmd" && ! grep -qi "ls-remote" "${_comp_dir}/cli.cmd"; then
-              log_vm_violation "${_rel_dir}/cli.cmd" "CLI_ROUTER_WIN" "Must delegate to engine/common/component_core.cmd or expose mandatory version manager verbs."
-            fi
-          fi
-          ;;
-      esac
-      ;;
-  esac
+  for _chk in setup.sh env.cmd env.sh setup_generic.sh; do
+    if [ -f "${_comp_dir}/${_chk}" ]; then
+      printf '%s\n' "${_comp_dir}/${_chk}" >> "$_files_out"
+    fi
+  done
+}
 
-  # 3. Verify setup.sh and setup.cmd delegate to setup_base or setup_generic
-  if [ -f "${_comp_dir}/setup.sh" ]; then
-    if ! grep -Eq "setup_base\.sh|setup_generic\.sh" "${_comp_dir}/setup.sh"; then
-      log_vm_violation "${_rel_dir}/setup.sh" "SETUP_DELEGATION" "Must source or delegate to engine/common/setup_base.sh (or setup_generic.sh)."
+# shellcheck disable=SC2329
+# ## _vm_shard_worker
+# Audits a shard of component directories using pure shell stat checks + one batched awk content scan.
+_vm_shard_worker() {
+  _vsw_shard="$1"
+  _vsw_files="${_vsw_shard}.files"
+  : > "$_vsw_files"
+  ERRORS=0
+  AUDITED=0
+  while IFS= read -r _vsw_c || [ -n "$_vsw_c" ]; do
+    [ -n "$_vsw_c" ] || continue
+    audit_component_structure "$_vsw_c" "$_vsw_files"
+  done < "$_vsw_shard"
+  if [ -s "$_vsw_files" ]; then
+    if ! libscript_batch_exec "$_vsw_files" 250 _vm_content_batch; then
+      ERRORS=$((ERRORS + 1))
     fi
   fi
-  if [ -f "${_comp_dir}/setup.cmd" ]; then
-    if ! grep -Eiq "setup_base\.cmd|setup_generic\.cmd" "${_comp_dir}/setup.cmd"; then
-      log_vm_violation "${_rel_dir}/setup.cmd" "SETUP_DELEGATION_WIN" "Must call or delegate to engine\\common\\setup_base.cmd (or setup_generic.cmd)."
-    fi
-  fi
-
-  # 3b. Verify env.cmd exports across endlocal boundary if setlocal is used
-  if [ -f "${_comp_dir}/env.cmd" ]; then
-    if grep -qi "setlocal" "${_comp_dir}/env.cmd" && ! grep -qi "endlocal" "${_comp_dir}/env.cmd"; then
-      log_vm_violation "${_rel_dir}/env.cmd" "ENV_CMD_ENDLOCAL" "env.cmd uses setlocal without endlocal; environment mutations will be lost on return."
-    fi
-    if grep -Eq '^[[:space:]]*call "%LIBSCRIPT_ROOT_DIR%\\engine\\common\\env_base\.cmd"[[:space:]]*$' "${_comp_dir}/env.cmd"; then
-      if ! grep -q 'CALLER_SCRIPT_DIR' "${_comp_dir}/env.cmd"; then
-        log_vm_violation "${_rel_dir}/env.cmd" "ENV_BASE_CALLER_CONTEXT" "env.cmd calls env_base.cmd without CALLER_SCRIPT_DIR or explicit component name argument."
-      fi
-    fi
-    if grep -Eiq '^[[:space:]]*set[[:space:]]+"?PATH=[^;]+;%PATH%"?[[:space:]]*$' "${_comp_dir}/env.cmd"; then
-      log_vm_violation "${_rel_dir}/env.cmd" "NON_IDEMPOTENT_PATH_CMD" "env.cmd prepends to PATH unconditionally; guard with findstr or delegate to env_base.cmd."
-    fi
-  fi
-  if [ -f "${_comp_dir}/env.sh" ]; then
-    if grep -Eq '^[[:space:]]*(export[[:space:]]+)?PATH="[^"]+:\$\{?PATH\}?"' "${_comp_dir}/env.sh"; then
-      log_vm_violation "${_rel_dir}/env.sh" "NON_IDEMPOTENT_PATH_SH" "env.sh prepends to PATH without idempotency guard; use libscript_path_prepend or a case check."
-    fi
-  fi
-
-  # 4. Verify Tier 1 leaf recipes do not invoke kernel/partitioning primitives
-  case "$_rel_dir" in
-    _lib/orchestration/*|_lib/unikernels/*|synthesis/disk/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*|_lib/base-system/*|_lib/virtualization/*|infrastructure/resources/*|infrastructure/providers/*)
-      ;;
-    *)
-      if [ -f "${_comp_dir}/setup_generic.sh" ]; then
-        if grep -Eq '^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]' "${_comp_dir}/setup_generic.sh"; then
-          log_vm_violation "${_rel_dir}/setup_generic.sh" "RECIPE_BOUNDARY" "Tier 1 leaf recipe must not invoke disk/VFS partitioning primitives."
-        fi
-      fi
-      ;;
-  esac
-
-  # 5. Ban raw winget/choco/scoop and raw network calls in Tier 1 leaf recipes (must delegate to engine/common/pkg_mgr.*)
-  case "$_rel_dir" in
-    _lib/package-managers/*)
-      ;;
-    *)
-      for _cmd_file in "$_comp_dir"/setup*.cmd "$_comp_dir"/uninstall*.cmd; do
-        [ -f "$_cmd_file" ] || continue
-        if grep -Eiq '^[ 	]*(where[ 	]+(winget|choco|scoop).*&&[ 	]*)?(call[ 	]+)?(winget|choco|scoop)[ 	]+(install|uninstall|upgrade|update)([ 	]|$)' "$_cmd_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_PACKAGE_MANAGER" "Direct winget/choco/scoop install/uninstall in $(basename "$_cmd_file"); delegate to pkg_mgr.cmd."
-        fi
-        if grep -Eiq '(Invoke-WebRequest|Invoke-RestMethod|[ 	"]iwr[ 	]|[ 	"]irm[ 	]|certutil[ 	]+-urlcache|curl(\.exe)?[ 	]+-[a-zA-Z0-9]*[sSfLOo])' "$_cmd_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_NETWORK_FETCH" "Raw network fetch in $(basename "$_cmd_file"); delegate to pkg_mgr.cmd."
-        fi
-        if grep -Eiq '^[ 	]*[^:]*([A-Za-z0-9_$"%!\\/.:-]*python[0-9.]*(\.exe)?["!]?[ 	]+-m[ 	]+venv|uv(\.exe)?[ 	]+venv|virtualenv[ 	]+)' "$_cmd_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_PYTHON_VENV" "Explicit Python venv setup in $(basename "$_cmd_file"); delegate to engine\\common\\python_env.cmd."
-        fi
-      done
-      for _ps1_file in "$_comp_dir"/setup*.ps1 "$_comp_dir"/uninstall*.ps1; do
-        [ -f "$_ps1_file" ] || continue
-        if grep -Eiq '^[ 	]*(&[ 	]+)?(winget|choco|scoop)[ 	]+(install|uninstall|upgrade|update)([ 	]|$)' "$_ps1_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_ps1_file")" "RAW_PACKAGE_MANAGER" "Direct winget/choco/scoop install/uninstall in $(basename "$_ps1_file"); delegate to pkg_mgr.ps1."
-        fi
-        if grep -Eiq '^[ 	]*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b)' "$_ps1_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_ps1_file")" "RAW_NETWORK_FETCH" "Raw Invoke-WebRequest/Invoke-RestMethod in $(basename "$_ps1_file"); delegate to pkg_mgr.ps1."
-        fi
-      done
-      ;;
-  esac
-
-  # 6. Ban raw apt-get/brew/dnf/apk/pkg install/remove, brew services, and raw curl/wget/aria2c in Tier 1 leaf recipes (must delegate to pkg_mgr.sh)
-  case "$_rel_dir" in
-    _lib/package-managers/*)
-      for _sh_file in "$_comp_dir"/setup*.sh "$_comp_dir"/install*.sh; do
-        [ -f "$_sh_file" ] || continue
-        if grep -Eq '^[ 	]*[^#]*(curl[ 	]+-[a-zA-Z0-9#-]*[sSfLOo]|wget[ 	]+-[a-zA-Z0-9-]*[qO]|aria2c[ 	]+-[dox])' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_NETWORK_FETCH" "Raw curl/wget/aria2c in $(basename "$_sh_file"); delegate to libscript_fetch_stdout or libscript_download."
-        fi
-      done
-      ;;
-    *)
-      for _sh_file in "$_comp_dir"/setup*.sh "$_comp_dir"/uninstall*.sh; do
-        [ -f "$_sh_file" ] || continue
-        if grep -Eq '^[ 	]*[^#]*(priv[ 	]+|sudo[ 	]+)?(apt-get[ 	]+(install|remove|purge)|apt[ 	]+(install|remove|purge)|brew[ 	]+(install|uninstall|services)|dnf[ 	]+(install|remove)|yum[ 	]+(install|remove)|apk[ 	]+(add|del)|pacman[ 	]+(-S|-R)|zypper[ 	]+(install|remove)|pkg[ 	]+(install|delete))[ 	]' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_PACKAGE_MANAGER" "Direct OS package manager call in $(basename "$_sh_file"); delegate to engine/common/pkg_mgr.sh or engine/common/service.sh."
-        fi
-        if grep -Eq '^[ 	]*[^#]*(curl[ 	]+-[a-zA-Z0-9#-]*[sSfLOo]|wget[ 	]+-[a-zA-Z0-9-]*[qO]|aria2c[ 	]+-[dox])' "$_sh_file" && ! grep -Eq '(--unix-socket|libscript-allow-raw-)' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_NETWORK_FETCH" "Raw curl/wget/aria2c in $(basename "$_sh_file"); delegate to libscript_fetch_stdout or libscript_download."
-        fi
-      done
-      ;;
-  esac
-
-  # 7. Ban raw daemon/init manager calls in component recipes (must delegate to engine/common/service.* or service_install.*)
-  case "$_rel_dir" in
-    _lib/init-systems/*)
-      ;;
-    *)
-      for _sh_file in "$_comp_dir"/setup*.sh "$_comp_dir"/service*.sh "$_comp_dir"/uninstall*.sh "$_comp_dir"/test*.sh; do
-        [ -f "$_sh_file" ] || continue
-        if grep -Eq '^[ 	]*[^#]*(priv[ 	]+|sudo[ 	]+)?(systemctl[ 	]+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl[ 	]+(load|unload|start|stop)|rc-service[ 	]+|rc-update[ 	]+(add|del)|svcadm[ 	]+(enable|disable|restart|refresh)|svccfg[ 	]+(import|delete)|sc\.exe[ 	]+(start|stop|create|delete|config|query)|net[ 	]+(start|stop)[ 	]+|service[ 	]+[A-Za-z0-9_$"'\''-]+[ 	]+(start|stop|restart|reload|status)|update-rc\.d[ 	]+|chkconfig[ 	]+|s6-svc[ 	]+|dinitctl[ 	]+|sysrc[ 	]+[A-Za-z0-9_$"'\''-]*_enable)' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_DAEMON_MANAGER" "Direct init/daemon manager call in $(basename "$_sh_file"); delegate to engine/common/service.sh or service_install.sh."
-        fi
-        if grep -Eq '^[ 	]*[^#]*(priv([_a-z]*)[ 	]+([A-Za-z0-9_$"'\''-]+[ 	]+)?)?([A-Za-z0-9_$"'\''/.-]*python[0-9.]*[ 	]+-m[ 	]+venv|uv[ 	]+venv|virtualenv[ 	]+)' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_PYTHON_VENV" "Explicit Python venv setup in $(basename "$_sh_file"); delegate to engine/common/python_env.sh."
-        fi
-        if grep -Eq '^[ 	]*[^#]*(\$\(uname([ 	\)]|$)|(^|[ 	;|&(])uname([ 	]+-[a-zA-Z]+)?([ 	;|&)]|$))' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_UNAME" "Raw uname call in $(basename "$_sh_file"); use UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from engine/common/os_info.sh."
-        fi
-      done
-      for _cmd_file in "$_comp_dir"/setup*.cmd "$_comp_dir"/service*.cmd "$_comp_dir"/uninstall*.cmd "$_comp_dir"/test*.cmd; do
-        [ -f "$_cmd_file" ] || continue
-        if grep -Eiq '^[ 	]*[^:]*(\bsc\.exe[ 	]+(start|stop|create|delete|config|query)|\bsc[ 	]+(start|stop|create|delete|config|query)|\bnet[ 	]+(start|stop)[ 	]+)' "$_cmd_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_DAEMON_MANAGER" "Direct sc.exe/sc/net service call in $(basename "$_cmd_file"); delegate to engine\\common\\service.cmd or service_install.cmd."
-        fi
-      done
-      ;;
-  esac
+  printf '%d %d\n' "$AUDITED" "$ERRORS" > "${_vsw_shard}.cnt"
+  [ "$ERRORS" -eq 0 ] && return 0 || return 1
 }
 
 # ## audit_no_adhoc_installers
-# Verifies that devtools/ and tests/ do not invoke raw OS package managers directly.
+# Verifies that devtools/ and tests/ do not invoke raw OS package managers or git push directly.
 audit_no_adhoc_installers() {
+  _adhoc_list="${VM_WORK}/ADHOC.TXT"
+  : > "$_adhoc_list"
+  set +f
   for _dir in "${LIBSCRIPT_ROOT_DIR}/devtools" "${LIBSCRIPT_ROOT_DIR}/tests"; do
     [ -d "$_dir" ] || continue
-    _scripts=$(find "$_dir" -maxdepth 1 -type f | sort)
-    for _script in $_scripts; do
+    for _script in "$_dir"/*.sh "$_dir"/*.cmd "$_dir"/*.ps1; do
       [ -f "$_script" ] || continue
-      case "$_script" in
-        *.sh|*.cmd|*.ps1) ;;
-        *) continue ;;
-      esac
       _rel="${_script#"${LIBSCRIPT_ROOT_DIR}"/}"
       case "$_rel" in
         *audit*|*test_vm_contract*|*distro_pkg_roundtrip*) continue ;;
       esac
-      if grep -Eq '^[[:space:]]*(winget[[:space:]]+install|choco[[:space:]]+install)[[:space:]]' "$_script"; then
-        log_vm_violation "$_rel" "ADHOC_INSTALLER" "Direct winget/choco invocation in devtools/ or tests/ is prohibited; use LibScript components."
-      fi
-      if grep -Eq '^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)' "$_script"; then
-        log_vm_violation "$_rel" "REMOTE_SAFETY" "Strict safety violation: 'git push' is prohibited."
-      fi
+      printf '%s\n' "$_script" >> "$_adhoc_list"
     done
   done
+  set -f
+  if [ -s "$_adhoc_list" ]; then
+    if ! libscript_batch_exec "$_adhoc_list" 250 _vm_adhoc_batch; then
+      ERRORS=$((ERRORS + 1))
+    fi
+  fi
 }
 
-printf '=== LibScript Version Manager Contract Audit ===
-'
+# shellcheck disable=SC2329
+# ## _vm_adhoc_batch
+# Checks a batch of devtools/ and tests/ scripts for adhoc winget/choco and git push calls.
+_vm_adhoc_batch() {
+  awk -v root="${LIBSCRIPT_ROOT_DIR}/" '
+    FNR == 1 {
+      rel = FILENAME
+      if (index(rel, root) == 1) rel = substr(rel, length(root) + 1)
+      seen_pkg = 0; seen_push = 0
+    }
+    !seen_pkg && /^[[:space:]]*(winget[[:space:]]+install|choco[[:space:]]+install)[[:space:]]/ {
+      seen_pkg = 1
+      print "[VM CONTRACT VIOLATION] [ADHOC_INSTALLER] " rel ": Direct winget/choco invocation in devtools/ or tests/ is prohibited; use LibScript components."
+      errs++
+    }
+    !seen_push && /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/ {
+      seen_push = 1
+      print "[VM CONTRACT VIOLATION] [REMOTE_SAFETY] " rel ": Strict safety violation: \x27git push\x27 is prohibited."
+      errs++
+    }
+    END { exit(errs > 0 ? 1 : 0) }
+  ' "$@" >&2
+}
 
-if [ $# -gt 0 ]; then
+printf '=== LibScript Version Manager Contract Audit ===\n'
+
+if [ "$#" -gt 0 ]; then
+  _exp_files="${VM_WORK}/EXP_FILES.TXT"
+  : > "$_exp_files"
   for _arg in "$@"; do
-    audit_component_dir "$_arg"
+    audit_component_structure "$_arg" "$_exp_files"
   done
+  if [ -s "$_exp_files" ]; then
+    if ! libscript_batch_exec "$_exp_files" 250 _vm_content_batch; then
+      ERRORS=$((ERRORS + 1))
+    fi
+  fi
 else
-  _comp_list=$(find "${LIBSCRIPT_ROOT_DIR}/_lib" -mindepth 2 -maxdepth 2 -type d | sort)
-  for _comp_path in $_comp_list; do
-    [ -d "$_comp_path" ] || continue
-    audit_component_dir "$_comp_path"
+  _comps_file="${VM_WORK}/COMPS.TXT"
+  : > "$_comps_file"
+  set +f
+  for _cat_d in "${LIBSCRIPT_ROOT_DIR}/_lib"/*; do
+    [ -d "$_cat_d" ] || continue
+    for _cmp_d in "$_cat_d"/*; do
+      [ -d "$_cmp_d" ] || continue
+      printf '%s\n' "$_cmp_d" >> "$_comps_file"
+    done
   done
+  set -f
+
+  if command -v jq >/dev/null 2>&1 && [ -d "${LIBSCRIPT_ROOT_DIR}/_lib" ]; then
+    find "${LIBSCRIPT_ROOT_DIR}/_lib" -type f -name 'manifest.json' -exec jq -r '
+      "\(input_filename)\t \([.capabilities[]? // empty] | join(" ")) "
+    ' {} + > "$CAPS_CACHE" 2>/dev/null || true
+  fi
+
+  _sh_dir="${VM_WORK}/shards"
+  mkdir -p "$_sh_dir"
+  _jobs=$(libscript_parallel_jobs)
+  if [ "$_jobs" -gt 1 ]; then
+    awk -v n="$_jobs" -v d="$_sh_dir" 'NF > 0 { idx = (c % n) + 1; c++; out = d "/S" idx ".TXT"; print $0 >> out; close(out) }' "$_comps_file"
+    _pids=''
+    _i=1
+    while [ "$_i" -le "$_jobs" ]; do
+      if [ -s "${_sh_dir}/S${_i}.TXT" ]; then
+        ( _vm_shard_worker "${_sh_dir}/S${_i}.TXT" ) &
+        _pids="${_pids} $!"
+      fi
+      _i=$((_i + 1))
+    done
+    for _p in $_pids; do
+      wait "$_p" || true
+    done
+    set +f
+    _sum_aud=0
+    _sum_err=0
+    for _cf in "${_sh_dir}"/*.cnt; do
+      [ -f "$_cf" ] || continue
+      read -r _ca _ce < "$_cf"
+      _sum_aud=$((_sum_aud + _ca))
+      _sum_err=$((_sum_err + _ce))
+    done
+    set -f
+    AUDITED="$_sum_aud"
+    ERRORS="$_sum_err"
+  else
+    _vm_shard_worker "$_comps_file" || true
+    read -r AUDITED ERRORS < "${_comps_file}.cnt"
+  fi
   audit_no_adhoc_installers
 fi
 
 if [ "$ERRORS" -gt 0 ]; then
-  printf '[FAIL] Version Manager Contract Audit failed with %d violation(s) across %d components.
-' "$ERRORS" "$AUDITED" >&2
+  printf '[FAIL] Version Manager Contract Audit failed with %d violation(s) across %d components.\n' "$ERRORS" "$AUDITED" >&2
   exit 1
 fi
 
-printf '[PASS] All %d components strictly adhere to the LibScript Version Manager Contract!
-' "$AUDITED"
+printf '[PASS] All %d components strictly adhere to the LibScript Version Manager Contract!\n' "$AUDITED"
 exit 0

@@ -1052,8 +1052,8 @@ set "LIBSCRIPT_ROOT_DIR=%BUILD_MSI_ROOT_DIR%"
 :: Compiles the WiX manifest into an MSI binary using cross-platform msi-rs.
 if "%USE_WIX%"=="1" (
     echo [INFO] Using traditional WiX Toolset...
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\wix\env.cmd" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\wix\env.cmd" >nul 2>&1
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\wix\env.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\wix\env.cmd" >nul 2>&1
     ) else if exist "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe" (
         set "PATH=!PATH!;C:\Program Files (x86)\WiX Toolset v3.14\bin"
     ) else if exist "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" (

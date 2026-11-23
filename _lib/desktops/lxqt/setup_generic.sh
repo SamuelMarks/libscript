@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.lxqt"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/lxqt/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/lxqt/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/lxqt" ]; then
   log_info "lxqt ${VERSION} is already installed at ${TARGET_DIR}."

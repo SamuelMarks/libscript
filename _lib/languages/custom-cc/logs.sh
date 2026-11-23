@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-_log="${CUSTOM_CC_LOG_FILE:-${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/compile_events.jsonl}"
+_log="${CUSTOM_CC_LOG_FILE:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/compile_events.jsonl}"
 if [ -f "${_log}" ]; then
   cat "${_log}"
 else

@@ -60,7 +60,7 @@ resolve_exact_version() {
 case "$ACTION" in
   ls)
     if [ "$NODEENV_INSTALL_METHOD" = "libscript_native" ]; then
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodeenv/" 2>/dev/null || true
     else
       command -v nodeenv >/dev/null 2>&1 && nodeenv --version || printf 'nodeenv not found\n'
     fi
@@ -76,7 +76,7 @@ case "$ACTION" in
     resolve_exact_version
     if [ "$NODEENV_INSTALL_METHOD" = "libscript_native" ]; then
       libscript_python_ensure_runtime
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodeenv/${EXACT_VERSION}"
       if [ -f "${TARGET_DIR}/bin/nodeenv" ]; then
         log_info "nodeenv ${EXACT_VERSION} is already installed in ${TARGET_DIR}."
       else
@@ -129,8 +129,8 @@ case "$ACTION" in
     resolve_exact_version
     if [ "$NODEENV_INSTALL_METHOD" = "libscript_native" ]; then
       log_info "Uninstalling nodeenv ${EXACT_VERSION}..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/${VERSION}"
+      rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodeenv/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodeenv/${VERSION}"
     else
       if command -v uv >/dev/null 2>&1; then uv tool uninstall nodeenv 2>/dev/null || true; fi
       if command -v pipx >/dev/null 2>&1; then pipx uninstall nodeenv 2>/dev/null || true; fi

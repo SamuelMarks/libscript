@@ -234,7 +234,7 @@ if [ -n "${PATHS:-}" ]; then
 fi
 
 if [ "$TARGET" = "local" ]; then
-  BACKUP_DIR="$HOME/.libscript/backups/$NODE"
+  BACKUP_DIR="${HOME:-/root}/.libscript/backups/$NODE"
   mkdir -p "$BACKUP_DIR"
   TIMESTAMP=$(date +%s)
   ARCHIVE="$BACKUP_DIR/backup-${TIMESTAMP}.tar.zst"

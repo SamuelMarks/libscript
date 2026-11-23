@@ -1080,6 +1080,10 @@ libscript_download() {
       actual_checksum=$(sha256sum "$cache_file" | awk '{print $1}')
     elif command -v shasum >/dev/null 2>&1; then
       actual_checksum=$(shasum -a 256 "$cache_file" | awk '{print $1}')
+    elif command -v sha256 >/dev/null 2>&1; then
+      actual_checksum=$(sha256 -q "$cache_file" 2>/dev/null || sha256 "$cache_file" | awk '{print $NF}')
+    elif command -v openssl >/dev/null 2>&1; then
+      actual_checksum=$(openssl dgst -sha256 "$cache_file" | awk '{print $NF}')
     fi
 
     if [ -n "$actual_checksum" ]; then
@@ -1094,9 +1098,19 @@ libscript_download() {
     case "$url" in
       file://*) ;;
       *)
-        if command -v sha256sum >/dev/null 2>&1; then
-          if ! grep -qF "$url" "$checksum_db" 2>/dev/null; then
-            printf '%s\n' "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
+        if ! grep -qF "$url" "$checksum_db" 2>/dev/null; then
+          _auto_sha=''
+          if command -v sha256sum >/dev/null 2>&1; then
+            _auto_sha=$(sha256sum "$cache_file" | awk '{print $1}')
+          elif command -v shasum >/dev/null 2>&1; then
+            _auto_sha=$(shasum -a 256 "$cache_file" | awk '{print $1}')
+          elif command -v sha256 >/dev/null 2>&1; then
+            _auto_sha=$(sha256 -q "$cache_file" 2>/dev/null || sha256 "$cache_file" | awk '{print $NF}')
+          elif command -v openssl >/dev/null 2>&1; then
+            _auto_sha=$(openssl dgst -sha256 "$cache_file" | awk '{print $NF}')
+          fi
+          if [ -n "$_auto_sha" ]; then
+            printf '%s\n' "$url $_auto_sha" >> "$checksum_db"
           fi
         fi
         ;;

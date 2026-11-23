@@ -74,11 +74,11 @@ if "%ACTION%"=="/?" (
     exit /b 0
 )
 if "%ACTION%"=="install" (
-    call "%~dp0setup.cmd" %*
+    call "!SCRIPT_DIR!\setup.cmd" %*
     exit /b !errorlevel!
 )
 if "%ACTION%"=="test" (
-    call "%~dp0test.cmd" %*
+    call "!SCRIPT_DIR!\test.cmd" %*
     exit /b !errorlevel!
 )
 for %%V in (logs status use env ls ls-remote download uninstall install-service uninstall-service which exec run) do (

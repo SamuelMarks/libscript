@@ -112,7 +112,7 @@ check_cloud_managed() {
 
 case "${1:-}" in
   --help|-h|/\?|-\?)
-    printf '%s\n' "Usage: $0 <create|delete|start|stop|status|ssh|scp|profile|wait-ready|topology-info|sync-repo|arm-ttl|release-locks|tfrc-audit> [args...]"
+    printf '%s\n' "Usage: ${THIS_FILE} <create|delete|start|stop|status|ssh|scp|profile|wait-ready|topology-info|sync-repo|arm-ttl|release-locks|tfrc-audit> [args...]"
     printf '%s\n' 'See README.md for details.'
     exit 0
     ;;

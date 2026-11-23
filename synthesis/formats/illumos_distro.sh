@@ -49,7 +49,7 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --help|-h)
-      printf 'Usage: %s --format <qcow2|box|raw|vhd|vmdk|iso> --profile <path> [--output <path>]\n' "$0"
+      printf 'Usage: %s --format <qcow2|box|raw|vhd|vmdk|iso> --profile <path> [--output <path>]\n' "${THIS_FILE}"
       exit 0
       ;;
     *)

@@ -48,7 +48,7 @@ SCRIPT_DIR="${_EDGCPP_DIR}"
 # ## verify_edgcpp_binaries_and_headers
 # Verifies that the edgcpp installation contains cpfe, cpfe-cp, cdisp, mk_errinfo, edg_decode, and bundled standard headers.
 verify_edgcpp_binaries_and_headers() {
-  _edg_dir="${EDGCPP_HOME:-${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default}"
+  _edg_dir="${EDGCPP_HOME:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default}"
   [ -d "${_edg_dir}/bin" ]
   [ -x "${_edg_dir}/bin/edgcpp" ]
   [ -x "${_edg_dir}/bin/edg-cc" ]
@@ -143,7 +143,7 @@ EOF
   [ "${_out_c}" = "EDGCPP_C_CONFORMANCE_OK" ]
 
   # Verify direct cpfe --llvm-be native object file generation on pure C11 TU
-  _edg_dir="${EDGCPP_HOME:-${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default}"
+  _edg_dir="${EDGCPP_HOME:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default}"
   if [ -x "${_edg_dir}/bin/cpfe" ]; then
     cat <<'EOF' > "${_tmp_dir}/pure_llvm_be.c"
 int edg_llvm_compute(int x, int y) {

@@ -80,7 +80,7 @@ case "$ACTION" in
       resolve_exact_version
       libscript_symlink_alias "sbt" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sbt/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sbt/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "sbt ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -121,7 +121,7 @@ case "$ACTION" in
          EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/sbt/sbt/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
          if [ -z "${EXACT_VERSION}" ] || [ "${EXACT_VERSION}" = "latest" ]; then EXACT_VERSION="1.10.7"; fi
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sbt/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sbt/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing sbt ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends 'java'

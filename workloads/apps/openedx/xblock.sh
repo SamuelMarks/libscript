@@ -42,7 +42,7 @@ for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
 PYTHON_BIN="${VENV_DIR}/bin/python"
 MANAGE_PY="${OPENEDX_INSTALL_DIR}/codebase/manage.py"
@@ -74,7 +74,7 @@ resolve_python() {
 #   $1 - package specification (PyPI name, wheel, or git URL)
 xblock_install() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 install <package_spec_or_git_url>"
+    log_err "Usage: ${THIS_FILE} install <package_spec_or_git_url>"
     return 1
   fi
   _pkg="$1"
@@ -127,7 +127,7 @@ EOF
 #   $1 - package name
 xblock_uninstall() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 uninstall <package_name>"
+    log_err "Usage: ${THIS_FILE} uninstall <package_name>"
     return 1
   fi
   _pkg="$1"

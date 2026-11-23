@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.systemd-networkd"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/systemd-networkd/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/systemd-networkd/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/systemd-networkd" ]; then
   log_info "systemd-networkd ${VERSION} is already installed at ${TARGET_DIR}."

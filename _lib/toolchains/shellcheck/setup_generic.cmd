@@ -94,7 +94,8 @@ if not exist "!TARGET_DIR!\bin\shellcheck.exe" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
     set "STACK="
-    call "%~f0"
+    set "STACK="
+    call "!THIS_FILE!"
 )
 call :update_aliases
 exit /b 0

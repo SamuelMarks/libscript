@@ -65,7 +65,7 @@ resolve_cmdtools_url() {
 
 case "$ACTION" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/android-sdk/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/android-sdk/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -91,7 +91,7 @@ case "$ACTION" in
   install)
     EXACT_VERSION="${ANDROID_SDK_VERSION}"
     [ "$EXACT_VERSION" = "latest" ] && EXACT_VERSION="11076708"
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/android-sdk/${EXACT_VERSION}"
+    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/android-sdk/${EXACT_VERSION}"
     if [ -x "${TARGET_DIR}/cmdline-tools/latest/bin/sdkmanager" ]; then
       log_info "android-sdk ${EXACT_VERSION} is already installed at ${TARGET_DIR}."
       libscript_symlink_alias "android-sdk" "latest" "${EXACT_VERSION}"
@@ -105,7 +105,7 @@ case "$ACTION" in
     TEMP_ZIP=$(mktemp)
     libscript_download "$DL_URL" "$TEMP_ZIP"
     EXTRACT_TMP=$(mktemp -d)
-    unzip -q "$TEMP_ZIP" -d "$EXTRACT_TMP"
+    unzip -q -o "$TEMP_ZIP" -d "$EXTRACT_TMP"
     rm -f "$TEMP_ZIP"
 
     if [ -d "${EXTRACT_TMP}/cmdline-tools" ]; then
@@ -130,8 +130,8 @@ case "$ACTION" in
   uninstall)
     EXACT_VERSION="${ANDROID_SDK_VERSION}"
     [ "$EXACT_VERSION" = "latest" ] && EXACT_VERSION="11076708"
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/android-sdk/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/android-sdk/latest"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/android-sdk/${EXACT_VERSION}"
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/android-sdk/latest"
     exit 0
     ;;
 esac

@@ -153,7 +153,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
         dir /al "%ALIAS_DIR%" >nul 2>&1
         if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
     )
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -307,7 +308,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
         dir /al "%ALIAS_DIR%" >nul 2>&1
         if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
     )
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\duckdb\default"
 if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (

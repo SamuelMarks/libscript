@@ -14,8 +14,12 @@ Execute this script to install and configure pnpm on the local system.
 
 $ErrorActionPreference = "Stop"
 
+$LibscriptRootDir = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
 if (-Not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
-  & "$PSScriptRoot\..\npm\setup.ps1"
+  $rootCmd = Join-Path $LibscriptRootDir "libscript.cmd"
+  if ((-Not (Get-Command npm -ErrorAction SilentlyContinue)) -and (Test-Path $rootCmd)) {
+    & $rootCmd install npm latest
+  }
   npm install -g pnpm
 }
 

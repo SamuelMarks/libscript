@@ -62,7 +62,7 @@ if "!errorlevel!" neq "0" (
     if exist "%USERPROFILE%\.local\bin" set "PATH=%USERPROFILE%\.local\bin;!PATH!"
 )
 
-set NETCTL_DIR=%~dp0
+set NETCTL_DIR=!SCRIPT_DIR!\
 set NETCTL_STATE_FILE=.netctl.json
 
 if "%~1"=="" goto usage

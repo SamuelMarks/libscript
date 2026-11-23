@@ -28,7 +28,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
-LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${HOME}/.libscript_k8s_data}"
+LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${HOME:-/root}/.libscript_k8s_data}"
 export LIBSCRIPT_DATA_DIR
 mkdir -p "${LIBSCRIPT_DATA_DIR}"
 
@@ -73,8 +73,8 @@ if ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@server echo ok >/dev/
       fi
     else
       priv mkdir -p /root/.ssh 2>/dev/null || true
-      if ! priv grep -q -f "${HOME}/.ssh/id_rsa.pub" /root/.ssh/authorized_keys 2>/dev/null; then
-        priv sh -c "cat \"${HOME}/.ssh/id_rsa.pub\" >> /root/.ssh/authorized_keys" 2>/dev/null || true
+      if ! priv grep -q -f "${HOME:-/root}/.ssh/id_rsa.pub" /root/.ssh/authorized_keys 2>/dev/null; then
+        priv sh -c "cat \"${HOME:-/root}/.ssh/id_rsa.pub\" >> /root/.ssh/authorized_keys" 2>/dev/null || true
       fi
       priv chmod 700 /root/.ssh 2>/dev/null || true
       priv chmod 600 /root/.ssh/authorized_keys 2>/dev/null || true

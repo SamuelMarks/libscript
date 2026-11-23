@@ -108,7 +108,7 @@ BUILD_OUT=$(PATH="${MOCK_BIN}:${PATH}" STACK="" "${SCRIPT_DIR}/cli.sh" build msd
 printf '%s\n' "$BUILD_OUT" | grep -q '\[SKIP\] msdos-4.0 box already built' || fail_bento_test 'Expected idempotent skip when msdos-4.0 box already exists'
 
 bento_dir=""
-for candidate in "${ORIG_BENTO_DIR}" "${LIBSCRIPT_ROOT_DIR}/../bento" "$HOME/bento"; do
+for candidate in "${ORIG_BENTO_DIR}" "${LIBSCRIPT_ROOT_DIR}/../bento" "${HOME:-/root}/bento"; do
   if [ -n "$candidate" ] && [ -f "$candidate/bento.gemspec" ]; then
     bento_dir="$candidate"
     break

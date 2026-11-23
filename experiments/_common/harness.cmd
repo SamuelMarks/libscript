@@ -341,10 +341,10 @@ if defined LIBSCRIPT_BENCH_PROBE_BIN (
         exit /b 0
     )
 )
-for /f "delims=" %%A in ('call "%~f0" :libscript_now_ns') do set "_T0=%%A"
+for /f "delims=" %%A in ('cmd /c "set STACK=& call ""!THIS_FILE!"" :libscript_now_ns"') do set "_T0=%%A"
 call "!_ERC_EXEC!" >nul 2>&1
 set "_ERC_RC=!errorlevel!"
-for /f "delims=" %%B in ('call "%~f0" :libscript_now_ns') do set "_T1=%%B"
+for /f "delims=" %%B in ('cmd /c "set STACK=& call ""!THIS_FILE!"" :libscript_now_ns"') do set "_T1=%%B"
 if not "!_ERC_TMP!"=="" del /f /q "!_ERC_TMP!" >nul 2>&1
 if not "!_ERC_RC!"=="0" exit /b !_ERC_RC!
 set /a "_DT_CS=(!_T1:~0,-7! - !_T0:~0,-7!)" 2>nul || set "_DT_CS=1"
@@ -383,18 +383,18 @@ for /L %%I in (1,1,!_ERW_N!) do (
         if exist "!LIBSCRIPT_BENCH_PROBE_BIN!" (
             for /f "tokens=1" %%E in ('"!LIBSCRIPT_BENCH_PROBE_BIN!" --exec cmd.exe /c "!_ERW_CMD!" 2^>nul') do echo.%%E>> "!_ERW_OUT!.tmp"
         ) else (
-            for /f "delims=" %%A in ('call "%~f0" :libscript_now_ns') do set "_WT0=%%A"
+            for /f "delims=" %%A in ('cmd /c "set STACK=& call ""!THIS_FILE!"" :libscript_now_ns"') do set "_WT0=%%A"
             call "!_ERW_CMD!" >nul 2>&1
-            for /f "delims=" %%B in ('call "%~f0" :libscript_now_ns') do set "_WT1=%%B"
+            for /f "delims=" %%B in ('cmd /c "set STACK=& call ""!THIS_FILE!"" :libscript_now_ns"') do set "_WT1=%%B"
             set /a "_WDT=(!_WT1:~0,-7! - !_WT0:~0,-7!)" 2>nul || set "_WDT=1"
             REM wincheck disable=CMD2003
             if !_WDT! lss 1 set "_WDT=1"
             echo !_WDT!0000000>> "!_ERW_OUT!.tmp"
         )
     ) else (
-        for /f "delims=" %%A in ('call "%~f0" :libscript_now_ns') do set "_WT0=%%A"
+        for /f "delims=" %%A in ('cmd /c "set STACK=& call ""!THIS_FILE!"" :libscript_now_ns"') do set "_WT0=%%A"
         call "!_ERW_CMD!" >nul 2>&1
-        for /f "delims=" %%B in ('call "%~f0" :libscript_now_ns') do set "_WT1=%%B"
+        for /f "delims=" %%B in ('cmd /c "set STACK=& call ""!THIS_FILE!"" :libscript_now_ns"') do set "_WT1=%%B"
         set /a "_WDT=(!_WT1:~0,-7! - !_WT0:~0,-7!)" 2>nul || set "_WDT=1"
         REM wincheck disable=CMD2003
         if !_WDT! lss 1 set "_WDT=1"
@@ -495,8 +495,8 @@ for %%D in ("!_EER_OUT!") do set "_EER_DIR=%%~dpD"
 if not "!_EER_DIR!"=="" (
     if not exist "!_EER_DIR!" mkdir "!_EER_DIR!"
 )
-for /f "delims=" %%P in ('call "%~f0" :libscript_exp_normalize_rss_bytes "!_EER_PEAK!" "!_EER_OS!"') do set "_PB=%%P"
-for /f "delims=" %%B in ('call "%~f0" :libscript_exp_normalize_rss_bytes "!_EER_BASE!" "!_EER_OS!"') do set "_BB=%%B"
+for /f "delims=" %%P in ('cmd /c "set STACK=& call ""!THIS_FILE!"" :libscript_exp_normalize_rss_bytes ""!_EER_PEAK!"" ""!_EER_OS!"""') do set "_PB=%%P"
+for /f "delims=" %%B in ('cmd /c "set STACK=& call ""!THIS_FILE!"" :libscript_exp_normalize_rss_bytes ""!_EER_BASE!"" ""!_EER_OS!"""') do set "_BB=%%B"
 call :libscript_exp_ensure_bench_probe
 set "_DB=0"
 set /a "_DB=!_PB! - !_BB!" 2>nul || set "_DB=0"

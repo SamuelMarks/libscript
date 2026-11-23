@@ -58,9 +58,17 @@ if ($Validate) {
 
 $chosenConfig = $null
 if ($Profile) {
-    $profilePath = Join-Path $rootDir "profiles\$Profile.json"
+    $profilePath = Join-Path $rootDir "synthesis\profiles\$Profile.json"
     if (-not (Test-Path $profilePath)) {
-        $profilePath = Join-Path $rootDir "profiles\$Profile"
+        $profilePath = Join-Path $rootDir "synthesis\profiles\$Profile"
+    }
+    if (-not (Test-Path $profilePath)) {
+        foreach ($sub in @("linux", "freebsd", "illumos", "reactos", "rtos", "hypervisor", "unikernel", "containers", "cloud", "lfs")) {
+            $cand1 = Join-Path $rootDir "synthesis\profiles\$sub\$Profile.json"
+            $cand2 = Join-Path $rootDir "synthesis\profiles\$sub\$Profile"
+            if (Test-Path $cand1) { $profilePath = $cand1; break }
+            if (Test-Path $cand2) { $profilePath = $cand2; break }
+        }
     }
     if (-not (Test-Path $profilePath)) {
         Write-Error "[ERROR] Profile not found: $Profile"

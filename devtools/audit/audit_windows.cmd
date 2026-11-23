@@ -69,7 +69,7 @@ exit /b 0
 :: ## main
 :: Executes the primary orchestration workflow for this script.
 :main
-set "ROOT_DIR=%~dp0..\.."
+set "ROOT_DIR=!SCRIPT_DIR!\..\.."
 
 where powershell >nul 2>&1
 if "%ERRORLEVEL%" NEQ "0" (

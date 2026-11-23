@@ -51,8 +51,8 @@ VERSION="${REDIS_VERSION:-latest}"
 # Checks LIBSCRIPT_HOME and system PATH for an existing redis-server or valkey-server installation.
 find_existing_redis() {
   for _fer_cand in \
-    "${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/${VERSION}/bin/redis-server" \
-    "${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/default/bin/redis-server" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/redis/${VERSION}/bin/redis-server" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/redis/default/bin/redis-server" \
     "$(command -v redis-server 2>/dev/null || true)" \
     "$(command -v valkey-server 2>/dev/null || true)"; do
     if [ -n "$_fer_cand" ] && [ -x "$_fer_cand" ]; then
@@ -162,7 +162,7 @@ case "$ACTION" in
     fi
     if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_rd=$(find_existing_redis 2>/dev/null); then
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/redis/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
       if [ "$_existing_rd" != "${TARGET_DIR}/bin/redis-server" ]; then
         ln -sf "$_existing_rd" "${TARGET_DIR}/bin/redis-server" 2>/dev/null || true
@@ -185,7 +185,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/redis/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing redis ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -196,7 +196,7 @@ case "$ACTION" in
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+              unzip -q -o "$cache_file" -d "${TARGET_DIR}" || true
             else
               cp "$cache_file" "${TARGET_DIR}/bin/redis" || true
               chmod +x "${TARGET_DIR}/bin/redis" || true
@@ -209,7 +209,7 @@ case "$ACTION" in
             if case "${REDIS_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "${REDIS_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              unzip -q -o "${TEMP_FILE}" -d "${TARGET_DIR}" || true
             else
               cp "${TEMP_FILE}" "${TARGET_DIR}/bin/redis" || true
               chmod +x "${TARGET_DIR}/bin/redis" || true

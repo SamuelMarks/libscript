@@ -42,6 +42,8 @@ compute_sha256_digest() {
     sha256sum "${1}" | awk '{print $1}'
   elif command -v shasum >/dev/null 2>&1; then
     shasum -a 256 "${1}" | awk '{print $1}'
+  elif command -v sha256 >/dev/null 2>&1; then
+    sha256 -q "${1}" 2>/dev/null || sha256 "${1}" | awk '{print $NF}'
   else
     cksum "${1}" | awk '{print $1}'
   fi

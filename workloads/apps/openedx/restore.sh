@@ -59,14 +59,14 @@ for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 BACKUP_HELPER="${SCRIPT_DIR}/backup_helper.sh"
 
 # ## restore_apply
 # Extracts and restores backup archive into local installation via backup_helper.sh.
 restore_apply() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 apply <archive_path> [--yes]"
+    log_err "Usage: ${THIS_FILE} apply <archive_path> [--yes]"
     return 1
   fi
   _archive="$1"

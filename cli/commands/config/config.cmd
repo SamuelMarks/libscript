@@ -107,8 +107,14 @@ if errorlevel 1 (
 if not "!VALIDATE_FILE!"=="" goto :validate_mode
 
 if "!TARGET_PROFILE!"=="" call :select_profile_menu
-set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\profiles\!TARGET_PROFILE!.json"
-if not exist "!PROFILE_PATH!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\profiles\!TARGET_PROFILE!"
+set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!TARGET_PROFILE!.json"
+if not exist "!PROFILE_PATH!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!TARGET_PROFILE!"
+if not exist "!PROFILE_PATH!" (
+    for %%S in (linux freebsd illumos reactos rtos hypervisor unikernel containers cloud lfs) do (
+        if not exist "!PROFILE_PATH!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!.json" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!.json"
+        if not exist "!PROFILE_PATH!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!"
+    )
+)
 if not exist "!PROFILE_PATH!" (
     echo [ERROR] Profile not found: !TARGET_PROFILE! 1>&2
     exit /b 1

@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.lightdm"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/lightdm/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/lightdm/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/lightdm" ]; then
   log_info "lightdm ${VERSION} is already installed at ${TARGET_DIR}."

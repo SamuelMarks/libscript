@@ -94,7 +94,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/conda/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/conda/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/conda" ]; then
         log_info "Installing conda ${VERSION} natively to ${TARGET_DIR}..."
         if [ -f "${LIBSCRIPT_ETC_DIR:-/etc}/alpine-release" ]; then

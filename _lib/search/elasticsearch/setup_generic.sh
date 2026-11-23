@@ -62,7 +62,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION:-latest}/bin/elasticsearch" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elasticsearch/${VERSION:-latest}/bin/elasticsearch" ]; then
       log_info "elasticsearch ${VERSION:-latest} is already installed."
       exit 0
     fi
@@ -72,7 +72,7 @@ case "$ACTION" in
     elif [ "${UNAME_LOWER}" = "freebsd" ]; then
       libscript_depends "elasticsearch8" || libscript_depends "textproc/elasticsearch8" || libscript_depends "textproc/elasticsearch7" || true
     else
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elasticsearch/${VERSION}"
       if [ ! -f "${TARGET_DIR}/bin/elasticsearch" ]; then
         mkdir -p "${TARGET_DIR}"
         OS_NAME='linux'
@@ -103,15 +103,15 @@ case "$ACTION" in
     ;;
   uninstall)
     log_info 'Uninstalling Elasticsearch...'
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION}"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elasticsearch/${VERSION}"
     exit 0
     ;;
   test)
     if command -v elasticsearch >/dev/null 2>&1; then
       elasticsearch --version
       exit 0
-    elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION}/bin/elasticsearch" ]; then
-      "${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION}/bin/elasticsearch" --version
+    elif [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elasticsearch/${VERSION}/bin/elasticsearch" ]; then
+      "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elasticsearch/${VERSION}/bin/elasticsearch" --version
       exit 0
     else
       printf 'elasticsearch binary not found\n' >&2

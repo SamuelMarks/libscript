@@ -18,7 +18,8 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -105,14 +106,20 @@ if not exist "!TOPO_FILE!" (
 for /f "usebackq delims=" %%N in (`jq -r ".name" "!TOPO_FILE!"`) do set "TOPO_NAME=%%N"
 set "_DP=%~dp0"
 set "_BS=!_DP:~-1!"
-if "!LIBSCRIPT_TOPOLOGY_STATE_DIR!"=="" (
-    set "STATE_DIR=!LIBSCRIPT_ROOT_DIR!!_BS!build!_BS!topologies!_BS!!TOPO_NAME!"
+if not "!LIBSCRIPT_TOPOLOGY_STATE_FILE!"=="" (
+    set "STATE_FILE=!LIBSCRIPT_TOPOLOGY_STATE_FILE!"
+    for %%D in ("!STATE_FILE!") do set "STATE_DIR=%%~dpD"
+    if not "!STATE_DIR!"=="" if not exist "!STATE_DIR!" mkdir "!STATE_DIR!"
 ) else (
-    set "STATE_DIR=!LIBSCRIPT_TOPOLOGY_STATE_DIR!"
+    if "!LIBSCRIPT_TOPOLOGY_STATE_DIR!"=="" (
+        set "STATE_DIR=!LIBSCRIPT_ROOT_DIR!!_BS!build!_BS!topologies!_BS!!TOPO_NAME!"
+    ) else (
+        set "STATE_DIR=!LIBSCRIPT_TOPOLOGY_STATE_DIR!"
+    )
+    if not exist "!STATE_DIR!" mkdir "!STATE_DIR!"
+    set "STATE_FILE=!STATE_DIR!\.topology_state.json"
 )
-if not exist "!STATE_DIR!" mkdir "!STATE_DIR!"
-set "STATE_FILE=!STATE_DIR!\.topology_state.json"
-set "LOCK_DIR=!STATE_DIR!\.lock"
+set "LOCK_DIR=!STATE_FILE!.lock"
 
 call :utc_now
 
@@ -203,7 +210,7 @@ set "_JQ_UP=%TEMP%\ls_topo_up_%RANDOM%_%RANDOM%.jq"
     echo   completed_hooks: ^(["pre_provision","substrate_prep","leader_bootstrap","follower_join","post_cluster"]^),
     echo   nodes: ^[
     echo     .node_groups[] as $g ^|
-    echo     range^(0; $g.count^) as $i ^|
+    echo     range^(0; ^($g.count // $g.replicas // 1^)^) as $i ^|
     echo     {
     echo       id: "\($g.name)-\($i|tostring)",
     echo       group: $g.name,

@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.kde-plasma-6"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kde-plasma-6/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/kde-plasma-6/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/kde-plasma-6" ]; then
   log_info "kde-plasma-6 ${VERSION} is already installed at ${TARGET_DIR}."

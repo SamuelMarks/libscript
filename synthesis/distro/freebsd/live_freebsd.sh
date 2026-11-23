@@ -99,7 +99,7 @@ fi
 
 # Embed msi-rs toolchain
 FREEBSD_OPT_LIBSCRIPT="${FREEBSD_OPT_LIBSCRIPT:-/opt/libscript}"
-MSI_PREFIX="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/latest/bin"
+MSI_PREFIX="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/latest/bin"
 if [ -d "$MSI_PREFIX" ]; then
   mkdir -p "${ROOTFS}${FREEBSD_OPT_LIBSCRIPT}/msi-rs/bin"
   cp -R "$MSI_PREFIX"/* "${ROOTFS}${FREEBSD_OPT_LIBSCRIPT}/msi-rs/bin/" 2>/dev/null || true

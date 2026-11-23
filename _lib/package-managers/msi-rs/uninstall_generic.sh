@@ -36,9 +36,9 @@ if [ "$VERSION" = "latest" ] || [ "$VERSION" = "lts" ] || [ "$VERSION" = "stable
 else
   EXACT_VERSION="$VERSION"
 fi
-rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${EXACT_VERSION}" \
-       "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${VERSION}" \
-       "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default" 2>/dev/null || true
+rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/${EXACT_VERSION}" \
+       "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/${VERSION}" \
+       "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default" 2>/dev/null || true
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/uninstall_generic.sh"
 export SCRIPT_NAME

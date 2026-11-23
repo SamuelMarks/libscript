@@ -80,7 +80,7 @@ EOF
 
 case "$ACTION" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nomad/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nomad/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -92,7 +92,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nomad/${EXACT_VERSION}"
+    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nomad/${EXACT_VERSION}"
     if [ ! -x "${TARGET_DIR}/bin/nomad" ]; then
       unset SCRIPT_NAME || true
       ACTION="install" sh "$DIR/setup.sh" install "nomad" "$VERSION"
@@ -113,7 +113,7 @@ case "$ACTION" in
     ;;
   install)
     resolve_exact_version
-    TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/nomad/${EXACT_VERSION}}"
+    TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nomad/${EXACT_VERSION}}"
     if [ -x "${TARGET_DIR}/bin/nomad" ]; then
       log_info "HashiCorp Nomad ${EXACT_VERSION} is already installed at ${TARGET_DIR}."
     else

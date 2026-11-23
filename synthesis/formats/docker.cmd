@@ -69,8 +69,58 @@ for %%A in (%*) do (
 )
 
 if "%IS_COMPOSE%"=="1" (
-    call "%REPO_ROOT%\synthesis\formats\docker_compose.cmd" %*
-) else (
-    call "%REPO_ROOT%\synthesis\formats\dockerfile.cmd" %*
+    call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\docker_compose.cmd" %*
+    exit /b !ERRORLEVEL!
 )
-exit /b %ERRORLEVEL%
+
+set "BASE_IMAGE=debian:bookworm-slim"
+set "IS_OFFLINE=0"
+if "%LIBSCRIPT_OFFLINE%"=="1" set "IS_OFFLINE=1"
+
+goto :parse_df_args
+
+:: ## parse_df_args
+:: Parses optional flags (--offline, --online, --base) before component arguments.
+:parse_df_args
+if "%~1"=="" goto :emit_df_hdr
+if /I "%~1"=="--offline" ( set "IS_OFFLINE=1" & shift & goto :parse_df_args )
+if /I "%~1"=="-o" ( set "IS_OFFLINE=1" & shift & goto :parse_df_args )
+if /I "%~1"=="--online" ( set "IS_OFFLINE=0" & shift & goto :parse_df_args )
+if /I "%~1"=="--base" ( set "BASE_IMAGE=%~2" & shift & shift & goto :parse_df_args )
+if /I "%~1"=="--base-image" ( set "BASE_IMAGE=%~2" & shift & shift & goto :parse_df_args )
+goto :emit_df_hdr
+
+:: ## emit_df_hdr
+:: Emits the Dockerfile header and RUN install layers to stdout.
+:emit_df_hdr
+if /I "!BASE_IMAGE!"=="debian" set "BASE_IMAGE=debian:bookworm-slim"
+if /I "!BASE_IMAGE!"=="alpine" set "BASE_IMAGE=alpine:latest"
+echo FROM !BASE_IMAGE!
+echo ARG TARGETOS=linux
+echo ARG TARGETARCH=amd64
+echo ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
+echo ENV LIBSCRIPT_ROOT_DIR="/opt/libscript"
+echo ENV LIBSCRIPT_BUILD_DIR="/opt/libscript_build"
+echo ENV LIBSCRIPT_DATA_DIR="/opt/libscript_data"
+echo ENV LIBSCRIPT_CACHE_DIR="/opt/libscript_cache"
+if "!IS_OFFLINE!"=="1" echo ENV LIBSCRIPT_OFFLINE="1"
+echo COPY . /opt/libscript
+echo WORKDIR /opt/libscript
+
+goto :emit_df_pkgs
+
+:: ## emit_df_pkgs
+:: Iterates through requested component and version pairs to emit RUN layers.
+:emit_df_pkgs
+if "%~1"=="" exit /b 0
+set "_DF_PKG=%~1"
+set "_DF_VER=%~2"
+if "!_DF_VER!"=="" set "_DF_VER=latest"
+if "!IS_OFFLINE!"=="1" (
+    echo RUN ./libscript.sh install !_DF_PKG! "!_DF_VER!" --offline
+) else (
+    echo RUN ./libscript.sh install !_DF_PKG! "!_DF_VER!"
+)
+shift
+if not "%~1"=="" shift
+goto :emit_df_pkgs

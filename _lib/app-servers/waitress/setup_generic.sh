@@ -56,7 +56,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    _wt_target="${LIBSCRIPT_HOME:-$HOME/.libscript}/waitress/${VERSION:-latest}"
+    _wt_target="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/waitress/${VERSION:-latest}"
     if [ -x "${_wt_target}/bin/waitress-serve" ]; then
       log_info "waitress ${VERSION:-latest} is already installed."
       exit 0

@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf 'Usage: %s <up|status|scale|drain|failover|upgrade|destroy> <topology.json> [--live|--mock|--dry-run] [args...]\n' "$0"
+  printf 'Usage: %s <up|status|scale|drain|failover|upgrade|destroy> <topology.json> [--live|--mock|--dry-run] [args...]\n' "${THIS_FILE}"
   exit 0
 fi
 

@@ -98,10 +98,10 @@ install_sqlite_via_pkg_mgr() {
   if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" = "1" ]; then
     return 0
   fi
-  _target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${EXACT_VERSION}"
+  _target_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/${EXACT_VERSION}"
   mkdir -p "${_target_dir}/bin"
   _sys_sqlite="$(command -v sqlite3 2>/dev/null || true)"
-  if [ -n "${_sys_sqlite}" ] && [ "${_sys_sqlite}" != "${_target_dir}/bin/sqlite3" ] && [ "${_sys_sqlite}" != "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/default/bin/sqlite3" ]; then
+  if [ -n "${_sys_sqlite}" ] && [ "${_sys_sqlite}" != "${_target_dir}/bin/sqlite3" ] && [ "${_sys_sqlite}" != "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/default/bin/sqlite3" ]; then
     ln -sf "${_sys_sqlite}" "${_target_dir}/bin/sqlite3"
     ln -sf "${_sys_sqlite}" "${_target_dir}/bin/sqlite"
   fi
@@ -240,7 +240,7 @@ case "$ACTION" in
     exit 0
     ;;
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -253,12 +253,12 @@ case "$ACTION" in
   use)
     resolve_exact_version
     _tc_id="${SQLITE_BUILD_TOOLCHAIN:-${SQLITE_COMPILER:-${LIBSCRIPT_BUILD_TOOLCHAIN:-default}}}"
-    if [ "${_tc_id}" != "default" ] && [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${EXACT_VERSION}-${_tc_id}" ]; then
+    if [ "${_tc_id}" != "default" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/${EXACT_VERSION}-${_tc_id}" ]; then
       libscript_symlink_alias "sqlite" "${VERSION}" "${EXACT_VERSION}-${_tc_id}"
       libscript_symlink_alias "sqlite" "default" "${EXACT_VERSION}-${_tc_id}"
       log_info "Set default sqlite version to ${EXACT_VERSION}-${_tc_id}."
     else
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "sqlite ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -297,7 +297,7 @@ case "$ACTION" in
         ;;
       *)
         resolve_exact_version
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${EXACT_VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/${EXACT_VERSION}"
         if [ -x "${TARGET_DIR}/bin/sqlite3" ] && [ "${FORCE_REBUILD:-0}" != "1" ]; then
           log_info "sqlite ${EXACT_VERSION} is already installed at ${TARGET_DIR}."
           libscript_symlink_alias "sqlite" "$VERSION" "${EXACT_VERSION}"

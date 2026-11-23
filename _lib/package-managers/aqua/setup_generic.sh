@@ -84,7 +84,7 @@ case "$ACTION" in
         libscript_depends 'curl'
         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/aquaproj/aqua/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/aqua/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/aqua/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "aqua ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -120,7 +120,7 @@ case "$ACTION" in
         libscript_depends 'curl'
         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/aquaproj/aqua/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/aqua/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/aqua/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         libscript_depends 'curl' 'tar'
         log_info "Installing aqua ${VERSION} natively to ${TARGET_DIR}..."

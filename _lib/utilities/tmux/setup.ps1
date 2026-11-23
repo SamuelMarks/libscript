@@ -14,12 +14,13 @@ Execute this script to install and configure tmux on the local system.
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Installing psmux as the native Windows alternative for tmux..."
-$PsmuxSetup = Join-Path $PSScriptRoot "..\psmux\setup.ps1"
-if (Test-Path $PsmuxSetup) {
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PsmuxSetup
+$LibscriptRootDir = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+Write-Host "Installing psmux via root orchestrator as the native Windows alternative for tmux..."
+$RootCmd = Join-Path $LibscriptRootDir "libscript.cmd"
+if (Test-Path $RootCmd) {
+    & $RootCmd install psmux latest
 } else {
-    Write-Host "Warning: psmux setup script not found at $PsmuxSetup"
+    Write-Host "Warning: libscript.cmd not found at $RootCmd"
 }
 
 

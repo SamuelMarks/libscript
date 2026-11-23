@@ -89,8 +89,8 @@ if [ -d "${FREEBSD_SRC_DIR:-/usr/src}" ] && [ -f "${FREEBSD_SRC_DIR:-/usr/src}/M
     make -C "${FREEBSD_SRC_DIR:-/usr/src}" buildworld buildkernel
     make -C "${FREEBSD_SRC_DIR:-/usr/src}" installworld installkernel DESTDIR="$TARGET_SYSROOT"
   fi
-elif [ -x "${SCRIPT_DIR}/distro/base.sh" ] && [ "${LIBSCRIPT_OFFLINE:-0}" = "0" ] && [ "${FREEBSD_DISTRO_FETCH_BASE:-${LIBSCRIPT_FETCH_FREEBSD_BASE:-0}}" = "1" ]; then
-  STACK="" "${SCRIPT_DIR}/distro/base.sh" "$TARGET_SYSROOT" "${FREEBSD_VERSION:-14.1-RELEASE}" "${LIBSCRIPT_TARGET_ARCH:-amd64}"
+elif [ -x "${SCRIPT_DIR}/../freebsd/base.sh" ] && [ "${LIBSCRIPT_OFFLINE:-0}" = "0" ] && [ "${FREEBSD_DISTRO_FETCH_BASE:-${LIBSCRIPT_FETCH_FREEBSD_BASE:-0}}" = "1" ]; then
+  STACK="" "${SCRIPT_DIR}/../freebsd/base.sh" "$TARGET_SYSROOT" "${FREEBSD_VERSION:-14.1-RELEASE}" "${LIBSCRIPT_TARGET_ARCH:-amd64}"
 fi
 
 if [ ! -f "$TARGET_SYSROOT/boot/loader.conf" ]; then

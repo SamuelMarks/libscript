@@ -65,7 +65,7 @@ case "$ACTION" in
     if [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "system" ]; then
       huggingface-cli --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/huggingface-cli/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/huggingface-cli/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -85,7 +85,7 @@ case "$ACTION" in
       libscript_symlink_alias "huggingface-cli" "${HUGGINGFACE_CLI_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "huggingface-cli" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/huggingface-cli/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/huggingface-cli/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "huggingface-cli ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -118,7 +118,7 @@ case "$ACTION" in
     else
         # libscript_native implementation
         resolve_exact_version
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/huggingface-cli/${EXACT_VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/huggingface-cli/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing huggingface-cli ${VERSION} natively to ${TARGET_DIR}..."
           libscript_depends 'python3' 'pip' 'python3-venv' || true

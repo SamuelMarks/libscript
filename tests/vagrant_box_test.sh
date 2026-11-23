@@ -46,7 +46,7 @@ for arg in "$@"; do
       PROVIDER="${arg#*=}"
       ;;
     -h|--help)
-      printf 'Usage: %s [box_path] [--provider=qemu] [--dry-run|--live]\n' "$0"
+      printf 'Usage: %s [box_path] [--provider=qemu] [--dry-run|--live]\n' "${THIS_FILE}"
       exit 0
       ;;
     *)

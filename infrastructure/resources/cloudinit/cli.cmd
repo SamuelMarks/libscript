@@ -101,5 +101,5 @@ exit /b 1
 :: ## execute
 :: Executes the primary orchestration workflow for this script.
 :execute
-call "%~dp0api.cmd" :libscript_cloudinit_generate_mount "%LIBSCRIPT_DEVICE%" "%LIBSCRIPT_MOUNT_POINT%" "%LIBSCRIPT_FS_TYPE%"
+call "!SCRIPT_DIR!\api.cmd" :libscript_cloudinit_generate_mount "%LIBSCRIPT_DEVICE%" "%LIBSCRIPT_MOUNT_POINT%" "%LIBSCRIPT_FS_TYPE%"
 exit /b %errorlevel%

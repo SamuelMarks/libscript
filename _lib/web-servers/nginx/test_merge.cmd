@@ -50,10 +50,10 @@ goto :find_root
 :root_found
 
 echo Running merge unit tests...
-if exist "%~dp0test_merge.ps1" (
+if exist "!SCRIPT_DIR!\test_merge.ps1" (
     where powershell >nul 2>&1
     if not errorlevel 1 (
-        powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0test_merge.ps1"
+        powershell -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test_merge.ps1"
         exit /b !ERRORLEVEL!
     )
 )

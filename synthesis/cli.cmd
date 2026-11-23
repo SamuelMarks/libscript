@@ -181,7 +181,7 @@ exit /b !errorlevel!
 :: ## fmt_dockerfile
 :: Dispatches Dockerfile export.
 :fmt_dockerfile
-call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dockerfile.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\docker.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
 exit /b !errorlevel!
 
 :: ## fmt_docker_compose

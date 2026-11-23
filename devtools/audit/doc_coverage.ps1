@@ -158,7 +158,7 @@ foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".cmd" -or $_.Ex
         $ln = $lines[$i]
         if ($ln -match '^\s*::\s*##\s+') { $hasDoc = $true; continue }
         if ($ln -match '^\s*::') { continue }
-        if ($ln -match '^\s*:[a-zA-Z0-9_]+' -and $ln -notmatch '^\s*:(EOF|eof|root_found|find_root)\b') {
+        if ($ln -match '^\s*:[A-Za-z0-9_.-]+' -and $ln -notmatch '^\s*:(EOF|eof|root_found|find_root)\b') {
             if (-not $hasDoc) {
                 Write-Warning "Missing Batch label docstring in $($sf.FullName):$($i + 1)"
                 $missingCmdLabels++

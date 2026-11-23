@@ -33,7 +33,7 @@ export DIR="${SCRIPT_DIR}"
 INPUT="${1:-}"
 
 if [ -z "$INPUT" ]; then
-    echo "Usage: $0 <path_with_variables>" >&2
+    echo "Usage: ${THIS_FILE} <path_with_variables>" >&2
     exit 1
 fi
 

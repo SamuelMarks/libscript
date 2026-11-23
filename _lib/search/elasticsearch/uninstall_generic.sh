@@ -28,5 +28,5 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 VERSION="${ELASTICSEARCH_VERSION:-7.17.21}"
-rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION}"
+rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elasticsearch/${VERSION}"
 exit 0

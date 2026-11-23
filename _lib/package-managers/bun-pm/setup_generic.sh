@@ -94,28 +94,28 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bun-pm/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun-pm/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/bun" ]; then
         log_info "Installing bun-pm ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if command -v bun >/dev/null 2>&1; then
           ln -sf "$(command -v bun)" "${TARGET_DIR}/bin/bun"
-        elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" ]; then
-          ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
+        elif [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/latest/bin/bun" ]; then
+          ln -sf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
         else
           (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install bun || true)
           if command -v bun >/dev/null 2>&1; then
             ln -sf "$(command -v bun)" "${TARGET_DIR}/bin/bun"
-          elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" ]; then
-            ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
-          elif [ -f "$HOME/.bun/bin/bun" ]; then
-            ln -sf "$HOME/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
+          elif [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/latest/bin/bun" ]; then
+            ln -sf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
+          elif [ -f "${HOME:-/root}/.bun/bin/bun" ]; then
+            ln -sf "${HOME:-/root}/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
           else
             libscript_depends 'bash' 'curl' 'unzip'
             # libscript-allow-upstream-bash: upstream bun.sh installer script requires bash
             libscript_fetch_stdout "https://bun.sh/install" | bash || true
-            if [ -f "$HOME/.bun/bin/bun" ]; then
-              ln -sf "$HOME/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
+            if [ -f "${HOME:-/root}/.bun/bin/bun" ]; then
+              ln -sf "${HOME:-/root}/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
             fi
           fi
         fi

@@ -185,7 +185,7 @@ case "$ACTION" in
     fi
     ;;
   --help|-h)
-    printf 'Usage: %s <list|enable|disable|apply|verify|teardown> [trait_name] [--manifest <libscript.json>]\n' "$0"
+    printf 'Usage: %s <list|enable|disable|apply|verify|teardown> [trait_name] [--manifest <libscript.json>]\n' "${THIS_FILE}"
     ;;
   *)
     printf '[ERROR] Unknown trait engine command: %s\n' "$ACTION" >&2

@@ -139,7 +139,7 @@ WORK_DIR="$REPO_SOURCE"
 case "$REPO_SOURCE" in
   http://*|https://*|git@*|ssh://*|*.git)
     APP_SLUG=$(basename "$REPO_SOURCE" .git)
-    WORK_DIR="${LIBSCRIPT_HOME:-${HOME}/.libscript}/deployments/${APP_SLUG}"
+    WORK_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/deployments/${APP_SLUG}"
     if [ "$DRY_RUN_MODE" = "1" ] || [ "$DRY_RUN_MODE" = "true" ]; then
       printf '[DRY_RUN] Would clone/update %s into %s (ref: %s)
 ' "$REPO_SOURCE" "$WORK_DIR" "${GIT_REF:-default}"

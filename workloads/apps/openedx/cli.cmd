@@ -269,9 +269,5 @@ if exist "!SCRIPT_DIR!\..\..\..\engine\common\component_core.cmd" (
     call "!SCRIPT_DIR!\..\..\..\engine\common\component_core.cmd" %*
     exit /b !ERRORLEVEL!
 )
-if exist "!SCRIPT_DIR!\..\..\..\libscript\engine\common\component_core.cmd" (
-    call "!SCRIPT_DIR!\..\..\..\libscript\engine\common\component_core.cmd" %*
-    exit /b !ERRORLEVEL!
-)
 echo [ERROR] component_core.cmd not found >&2
 exit /b 1

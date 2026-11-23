@@ -33,14 +33,14 @@ export LIBSCRIPT_ROOT_DIR
 # ## show_help
 # Displays usage instructions for the runtime setup script.
 show_help() {
-  printf 'Usage: %s [-InstallDir <path>] [-PythonExe <path>]\n' "$0"
+  printf 'Usage: %s [-InstallDir <path>] [-PythonExe <path>]\n' "${THIS_FILE}"
   exit 0
 }
 
 # ## main
 # Parses arguments and creates all required Open edX runtime directories and sitecustomize.py.
 main() {
-  _install_dir="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+  _install_dir="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
   while [ $# -gt 0 ]; do
     case "$1" in
       -InstallDir|--install-dir)

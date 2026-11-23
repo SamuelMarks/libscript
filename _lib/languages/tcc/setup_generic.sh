@@ -132,7 +132,7 @@ install_tcc_component() {
     return 0
   fi
 
-  TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/${EXACT_VERSION}"
+  TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/${EXACT_VERSION}"
   if [ -x "${TARGET_DIR}/bin/tcc" ] && [ "${FORCE_REBUILD:-0}" != "1" ]; then
     libscript_symlink_alias "tcc" "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias "tcc" "default" "${EXACT_VERSION}"
@@ -151,7 +151,7 @@ install_tcc_component() {
 
 case "${ACTION}" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/" 2>/dev/null || true
     ;;
   ls-remote)
     printf '0.9.26
@@ -171,8 +171,8 @@ case "${ACTION}" in
     install_tcc_component
     ;;
   uninstall)
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/${VERSION}"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/${EXACT_VERSION}"
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/${VERSION}"
     ;;
   *)
     install_tcc_component

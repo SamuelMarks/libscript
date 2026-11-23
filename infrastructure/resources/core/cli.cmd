@@ -62,9 +62,9 @@ for %%a in (%*) do (
 )
 
 if "%SKIP_STATE%"=="0" (
-    if exist "%~dp0state_backend.cmd" (
-        call "%~dp0state_backend.cmd" pull_state
-        call "%~dp0state_backend.cmd" lock_state
+    if exist "!SCRIPT_DIR!\state_backend.cmd" (
+        call "!SCRIPT_DIR!\state_backend.cmd" pull_state
+        call "!SCRIPT_DIR!\state_backend.cmd" lock_state
         if errorlevel 1 exit /b 1
     )
 )
@@ -73,9 +73,9 @@ call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*
 set "CLI_ERR=%ERRORLEVEL%"
 
 if "%SKIP_STATE%"=="0" (
-    if exist "%~dp0state_backend.cmd" (
-        call "%~dp0state_backend.cmd" push_state
-        call "%~dp0state_backend.cmd" unlock_state
+    if exist "!SCRIPT_DIR!\state_backend.cmd" (
+        call "!SCRIPT_DIR!\state_backend.cmd" push_state
+        call "!SCRIPT_DIR!\state_backend.cmd" unlock_state
     )
 )
 

@@ -98,7 +98,7 @@ case "$ACTION" in
     if [ "$AZURE_CLI_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/azure-cli/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/azure-cli/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing azure-cli ${VERSION} natively to ${TARGET_DIR}..."
         if [ -f /etc/alpine-release ] || [ "${TARGET_OS:-}" = "alpine" ] || [ "${TARGET_OS:-}" = "rhel" ] || [ "${PKG_MGR:-}" = "dnf" ]; then
@@ -113,8 +113,8 @@ case "$ACTION" in
           mkdir -p "${TARGET_DIR}/bin"
           if [ -x "/usr/local/bin/az" ]; then
             ln -sf "/usr/local/bin/az" "${TARGET_DIR}/bin/az"
-          elif [ -x "$HOME/.local/bin/az" ]; then
-            ln -sf "$HOME/.local/bin/az" "${TARGET_DIR}/bin/az"
+          elif [ -x "${HOME:-/root}/.local/bin/az" ]; then
+            ln -sf "${HOME:-/root}/.local/bin/az" "${TARGET_DIR}/bin/az"
           elif command -v az >/dev/null 2>&1; then
             ln -sf "$(command -v az)" "${TARGET_DIR}/bin/az"
           fi

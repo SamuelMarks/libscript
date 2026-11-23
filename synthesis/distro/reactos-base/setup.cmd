@@ -118,7 +118,7 @@ if "!FROM_SOURCE!"=="1" (
 set "_FLAG=--allow-stub"
 if "!STRICT_BUILD!"=="1" set "_FLAG=--strict"
 set "STACK="
-call "!SCRIPT_DIR!\distro\base.cmd" !_FLAG! "!TARGET_SYSROOT!" "!REACTOS_VER!" "!TARGET_ARCH!"
+call "!SCRIPT_DIR!\..\reactos\base.cmd" !_FLAG! "!TARGET_SYSROOT!" "!REACTOS_VER!" "!TARGET_ARCH!"
 if errorlevel 1 exit /b !errorlevel!
 
 echo mode=repack> "!STAMP_FILE!"

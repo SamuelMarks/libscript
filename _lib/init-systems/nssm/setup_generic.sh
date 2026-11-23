@@ -50,7 +50,7 @@ ACTION="${ACTION:-install}"
 
 case "$ACTION" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nssm/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nssm/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -72,7 +72,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    TARGET_DIR="${NSSM_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/nssm/${NSSM_VERSION}}"
+    TARGET_DIR="${NSSM_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nssm/${NSSM_VERSION}}"
     if [ -x "${TARGET_DIR}/bin/nssm" ]; then
       log_info "nssm ${NSSM_VERSION} is already installed at ${TARGET_DIR}."
       libscript_symlink_alias "nssm" "latest" "${NSSM_VERSION}"

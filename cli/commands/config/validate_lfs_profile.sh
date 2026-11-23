@@ -33,18 +33,28 @@ export LIBSCRIPT_ROOT_DIR
 SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/os-config.schema.json"
 
 if [ $# -lt 1 ]; then
-  printf 'Usage: %s <profile.json>\n' "$0" >&2
+  printf 'Usage: %s <profile.json>\n' "${THIS_FILE}" >&2
   exit 1
 fi
 
 PROFILE_FILE="$1"
 if [ ! -f "$PROFILE_FILE" ]; then
-  # Try relative to profiles/
-  if [ -f "${LIBSCRIPT_ROOT_DIR}/profiles/${PROFILE_FILE}" ]; then
-    PROFILE_FILE="${LIBSCRIPT_ROOT_DIR}/profiles/${PROFILE_FILE}"
-  elif [ -f "${LIBSCRIPT_ROOT_DIR}/profiles/${PROFILE_FILE}.json" ]; then
-    PROFILE_FILE="${LIBSCRIPT_ROOT_DIR}/profiles/${PROFILE_FILE}.json"
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${PROFILE_FILE}" ]; then
+    PROFILE_FILE="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${PROFILE_FILE}"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${PROFILE_FILE}.json" ]; then
+    PROFILE_FILE="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${PROFILE_FILE}.json"
   else
+    for _vp_sub in linux freebsd illumos reactos rtos hypervisor unikernel containers cloud lfs; do
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_vp_sub}/${PROFILE_FILE}" ]; then
+        PROFILE_FILE="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_vp_sub}/${PROFILE_FILE}"
+        break
+      elif [ -f "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_vp_sub}/${PROFILE_FILE}.json" ]; then
+        PROFILE_FILE="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_vp_sub}/${PROFILE_FILE}.json"
+        break
+      fi
+    done
+  fi
+  if [ ! -f "$PROFILE_FILE" ]; then
     printf '[ERROR] Profile not found: %s\n' "$1" >&2
     exit 1
   fi

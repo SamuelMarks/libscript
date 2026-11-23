@@ -93,7 +93,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\ocaml\!EXACT_VERSION!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
-    call "%~f0"
+    set "STACK="
+    call "!THIS_FILE!"
 )
 if exist "%LIBSCRIPT_HOME%\ocaml\%OCAML_VERSION%" rmdir "%LIBSCRIPT_HOME%\ocaml\%OCAML_VERSION%" 2>nul
 mklink /J "%LIBSCRIPT_HOME%\ocaml\%OCAML_VERSION%" "!TARGET_DIR!" >nul

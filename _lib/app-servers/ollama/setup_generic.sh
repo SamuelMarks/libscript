@@ -53,8 +53,8 @@ VERSION="${OLLAMA_VERSION:-latest}"
 # Checks LIBSCRIPT_HOME, /usr/local/bin, /usr/bin, and system PATH for an existing ollama binary.
 find_existing_ollama() {
   for _feo_cand in \
-    "${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${VERSION}/bin/ollama" \
-    "${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/default/bin/ollama" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/${VERSION}/bin/ollama" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/default/bin/ollama" \
     "/usr/local/bin/ollama" \
     "/usr/bin/ollama" \
     "$(command -v ollama 2>/dev/null || true)"; do
@@ -187,7 +187,7 @@ case "$ACTION" in
   install)
     if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_ol=$(find_existing_ollama 2>/dev/null); then
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
       if [ "$_existing_ol" != "${TARGET_DIR}/bin/ollama" ]; then
         ln -sf "$_existing_ol" "${TARGET_DIR}/bin/ollama" 2>/dev/null || true
@@ -202,7 +202,7 @@ case "$ACTION" in
       if libscript_depends "ollama" 2>/dev/null; then
         if command -v ollama >/dev/null 2>&1; then
           resolve_exact_version
-          TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
+          TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/${EXACT_VERSION}"
           mkdir -p "${TARGET_DIR}/bin"
           ln -sf "$(command -v ollama)" "${TARGET_DIR}/bin/ollama"
           libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
@@ -216,7 +216,7 @@ case "$ACTION" in
     fi
     # libscript_native implementation
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
+    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/${EXACT_VERSION}"
     if [ ! -x "${TARGET_DIR}/bin/ollama" ]; then
       log_info "Installing ollama ${VERSION} natively to ${TARGET_DIR}..."
       mkdir -p "${TARGET_DIR}/bin"
@@ -227,7 +227,7 @@ case "$ACTION" in
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
             tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
           elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            unzip -q -o "$cache_file" -d "${TARGET_DIR}" || true
           else
             cp "$cache_file" "${TARGET_DIR}/bin/ollama" || true
             chmod +x "${TARGET_DIR}/bin/ollama" || true
@@ -240,7 +240,7 @@ case "$ACTION" in
           if case "${OLLAMA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
             tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
           elif case "${OLLAMA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            unzip -q -o "${TEMP_FILE}" -d "${TARGET_DIR}" || true
           else
             cp "${TEMP_FILE}" "${TARGET_DIR}/bin/ollama" || true
             chmod +x "${TARGET_DIR}/bin/ollama" || true

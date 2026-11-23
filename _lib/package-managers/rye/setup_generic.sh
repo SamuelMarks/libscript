@@ -80,7 +80,7 @@ case "$ACTION" in
       resolve_exact_version
       libscript_symlink_alias "rye" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rye/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rye/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "rye ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -117,7 +117,7 @@ case "$ACTION" in
          EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/astral-sh/rye/releases/latest" | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
          if [ -z "${EXACT_VERSION}" ]; then EXACT_VERSION="latest"; fi
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rye/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rye/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing rye ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"

@@ -93,7 +93,7 @@ find_msi_gui() {
     return 0
   fi
   for candidate in \
-    "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/latest/bin/msi-gui" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/latest/bin/msi-gui" \
     "${REPO_ROOT}/target/release/msi-gui" \
     "/opt/libscript/msi-rs/bin/msi-gui"; do
     if [ -x "$candidate" ]; then

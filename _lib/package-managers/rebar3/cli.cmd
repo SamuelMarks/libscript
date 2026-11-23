@@ -48,5 +48,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if not defined PACKAGE_NAME for %%I in ("%~dp0.") do set "PACKAGE_NAME=%%~nxI"
+if not defined PACKAGE_NAME for %%I in ("!SCRIPT_DIR!\.") do set "PACKAGE_NAME=%%~nxI"
 call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*

@@ -106,6 +106,10 @@ if "%LIBSCRIPT_DOS_83%"=="1" (
     goto :eof
 )
 
+if exist "%base_dir%" (
+    dir /al "%base_dir%" 2>nul | findstr /I /C:"%alias_name%" >nul 2>&1
+    if not errorlevel 1 rmdir "%alias_path%" >nul 2>&1
+)
 if exist "%alias_path%" (
     set "_IS_JUNCTION=0"
     where fsutil >nul 2>&1
@@ -437,6 +441,15 @@ if /i "!_hga_act!"=="use" (
     )
     set "_hga_exact=!EXACT_VERSION!"
     if "!_hga_exact!"=="" set "_hga_exact=!_hga_ver!"
+    if not exist "!_hga_home!\!_hga_comp!\!_hga_exact!" (
+        if exist "!DIR!\setup.cmd" (
+            echo [INFO] !_hga_comp! !_hga_exact! is not installed. Installing it now...
+            set "STACK="
+            set "ACTION=install"
+            call "!DIR!\setup.cmd" install "!_hga_comp!" "!_hga_ver!"
+            if errorlevel 1 exit /b !errorlevel!
+        )
+    )
     call :libscript_symlink_alias "!_hga_comp!" "!_hga_ver!" "!_hga_exact!"
     call :libscript_symlink_alias "!_hga_comp!" "default" "!_hga_exact!"
     exit /b 0

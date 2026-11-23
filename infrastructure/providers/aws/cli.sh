@@ -746,12 +746,12 @@ case "$CMD" in
     ;;
   --help|-h|/\?|"-?")
     printf '%s\n' 'LibScript AWS Cloud Wrapper'
-    printf '%s\n' "Usage: $0 {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    printf '%s\n' "Usage: ${THIS_FILE} {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 0
     ;;
   *)
     printf '%s\n' 'LibScript AWS Cloud Wrapper'
-    printf '%s\n' "Usage: $0 {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    printf '%s\n' "Usage: ${THIS_FILE} {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 1
     ;;
 esac

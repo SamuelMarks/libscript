@@ -89,8 +89,10 @@ if /i "%ACTION%"=="stop" (
 )
 if /i "%ACTION%"=="restart" (
     call :configure_redis_storage
-    call "%~f0" stop
-    call "%~f0" start
+    set "STACK="
+    call "!THIS_FILE!" stop
+    set "STACK="
+    call "!THIS_FILE!" start
     exit /b 0
 )
 if /i "%ACTION%"=="status" (

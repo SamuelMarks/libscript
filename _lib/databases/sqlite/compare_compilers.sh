@@ -83,9 +83,9 @@ compare_single_compiler() {
   SQLITE_INSTALL_METHOD="from-source" SQLITE_BUILD_TOOLCHAIN="${_cc_id}" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install sqlite "${SQLITE_VER}" --from-source --toolchain="${_cc_id}"
 
   if [ "${_cc_id}" = "default" ]; then
-    _target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${SQLITE_VER}"
+    _target_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/${SQLITE_VER}"
   else
-    _target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${SQLITE_VER}-${_cc_id}"
+    _target_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite/${SQLITE_VER}-${_cc_id}"
   fi
   _bin="${_target_dir}/bin/sqlite3"
   _metrics="${_target_dir}/build-metrics.json"

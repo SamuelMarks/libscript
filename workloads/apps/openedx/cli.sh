@@ -87,7 +87,7 @@ handle_tutor_do() {
       exec "${SCRIPT_NAME}" mongo "$@"
       ;;
     reindex|rebuildindex)
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
       if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ] && [ -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ]; then
         (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/python" manage.py cms reindex_course --active)
       else
@@ -104,7 +104,7 @@ handle_tutor_do() {
         exit 1
       fi
       shift
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
       if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
         export PATH="${OPENEDX_INSTALL_DIR}/.venv/bin:${PATH}"
         (cd "${OPENEDX_INSTALL_DIR}" && "$@")

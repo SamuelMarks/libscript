@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 [vagrant_dir | target_user@target_host target_path]"
+  echo "Usage: ${THIS_FILE} [vagrant_dir | target_user@target_host target_path]"
   exit 1
 fi
 
@@ -72,7 +72,7 @@ if [ -d "$TARGET" ] && [ -f "$TARGET/Vagrantfile" ]; then
 else
     # Manual target
     if [ $# -lt 2 ]; then
-      echo "Usage: $0 <target_user@target_host> <target_path>"
+      echo "Usage: ${THIS_FILE} <target_user@target_host> <target_path>"
       exit 1
     fi
     TARGET_HOST="$1"

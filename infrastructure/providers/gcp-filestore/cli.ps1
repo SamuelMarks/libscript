@@ -18,7 +18,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$LogCmd = Join-Path $PSScriptRoot "..\..\_common\log.ps1"
+$RootDir = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+$LogCmd = Join-Path $RootDir "engine\common\log.ps1"
 
 $ProjectFlag = ""
 if ($env:GCP_PROJECT_ID) {
@@ -37,7 +38,7 @@ if ($Action -eq "create") {
     & $LogCmd -Info "Creating GCP Filestore $InstanceName in $env:FILESTORE_ZONE..."
     
     $TagsArg = ""
-    $TagsCmd = Join-Path $PSScriptRoot "..\..\..\cloud\core\tags.cmd"
+    $TagsCmd = Join-Path $RootDir "infrastructure\resources\core\tags.cmd"
     if (Test-Path $TagsCmd) {
         & $TagsCmd :init | Out-Null
         if ($env:LIBSCRIPT_TAG_ENABLE -eq "true") {
@@ -59,7 +60,7 @@ if ($Action -eq "create") {
         & $LogCmd -Error "Usage: filestore delete <name>"
         exit 1
     }
-    $TagsCmd = Join-Path $PSScriptRoot "..\..\..\cloud\core\tags.cmd"
+    $TagsCmd = Join-Path $RootDir "infrastructure\resources\core\tags.cmd"
     if (Test-Path $TagsCmd) {
         & $TagsCmd :libscript_verify_managed gcp filestore $InstanceName $env:FILESTORE_ZONE
         if ($LASTEXITCODE -ne 0) { exit 1 }

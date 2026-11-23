@@ -64,7 +64,7 @@ case "$ACTION" in
     if [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
       coursier --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/coursier/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -84,7 +84,7 @@ case "$ACTION" in
       libscript_symlink_alias "coursier" "${COURSIER_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "coursier" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/coursier/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "coursier ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -126,7 +126,7 @@ case "$ACTION" in
            libscript_depends 'curl'
            EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/coursier/coursier/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
         fi
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${EXACT_VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/coursier/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing coursier ${VERSION} natively to ${TARGET_DIR}..."
           mkdir -p "${TARGET_DIR}/bin"

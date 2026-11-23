@@ -143,6 +143,11 @@ for /d %%C in ("!TARGET_ROOT!\_lib\*") do (
                     set /a ERRORS+=1
                 )
             )
+            findstr /R /C:"\.\.[/\\]_common[/\\]" /C:"\.\.[/\\]\.\.[/\\]_common[/\\]" /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]setup\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]cli\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]test\." "%%D\*.sh" "%%D\*.cmd" "%%D\*.ps1" >nul 2>&1
+            if not errorlevel 1 (
+                echo [TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib\!_CN!\!_DN!: Lateral cross-component or stale _common reference is forbidden. >&2
+                set /a ERRORS+=1
+            )
         )
     )
 )

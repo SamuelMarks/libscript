@@ -106,7 +106,7 @@ WRAP
     resolve_exact_version
     TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/zephyr/${EXACT_VERSION}"
     if [ ! -d "$TARGET_DIR" ]; then
-      ACTION='install' "$0"
+      STACK='' ACTION='install' "${THIS_FILE}"
     fi
     libscript_symlink_alias 'zephyr' "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias 'zephyr' 'default' "${EXACT_VERSION}"

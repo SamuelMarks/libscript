@@ -32,7 +32,7 @@ export LIBSCRIPT_ROOT_DIR
 # ## print_usage
 # Prints usage instructions for traits/secrets/render.sh.
 print_usage() {
-  printf '%s\n' "Usage: $0 <template_file> <output_file> [secrets_kv_file]"
+  printf '%s\n' "Usage: ${THIS_FILE} <template_file> <output_file> [secrets_kv_file]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

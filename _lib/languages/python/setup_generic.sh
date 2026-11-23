@@ -71,7 +71,7 @@ fi
 find_existing_python() {
   _fep_req=$(printf '%s' "$PYTHON_VERSION" | cut -d. -f1,2)
   [ "$_fep_req" = "latest" ] && _fep_req="3.12"
-  _fep_home="${LIBSCRIPT_HOME:-$HOME/.libscript}"
+  _fep_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
   if [ -x "${_fep_home}/python/${PYTHON_VERSION}/bin/python3" ]; then
     printf '%s\n' "${_fep_home}/python/${PYTHON_VERSION}/bin/python3"
     return 0
@@ -125,7 +125,7 @@ find_existing_python() {
 link_python_into_libscript_home() {
   _lpi_py_bin="$1"
   _lpi_bin_dir=$(dirname -- "$_lpi_py_bin")
-  _lpi_target="${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${PYTHON_VERSION}"
+  _lpi_target="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/python/${PYTHON_VERSION}"
   mkdir -p "${_lpi_target}/bin"
   if [ "$_lpi_py_bin" != "${_lpi_target}/bin/python3" ]; then
     ln -sf "$_lpi_py_bin" "${_lpi_target}/bin/python3" 2>/dev/null || true
@@ -141,8 +141,8 @@ link_python_into_libscript_home() {
   libscript_symlink_alias "python" "latest" "${PYTHON_VERSION}"
   _py_owner="${SERVICE_USER:-${REMOTE_USER:-${SUDO_USER:-}}}"
   if [ -n "$_py_owner" ] && [ "$_py_owner" != "root" ]; then
-    chmod 0755 "${LIBSCRIPT_HOME:-$HOME/.libscript}" "${LIBSCRIPT_HOME:-$HOME/.libscript}/python" 2>/dev/null || true
-    chown -R "${_py_owner}:${SERVICE_GROUP:-${REMOTE_GROUP:-$_py_owner}}" "${LIBSCRIPT_HOME:-$HOME/.libscript}/python" 2>/dev/null || true
+    chmod 0755 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/python" 2>/dev/null || true
+    chown -R "${_py_owner}:${SERVICE_GROUP:-${REMOTE_GROUP:-$_py_owner}}" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/python" 2>/dev/null || true
   fi
 }
 
@@ -235,7 +235,7 @@ case "$ACTION" in
     if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
       python3 --version 2>/dev/null || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/python/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -255,7 +255,7 @@ case "$ACTION" in
       libscript_symlink_alias "python" "${PYTHON_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "python" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/python/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "python ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -321,7 +321,7 @@ case "$ACTION" in
           ln -sf "python3" "${_py_dest}/bin/python"
         fi
         libscript_symlink_alias "python" "${PYTHON_VERSION}" "${EXACT_VERSION}"
-        if [ "${LIBSCRIPT_AUTO_USE:-0}" = "1" ] || [ ! -e "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/default" ]; then
+        if [ "${LIBSCRIPT_AUTO_USE:-0}" = "1" ] || [ ! -e "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/python/default" ]; then
           libscript_symlink_alias "python" "default" "${EXACT_VERSION}"
         fi
         setup_python_venv_if_requested
@@ -345,7 +345,7 @@ case "$ACTION" in
       if command -v uv >/dev/null 2>&1; then
         _req_py="${PYTHON_VERSION}"
         [ "$_req_py" = "latest" ] && _req_py="3.12"
-        _uv_store="${LIBSCRIPT_HOME:-$HOME/.libscript}/python/_uv_store"
+        _uv_store="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/python/_uv_store"
         mkdir -p "${_uv_store}"
         log_info "[CREATE] Installing isolated CPython ${_req_py} via uv into ${_uv_store}..."
         if UV_PYTHON_INSTALL_DIR="${_uv_store}" uv python install "$_req_py" >/dev/null 2>&1; then

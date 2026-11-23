@@ -56,7 +56,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    _uv_target="${LIBSCRIPT_HOME:-$HOME/.libscript}/uvicorn/${VERSION:-latest}"
+    _uv_target="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uvicorn/${VERSION:-latest}"
     if [ -x "${_uv_target}/bin/uvicorn" ]; then
       log_info "uvicorn ${VERSION:-latest} is already installed."
       exit 0

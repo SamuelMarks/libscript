@@ -51,7 +51,7 @@ ACTION="${ACTION:-install}"
 # Checks LIBSCRIPT_HOME, /usr/sbin/nginx, and system PATH for an existing nginx binary.
 find_existing_nginx() {
   for _fen_cand in \
-    "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${NGINX_VERSION}/bin/nginx" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nginx/${NGINX_VERSION}/bin/nginx" \
     "/usr/sbin/nginx" \
     "/usr/local/bin/nginx" \
     "$(command -v nginx 2>/dev/null || true)"; do
@@ -81,7 +81,7 @@ case "$ACTION" in
     if [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
       nginx --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nginx/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -101,7 +101,7 @@ case "$ACTION" in
       libscript_symlink_alias "nginx" "${NGINX_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "nginx" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nginx/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "nginx ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -146,7 +146,7 @@ case "$ACTION" in
       libscript_depends 'nginx'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nginx/${EXACT_VERSION}"
       
       if [ -x "${TARGET_DIR}/bin/nginx" ]; then
         libscript_symlink_alias "nginx" "${NGINX_VERSION}" "${EXACT_VERSION}"

@@ -14,7 +14,11 @@ Execute this script to install and configure python-server on the local system.
 
 $ErrorActionPreference = "Stop"
 
-Get-ChildItem "$PSScriptRoot\..\python\setup.cmd" | ForEach-Object { & $_.FullName }
+$LibscriptRootDir = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+$rootCmd = Join-Path $LibscriptRootDir "libscript.cmd"
+if ((-not (Get-Command python -ErrorAction SilentlyContinue)) -and (Test-Path $rootCmd)) {
+    & $rootCmd install python latest
+}
 
 if (Test-Path "$env:PYTHON_SERVER_DEST\requirements.txt") {
     Write-Host "[INFO] Installing Python dependencies..."

@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.wireplumber"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/wireplumber/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/wireplumber/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/wireplumber" ]; then
   log_info "wireplumber ${VERSION} is already installed at ${TARGET_DIR}."

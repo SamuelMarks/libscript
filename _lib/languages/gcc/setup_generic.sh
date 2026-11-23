@@ -60,7 +60,7 @@ resolve_exact_version() {
 # Stages an idempotent GCC wrapper directory under LIBSCRIPT_HOME pointing to the active system GCC.
 stage_system_gcc_shim() {
   resolve_exact_version
-  _target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/${EXACT_VERSION}"
+  _target_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/${EXACT_VERSION}"
   if [ -x "${_target_dir}/bin/gcc" ] && [ "${FORCE_REBUILD:-0}" != "1" ]; then
     libscript_symlink_alias "gcc" "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias "gcc" "default" "${EXACT_VERSION}"
@@ -91,7 +91,7 @@ stage_system_gcc_shim() {
 
 case "${ACTION}" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -196,8 +196,8 @@ EOF
     ;;
   uninstall)
     resolve_exact_version
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/${VERSION}"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/${EXACT_VERSION}"
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/${VERSION}"
     exit 0
     ;;
   *)

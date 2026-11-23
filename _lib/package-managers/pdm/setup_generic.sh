@@ -80,7 +80,7 @@ case "$ACTION" in
       resolve_exact_version
       libscript_symlink_alias "pdm" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pdm/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "pdm ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -112,7 +112,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pdm/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/pdm" ]; then
         log_info "Installing pdm ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends 'python' || true
@@ -121,7 +121,7 @@ case "$ACTION" in
            EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/pdm-project/pdm/releases/latest" | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
            if [ -z "${EXACT_VERSION}" ]; then EXACT_VERSION="latest"; fi
         fi
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pdm/${EXACT_VERSION}"
         PY_BIN='python3'
         if command -v python3.12 >/dev/null 2>&1; then
           PY_BIN='python3.12'

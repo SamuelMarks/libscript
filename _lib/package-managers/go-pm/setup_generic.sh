@@ -95,19 +95,19 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/go-pm/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/go-pm/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ] || [ ! -x "${TARGET_DIR}/bin/go" ]; then
         log_info "Installing go-pm ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        if ! command -v go >/dev/null 2>&1 && [ ! -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/go/latest/bin/go" ]; then
+        if ! command -v go >/dev/null 2>&1 && [ ! -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/go/latest/bin/go" ]; then
           libscript_depends 'go' || true
         fi
         if command -v go >/dev/null 2>&1; then
           ln -sf "$(command -v go)" "${TARGET_DIR}/bin/go"
           ln -sf "$(command -v go)" "${TARGET_DIR}/bin/go-pm"
-        elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/go/latest/bin/go" ]; then
-          ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/go/latest/bin/go" "${TARGET_DIR}/bin/go"
-          ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/go/latest/bin/go" "${TARGET_DIR}/bin/go-pm"
+        elif [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/go/latest/bin/go" ]; then
+          ln -sf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/go/latest/bin/go" "${TARGET_DIR}/bin/go"
+          ln -sf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/go/latest/bin/go" "${TARGET_DIR}/bin/go-pm"
         else
           "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install go || true
           if command -v go >/dev/null 2>&1; then

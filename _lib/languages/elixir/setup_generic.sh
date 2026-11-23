@@ -105,7 +105,7 @@ case "$ACTION" in
         ELIXIR_DOWNLOAD_URL="https://github.com/elixir-lang/elixir/releases/download/v${_elixir_ver}/elixir-otp-26.zip"
       fi
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elixir/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/elixir" ]; then
         log_info "Installing elixir ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -116,7 +116,7 @@ case "$ACTION" in
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+              unzip -q -o "$cache_file" -d "${TARGET_DIR}" || true
             else
               cp "$cache_file" "${TARGET_DIR}/bin/elixir" || true
               chmod +x "${TARGET_DIR}/bin/elixir" || true
@@ -129,7 +129,7 @@ case "$ACTION" in
             if case "${ELIXIR_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "${ELIXIR_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              unzip -q -o "${TEMP_FILE}" -d "${TARGET_DIR}" || true
             else
               cp "${TEMP_FILE}" "${TARGET_DIR}/bin/elixir" || true
               chmod +x "${TARGET_DIR}/bin/elixir" || true

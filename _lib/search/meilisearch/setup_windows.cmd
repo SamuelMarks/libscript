@@ -50,4 +50,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0setup_generic.cmd" %*
+call "!SCRIPT_DIR!\setup_generic.cmd" %*

@@ -75,11 +75,11 @@ done
 # ## ensure_msirs_env
 # Ensures msi-rs tools (msiinfo, msidiff) are available on PATH.
 ensure_msirs_env() {
-  if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
-    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+  if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default/bin:${PATH}"
     export PATH
-  elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin" ]; then
-    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
+  elif [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/v0.0.1/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
     export PATH
   fi
 }

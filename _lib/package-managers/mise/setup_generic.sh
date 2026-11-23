@@ -74,7 +74,7 @@ case "$ACTION" in
     elif [ "$MISE_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' 'System packages do not support ls here.'
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/mise/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mise/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -114,7 +114,7 @@ case "$ACTION" in
       libscript_symlink_alias "mise" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "mise" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/mise/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mise/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "mise ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -155,7 +155,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/mise/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mise/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/mise" ]; then
         log_info "Installing mise ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -174,8 +174,8 @@ case "$ACTION" in
            exit 1
         fi
         rm -f "${_mise_inst}"
-        if [ ! -f "${TARGET_DIR}/bin/mise" ] && [ -f "$HOME/.local/bin/mise" ]; then
-          cp "$HOME/.local/bin/mise" "${TARGET_DIR}/bin/mise" || true
+        if [ ! -f "${TARGET_DIR}/bin/mise" ] && [ -f "${HOME:-/root}/.local/bin/mise" ]; then
+          cp "${HOME:-/root}/.local/bin/mise" "${TARGET_DIR}/bin/mise" || true
         fi
         chmod +x "${TARGET_DIR}/bin/mise" 2>/dev/null || true
       else

@@ -35,7 +35,7 @@ trap 'rm -rf "$TEST_SANDBOX"' EXIT INT TERM
 export HOME="${TEST_SANDBOX}/home"
 export LIBSCRIPT_HOME="${TEST_SANDBOX}/libscript_home"
 export LIBSCRIPT_CACHE_DIR="${TEST_SANDBOX}/cache"
-mkdir -p "$HOME" "$LIBSCRIPT_HOME" "$LIBSCRIPT_CACHE_DIR"
+mkdir -p "${HOME:-/root}" "$LIBSCRIPT_HOME" "$LIBSCRIPT_CACHE_DIR"
 
 FAILURES=0
 
@@ -60,15 +60,15 @@ assert_contains() {
 # Verifies that version manager operations never mutate user shell profiles.
 test_non_invasive_isolation() {
   printf '==> 1. Testing Non-Invasive Environment Isolation...\n'
-  printf '# sentinel-bashrc\n' > "${HOME}/.bashrc"
-  printf '# sentinel-profile\n' > "${HOME}/.profile"
-  printf '# sentinel-zshrc\n' > "${HOME}/.zshrc"
+  printf '# sentinel-bashrc\n' > "${HOME:-/root}/.bashrc"
+  printf '# sentinel-profile\n' > "${HOME:-/root}/.profile"
+  printf '# sentinel-zshrc\n' > "${HOME:-/root}/.zshrc"
 
   sh "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/cli.sh" --help >/dev/null
 
-  if [ "$(cat "${HOME}/.bashrc")" = "# sentinel-bashrc" ] && 
-     [ "$(cat "${HOME}/.profile")" = "# sentinel-profile" ] && 
-     [ "$(cat "${HOME}/.zshrc")" = "# sentinel-zshrc" ]; then
+  if [ "$(cat "${HOME:-/root}/.bashrc")" = "# sentinel-bashrc" ] && 
+     [ "$(cat "${HOME:-/root}/.profile")" = "# sentinel-profile" ] && 
+     [ "$(cat "${HOME:-/root}/.zshrc")" = "# sentinel-zshrc" ]; then
     printf '[PASS] Shell profiles (~/.bashrc, ~/.profile, ~/.zshrc) untouched.\n'
   else
     printf '[FAIL] Shell profiles were mutated!\n' >&2

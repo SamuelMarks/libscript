@@ -59,8 +59,8 @@ if "%errorlevel%" equ "0" (
   exit /b 0
 )
 
-if exist "%~dp0cli.cmd" (
-    call "%~dp0cli.cmd" --help >nul
+if exist "!SCRIPT_DIR!\cli.cmd" (
+    call "!SCRIPT_DIR!\cli.cmd" --help >nul
 )
 exit /b 0
 
@@ -75,7 +75,7 @@ set "LIBSCRIPT_DATA_DIR=!_T_DIR!\data"
 set "LIBSCRIPT_INIT_SYSTEM=none"
 set "LIBSCRIPT_DRY_RUN=1"
 set "STACK="
-call "%~dp0service.cmd" configure "!OLLAMA_MODELS_DIR!" >nul 2>&1
+call "!SCRIPT_DIR!\service.cmd" configure "!OLLAMA_MODELS_DIR!" >nul 2>&1
 if not exist "!OLLAMA_MODELS_DIR!\manifests" (
     rmdir /s /q "!_T_DIR!" >nul 2>&1
     exit /b 1

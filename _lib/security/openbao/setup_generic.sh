@@ -80,7 +80,7 @@ case "$ACTION" in
       resolve_exact_version
       libscript_symlink_alias "openbao" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/openbao/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openbao/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "openbao ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -120,7 +120,7 @@ case "$ACTION" in
          EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/openbao/openbao/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
          [ -z "$EXACT_VERSION" ] && EXACT_VERSION="2.1.0"
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/openbao/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openbao/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing openbao ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"

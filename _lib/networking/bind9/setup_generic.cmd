@@ -93,7 +93,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\bind9\!EXACT_VERSION!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
-    call "%~f0"
+    set "STACK="
+    call "!THIS_FILE!"
 )
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "bind9" "%BIND9_VERSION%" "!EXACT_VERSION!"
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "bind9" "default" "!EXACT_VERSION!"

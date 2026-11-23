@@ -119,7 +119,7 @@ run_platform_init() {
 # ## main
 # Parses CLI arguments and invokes run_platform_init.
 main() {
-  _install_dir="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+  _install_dir="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
   while [ $# -gt 0 ]; do
     case "$1" in
       --install-dir|-InstallDir)

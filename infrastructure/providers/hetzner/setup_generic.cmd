@@ -62,11 +62,11 @@ if "%~1"=="-h" (
 )
 
 if "%~1"=="" (
-    call "%~dp0setup_windows.cmd"
+    call "!SCRIPT_DIR!\setup_windows.cmd"
     exit /b !ERRORLEVEL!
 )
 if /i "%~1"=="install" (
-    call "%~dp0setup_windows.cmd"
+    call "!SCRIPT_DIR!\setup_windows.cmd"
     exit /b !ERRORLEVEL!
 )
 

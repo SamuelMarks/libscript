@@ -64,7 +64,7 @@ case "$ACTION" in
     if [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
       bazel --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bazel/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -84,7 +84,7 @@ case "$ACTION" in
       libscript_symlink_alias "bazel" "${BAZEL_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "bazel" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bazel/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "bazel ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -125,7 +125,7 @@ case "$ACTION" in
         if [ "${EXACT_VERSION}" = "latest" ]; then
            EXACT_VERSION='7.4.1'
         fi
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/${EXACT_VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bazel/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing bazel ${VERSION} natively to ${TARGET_DIR}..."
           mkdir -p "${TARGET_DIR}/bin"

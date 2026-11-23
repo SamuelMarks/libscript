@@ -43,7 +43,7 @@ fetch_openbao_kv() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <secret_path>"
+  printf '%s\n' "Usage: ${THIS_FILE} <secret_path>"
   exit 0
 fi
 

@@ -32,7 +32,7 @@ export PACKAGE_NAME='nomad'
 
 for _arg in "$@"; do
   if [ "$_arg" = "--purge-data" ]; then
-    rm -rf "${NOMAD_DATA_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/nomad/data}"
+    rm -rf "${NOMAD_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nomad/data}"
   fi
 done
 

@@ -65,7 +65,7 @@ case "$ACTION" in
     if [ "${XPK_INSTALL_METHOD}" = "system" ]; then
       xpk --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/xpk/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -85,7 +85,7 @@ case "$ACTION" in
       libscript_symlink_alias "xpk" "${XPK_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "xpk" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/xpk/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "xpk ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -118,7 +118,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/xpk/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing xpk ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends 'python3' 'pip' 'python3-venv' || true

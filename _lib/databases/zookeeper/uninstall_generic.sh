@@ -32,7 +32,7 @@ export PACKAGE_NAME='zookeeper'
 
 for _arg in "$@"; do
   if [ "$_arg" = "--purge-data" ]; then
-    rm -rf "${ZOOKEEPER_DATA_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/zookeeper/data}"
+    rm -rf "${ZOOKEEPER_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/zookeeper/data}"
   fi
 done
 

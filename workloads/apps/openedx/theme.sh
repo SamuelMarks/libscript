@@ -58,7 +58,7 @@ for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 THEMES_DIR="${OPENEDX_INSTALL_DIR}/themes"
 THEME_REGISTRY="${THEMES_DIR}/registry.json"
 PYTHON_BIN="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
@@ -89,7 +89,7 @@ resolve_python() {
 #   --branch <branch>
 theme_install() {
   if [ $# -lt 2 ]; then
-    log_err "Usage: $0 install <name> <git_url> [--branch <branch>]"
+    log_err "Usage: ${THIS_FILE} install <name> <git_url> [--branch <branch>]"
     return 1
   fi
   _name="$1"
@@ -151,7 +151,7 @@ EOF
 #   $1 - name
 theme_build() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 build <name>"
+    log_err "Usage: ${THIS_FILE} build <name>"
     return 1
   fi
   _name="$1"
@@ -198,7 +198,7 @@ theme_build() {
 #   --site <domain>
 theme_apply() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 apply <name> [--site <domain>]"
+    log_err "Usage: ${THIS_FILE} apply <name> [--site <domain>]"
     return 1
   fi
   _name="$1"
@@ -295,7 +295,7 @@ EOF
 #   $1 - name
 theme_remove() {
   if [ $# -lt 1 ]; then
-    log_err "Usage: $0 remove <name>"
+    log_err "Usage: ${THIS_FILE} remove <name>"
     return 1
   fi
   _name="$1"

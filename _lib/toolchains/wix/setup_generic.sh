@@ -56,7 +56,7 @@ case "${ACTION}" in
     ;;
   use)
     if [ ! -d "${TARGET_DIR}" ]; then
-      ACTION='install' "$0"
+      STACK='' ACTION='install' "${THIS_FILE}"
     fi
     libscript_symlink_alias 'wix' "${WIX_VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias 'wix' 'default' "${EXACT_VERSION}"

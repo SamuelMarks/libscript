@@ -70,7 +70,7 @@ run_transactional_upgrade() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <component> <old_version> <new_version> [--simulate-failure]"
+  printf '%s\n' "Usage: ${THIS_FILE} <component> <old_version> <new_version> [--simulate-failure]"
   exit 0
 fi
 

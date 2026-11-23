@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 set "STACK="
-call "%~dp0env.cmd"
+call "!SCRIPT_DIR!\env.cmd"
 set "STACK="
 call waitress-serve --help >nul 2>&1
 exit /b %ERRORLEVEL%

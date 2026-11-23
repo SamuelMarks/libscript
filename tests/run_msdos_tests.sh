@@ -34,7 +34,7 @@ FORWARD_ARGS=""
 # ## show_msdos_help
 # Displays CLI usage help for run_msdos_tests.sh.
 show_msdos_help() {
-  printf 'Usage: %s [TARGETS...|all] [--os msdos-4.0|msdos-2.0|msdos-1.25] [--snapshot vanilla] [--idempotency-runs 2] [--boot-only]\n' "$0"
+  printf 'Usage: %s [TARGETS...|all] [--os msdos-4.0|msdos-2.0|msdos-1.25] [--snapshot vanilla] [--idempotency-runs 2] [--boot-only]\n' "${THIS_FILE}"
   printf 'Runs LibScript DOS component verification on a local Bento MS-DOS Vagrant VM.\n'
 }
 

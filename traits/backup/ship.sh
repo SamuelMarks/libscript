@@ -47,7 +47,7 @@ ship_to_object_storage() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <local_snapshot_dir> <remote_storage_uri>"
+  printf '%s\n' "Usage: ${THIS_FILE} <local_snapshot_dir> <remote_storage_uri>"
   exit 0
 fi
 

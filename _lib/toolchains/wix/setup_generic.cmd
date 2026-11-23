@@ -67,7 +67,8 @@ if /I "%ACTION%"=="ls-remote" (
 if /I "%ACTION%"=="use" (
     if not exist "!TARGET_DIR!" (
         set "ACTION=install"
-        call "%~f0"
+        set "STACK="
+        call "!THIS_FILE!"
     )
     call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "wix" "%WIX_VERSION%" "!EXACT_VERSION!"
     call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "wix" "default" "!EXACT_VERSION!"

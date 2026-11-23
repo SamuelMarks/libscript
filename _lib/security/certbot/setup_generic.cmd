@@ -103,7 +103,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\certbot\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\certbot\%CERTBOT_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%" >nul 2>&1
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -160,7 +161,8 @@ if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\certbot\latest"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%" >nul 2>&1
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 

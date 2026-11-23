@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf 'Usage: %s <up|status|scale|drain|failover|upgrade|destroy> <topology.json> [--live|--mock|--dry-run] [args...]\n' "$0"
+  printf 'Usage: %s <up|status|scale|drain|failover|upgrade|destroy> <topology.json> [--live|--mock|--dry-run] [args...]\n' "${THIS_FILE}"
   exit 0
 fi
 
@@ -71,9 +71,15 @@ case "$TOPO_NAME" in
 esac
 
 TOPO_DIR=$(cd -- "$(dirname -- "$TOPO_FILE")" && pwd)
-STATE_BASE="${LIBSCRIPT_TOPOLOGY_STATE_DIR:-$TOPO_DIR}"
-mkdir -p "$STATE_BASE"
-STATE_FILE="${STATE_BASE}/.topology_state.json"
+if [ -n "${LIBSCRIPT_TOPOLOGY_STATE_FILE:-}" ]; then
+  STATE_FILE="$LIBSCRIPT_TOPOLOGY_STATE_FILE"
+  STATE_BASE=$(dirname -- "$STATE_FILE")
+  mkdir -p "$STATE_BASE"
+else
+  STATE_BASE="${LIBSCRIPT_TOPOLOGY_STATE_DIR:-$TOPO_DIR}"
+  mkdir -p "$STATE_BASE"
+  STATE_FILE="${STATE_BASE}/.topology_state.json"
+fi
 LOCK_DIR="${STATE_FILE}.lock"
 
 # ## now_utc
@@ -125,7 +131,7 @@ init_or_resume_state() {
       updated_at: $ts,
       completed_hooks: [],
       nodes: [
-        .node_groups[] as $g | range(0; $g.count) | {
+        .node_groups[] as $g | range(0; ($g.count // $g.replicas // 1)) | {
           id: "\($g.name)-\(.)",
           group: $g.name,
           role: $g.role,

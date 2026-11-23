@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.libva"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/libva/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/libva/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/libva" ]; then
   log_info "libva ${VERSION} is already installed at ${TARGET_DIR}."

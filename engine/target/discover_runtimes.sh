@@ -82,6 +82,6 @@ if [ "$MODE" = "--json" ]; then
 elif [ "$MODE" = "--eval" ]; then
   discover_python || true
 else
-  printf 'Usage: %s [--json | --eval]\n' "$0" >&2
+  printf 'Usage: %s [--json | --eval]\n' "${THIS_FILE}" >&2
   exit 1
 fi

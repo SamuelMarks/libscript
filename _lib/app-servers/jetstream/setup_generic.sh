@@ -98,7 +98,7 @@ case "$ACTION" in
 
       libscript_depends 'python' 'git'
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/jetstream/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/jetstream/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing Jetstream ${EXACT_VERSION} to ${TARGET_DIR}..."
         if ! type libscript_python_venv >/dev/null 2>&1; then

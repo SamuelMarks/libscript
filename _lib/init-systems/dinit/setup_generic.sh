@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.dinit"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/dinit/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/dinit/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/dinit" ]; then
   log_info "dinit ${VERSION} is already installed at ${TARGET_DIR}."

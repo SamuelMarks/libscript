@@ -31,7 +31,7 @@ BENTO_DIR="${BENTO_DIR:-${LIBSCRIPT_ROOT_DIR}/../bento}"
 # ## show_smoke_usage
 # Prints command-line options for test_qemu_msdos_smoke.sh.
 show_smoke_usage() {
-  printf 'Usage: %s [--use-bento-disk|--use-bento-vagrant|--synthetic-only] [--bento-dir <path>]\n' "$0"
+  printf 'Usage: %s [--use-bento-disk|--use-bento-vagrant|--synthetic-only] [--bento-dir <path>]\n' "${THIS_FILE}"
 }
 
 while [ $# -gt 0 ]; do

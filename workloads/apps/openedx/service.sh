@@ -29,7 +29,7 @@ APP_DIR="${SCRIPT_DIR}"
 export APP_DIR
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-: "${OPENEDX_INSTALL_DIR:=${LIBSCRIPT_HOME:-${HOME}/.libscript}/openedx}"
+: "${OPENEDX_INSTALL_DIR:=${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 RUN_DIR="${OPENEDX_INSTALL_DIR}/run"
 LOG_DIR="${OPENEDX_INSTALL_DIR}/logs"
 [ -d "${RUN_DIR}" ] || mkdir -p "${RUN_DIR}"

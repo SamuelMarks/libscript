@@ -50,7 +50,7 @@ goto :find_root
 
 
 IF NOT DEFINED LIBSCRIPT_ROOT_DIR (
-    SET "LIBSCRIPT_ROOT_DIR=%~dp0"
+    SET "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\"
 )
 
 if "%~1"=="--help" goto show_help

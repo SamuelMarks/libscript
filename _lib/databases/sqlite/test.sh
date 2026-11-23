@@ -160,6 +160,8 @@ if command -v sha256sum >/dev/null 2>&1; then
   _digest="$(sha256sum "${SQLITE_TRANSCRIPT_FILE}" | awk '{print $1}')"
 elif command -v shasum >/dev/null 2>&1; then
   _digest="$(shasum -a 256 "${SQLITE_TRANSCRIPT_FILE}" | awk '{print $1}')"
+elif command -v sha256 >/dev/null 2>&1; then
+  _digest="$(sha256 -q "${SQLITE_TRANSCRIPT_FILE}" 2>/dev/null || sha256 "${SQLITE_TRANSCRIPT_FILE}" | awk '{print $NF}')"
 else
   _digest='ok'
 fi

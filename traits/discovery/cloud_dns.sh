@@ -54,7 +54,7 @@ manage_cloud_dns_record() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <map|unmap> <fqdn> <ip_address> [provider]"
+  printf '%s\n' "Usage: ${THIS_FILE} <map|unmap> <fqdn> <ip_address> [provider]"
   exit 0
 fi
 

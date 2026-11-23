@@ -41,7 +41,7 @@ done
 # Prints usage instructions for gcp-gpu-vm workload deployment.
 print_usage() {
   printf '%s
-' "Usage: $0 [--detached] [--forward-port <spec>] [--help]"
+' "Usage: ${THIS_FILE} [--detached] [--forward-port <spec>] [--help]"
 }
 
 DETACHED_FLAG=""

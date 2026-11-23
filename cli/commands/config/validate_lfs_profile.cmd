@@ -57,15 +57,21 @@ IF "%~1"=="" (
 )
 
 SET "PROFILE_FILE=%~1"
-IF NOT EXIST "%PROFILE_FILE%" (
-    IF EXIST "!LIBSCRIPT_ROOT_DIR!\profiles\%PROFILE_FILE%" (
-        SET "PROFILE_FILE=!LIBSCRIPT_ROOT_DIR!\profiles\%PROFILE_FILE%"
-    ) ELSE IF EXIST "!LIBSCRIPT_ROOT_DIR!\profiles\!PROFILE_FILE!.json" (
-        SET "PROFILE_FILE=!LIBSCRIPT_ROOT_DIR!\profiles\%PROFILE_FILE%.json"
+IF NOT EXIST "!PROFILE_FILE!" (
+    IF EXIST "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!PROFILE_FILE!" (
+        SET "PROFILE_FILE=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!PROFILE_FILE!"
+    ) ELSE IF EXIST "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!PROFILE_FILE!.json" (
+        SET "PROFILE_FILE=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!PROFILE_FILE!.json"
     ) ELSE (
-        echo [ERROR] Profile not found: %~1 >&2
-        exit /b 1
+        for %%S in (linux freebsd illumos reactos rtos hypervisor unikernel containers cloud lfs) do (
+            if not exist "!PROFILE_FILE!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\%~1" set "PROFILE_FILE=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\%~1"
+            if not exist "!PROFILE_FILE!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\%~1.json" set "PROFILE_FILE=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\%~1.json"
+        )
     )
+)
+IF NOT EXIST "!PROFILE_FILE!" (
+    echo [ERROR] Profile not found: %~1 >&2
+    exit /b 1
 )
 
 echo === LibScript LFS Profile Validator (Win32) ===

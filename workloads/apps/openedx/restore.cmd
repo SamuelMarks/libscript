@@ -49,7 +49,7 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 if "%OPENEDX_INSTALL_DIR%"=="" (

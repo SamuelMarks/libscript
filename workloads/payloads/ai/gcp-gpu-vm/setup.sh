@@ -40,7 +40,7 @@ done
 # Prints usage instructions for gcp-gpu-vm setup.sh.
 print_usage() {
   printf '%s
-' "Usage: $0 [--help]"
+' "Usage: ${THIS_FILE} [--help]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

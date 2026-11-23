@@ -175,7 +175,7 @@ case "$ACTION" in
         arch='arm64'
       fi
 
-      target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/vagrant/${ver}/bin"
+      target_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vagrant/${ver}/bin"
       if [ -x "$target_dir/vagrant" ]; then
         log_info "Vagrant ${ver} is already installed at $target_dir/vagrant"
       else

@@ -57,5 +57,5 @@ if "%~1"=="" (
 set "TARGET_LISTEN_REGEX=443.*ssl"
 if not "%~4"=="" set "TARGET_LISTEN_REGEX=%~4"
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "& { . '%~dp0merge_location_into_server.ps1'; Merge-LocationIntoServer -ExistingConfig '%~1' -NewLocationBlock '%~2' -TargetServerName '%~3' -TargetListenRegex '%TARGET_LISTEN_REGEX%' }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& { . '!SCRIPT_DIR!\merge_location_into_server.ps1'; Merge-LocationIntoServer -ExistingConfig '%~1' -NewLocationBlock '%~2' -TargetServerName '%~3' -TargetListenRegex '%TARGET_LISTEN_REGEX%' }"
 exit /b %ERRORLEVEL%

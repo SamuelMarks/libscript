@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <up|status|scale|drain|failover|upgrade|destroy> [args...]"
+  printf '%s\n' "Usage: ${THIS_FILE} <up|status|scale|drain|failover|upgrade|destroy> [args...]"
   exit 0
 fi
 

@@ -56,11 +56,9 @@ ollama_warmup_model() {
   return 0
 }
 
-case "$(basename -- "${0}")" in
-  warmup.sh)
-    ollama_warmup_model "$@"
-    ;;
-esac
+if ! (return 0 2>/dev/null); then
+  ollama_warmup_model "$@"
+fi
 
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

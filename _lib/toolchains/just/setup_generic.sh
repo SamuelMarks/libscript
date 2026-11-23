@@ -66,7 +66,7 @@ case "$ACTION" in
     if [ "${JUST_INSTALL_METHOD}" = "system" ]; then
       just --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/just/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/just/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -86,7 +86,7 @@ case "$ACTION" in
       libscript_symlink_alias "just" "${JUST_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "just" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/just/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "just ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -117,7 +117,7 @@ case "$ACTION" in
     if [ "${JUST_INSTALL_METHOD}" = "system" ]; then
       if libscript_depends 'just' 2>/dev/null; then
         resolve_exact_version
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/just/${EXACT_VERSION}"
         mkdir -p "${TARGET_DIR}/bin"
         sys_just=""
         if command -v just >/dev/null 2>&1; then
@@ -147,7 +147,7 @@ case "$ACTION" in
            EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/casey/just/releases/latest" | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
            EXACT_VERSION="${EXACT_VERSION:-1.40.0}"
         fi
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/just/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing just ${VERSION} natively to ${TARGET_DIR}..."
           mkdir -p "${TARGET_DIR}/bin"

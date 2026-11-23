@@ -50,19 +50,19 @@ goto :find_root
 
 set "PACKAGE_NAME=ollama"
 if /i "%~1"=="ensure-models" (
-    call "%~dp0service.cmd" %*
+    call "!SCRIPT_DIR!\service.cmd" %*
     exit /b !ERRORLEVEL!
 )
 if /i "%~1"=="prune-models" (
-    call "%~dp0service.cmd" %*
+    call "!SCRIPT_DIR!\service.cmd" %*
     exit /b !ERRORLEVEL!
 )
 if /i "%~1"=="configure" (
-    call "%~dp0service.cmd" %*
+    call "!SCRIPT_DIR!\service.cmd" %*
     exit /b !ERRORLEVEL!
 )
 if /i "%~1"=="override-env" (
-    call "%~dp0service.cmd" %*
+    call "!SCRIPT_DIR!\service.cmd" %*
     exit /b !ERRORLEVEL!
 )
 call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*

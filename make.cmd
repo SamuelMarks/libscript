@@ -80,6 +80,12 @@ exit /b 0
 :: ## audit
 :: Executes the full static and behavioral standards audit suite.
 :audit
+where git >nul 2>&1
+if not errorlevel 1 (
+    if exist "%LIBSCRIPT_ROOT_DIR%\.git" (
+        git -C "%LIBSCRIPT_ROOT_DIR%" config core.hooksPath .githooks >nul 2>&1
+    )
+)
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_standards.cmd" --all
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_posix.cmd"

@@ -94,7 +94,7 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/mix/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mix/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing mix ${VERSION} natively (by installing elixir)..."
         
@@ -109,9 +109,9 @@ case "$ACTION" in
           ELIXIR_EXACT_VERSION="$VERSION"
         fi
         
-        ELIXIR_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/${ELIXIR_EXACT_VERSION}"
-        if [ -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/latest/bin/mix" ]; then
-          ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/latest/bin/mix" "${TARGET_DIR}/bin/mix"
+        ELIXIR_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elixir/${ELIXIR_EXACT_VERSION}"
+        if [ -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elixir/latest/bin/mix" ]; then
+          ln -sf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elixir/latest/bin/mix" "${TARGET_DIR}/bin/mix"
         elif [ -f "${ELIXIR_DIR}/bin/mix" ]; then
           ln -sf "${ELIXIR_DIR}/bin/mix" "${TARGET_DIR}/bin/mix"
         elif command -v mix >/dev/null 2>&1; then

@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    set "LIBSCRIPT_ROOT_DIR=%~dp0..\..\.."
+    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
@@ -122,7 +122,7 @@ set "DEFAULT_DIR=%LIBSCRIPT_HOME%\msi-rs\default"
 
 if not exist "%TARGET_DIR%" (
     echo msi-rs %EXACT_VERSION% is not installed. Installing now...
-    call "%~dp0setup.cmd" install msi-rs %MSI_RS_VERSION%
+    call "!SCRIPT_DIR!\setup.cmd" install msi-rs %MSI_RS_VERSION%
 )
 
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
@@ -130,7 +130,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
         dir /al "%ALIAS_DIR%" >nul 2>&1
         if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
     )
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%"
 mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
@@ -281,7 +282,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
     cd /d "%BUILD_DIR%"
     set "CARGO_PROFILE_RELEASE_OPT_LEVEL=3" && cargo build --workspace --bins --release
     call :install_binaries "%BUILD_DIR%\target\release"
-    cd /d "%~dp0"
+    cd /d "!SCRIPT_DIR!"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 ) else if not "%MSI_RS_DOWNLOAD_URL%"=="" (
     echo Downloading prebuilt msi-rs binary archive...
@@ -299,7 +300,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
     cd /d "%BUILD_DIR%"
     set "CARGO_PROFILE_RELEASE_OPT_LEVEL=3" && cargo build --workspace --bins --release
     call :install_binaries "%BUILD_DIR%\target\release"
-    cd /d "%~dp0"
+    cd /d "!SCRIPT_DIR!"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 )
 :: wincheck disable=CMD3005
@@ -312,7 +313,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
         dir /al "%ALIAS_DIR%" >nul 2>&1
         if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
     )
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%"
 mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1

@@ -106,7 +106,8 @@ if not exist "!TARGET_DIR!\bin\wincheck.exe" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
     set "STACK="
-    call "%~f0"
+    set "STACK="
+    call "!THIS_FILE!"
     if errorlevel 1 exit /b 1
 )
 call :update_aliases

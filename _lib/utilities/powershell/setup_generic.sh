@@ -66,7 +66,7 @@ case "$ACTION" in
     if [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
       powershell --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/powershell/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/powershell/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -86,7 +86,7 @@ case "$ACTION" in
       libscript_symlink_alias "powershell" "${POWERSHELL_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "powershell" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/powershell/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/powershell/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "powershell ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -127,7 +127,7 @@ case "$ACTION" in
          libscript_depends 'curl'
          EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/powershell/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/powershell/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing powershell ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"

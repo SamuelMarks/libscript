@@ -507,7 +507,7 @@ libscript_handle_generic_action() {
         if [ ! -d "$_hga_target" ]; then
           log_info "${_hga_comp} ${EXACT_VERSION} is not installed. Installing it now..."
           unset SCRIPT_NAME || true
-          ACTION="install" sh "${DIR:-$SCRIPT_DIR}/setup.sh" install "$_hga_comp" "" || exit 1
+          STACK="" ACTION="install" sh "${DIR:-$SCRIPT_DIR}/setup.sh" install "$_hga_comp" "" || exit 1
         fi
         libscript_symlink_alias "$_hga_comp" "default" "$EXACT_VERSION"
         log_info "Set default ${_hga_comp} version to ${EXACT_VERSION}."

@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.gnome"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gnome/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gnome/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/gnome" ]; then
   log_info "gnome ${VERSION} is already installed at ${TARGET_DIR}."

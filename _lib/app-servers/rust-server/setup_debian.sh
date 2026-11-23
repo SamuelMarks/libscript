@@ -61,7 +61,7 @@ fi
 NAME=' '"${SERVICE_NAME}"
 cd -- "${RUST_SERVER_DEST}"
 # shellcheck disable=SC1090,SC1091
-[ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
+[ -f "${HOME:-/root}/.cargo/env" ] && . "${HOME:-/root}/.cargo/env"
 
 [ -f Cargo.toml ] || cargo init --bin
 cargo build --release

@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-export LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}"
+export LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
 mkdir -p "${LIBSCRIPT_HOME}" "${LIBSCRIPT_ROOT_DIR}/build"
 if [ ! -f "${LIBSCRIPT_ROOT_DIR}/cache/downloads/sqlite/sqlite-amalgamation-3460100.zip" ]; then
   unset SCRIPT_NAME || true

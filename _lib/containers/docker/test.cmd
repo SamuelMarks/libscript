@@ -53,8 +53,8 @@ goto :find_root
 where docker >nul 2>&1
 if not errorlevel 1 (
     docker --version
-) else if exist "%~dp0cli.cmd" (
-    call "%~dp0cli.cmd" --help >nul
+) else if exist "!SCRIPT_DIR!\cli.cmd" (
+    call "!SCRIPT_DIR!\cli.cmd" --help >nul
 ) else (
     exit /b 0
 )

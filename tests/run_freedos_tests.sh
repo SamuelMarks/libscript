@@ -47,7 +47,7 @@ FORWARD_ARGS=""
 # ## show_freedos_help
 # Displays CLI usage help for run_freedos_tests.sh.
 show_freedos_help() {
-  printf 'Usage: %s [TARGETS...|all] [--os freedos-1.3|freedos-1.4] [--snapshot vanilla] [--idempotency-runs 2] [--boot-only]\n' "$0"
+  printf 'Usage: %s [TARGETS...|all] [--os freedos-1.3|freedos-1.4] [--snapshot vanilla] [--idempotency-runs 2] [--boot-only]\n' "${THIS_FILE}"
   printf 'Runs LibScript DOS component verification on a local Bento FreeDOS Vagrant VM.\n'
 }
 

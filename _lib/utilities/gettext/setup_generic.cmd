@@ -102,7 +102,8 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\gettext\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\gettext\%GETTEXT_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%" >nul 2>&1
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -168,7 +169,8 @@ for %%T in (msgfmt xgettext msginit msgmerge) do (
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\gettext\latest"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%" >nul 2>&1
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 

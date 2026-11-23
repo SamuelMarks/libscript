@@ -49,7 +49,7 @@ orchestrate_backups() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 [dest_dir] [component...]"
+  printf '%s\n' "Usage: ${THIS_FILE} [dest_dir] [component...]"
   exit 0
 fi
 

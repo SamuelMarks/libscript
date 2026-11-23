@@ -146,9 +146,20 @@ fi
 # Mode 2: Load profile or select via TUI
 CHOSEN_CONFIG=""
 if [ -n "$TARGET_PROFILE" ]; then
-  profile_path="${LIBSCRIPT_ROOT_DIR}/profiles/${TARGET_PROFILE}.json"
+  profile_path="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${TARGET_PROFILE}.json"
   if [ ! -f "$profile_path" ]; then
-    profile_path="${LIBSCRIPT_ROOT_DIR}/profiles/${TARGET_PROFILE}"
+    profile_path="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${TARGET_PROFILE}"
+  fi
+  if [ ! -f "$profile_path" ]; then
+    for _p_sub in linux freebsd illumos reactos rtos hypervisor unikernel containers cloud lfs; do
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_p_sub}/${TARGET_PROFILE}.json" ]; then
+        profile_path="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_p_sub}/${TARGET_PROFILE}.json"
+        break
+      elif [ -f "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_p_sub}/${TARGET_PROFILE}" ]; then
+        profile_path="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_p_sub}/${TARGET_PROFILE}"
+        break
+      fi
+    done
   fi
   if [ ! -f "$profile_path" ]; then
     printf '[ERROR] Profile not found: %s\n' "$TARGET_PROFILE" >&2

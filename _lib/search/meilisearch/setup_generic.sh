@@ -75,7 +75,7 @@ v1.36.0
   install)
     resolve_exact_version
     log_info "Installing Meilisearch (${EXACT_VERSION}) via ${MEILISEARCH_INSTALL_METHOD}..."
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/meilisearch/${EXACT_VERSION}"
+    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/meilisearch/${EXACT_VERSION}"
     if [ -f "${TARGET_DIR}/bin/meilisearch" ] && "${TARGET_DIR}/bin/meilisearch" --version >/dev/null 2>&1; then
       log_info "Meilisearch ${EXACT_VERSION} is already installed in ${TARGET_DIR}."
     else

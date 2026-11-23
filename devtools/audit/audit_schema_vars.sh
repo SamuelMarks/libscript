@@ -25,6 +25,13 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/parallel.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+ASV_WORK=$(libscript_make_tmpdir 'asv')
+
 if ! command -v jq >/dev/null 2>&1; then
   printf '[ERROR] jq is required by audit_schema_vars.sh.\n' >&2
   exit 1
@@ -105,7 +112,7 @@ is_internal_runtime_var() {
     LIBSCRIPT_OVERRIDE_CHANGED|LIBSCRIPT_RESOLVED_CC_*|LIBSCRIPT_RESOLVED_CXX_BIN|LIBSCRIPT_LAST_PEAK_RSS_KB|LIBSCRIPT_LAST_COMPILE_TIME_MS|LIBSCRIPT_EXTRACTED_SRC_DIR|LIBSCRIPT_BUILD_TARGET_DIR|LIBSCRIPT_BASE_DIR)
       return 0
       ;;
-    LIBSCRIPT_HW_CPU_MODEL|LIBSCRIPT_HW_PHYS_CORES|LIBSCRIPT_HW_PERF_CORES|LIBSCRIPT_HW_NUMA_NODES)
+    LIBSCRIPT_HW_CPU_MODEL|LIBSCRIPT_HW_PHYS_CORES|LIBSCRIPT_HW_PERF_CORES|LIBSCRIPT_HW_NUMA_NODES|LIBSCRIPT_RESOLVED_JOBS|LIBSCRIPT_BG_SUPPORTED|LIBSCRIPT_PARALLEL_SUPPORTED|LIBSCRIPT_PARALLEL_PROBED|LIBSCRIPT_MAP_FN)
       return 0
       ;;
     LIBSCRIPT_BENCH_CLOCK_NS_BIN|LIBSCRIPT_BENCH_PROBE_BIN|LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA)
@@ -123,10 +130,10 @@ is_internal_runtime_var() {
 # ## audit_schema_refs
 # Verifies that all file-based $ref links across *.schema.json files resolve to existing files on disk.
 audit_schema_refs() {
-  _tmp_refs=$(mktemp)
+  _tmp_refs="${ASV_WORK}/REFS.TSV"
   # shellcheck disable=SC2016
-  find "${LIBSCRIPT_ROOT_DIR}" -name '*.schema.json' -not -path '*/node_modules/*' -not -path '*/.git/*' -print0 \
-    | xargs -0 jq -rn 'inputs | (input_filename) as $f | (.. | objects | select(has("$ref")) | ."$ref" | "\($f)\t\(.)")' > "$_tmp_refs" 2>/dev/null || true
+  find "${LIBSCRIPT_ROOT_DIR}" \( -name node_modules -o -name .git -o -name cache -o -name tests_tmp \) -prune -o -type f -name '*.schema.json' \
+    -exec jq -rn 'inputs | (input_filename) as $f | (.. | objects | select(has("$ref")) | ."$ref" | "\($f)\t\(.)")' {} + > "$_tmp_refs" 2>/dev/null || true
   while IFS='	' read -r _sf _r; do
     [ -n "$_sf" ] && [ -n "$_r" ] || continue
     case "$_r" in
@@ -144,8 +151,9 @@ audit_schema_refs() {
   rm -f "$_tmp_refs"
 }
 
-PACK_CACHE_FILE=$(mktemp)
-trap 'rm -f "$PACK_CACHE_FILE" 2>/dev/null || true' EXIT INT TERM HUP
+PACK_CACHE_FILE="${ASV_WORK}/PACKS.TSV"
+: > "$PACK_CACHE_FILE"
+trap 'rm -rf "$ASV_WORK" 2>/dev/null || true' EXIT INT TERM HUP
 if [ -d "$VARS_PACK_DIR" ]; then
   set +f
   for _pack_file in "${VARS_PACK_DIR}"/*.schema.json; do
@@ -466,18 +474,16 @@ audit_component_vars() {
       ([.properties // {} | keys[]] | join(" ")),
       ([((.properties // {} | keys[]), (.properties // {} | to_entries[] | .value.deprecated_aliases[]?))] | unique | join(" ")),
       ([."x-libscript-var-packs"[]? // empty] | join(","))
-    ] | @tsv
+    ] | join("|")
   ' "$_local_schema" 2>/dev/null); then
     printf '[STANDARDS VIOLATION] [INVALID_JSON] %s: Schema is not valid JSON.\n' "$_rel_schema" >&2
     ERRORS=$((ERRORS + 1))
     return 0
   fi
 
-  _missing=$(printf '%s\n' "$_schema_info" | cut -f1)
-  _placeholders=$(printf '%s\n' "$_schema_info" | cut -f2)
-  _local_raw_keys=$(printf '%s\n' "$_schema_info" | cut -f3)
-  _local_keys=$(printf '%s\n' "$_schema_info" | cut -f4)
-  _packs_csv=$(printf '%s\n' "$_schema_info" | cut -f5)
+  IFS='|' read -r _missing _placeholders _local_raw_keys _local_keys _packs_csv <<EOF_SCH
+$_schema_info
+EOF_SCH
 
   if [ -n "$_missing" ]; then
     for _k in $_missing; do
@@ -557,19 +563,65 @@ audit_component_vars() {
   done
 }
 
+# shellcheck disable=SC2329
+# ## _asv_shard_worker
+# Audits a shard of component directories for schema and manifest conformance.
+_asv_shard_worker() {
+  _asw_sh="$1"
+  ERRORS=0
+  AUDITED=0
+  while IFS= read -r _asw_c || [ -n "$_asw_c" ]; do
+    [ -n "$_asw_c" ] && audit_component_vars "$_asw_c"
+  done < "$_asw_sh"
+  printf '%d %d\n' "$AUDITED" "$ERRORS" > "${_asw_sh}.cnt"
+  [ "$ERRORS" -eq 0 ] && return 0 || return 1
+}
+
 MODE="${1:---all}"
 if [ "$MODE" = '--all' ]; then
   audit_root_schemas_and_profiles
+  _comps_f="${ASV_WORK}/COMPS.TXT"
+  : > "$_comps_f"
   set +f
   for _cat in "${LIBSCRIPT_ROOT_DIR}/_lib"/*; do
     [ -d "$_cat" ] || continue
     [ "$(basename "$_cat")" = '_common' ] && continue
     for _comp in "$_cat"/*; do
       [ -d "$_comp" ] || continue
-      audit_component_vars "$_comp"
+      printf '%s\n' "$_comp" >> "$_comps_f"
     done
   done
   set -f
+  _jobs=$(libscript_parallel_jobs)
+  if [ "$_jobs" -gt 1 ] && [ -s "$_comps_f" ]; then
+    _sdir="${ASV_WORK}/shards"
+    mkdir -p "$_sdir"
+    awk -v n="$_jobs" -v d="$_sdir" 'NF > 0 { idx = (c % n) + 1; c++; out = d "/S" idx ".TXT"; print $0 >> out; close(out) }' "$_comps_f"
+    _pids=''
+    _i=1
+    while [ "$_i" -le "$_jobs" ]; do
+      if [ -s "${_sdir}/S${_i}.TXT" ]; then
+        ( _asv_shard_worker "${_sdir}/S${_i}.TXT" ) &
+        _pids="${_pids} $!"
+      fi
+      _i=$((_i + 1))
+    done
+    for _p in $_pids; do
+      wait "$_p" || true
+    done
+    set +f
+    for _cf in "${_sdir}"/*.cnt; do
+      [ -f "$_cf" ] || continue
+      read -r _ca _ce < "$_cf"
+      AUDITED=$((AUDITED + _ca))
+      ERRORS=$((ERRORS + _ce))
+    done
+    set -f
+  else
+    while IFS= read -r _comp || [ -n "$_comp" ]; do
+      [ -n "$_comp" ] && audit_component_vars "$_comp"
+    done < "$_comps_f"
+  fi
 elif [ "$MODE" = '--staged' ]; then
   audit_root_schemas_and_profiles
   _staged_dirs=$(git -C "$LIBSCRIPT_ROOT_DIR" diff --cached --name-only --diff-filter=ACMR | awk -F/ '$1 == "_lib" && $2 != "_common" && NF >= 3 { print $1 "/" $2 "/" $3 }' | sort -u || true)

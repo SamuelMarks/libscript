@@ -53,8 +53,8 @@ goto :find_root
 
 
 
-for %%I in ("%~dp0.") do set "OPENEDX_SCRIPT_DIR=%%~fI"
-for %%I in ("%~dp0..\..\..") do set "OPENEDX_ROOT_DIR=%%~fI"
+for %%I in ("!SCRIPT_DIR!\.") do set "OPENEDX_SCRIPT_DIR=%%~fI"
+for %%I in ("!SCRIPT_DIR!\..\..\..") do set "OPENEDX_ROOT_DIR=%%~fI"
 set "SCRIPT_DIR=!OPENEDX_SCRIPT_DIR!"
 set "LIBSCRIPT_ROOT_DIR=!OPENEDX_ROOT_DIR!"
 set "LIBSCRIPT_BIN=!OPENEDX_ROOT_DIR!\libscript.cmd"

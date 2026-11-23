@@ -112,7 +112,7 @@ case "$KERNEL_KIND" in
     fi
     ;;
   unikraft|nanos|osv|rumprun|mirageos|unikernel-*)
-    STACK='' "${SCRIPT_DIR}/unikernel.sh" "$TARGET_SYSROOT" "$KERNEL_ARTIFACT"
+    STACK='' "${SCRIPT_DIR}/unikernel_img.sh" "$TARGET_SYSROOT" "$KERNEL_ARTIFACT"
     if grep -q 'Stub' "$KERNEL_ARTIFACT" 2>/dev/null; then
       if [ "$STRICT_BUILD" = "1" ] && [ "$ALLOW_STUB" != "1" ]; then
         printf '[ERROR] Strict unikernel direct-boot synthesis failed for %s.\n' "$KERNEL_KIND" >&2

@@ -40,7 +40,7 @@ unset SCRIPT_NAME || true
 # ## print_usage
 # Prints usage instructions for gke-xpk-inference setup.sh.
 print_usage() {
-  printf '%s\n' "Usage: $0 [--help]"
+  printf '%s\n' "Usage: ${THIS_FILE} [--help]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

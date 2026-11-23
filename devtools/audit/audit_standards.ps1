@@ -342,6 +342,9 @@ function Audit-File {
         if ($normPath -notmatch '(^|/)devtools/audit/(audit_posix|audit_standards)\.sh$') {
             $hasUnguardedMkdir = $false
             $hasUnguardedLn = $false
+            $hasUnzipNoO = $false
+            $hasActionDollar0 = $false
+            $hasBareLsHome = $false
             foreach ($sLine in ($allContent -split "`r?`n")) {
                 if ($sLine -match '^\s*#') { continue }
                 if ($sLine -match '(^|[\s;|&(])mkdir[ \t]+[^-\r\n]' -and $sLine -notmatch '(?i)(lock|while|if[ \t]+!|if[ \t]+not[ \t]+exist|vagrant[ \t]+ssh)') {
@@ -350,12 +353,30 @@ function Audit-File {
                 if ($sLine -match '(^|[\s;|&(])ln[ \t]+-s[ \t]+[^-\r\n]') {
                     $hasUnguardedLn = $true
                 }
+                if ($sLine -match '(^|[\s;|&(])unzip[ \t]+-q[ \t]+' -and $sLine -notmatch '[ \t]-[a-zA-Z]*o([ \t]|$)' -and $normPath -notmatch 'scaffold\.sh$') {
+                    $hasUnzipNoO = $true
+                }
+                if ($sLine -match 'ACTION=.?install.?[ \t]+"\$0"' -and $normPath -notmatch 'scaffold\.sh$') {
+                    $hasActionDollar0 = $true
+                }
+                if ($sLine -match '\$\{LIBSCRIPT_HOME:-\$(\{HOME\}|HOME)/') {
+                    $hasBareLsHome = $true
+                }
             }
             if ($hasUnguardedMkdir) {
                 Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' found without '-p'. Use 'mkdir -p' for idempotency."
             }
             if ($hasUnguardedLn) {
                 Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'ln -s' found without '-f'. Use 'ln -sf' for idempotency."
+            }
+            if ($hasUnzipNoO) {
+                Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Non-idempotent 'unzip -q' without '-o' overwrite flag."
+            }
+            if ($hasActionDollar0) {
+                Log-Violation -File $FilePath -Rule "THIS_FILE_DANCE" -Details "Self-re-invocation via `$0 instead of STACK='' ... `"`${THIS_FILE}`"."
+            }
+            if ($hasBareLsHome) {
+                Log-Violation -File $FilePath -Rule "SET_FEU_SAFETY" -Details "Unguarded `${LIBSCRIPT_HOME:-`$HOME/...} under set -feu; use `${HOME:-/root}."
             }
         }
         $lastScriptNameLine = -10

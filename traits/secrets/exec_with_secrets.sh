@@ -57,7 +57,7 @@ while [ $# -gt 0 ]; do
     --output) OUT_FILE="$2"; shift 2 ;;
     --) shift; break ;;
     --help|-h)
-      printf '%s\n' "Usage: $0 --source <secrets_file> [--template <tpl> --output <out>] [-- <cmd> [args...]]"
+      printf '%s\n' "Usage: ${THIS_FILE} --source <secrets_file> [--template <tpl> --output <out>] [-- <cmd> [args...]]"
       exit 0
       ;;
     *) break ;;

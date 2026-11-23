@@ -55,27 +55,27 @@ if /i "%action%"=="list-managed" goto handle_list_managed
 if /i "%action%"=="status" goto handle_list_managed
 if /i "%action%"=="diff" goto handle_diff
 if /i "%action%"=="backup" (
-    call "%~dp0backup_cloud.cmd" %*
+    call "!SCRIPT_DIR!\backup_cloud.cmd" %*
     exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="restore" (
-    call "%~dp0restore_cloud.cmd" %*
+    call "!SCRIPT_DIR!\restore_cloud.cmd" %*
     exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="dashboard" (
-    call "%~dp0dashboard.cmd" dashboard %*
+    call "!SCRIPT_DIR!\dashboard.cmd" dashboard %*
     exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="cost" (
-    call "%~dp0dashboard.cmd" cost %*
+    call "!SCRIPT_DIR!\dashboard.cmd" cost %*
     exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="usage" (
-    call "%~dp0dashboard.cmd" usage %*
+    call "!SCRIPT_DIR!\dashboard.cmd" usage %*
     exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="logs-aggregate" (
-    call "%~dp0dashboard.cmd" logs-aggregate %*
+    call "!SCRIPT_DIR!\dashboard.cmd" logs-aggregate %*
     exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="aws" goto :route_provider

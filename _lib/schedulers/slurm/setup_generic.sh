@@ -78,7 +78,7 @@ EOF
 
 case "$ACTION" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/slurm/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/slurm/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -90,7 +90,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/slurm/${EXACT_VERSION}"
+    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/slurm/${EXACT_VERSION}"
     if [ ! -x "${TARGET_DIR}/bin/sbatch" ]; then
       unset SCRIPT_NAME || true
       ACTION="install" sh "$DIR/setup.sh" install "slurm" "$VERSION"
@@ -111,7 +111,7 @@ case "$ACTION" in
     ;;
   install)
     resolve_exact_version
-    TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/slurm/${EXACT_VERSION}}"
+    TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/slurm/${EXACT_VERSION}}"
     if [ -x "${TARGET_DIR}/bin/sbatch" ]; then
       log_info "Slurm ${EXACT_VERSION} is already installed at ${TARGET_DIR}."
     else

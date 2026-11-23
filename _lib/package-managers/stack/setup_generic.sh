@@ -99,7 +99,7 @@ case "$ACTION" in
       fi
 
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/stack/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/stack/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing stack ${VERSION} natively to ${TARGET_DIR}..."
         if [ "$UNAME_LOWER" = "freebsd" ]; then

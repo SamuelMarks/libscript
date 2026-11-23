@@ -35,7 +35,7 @@ VALIDATE_ONLY=0
 # ## show_usage
 # Prints command-line usage instructions for register_bento_boxes.sh.
 show_usage() {
-  printf 'Usage: %s [--bento-dir <path>] [--bento-prefix <prefix>] [--arch <aarch64|x86_64>] [--force] [--validate-only]\n' "$0"
+  printf 'Usage: %s [--bento-dir <path>] [--bento-prefix <prefix>] [--arch <aarch64|x86_64>] [--force] [--validate-only]\n' "${THIS_FILE}"
 }
 
 while [ $# -gt 0 ]; do

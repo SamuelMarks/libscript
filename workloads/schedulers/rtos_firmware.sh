@@ -50,7 +50,7 @@ compile_rtos_spec() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf 'Usage: %s <compile|submit|status|logs|stop|destroy> <payload.json_or_id> [--runner <qemu|renode|openocd>]\n' "$0"
+  printf 'Usage: %s <compile|submit|status|logs|stop|destroy> <payload.json_or_id> [--runner <qemu|renode|openocd>]\n' "${THIS_FILE}"
   exit 0
 fi
 

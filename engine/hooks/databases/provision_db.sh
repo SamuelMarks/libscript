@@ -209,7 +209,7 @@ find_manifest_duckdb_python() {
   for _fmdp_cand in \
     "${MANIFEST_DIR}/.venv/bin/python" \
     "${MANIFEST_DIR}"/*/.venv/bin/python \
-    "${LIBSCRIPT_HOME:-$HOME/.libscript}"/python/*/bin/python3 \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"/python/*/bin/python3 \
     "$(command -v python3 2>/dev/null || true)"; do
     if [ -n "$_fmdp_cand" ] && [ -x "$_fmdp_cand" ]; then
       if "$_fmdp_cand" -c "import duckdb" >/dev/null 2>&1; then

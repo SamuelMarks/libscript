@@ -63,7 +63,7 @@ case "$ACTION" in
     if [ "${CURL_INSTALL_METHOD:-}" = "system" ]; then
       printf '%s\n' 'System packages do not support ls here.'
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/curl/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/curl/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -79,7 +79,7 @@ case "$ACTION" in
       libscript_symlink_alias "curl" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "curl" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/curl/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/curl/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "curl ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -132,7 +132,7 @@ case "$ACTION" in
       libscript_build_component_from_source "curl" "${EXACT_VERSION}" "curl" "c" "cmake" "${CURL_DOWNLOAD_URL:-}"
       exit 0
     fi
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/curl/${VERSION:-latest}/bin/curl" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/curl/${VERSION:-latest}/bin/curl" ]; then
       log_info "curl ${VERSION:-latest} is already installed."
       exit 0
     fi

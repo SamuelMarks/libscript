@@ -49,5 +49,5 @@ goto :find_root
 :root_found
 
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0create_server_block.ps1" %*
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\create_server_block.ps1" %*
 exit /b %ERRORLEVEL%

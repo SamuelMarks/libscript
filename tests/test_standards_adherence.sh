@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Regression test suite verifying adherence to LibScript engineering standards,
-# zero-dependency C11 ELF patching, Tier 3.5/4 idempotency, and audit rules.
+# zero-dependency C11 ELF patching, T0-T5 idempotency, and static audit rules.
 # ## Usage
 # ./tests/test_standards_adherence.sh
 
@@ -308,6 +308,76 @@ EOF_REL_JSON
     || fail_test 'Expected libscript_download to rescue HTTP 403 via authenticated GitHub REST API asset endpoint'
   cmp -s "${GH_TEST_DIR}/fixture.bin" "${GH_TEST_DIR}/out2.tar.gz" || fail_test 'Downloaded payload from GitHub REST API fallback did not match fixture'
 fi
+
+printf '%s\n' '=== 7. Test Sourced THIS_FILE Self-Re-Execution, Hyphenated Batch Label Docs & Tier Purity ==='
+SELF_EXEC_DIR="${TEST_TMP}/self_exec"
+mkdir -p "${SELF_EXEC_DIR}"
+cat << 'EOF_SG' > "${SELF_EXEC_DIR}/setup_generic.sh"
+#!/bin/sh
+# ## Overview
+# Mock setup_generic script verifying sourced THIS_FILE self-re-execution.
+# ## Usage
+# ./setup_generic.sh
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+case "${ACTION:-install}" in
+  use)
+    if [ ! -f "${SELF_EXEC_MARKER}" ]; then
+      STACK='' ACTION='install' "${THIS_FILE}"
+    fi
+    ;;
+  install)
+    printf 'installed\n' > "${SELF_EXEC_MARKER}"
+    ;;
+esac
+EOF_SG
+chmod +x "${SELF_EXEC_DIR}/setup_generic.sh"
+cat << 'EOF_CALLER' > "${SELF_EXEC_DIR}/caller.sh"
+#!/bin/sh
+set -feu
+SCRIPT_NAME="${1}"
+export SCRIPT_NAME
+. "${SCRIPT_NAME}"
+EOF_CALLER
+chmod +x "${SELF_EXEC_DIR}/caller.sh"
+SELF_EXEC_MARKER="${SELF_EXEC_DIR}/installed.ok" ACTION='use' STACK='' sh "${SELF_EXEC_DIR}/caller.sh" "${SELF_EXEC_DIR}/setup_generic.sh"
+[ -f "${SELF_EXEC_DIR}/installed.ok" ] || fail_test 'Expected sourced setup_generic.sh use verb to self-re-execute install via STACK-cleared THIS_FILE'
+
+DOC_FIX="${TEST_TMP}/doc_fix"
+mkdir -p "${DOC_FIX}/_lib"
+cp "${LIBSCRIPT_ROOT_DIR}/ROOT" "${DOC_FIX}/ROOT"
+cat << 'EOF_BAD_CMD' > "${DOC_FIX}/bad.cmd"
+@echo off
+:: # bad.cmd
+:: ## Overview
+:: Test fixture with undocumented hyphenated batch label.
+:: ## Usage
+:: bad.cmd
+setlocal EnableDelayedExpansion
+:--undocumented-flag
+exit /b 0
+EOF_BAD_CMD
+if "${LIBSCRIPT_ROOT_DIR}/devtools/audit/doc_coverage.sh" --strict --repo-root "${DOC_FIX}" >/dev/null 2>&1; then
+  fail_test 'Expected doc_coverage.sh --strict to reject undocumented :--undocumented-flag batch label'
+fi
+
+grep -q 'make\.cmd' "${LIBSCRIPT_ROOT_DIR}/make.bat" || fail_test 'Expected make.bat to delegate directly to make.cmd'
+grep -q 'unzip_no_o_hits' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" || fail_test 'Expected unzip -o idempotency rule in audit_standards.sh'
+grep -q 'stale_mklink_hits' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" || fail_test 'Expected mklink /J idempotency rule in audit_standards.sh'
 
 printf '%s\n' '[PASS] All standards adherence regression tests succeeded.'
 exit 0

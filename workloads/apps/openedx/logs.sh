@@ -47,7 +47,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-OPENEDX_LOG_DIR="${OPENEDX_INSTALL_DIR:-$HOME/.libscript/openedx}/logs"
+OPENEDX_LOG_DIR="${OPENEDX_INSTALL_DIR:-${HOME:-/root}/.libscript/openedx}/logs"
 case "$TARGET" in
   install) LOG_FILE="${OPENEDX_LOG_DIR}/install.log" ;;
   lms) LOG_FILE="${OPENEDX_LOG_DIR}/lms.log" ;;

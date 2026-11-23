@@ -48,7 +48,7 @@ issue_acme_cert() {
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <domain_name> [email]"
+  printf '%s\n' "Usage: ${THIS_FILE} <domain_name> [email]"
   exit 0
 fi
 

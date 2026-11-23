@@ -43,7 +43,7 @@ done
 # ## print_usage
 # Prints usage instructions for traits/storage/mount.sh.
 print_usage() {
-  printf '%s\n' "Usage: $0 <device_or_uuid|--auto-data-disk> <mount_point> [fstype]"
+  printf '%s\n' "Usage: ${THIS_FILE} <device_or_uuid|--auto-data-disk> <mount_point> [fstype]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

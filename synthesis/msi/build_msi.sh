@@ -56,7 +56,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # ## show_help
 # Prints script usage instructions and available command-line switches.
 show_help() {
-  printf '%s\n' "Usage: $0 [TARGET_DIR] [OPTIONS]"
+  printf '%s\n' "Usage: ${THIS_FILE} [TARGET_DIR] [OPTIONS]"
   printf '%s\n' 'Generates a generic WiX Windows Installer (.msi) package.'
   printf '%s\n' 'Options:'
   printf '%s\n' '  --out <name>          Output base file name'
@@ -1279,10 +1279,10 @@ fi
 compile_msi() {
   if [ "$USE_WIX" = "1" ]; then
     printf '[INFO] Using traditional WiX Toolset...\n'
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/wix/env.sh" ]; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/wix/env.sh" ]; then
       # shellcheck disable=SC1090,SC1091
       _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/wix/env.sh"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/wix/env.sh"
       export SCRIPT_NAME
       # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
@@ -1297,11 +1297,11 @@ compile_msi() {
     elif [ -d "${LIBSCRIPT_ROOT_DIR}/../msi-rs/target/debug" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/../msi-rs/target/debug/candle" ]; then
       PATH="${LIBSCRIPT_ROOT_DIR}/../msi-rs/target/debug:${PATH}"
       export PATH
-    elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
-      PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+    elif [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default/bin" ]; then
+      PATH="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default/bin:${PATH}"
       export PATH
-    elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin" ]; then
-      PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
+    elif [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/v0.0.1/bin" ]; then
+      PATH="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
       export PATH
     fi
 

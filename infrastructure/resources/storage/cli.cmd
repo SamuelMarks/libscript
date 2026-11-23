@@ -157,7 +157,7 @@ if "%LIBSCRIPT_CLOUD%"=="" (
 )
 
 if "%CMD%"=="list" (
-    call "%~dp0api.cmd" :libscript_storage_list "%LIBSCRIPT_CLOUD%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_storage_list "%LIBSCRIPT_CLOUD%"
     exit /b !ERRORLEVEL!
 )
 
@@ -167,11 +167,11 @@ if "%LIBSCRIPT_BUCKET%"=="" (
 )
 
 if "%CMD%"=="create" (
-    call "%~dp0api.cmd" :libscript_storage_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_STORAGE_PUBLIC_WEB%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_storage_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_STORAGE_PUBLIC_WEB%"
     exit /b !ERRORLEVEL!
 )
 if "%CMD%"=="delete" (
-    call "%~dp0api.cmd" :libscript_storage_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_storage_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%"
     exit /b !ERRORLEVEL!
 )
 if "%CMD%"=="sync" (
@@ -179,7 +179,7 @@ if "%CMD%"=="sync" (
         echo Error: --local-dir ^(or LIBSCRIPT_SYNC_DIR^) is required for sync. >&2
         exit /b 1
     )
-    call "%~dp0api.cmd" :libscript_storage_sync "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_SYNC_DIR%"
+    call "!SCRIPT_DIR!\api.cmd" :libscript_storage_sync "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_SYNC_DIR%"
     exit /b !ERRORLEVEL!
 )
 

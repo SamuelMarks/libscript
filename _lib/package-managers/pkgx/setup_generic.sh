@@ -70,7 +70,7 @@ case "$ACTION" in
     elif [ "$PKGX_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' 'System packages do not support ls here.'
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pkgx/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -101,7 +101,7 @@ case "$ACTION" in
       resolve_exact_version
       libscript_symlink_alias "pkgx" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pkgx/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "pkgx ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -146,7 +146,7 @@ case "$ACTION" in
          libscript_depends 'curl'
          EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/pkgxdev/pkgx/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
       fi
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pkgx/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing pkgx ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"

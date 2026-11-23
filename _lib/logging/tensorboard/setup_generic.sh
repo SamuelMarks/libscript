@@ -101,7 +101,7 @@ case "$ACTION" in
       resolve_exact_version
       libscript_depends 'python'
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/tensorboard/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tensorboard/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing tensorboard ${VERSION} to ${TARGET_DIR}..."
         if ! type libscript_python_venv >/dev/null 2>&1; then

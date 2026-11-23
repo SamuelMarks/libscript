@@ -49,12 +49,12 @@ VERSION="${UV_VERSION:-latest}"
 # ## find_existing_uv
 # Searches LIBSCRIPT_HOME, ~/.local/bin, and system PATH for an existing uv binary.
 find_existing_uv() {
-  _feu_home="${LIBSCRIPT_HOME:-$HOME/.libscript}"
+  _feu_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
   for _feu_cand in \
     "${_feu_home}/uv/${VERSION}/bin/uv" \
     "${_feu_home}/uv/default/bin/uv" \
-    "${REMOTE_HOME:-$HOME}/.local/bin/uv" \
-    "${HOME}/.local/bin/uv" \
+    "${REMOTE_HOME:-${HOME:-/root}}/.local/bin/uv" \
+    "${HOME:-/root}/.local/bin/uv" \
     "/root/.local/bin/uv" \
     "$(command -v uv 2>/dev/null || true)"; do
     if [ -n "$_feu_cand" ] && [ -x "$_feu_cand" ] && "$_feu_cand" --version >/dev/null 2>&1; then
@@ -124,7 +124,7 @@ case "$ACTION" in
   install)
     if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_uv=$(find_existing_uv 2>/dev/null); then
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uv/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
       if [ "$_existing_uv" != "${TARGET_DIR}/bin/uv" ]; then
         ln -sf "$_existing_uv" "${TARGET_DIR}/bin/uv" 2>/dev/null || true
@@ -148,7 +148,7 @@ case "$ACTION" in
     if [ "$UV_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uv/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/uv" ]; then
         log_info "Installing uv ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
@@ -159,7 +159,7 @@ case "$ACTION" in
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+              unzip -q -o "$cache_file" -d "${TARGET_DIR}" || true
             else
               cp "$cache_file" "${TARGET_DIR}/bin/uv" || true
               chmod +x "${TARGET_DIR}/bin/uv" || true

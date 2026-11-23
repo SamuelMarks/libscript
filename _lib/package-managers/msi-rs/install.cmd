@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    set "LIBSCRIPT_ROOT_DIR=%~dp0..\..\.."
+    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
@@ -122,7 +122,7 @@ set "DEFAULT_DIR=%LIBSCRIPT_HOME%\msi-rs\default"
 
 if not exist "%TARGET_DIR%" (
     echo msi-rs %EXACT_VERSION% is not installed. Installing now...
-    call "%~dp0setup.cmd" install msi-rs %MSI_RS_VERSION%
+    call "!SCRIPT_DIR!\setup.cmd" install msi-rs %MSI_RS_VERSION%
 )
 
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
@@ -264,7 +264,7 @@ if exist "%CACHE_ZIP%" (
     cd /d "%BUILD_DIR%"
     cargo build --release -p msi-cli
     call :install_binaries "%BUILD_DIR%\target\release"
-    cd /d "%~dp0"
+    cd /d "!SCRIPT_DIR!"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 ) else if not "%MSI_RS_DOWNLOAD_URL%"=="" (
     echo Downloading prebuilt msi-rs binary archive...
@@ -282,7 +282,7 @@ if exist "%CACHE_ZIP%" (
     cd /d "%BUILD_DIR%"
     cargo build --release -p msi-cli
     call :install_binaries "%BUILD_DIR%\target\release"
-    cd /d "%~dp0"
+    cd /d "!SCRIPT_DIR!"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 )
 :: wincheck disable=CMD3005

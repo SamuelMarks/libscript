@@ -99,7 +99,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --help|-h)
-      printf 'Usage: %s [OPTIONS]\n' "$0"
+      printf 'Usage: %s [OPTIONS]\n' "${THIS_FILE}"
       printf 'Options:\n'
       printf '  --manifest <path>    Path to offline_bundle.json manifest\n'
       printf '  --cache-dir <dir>    Target cache staging directory\n'

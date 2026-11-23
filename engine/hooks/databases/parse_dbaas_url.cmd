@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    for %%i in ("%~dp0..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!LIBSCRIPT_ROOT_DIR!") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 set "RAW_URL=%~1"

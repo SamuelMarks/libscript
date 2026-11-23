@@ -266,7 +266,7 @@ case "$ACTION" in
     exit 0
     ;;
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/vultr/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vultr/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -289,7 +289,7 @@ case "$ACTION" in
       libscript_depends 'vultr-cli' || true
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vultr/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vultr/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
       libscript_symlink_alias "vultr" "$VERSION" "${EXACT_VERSION}"
     fi
@@ -300,8 +300,8 @@ case "$ACTION" in
     ;;
   uninstall)
     resolve_exact_version
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/vultr/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/vultr/$VERSION"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vultr/${EXACT_VERSION}"
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vultr/$VERSION"
     exit 0
     ;;
 esac

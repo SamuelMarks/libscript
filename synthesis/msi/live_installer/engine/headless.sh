@@ -190,7 +190,7 @@ fi
 
 # Step 2: Extract Packages via real msi-rs binary
 log_msg "[STAGE 2/4] Executing MSI extraction via msi-rs..."
-MSI_CLI="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/latest/bin/msi"
+MSI_CLI="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/latest/bin/msi"
 
 if [ -n "$MSI_PACKAGE" ] && [ -x "$MSI_CLI" ]; then
    log_msg "Running: $MSI_CLI install $MSI_PACKAGE"
@@ -210,16 +210,16 @@ elif [ "$OS_NAME" = "SunOS" ]; then
   STACK='' "${SCRIPT_DIR}/../distro_installers/install_illumos.sh" "$TARGET_DISK" "$TARGET_MNT"
 fi
 
-if [ "$WORKLOAD" = "openedx" ] && [ -x "${SCRIPT_DIR}/../workloads/openedx.sh" ]; then
-  STACK='' "${SCRIPT_DIR}/../workloads/openedx.sh" "$TARGET_MNT"
-elif [ "$WORKLOAD" = "wordpress" ] && [ -x "${SCRIPT_DIR}/../workloads/wordpress.sh" ]; then
-  STACK='' "${SCRIPT_DIR}/../workloads/wordpress.sh" "$TARGET_MNT"
+if [ "$WORKLOAD" = "openedx" ] && [ -x "${SCRIPT_DIR}/../presets/openedx.sh" ]; then
+  STACK='' "${SCRIPT_DIR}/../presets/openedx.sh" "$TARGET_MNT"
+elif [ "$WORKLOAD" = "wordpress" ] && [ -x "${SCRIPT_DIR}/../presets/wordpress.sh" ]; then
+  STACK='' "${SCRIPT_DIR}/../presets/wordpress.sh" "$TARGET_MNT"
 elif [ "$WORKLOAD" != "none" ]; then
-  STACK='' "${SCRIPT_DIR}/../workloads/components.sh" "$TARGET_MNT" "$WORKLOAD"
+  STACK='' "${SCRIPT_DIR}/../presets/components.sh" "$TARGET_MNT" "$WORKLOAD"
 fi
 
 if [ -n "${MSI_RS_COMPONENTS:-}" ]; then
-  STACK='' "${SCRIPT_DIR}/../workloads/components.sh" "$TARGET_MNT" "$MSI_RS_COMPONENTS"
+  STACK='' "${SCRIPT_DIR}/../presets/components.sh" "$TARGET_MNT" "$MSI_RS_COMPONENTS"
 fi
 
 # Step 4: Finalize target bootloader deployment

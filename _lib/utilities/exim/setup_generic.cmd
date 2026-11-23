@@ -55,15 +55,17 @@ if "%VERSION%"=="" set "VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
 if "%ACTION%"=="install" (
-    if exist "%LIBSCRIPT_HOME%\exim\%VERSION%" (
-        echo [INFO] exim %VERSION% is already installed.
+    if exist "!LIBSCRIPT_HOME!\exim\!VERSION!" (
+        echo [INFO] exim !VERSION! is already installed.
         exit /b 0
     )
-    echo [INFO] Exim is POSIX-specific. Routing to hMailServer for native Windows SMTP relay...
-    call "!SCRIPT_DIR!\..\hmailserver\setup.cmd" install
+    echo [INFO] Exim is POSIX-specific. Routing to hMailServer via root orchestrator for native Windows SMTP relay...
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install hmailserver latest
     exit /b !ERRORLEVEL!
 ) else if "%ACTION%"=="test" (
-    call "!SCRIPT_DIR!\..\hmailserver\test.cmd"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" test hmailserver
     exit /b !ERRORLEVEL!
 )
 

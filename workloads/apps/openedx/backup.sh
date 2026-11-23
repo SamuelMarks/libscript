@@ -62,7 +62,7 @@ for LIB in "engine/common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 OPENEDX_BACKUP_DIR="${OPENEDX_BACKUP_DIR:-${OPENEDX_INSTALL_DIR}/backups}"
 BACKUP_HELPER="${SCRIPT_DIR}/backup_helper.sh"
 

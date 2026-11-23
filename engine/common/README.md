@@ -24,12 +24,13 @@ primitives in pure POSIX `/bin/sh` and native Windows Batch (`.cmd`) / PowerShel
     synchronization in `${LIBSCRIPT_HOME}/bin` (`libscript_sync_active_bin` /
     `libscript_cleanup_active_bin`), semantic version sorting, and standard component CLI verbs
     (`install`, `uninstall`, `ls`, `ls-remote`, `use`, `which`, `env`, `test`).
-- **Source Compilation & Binary Patching (`source_builder.{sh,cmd}`, `elf_verneed_patch.{sh,cmd}`,
-  `hw_tune.{sh,cmd}`)**:
+- **Source Compilation, Concurrency & Binary Patching (`source_builder.{sh,cmd}`,
+  `elf_verneed_patch.{sh,cmd}`, `hw_tune.{sh,cmd}`, `parallel.{sh,cmd}`)**:
   - Multi-toolchain source build engine
     (`--from-source --toolchain=default|gcc|clang|tcc|edgcpp|custom-cc`) emitting
-    `build-metrics.json` telemetry, ELF `DT_VERNEED` compatibility patching, and CPU/RAM parallelism
-    auto-tuning.
+    `build-metrics.json` telemetry, ELF `DT_VERNEED` compatibility patching, CPU/RAM parallelism
+    auto-tuning, and zero-dependency POSIX `/bin/sh` + Windows Batch worker-pool sharding
+    (`LIBSCRIPT_JOBS` with sequential MS-DOS fallback).
 - **Daemon Supervision & Lifecycle Hooks (`service.{sh,cmd}`, `service_install.{sh,cmd}`,
   `daemonize.{sh,cmd,ps1}`, `daemon_launcher.{sh,cmd,ps1}`, `hooks.{sh,cmd}`,
   `component_hook_impl.{sh,cmd}`, `upgrade_engine.{sh,cmd}`)**:

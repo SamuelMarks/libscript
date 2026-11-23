@@ -40,7 +40,7 @@ unset SCRIPT_NAME || true
 # ## print_usage
 # Prints command usage help for gke-xpk-training setup.sh.
 print_usage() {
-  printf '%s\n' "Usage: $0 [--help]"
+  printf '%s\n' "Usage: ${THIS_FILE} [--help]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

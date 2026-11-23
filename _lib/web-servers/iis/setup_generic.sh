@@ -64,7 +64,7 @@ case "$ACTION" in
     if [ "${IIS_INSTALL_METHOD}" = "system" ]; then
       iis --version || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/iis/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/iis/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -84,7 +84,7 @@ case "$ACTION" in
       libscript_symlink_alias "iis" "${IIS_VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias "iis" "default" "${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/iis/${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/iis/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "iis ${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -111,7 +111,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/iis/${VERSION:-latest}/bin/iis" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/iis/${VERSION:-latest}/bin/iis" ]; then
       log_info "iis ${VERSION:-latest} is already installed."
       exit 0
     fi

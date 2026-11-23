@@ -94,7 +94,8 @@ set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
-    call "%~f0"
+    set "STACK="
+    call "!THIS_FILE!"
 )
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "%SQLITE_TOOLS_VERSION%" "!EXACT_VERSION!"
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "sqlite-tools" "default" "!EXACT_VERSION!"

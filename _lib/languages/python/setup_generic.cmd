@@ -178,7 +178,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
         dir /al "%ALIAS_DIR%" >nul 2>&1
         if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
     )
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -216,7 +217,8 @@ for %%N in ("!_LDP_DIR!") do (
 if not exist "%LIBSCRIPT_HOME%\python" mkdir "%LIBSCRIPT_HOME%\python"
 set "_LDP_VER_DIR=%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
 if /i not "!_LDP_DIR!"=="!_LDP_VER_DIR!" (
-    if not exist "!_LDP_VER_DIR!" mklink /J "!_LDP_VER_DIR!" "!_LDP_DIR!" >nul 2>&1
+    rmdir "!_LDP_VER_DIR!" >nul 2>&1
+    mklink /J "!_LDP_VER_DIR!" "!_LDP_DIR!" >nul 2>&1
 )
 set "_LDP_DEF_DIR=%LIBSCRIPT_HOME%\python\default"
 if /i not "!_LDP_DIR!"=="!_LDP_DEF_DIR!" (
@@ -313,7 +315,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
         dir /al "%ALIAS_DIR%" >nul 2>&1
         if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
     )
-    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    rmdir "%ALIAS_DIR%" >nul 2>&1
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\python\default"
 if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (

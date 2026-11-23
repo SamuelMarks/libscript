@@ -51,7 +51,7 @@ record_compile_event() {
   _ev_rc="${2:-0}"
   _ev_fallback="${3:-false}"
   _ev_ms="${4:-1}"
-  _log_file="${CUSTOM_CC_LOG_FILE:-${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/compile_events.jsonl}"
+  _log_file="${CUSTOM_CC_LOG_FILE:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/compile_events.jsonl}"
   _log_dir="$(dirname -- "${_log_file}")"
   mkdir -p "${_log_dir}"
   _safe_src=$(printf '%s' "${_ev_src}" | tr '"' "'" | tr -d '

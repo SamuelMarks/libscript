@@ -72,7 +72,7 @@ exit /b 0
 :main
 :: ## main
 :: Executes the primary orchestration workflow for this script.
-set "DIR=%~dp0"
+set "DIR=!SCRIPT_DIR!\"
 :: Remove trailing backslash if present
 if "%DIR:~-1%"=="\" set "DIR=%DIR:~0,-1%"
 

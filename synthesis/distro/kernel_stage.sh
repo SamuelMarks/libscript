@@ -66,7 +66,7 @@ case "${LIBSCRIPT_TARGET_OS:-linux}" in
       ls -l "${ROOTFS}/boot/zephyr.elf" 2>/dev/null || printf '[INFO] Zephyr firmware not yet staged in %s/boot\n' "$ROOTFS"
       exit 0
     fi
-    LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" STACK='' "${SCRIPT_DIR}/zephyr/build_firmware.sh" --sysroot="$ROOTFS"
+    LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/zephyr/build_firmware.sh" --sysroot="$ROOTFS"
     exit 0
     ;;
   freertos|rtos-freertos)
@@ -77,7 +77,7 @@ case "${LIBSCRIPT_TARGET_OS:-linux}" in
       ls -l "${ROOTFS}/boot/freertos.elf" 2>/dev/null || printf '[INFO] FreeRTOS firmware not yet staged in %s/boot\n' "$ROOTFS"
       exit 0
     fi
-    LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" STACK='' "${SCRIPT_DIR}/freertos/build_firmware.sh" --sysroot="$ROOTFS"
+    LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/freertos/build_firmware.sh" --sysroot="$ROOTFS"
     exit 0
     ;;
 esac
@@ -197,8 +197,8 @@ if [ ! -s "${ROOTFS}/boot/vmlinux" ]; then
   cp -f "${ROOTFS}/boot/vmlinuz" "${ROOTFS}/boot/vmlinux"
 fi
 
-if [ -x "${SCRIPT_DIR}/initramfs/gen_initramfs.sh" ] && command -v cpio >/dev/null 2>&1; then
-  STACK="" "${SCRIPT_DIR}/initramfs/gen_initramfs.sh" "${ROOTFS}" "${ROOTFS}/boot/initramfs.img"
+if [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/initramfs/gen_initramfs.sh" ] && command -v cpio >/dev/null 2>&1; then
+  STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/initramfs/gen_initramfs.sh" "${ROOTFS}" "${ROOTFS}/boot/initramfs.img"
 else
   INITRAMFS_TMP="${ROOTFS}/tmp/initramfs_stage_$$"
   mkdir -p "${INITRAMFS_TMP}/bin" "${INITRAMFS_TMP}/dev" "${INITRAMFS_TMP}/proc" "${INITRAMFS_TMP}/sys" "${INITRAMFS_TMP}/mnt" "${INITRAMFS_TMP}/run"

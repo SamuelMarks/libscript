@@ -49,7 +49,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "THIS_DIR=%~dp0"
+set "THIS_DIR=!SCRIPT_DIR!\"
 :: Remove trailing slash
 set "THIS_DIR=%THIS_DIR:~0,-1%"
 set "REPO_ROOT=%THIS_DIR%\.."

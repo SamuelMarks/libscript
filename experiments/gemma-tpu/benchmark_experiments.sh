@@ -36,7 +36,7 @@ unset SCRIPT_NAME _be_lib || true
 # ## show_suite_help
 # Prints CLI options for gemma-tpu-suite benchmark_experiments.sh.
 show_suite_help() {
-  printf '%s\n' "Usage: $0 [--tfrc-config=<path>] [--repo-dir=<dir>] [--results-dir=<dir>] [--model=<id>] [--backends=<csv|all>] [--subsuites=E0,E1,E2,E3,E4] [--command-template=<tpl>] [--fresh-vm-per-backend] [--resume] [--local-exec]"
+  printf '%s\n' "Usage: ${THIS_FILE} [--tfrc-config=<path>] [--repo-dir=<dir>] [--results-dir=<dir>] [--model=<id>] [--backends=<csv|all>] [--subsuites=E0,E1,E2,E3,E4] [--command-template=<tpl>] [--fresh-vm-per-backend] [--resume] [--local-exec]"
 }
 
 GEMMA_TPU_SUITE_REPO_DIR="${GEMMA_TPU_SUITE_REPO_DIR:-$(pwd)}"

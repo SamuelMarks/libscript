@@ -175,7 +175,7 @@ populate_restricted_bin_without_wincheck() {
     [ -n "$_path_dir" ] && [ -d "$_path_dir" ] || continue
     _rev_dirs="${_path_dir}:${_rev_dirs}"
   done
-  for _extra_dir in "${LIBSCRIPT_HOME:-$HOME/.libscript}/bin" "${LIBSCRIPT_HOME:-$HOME/.libscript}/shellcheck/default/bin"; do
+  for _extra_dir in "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/shellcheck/default/bin"; do
     if [ -d "$_extra_dir" ]; then
       _rev_dirs="${_extra_dir}:${_rev_dirs}"
     fi

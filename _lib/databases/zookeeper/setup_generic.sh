@@ -118,7 +118,7 @@ EOF
 
 case "$ACTION" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/zookeeper/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/zookeeper/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
@@ -130,7 +130,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/zookeeper/${EXACT_VERSION}"
+    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/zookeeper/${EXACT_VERSION}"
     if [ ! -x "${TARGET_DIR}/bin/zookeeper" ]; then
       unset SCRIPT_NAME || true
       ACTION="install" sh "$DIR/setup.sh" install "zookeeper" "$VERSION"
@@ -151,7 +151,7 @@ case "$ACTION" in
     ;;
   install)
     resolve_exact_version
-    TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/zookeeper/${EXACT_VERSION}}"
+    TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/zookeeper/${EXACT_VERSION}}"
     if [ -x "${TARGET_DIR}/bin/zookeeper" ]; then
       log_info "Apache ZooKeeper ${EXACT_VERSION} is already installed at ${TARGET_DIR}."
     else

@@ -47,7 +47,7 @@ LMS_HOST="${LMS_HOST:-openedx.local}"
 CMS_HOST="${CMS_HOST:-studio.openedx.local}"
 ADMIN_USER="${OPENEDX_ADMIN_USERNAME:-admin}"
 ADMIN_PASS="${OPENEDX_ADMIN_PASSWORD:-admin}"
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 
 TMP_DIR="${TMPDIR:-/tmp}/openedx_real_test_$$"
 mkdir -p "$TMP_DIR"

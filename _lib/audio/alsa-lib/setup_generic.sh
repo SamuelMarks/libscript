@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.alsa-lib"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/alsa-lib/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/alsa-lib/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/alsa-lib" ]; then
   log_info "alsa-lib ${VERSION} is already installed at ${TARGET_DIR}."

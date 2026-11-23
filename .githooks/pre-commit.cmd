@@ -1,11 +1,12 @@
 @echo off
 :: # pre-commit.cmd
-::
 :: ## Overview
-:: Handles operations related to the component '.githooks'.
-::
+:: Zero-PowerShell Windows Batch Git pre-commit orchestrator executing staged Prettier normalization,
+:: concurrent static audits (`cspell`, `audit_standards`, `audit_posix`, `audit_tiers`,
+:: `audit_version_manager`, `audit_schema_vars`, `shellcheck`, `wincheck`, `doc_coverage`),
+:: and parallel schema/README synchronization via `engine\common\parallel.cmd` (falling back sequentially on MS-DOS).
 :: ## Usage
-:: Execute this script to perform actions for .githooks.
+:: .githooks\pre-commit.cmd [--all]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -21,6 +22,7 @@ set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
     call :find_root
@@ -49,152 +51,217 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-cd /d "%LIBSCRIPT_ROOT_DIR%"
 
-if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" (
+if /I "%~1"=="--sc-worker" goto :sc_worker_entry
+if /I "%~1"=="--wc-worker" goto :wc_worker_entry
+if /I "%~1"=="--cspell-worker" goto :cspell_worker_entry
+
+set "HOOK_REPO_ROOT=%LIBSCRIPT_ROOT_DIR%"
+for /f "delims=" %%R in ('git rev-parse --show-toplevel 2^>nul') do set "HOOK_REPO_ROOT=%%~fR"
+cd /d "!HOOK_REPO_ROOT!"
+
+set "_PC_LS_HOME=%LIBSCRIPT_HOME%"
+if "!_PC_LS_HOME!"=="" set "_PC_LS_HOME=%USERPROFILE%\.libscript"
+if exist "!_PC_LS_HOME!\bin" (
+    echo ";!PATH!;" | findstr /I /C:";!_PC_LS_HOME!\bin;" >nul 2>&1
+    if errorlevel 1 set "PATH=!PATH!;!_PC_LS_HOME!\bin"
+)
+
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\nodejs\env.cmd" (
     set "_PC_SAVED_ST=!STACK!"
     set "STACK="
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\nodejs\env.cmd" >nul 2>&1
     set "STACK=!_PC_SAVED_ST!"
 )
+
 where jq >nul 2>&1
-if errorlevel 1 if exist "%LIBSCRIPT_ROOT_DIR%\_lib\utilities\jq\env.cmd" (
+if errorlevel 1 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
     set "_PC_SAVED_ST=!STACK!"
     set "STACK="
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\utilities\jq\env.cmd" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
     set "STACK=!_PC_SAVED_ST!"
 )
 
-echo Running pre-commit hooks...
+set "_PC_SAVED_ST=!STACK!"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\parallel.cmd" :detect_jobs
+set "STACK=!_PC_SAVED_ST!"
+if "!LIBSCRIPT_RESOLVED_JOBS!"=="" set "LIBSCRIPT_RESOLVED_JOBS=1"
+
+echo Running pre-commit hooks ^(jobs=!LIBSCRIPT_RESOLVED_JOBS!^)...
 
 set "AUDIT_MODE=--staged"
 set "GIT_FILE_CMD=git diff --no-ext-diff --cached --name-only --diff-filter=ACM"
-if /i "%~1"=="--all" (
+if /I "%~1"=="--all" (
     set "AUDIT_MODE=--all"
     set "GIT_FILE_CMD=git ls-files --cached --others --exclude-standard"
 )
 
-:: 1. Enforce line endings and indent via Prettier where applicable
+set "_PC_BASE=%TEMP%"
+if "!_PC_BASE!"=="" set "_PC_BASE=!LIBSCRIPT_ROOT_DIR!\tests_tmp"
+set "_PC_WORK=!_PC_BASE!\lsp_pc_!RANDOM!_!RANDOM!"
+if not exist "!_PC_WORK!" mkdir "!_PC_WORK!"
+
+set "_PC_STAGED=!_PC_WORK!\STAGED.TXT"
+set "_PC_CHECK=!_PC_WORK!\CHECK.TXT"
+type nul > "!_PC_STAGED!"
+type nul > "!_PC_CHECK!"
+
+git diff --no-ext-diff --cached --name-only --diff-filter=ACM > "!_PC_STAGED!" 2>nul
+if /I "!AUDIT_MODE!"=="--all" (
+    !GIT_FILE_CMD! > "!_PC_CHECK!" 2>nul
+) else (
+    for /f "usebackq delims=" %%F in ("!_PC_STAGED!") do (
+        if exist "%%F" echo.%%F>> "!_PC_CHECK!"
+    )
+)
+
+:: Wave 1: Batched Prettier normalization + idempotent toolchain bootstrap
 where npx >nul 2>&1
 if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
-    if /i not "%AUDIT_MODE%"=="--all" (
-        for /f "tokens=*" %%F in ('git diff --no-ext-diff --cached --name-only --diff-filter=ACM 2^>nul') do (
-            if exist "%%F" (
-                set "_EXT=%%~xF"
-                if /i "!_EXT!"==".json" (
-                    call npx --yes prettier --write "%%F" >nul 2>&1
-                    git add "%%F"
-                ) else if /i "!_EXT!"==".yml" (
-                    call npx --yes prettier --write "%%F" >nul 2>&1
-                    git add "%%F"
-                ) else if /i "!_EXT!"==".yaml" (
-                    call npx --yes prettier --write "%%F" >nul 2>&1
-                    git add "%%F"
-                ) else if /i "!_EXT!"==".md" (
-                    call npx --yes prettier --write "%%F" >nul 2>&1
-                    git add "%%F"
-                )
-            )
-        )
+    if /I not "!AUDIT_MODE!"=="--all" (
+        call :format_staged_batches
     )
 )
 
-:: 2. Spellcheck
-where npx >nul 2>&1
-if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
-    echo Running spellcheck...
-    set "TMP_SPELL=%TEMP%\staged_spell_!RANDOM!.txt"
-    !GIT_FILE_CMD! > "!TMP_SPELL!" 2>nul
-    if exist "!TMP_SPELL!" (
-        for %%S in ("!TMP_SPELL!") do if not "%%~zS"=="0" (
-            call npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "!TMP_SPELL!"
-            if errorlevel 1 (
-                del /f /q "!TMP_SPELL!" >nul 2>&1
-                echo [ERROR] Spellcheck failed. Fix typos or add words to .cspell.json.
-                exit /b 1
-            )
-        )
-        del /f /q "!TMP_SPELL!" >nul 2>&1
-    )
-)
-
-:: 3. LibScript Standards Audit
-set "HOOK_REPO_ROOT=%LIBSCRIPT_ROOT_DIR%"
-for /f "delims=" %%R in ('git rev-parse --show-toplevel 2^>nul') do set "HOOK_REPO_ROOT=%%~fR"
-if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_standards.cmd" (
-    echo Running LibScript engineering standards audit...
-    call "!HOOK_REPO_ROOT!\devtools\audit\audit_standards.cmd" !AUDIT_MODE!
-    if errorlevel 1 (
-        echo [ERROR] Standards audit failed. Please fix violations before committing.
-        exit /b 1
-    )
-)
-
-if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_posix.cmd" (
-    echo Running POSIX and companion parity audit...
-    call "!HOOK_REPO_ROOT!\devtools\audit\audit_posix.cmd" !AUDIT_MODE!
-    if errorlevel 1 (
-        echo [ERROR] POSIX and companion parity audit failed.
-        exit /b 1
-    )
-)
-
-if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_tiers.cmd" (
-    echo Running T0-T5 architectural tier boundary audit...
-    call "!HOOK_REPO_ROOT!\devtools\audit\audit_tiers.cmd" !AUDIT_MODE!
-    if errorlevel 1 (
-        echo [ERROR] Architectural tier boundary audit failed.
-        exit /b 1
-    )
-)
-
-if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_version_manager.cmd" (
-    echo Running Version Manager Contract audit...
-    call "!HOOK_REPO_ROOT!\devtools\audit\audit_version_manager.cmd"
-    if errorlevel 1 (
-        echo [ERROR] Version Manager Contract audit failed.
-        exit /b 1
-    )
-)
-
-if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_schema_vars.cmd" (
-    echo Running Schema Variable Coverage audit...
-    call "!HOOK_REPO_ROOT!\devtools\audit\audit_schema_vars.cmd" !AUDIT_MODE!
-    if errorlevel 1 (
-        echo [ERROR] Schema Variable Coverage audit failed.
-        exit /b 1
-    )
-)
-
-:: 4. ShellCheck (bootstrapped via _lib\toolchains\shellcheck when nonexistent)
 call :ensure_shellcheck_bootstrapped
 if errorlevel 1 (
-    echo [ERROR] ShellCheck bootstrap failed.
-    exit /b 1
-)
-echo Running shellcheck...
-call :run_shellcheck_audit
-if errorlevel 1 (
-    echo [ERROR] ShellCheck audit failed.
+    rmdir /s /q "!_PC_WORK!" >nul 2>&1
     exit /b 1
 )
 
-:: 4b. WinCheck (bootstrapped via _lib\toolchains\win-cmd-rs when nonexistent)
-call :run_wincheck_audit
-if errorlevel 1 (
-    echo [ERROR] WinCheck batch audit failed.
-    exit /b 1
+set "SHELLCHECK_OPT_ARGS="
+shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
+if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
+
+set "_PC_SC_LIST=!_PC_WORK!\SC.TXT"
+set "_PC_WC_LIST=!_PC_WORK!\WC.TXT"
+type nul > "!_PC_SC_LIST!"
+type nul > "!_PC_WC_LIST!"
+!GIT_FILE_CMD! -- "*.sh" ".githooks/pre-commit" > "!_PC_WORK!\RAW_SC.TXT" 2>nul
+for /f "usebackq delims=" %%S in ("!_PC_WORK!\RAW_SC.TXT") do (
+    call :maybe_add_sc_file "%%S"
+)
+!GIT_FILE_CMD! -- "*.cmd" "*.bat" > "!_PC_WORK!\RAW_WC.TXT" 2>nul
+for /f "usebackq delims=" %%W in ("!_PC_WORK!\RAW_WC.TXT") do (
+    call :maybe_add_wc_file "%%W"
 )
 
-if exist "!HOOK_REPO_ROOT!\devtools\docs-gen\generate_markdown_docs.cmd" (
-    echo Regenerating markdown readme files interpolating the json...
-    call "!HOOK_REPO_ROOT!\devtools\docs-gen\generate_markdown_docs.cmd"
+set "_HAS_WC=0"
+for %%Z in ("!_PC_WC_LIST!") do if not "%%~zZ"=="0" set "_HAS_WC=1"
+if "!_HAS_WC!"=="1" (
+    call :ensure_wincheck_bootstrapped
     if errorlevel 1 (
-        echo [ERROR] generate_markdown_docs.cmd failed.
+        rmdir /s /q "!_PC_WORK!" >nul 2>&1
         exit /b 1
     )
+)
+
+:: Wave 2: Concurrent static audits & linters
+set "_WAVE2=!_PC_WORK!\WAVE2.TXT"
+type nul > "!_WAVE2!"
+
+set "_HAS_CHK=0"
+for %%Z in ("!_PC_CHECK!") do if not "%%~zZ"=="0" set "_HAS_CHK=1"
+if "!_HAS_CHK!"=="1" (
+    >>"!_WAVE2!" echo call "!THIS_FILE!" --cspell-worker "!_PC_CHECK!"
+)
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_standards.cmd" (
+    >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\audit_standards.cmd" !AUDIT_MODE!
+)
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_posix.cmd" (
+    >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\audit_posix.cmd" !AUDIT_MODE!
+)
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_tiers.cmd" (
+    >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\audit_tiers.cmd" !AUDIT_MODE!
+)
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_version_manager.cmd" (
+    set "_RUN_VM=0"
+    if /I "!AUDIT_MODE!"=="--all" set "_RUN_VM=1"
+    if "!_RUN_VM!"=="0" (
+        findstr /R /C:"^_lib[/\\]" "!_PC_CHECK!" >nul 2>&1
+        if not errorlevel 1 set "_RUN_VM=1"
+    )
+    if "!_RUN_VM!"=="1" (
+        >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\audit_version_manager.cmd"
+    )
+)
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_schema_vars.cmd" (
+    set "_RUN_SV=0"
+    if /I "!AUDIT_MODE!"=="--all" set "_RUN_SV=1"
+    if "!_RUN_SV!"=="0" (
+        findstr /R /C:"^_lib[/\\]" /C:"\.schema\.json$" "!_PC_CHECK!" >nul 2>&1
+        if not errorlevel 1 set "_RUN_SV=1"
+    )
+    if "!_RUN_SV!"=="1" (
+        >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\audit_schema_vars.cmd" !AUDIT_MODE!
+    )
+)
+
+echo Running shellcheck...
+set "_HAS_SC=0"
+for %%Z in ("!_PC_SC_LIST!") do if not "%%~zZ"=="0" set "_HAS_SC=1"
+if "!_HAS_SC!"=="1" (
+    >>"!_WAVE2!" echo call "!LIBSCRIPT_ROOT_DIR!\engine\common\parallel.cmd" :run_shards "!_PC_SC_LIST!" "!THIS_FILE! --sc-worker"
+)
+if "!_HAS_WC!"=="1" (
+    echo Running wincheck...
+    >>"!_WAVE2!" echo call "!LIBSCRIPT_ROOT_DIR!\engine\common\parallel.cmd" :run_shards "!_PC_WC_LIST!" "!THIS_FILE! --wc-worker"
+)
+if exist "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" (
+    >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" --strict
+)
+
+set "_PC_SAVED_ST=!STACK!"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\parallel.cmd" :run_tasks "!_WAVE2!"
+set "_W2_RC=!ERRORLEVEL!"
+set "STACK=!_PC_SAVED_ST!"
+if not "!_W2_RC!"=="0" (
+    echo [ERROR] One or more concurrent pre-commit audits failed. 1>&2
+    rmdir /s /q "!_PC_WORK!" >nul 2>&1
+    exit /b 1
+)
+
+:: Wave 3: Parallel + staged fast-path Markdown & README table synchronization
+set "_NEED_GMD=0"
+set "_NEED_UR=0"
+if /I "!AUDIT_MODE!"=="--all" (
+    set "_NEED_GMD=1"
+    set "_NEED_UR=1"
+) else if "!_HAS_CHK!"=="1" (
+    findstr /I /R /C:"vars\.schema\.json$" /C:"schemas[/\\]vars[/\\]" /C:"devtools[/\\]docs-gen[/\\]" /C:"README\.md$" "!_PC_CHECK!" >nul 2>&1
+    if not errorlevel 1 set "_NEED_GMD=1"
+    findstr /I /R /C:"manifest\.json$" /C:"README\.md$" /C:"TODO_PLAN\.md$" /C:"update_results\." "!_PC_CHECK!" >nul 2>&1
+    if not errorlevel 1 set "_NEED_UR=1"
+)
+
+set "_WAVE3=!_PC_WORK!\WAVE3.TXT"
+type nul > "!_WAVE3!"
+if "!_NEED_GMD!"=="1" if exist "!HOOK_REPO_ROOT!\devtools\docs-gen\generate_markdown_docs.cmd" (
+    echo Regenerating markdown readme files interpolating the json...
+    >>"!_WAVE3!" echo call "!HOOK_REPO_ROOT!\devtools\docs-gen\generate_markdown_docs.cmd"
+)
+if "!_NEED_UR!"=="1" if exist "!HOOK_REPO_ROOT!\tests\update_results.cmd" (
+    echo Updating Supported Components in README.md...
+    >>"!_WAVE3!" echo call "!HOOK_REPO_ROOT!\tests\update_results.cmd"
+)
+
+for %%Z in ("!_WAVE3!") do if not "%%~zZ"=="0" (
+    set "_PC_SAVED_ST=!STACK!"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\parallel.cmd" :run_tasks "!_WAVE3!" 2
+    set "_W3_RC=!ERRORLEVEL!"
+    set "STACK=!_PC_SAVED_ST!"
+    if not "!_W3_RC!"=="0" (
+        rmdir /s /q "!_PC_WORK!" >nul 2>&1
+        exit /b 1
+    )
+)
+
+if "!_NEED_GMD!"=="1" (
     for /f "delims=" %%F in ('git ls-files -m 2^>nul') do (
-        if /i "%%~nxF"=="README.md" (
+        if /I "%%~nxF"=="README.md" (
             where npx >nul 2>&1
             if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
                 call npx --yes prettier --write "%%F" >nul 2>&1
@@ -204,34 +271,86 @@ if exist "!HOOK_REPO_ROOT!\devtools\docs-gen\generate_markdown_docs.cmd" (
     )
 )
 
-if exist "!HOOK_REPO_ROOT!\tests\update_results.cmd" (
-    echo Updating Supported Components in README.md...
-    call "!HOOK_REPO_ROOT!\tests\update_results.cmd"
-    if errorlevel 1 (
-        echo [ERROR] update_results.cmd failed.
-        exit /b 1
-    )
-)
-
-if exist "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" (
+if "!_NEED_UR!"=="1" if exist "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" (
     echo Updating Doc Coverage shield in README.md...
     call "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" --update-readme
     if errorlevel 1 (
-        echo [ERROR] Documentation coverage audit failed. Please fix missing documentation before committing.
+        rmdir /s /q "!_PC_WORK!" >nul 2>&1
         exit /b 1
     )
 )
 
-git diff --quiet -- README.md >nul 2>&1
-if errorlevel 1 (
-    where npx >nul 2>&1
-    if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
-        call npx --yes prettier --write README.md >nul 2>&1
+if exist "README.md" (
+    git diff --quiet -- README.md >nul 2>&1
+    if errorlevel 1 (
+        where npx >nul 2>&1
+        if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
+            call npx --yes prettier --write README.md >nul 2>&1
+        )
+        git add README.md
     )
-    git add README.md
 )
 
+rmdir /s /q "!_PC_WORK!" >nul 2>&1
 echo Pre-commit hook completed successfully.
+exit /b 0
+
+:: ## format_staged_batches
+:: Formats staged JSON, YAML, and Markdown files in batches of 40 via Prettier and re-stages them.
+:format_staged_batches
+set "_FMT_B="
+set /a "_FMT_N=0"
+for /f "usebackq delims=" %%F in ("!_PC_STAGED!") do (
+    if exist "%%F" (
+        set "_EXT=%%~xF"
+        set "_DO_FMT=0"
+        if /I "!_EXT!"==".json" set "_DO_FMT=1"
+        if /I "!_EXT!"==".yml" set "_DO_FMT=1"
+        if /I "!_EXT!"==".yaml" set "_DO_FMT=1"
+        if /I "!_EXT!"==".md" set "_DO_FMT=1"
+        if "!_DO_FMT!"=="1" (
+            set "_FMT_B=!_FMT_B! "%%F""
+            set /a "_FMT_N+=1"
+            if "!_FMT_N!"=="40" (
+                call npx --yes prettier --write !_FMT_B! >nul 2>&1
+                git add -- !_FMT_B! >nul 2>&1
+                set "_FMT_B="
+                set /a "_FMT_N=0"
+            )
+        )
+    )
+)
+if not "!_FMT_N!"=="0" (
+    call npx --yes prettier --write !_FMT_B! >nul 2>&1
+    git add -- !_FMT_B! >nul 2>&1
+)
+exit /b 0
+
+:: ## maybe_add_sc_file
+:: Appends an existing non-excluded POSIX script path to _PC_SC_LIST.
+:maybe_add_sc_file
+set "_MSC_F=%~1"
+set "_MSC_N=!_MSC_F:\=/!"
+if not "!_MSC_N:node_modules/=!"=="!_MSC_N!" exit /b 0
+if not "!_MSC_N:.git/=!"=="!_MSC_N!" exit /b 0
+if /I "!_MSC_N:~0,4!"=="gen/" exit /b 0
+if not "!_MSC_N:/gen/=!"=="!_MSC_N!" exit /b 0
+if exist "!_MSC_F!" echo.!_MSC_F!>> "!_PC_SC_LIST!"
+exit /b 0
+
+:: ## maybe_add_wc_file
+:: Appends an existing non-excluded Windows Batch script path to _PC_WC_LIST.
+:maybe_add_wc_file
+set "_MWC_F=%~1"
+set "_MWC_N=!_MWC_F:\=/!"
+if not "!_MWC_N:node_modules/=!"=="!_MWC_N!" exit /b 0
+if not "!_MWC_N:.git/=!"=="!_MWC_N!" exit /b 0
+if not "!_MWC_N:tests_tmp/=!"=="!_MWC_N!" exit /b 0
+if not "!_MWC_N:cache/=!"=="!_MWC_N!" exit /b 0
+if not "!_MWC_N:build/=!"=="!_MWC_N!" exit /b 0
+if /I "!_MWC_N:~0,4!"=="gen/" exit /b 0
+if not "!_MWC_N:/gen/=!"=="!_MWC_N!" exit /b 0
+if exist "!_MWC_F!" echo.!_MWC_F!>> "!_PC_WC_LIST!"
 exit /b 0
 
 :: ## load_shellcheck_env
@@ -251,7 +370,6 @@ exit /b 0
 call :load_shellcheck_env
 where shellcheck >nul 2>&1
 if not errorlevel 1 exit /b 0
-
 echo [BOOTSTRAP] shellcheck not found on PATH; installing via LibScript version manager...
 set "_SC_BOOT_VER=%SHELLCHECK_VERSION%"
 if "!_SC_BOOT_VER!"=="" set "_SC_BOOT_VER=latest"
@@ -273,69 +391,6 @@ if errorlevel 1 (
 )
 exit /b 0
 
-:: ## run_shellcheck_audit
-:: Executes ShellCheck across candidate POSIX scripts using 4 parallel workers when PowerShell is available, falling back to pure Batch.
-:run_shellcheck_audit
-set "SHELLCHECK_OPT_ARGS="
-shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
-if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
-
-set "_SC_LIST_TMP=%TEMP%\libscript_sc_files_%RANDOM%.txt"
-!GIT_FILE_CMD! -- "*.sh" ".githooks/pre-commit" > "!_SC_LIST_TMP!" 2>nul
-if not exist "!_SC_LIST_TMP!" exit /b 0
-for %%S in ("!_SC_LIST_TMP!") do if "%%~zS"=="0" (
-    del /f /q "!_SC_LIST_TMP!" >nul 2>&1
-    exit /b 0
-)
-
-REM wincheck disable=CMD3006
-set "_SC_PS="
-where pwsh.exe >nul 2>&1
-if not errorlevel 1 set "_SC_PS=pwsh.exe"
-if not defined _SC_PS (
-    where powershell.exe >nul 2>&1
-    if not errorlevel 1 set "_SC_PS=powershell.exe"
-)
-
-if defined _SC_PS (
-    set "_LS_SC_LIST=!_SC_LIST_TMP!"
-    set "_LS_SC_OPTS=!SHELLCHECK_OPT_ARGS!"
-    "!_SC_PS!" -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $scExe = (Get-Command shellcheck -ErrorAction Stop).Source; $cwd = (Get-Location).Path; $raw = [System.IO.File]::ReadAllLines($env:_LS_SC_LIST); $files = New-Object 'System.Collections.Generic.List[string]'; foreach ($f in $raw) { if ([string]::IsNullOrWhiteSpace($f)) { continue }; $n = $f.Replace([char]92, [char]47); if ($n -match '(^|/)(node_modules|\.git|gen)/') { continue }; $full = [System.IO.Path]::Combine($cwd, $f); if ([System.IO.File]::Exists($full)) { [void]$files.Add($f) } }; if ($files.Count -eq 0) { exit 0 }; $opts = if ($env:_LS_SC_OPTS) { $env:_LS_SC_OPTS.Trim() } else { '' }; $running = New-Object 'System.Collections.Generic.List[object]'; $failed = $false; for ($i = 0; $i -lt $files.Count; $i += 80) { while ($running.Count -ge 4) { $doneIdx = -1; for ($k = 0; $k -lt $running.Count; $k++) { if ($running[$k].Proc.HasExited) { $doneIdx = $k; break } }; if ($doneIdx -lt 0) { Start-Sleep -Milliseconds 20; continue }; $item = $running[$doneIdx]; $running.RemoveAt($doneIdx); $item.Proc.WaitForExit(); $outStr = $item.Out.GetAwaiter().GetResult(); $errStr = $item.Err.GetAwaiter().GetResult(); if ($outStr) { [Console]::Out.Write($outStr) }; if ($errStr) { [Console]::Error.Write($errStr) }; if ($item.Proc.ExitCode -ne 0) { $failed = $true }; $item.Proc.Dispose() }; $end = [Math]::Min($i + 79, $files.Count - 1); $quoted = for ($j = $i; $j -le $end; $j++) { [char]34 + $files[$j] + [char]34 }; $argStr = '-s sh ' + $(if ($opts) { $opts + ' ' } else { '' }) + ($quoted -join ' '); $psi = New-Object System.Diagnostics.ProcessStartInfo; $psi.FileName = $scExe; $psi.Arguments = $argStr; $psi.UseShellExecute = $false; $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true; $p = [System.Diagnostics.Process]::Start($psi); [void]$running.Add(@{ Proc = $p; Out = $p.StandardOutput.ReadToEndAsync(); Err = $p.StandardError.ReadToEndAsync() }) }; foreach ($item in $running) { $item.Proc.WaitForExit(); $outStr = $item.Out.GetAwaiter().GetResult(); $errStr = $item.Err.GetAwaiter().GetResult(); if ($outStr) { [Console]::Out.Write($outStr) }; if ($errStr) { [Console]::Error.Write($errStr) }; if ($item.Proc.ExitCode -ne 0) { $failed = $true }; $item.Proc.Dispose() }; if ($failed) { exit 1 }; exit 0"
-    set "_SC_RC=!ERRORLEVEL!"
-    del /f /q "!_SC_LIST_TMP!" >nul 2>&1
-    exit /b !_SC_RC!
-)
-
-set "_SC_BATCH="
-set "_SC_COUNT=0"
-set "_SC_FAILED=0"
-for /f "usebackq delims=" %%F in ("!_SC_LIST_TMP!") do (
-    set "_SC_CAND=%%F"
-    set "_SC_NORM=!_SC_CAND:\=/!"
-    set "_SC_MATCH=1"
-    if not "!_SC_NORM:node_modules/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
-    if not "!_SC_NORM:.git/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
-    if /i "!_SC_NORM:~0,4!"=="gen/" set "_SC_MATCH=0"
-    if not "!_SC_NORM:/gen/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
-    if "!_SC_MATCH!"=="1" if exist "%%F" (
-        set "_SC_BATCH=!_SC_BATCH! "%%F""
-        set /a "_SC_COUNT+=1"
-        if "!_SC_COUNT!"=="40" (
-            shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
-            if errorlevel 1 set "_SC_FAILED=1"
-            set "_SC_BATCH="
-            set "_SC_COUNT=0"
-        )
-    )
-)
-del /f /q "!_SC_LIST_TMP!" >nul 2>&1
-if not "!_SC_COUNT!"=="0" (
-    shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
-    if errorlevel 1 set "_SC_FAILED=1"
-)
-if "!_SC_FAILED!"=="1" exit /b 1
-exit /b 0
-
 :: ## load_wincheck_env
 :: Loads the isolated win-cmd-rs version manager PATH while preserving STACK state.
 :load_wincheck_env
@@ -353,18 +408,17 @@ exit /b 0
 call :load_wincheck_env
 where wincheck >nul 2>&1
 if not errorlevel 1 exit /b 0
-
 echo [BOOTSTRAP] wincheck not found on PATH; installing via LibScript version manager...
 set "_WC_BOOT_VER=%WIN_CMD_RS_VERSION%"
 if "!_WC_BOOT_VER!"=="" set "_WC_BOOT_VER=latest"
-set "_PC_WC_SAVED_STACK=%STACK%"
+set "_PC_SAVED_STACK=%STACK%"
 set "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1"
 set "STACK="
 call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install win-cmd-rs "!_WC_BOOT_VER!"
 set "_WC_INST_RC=!errorlevel!"
-set "STACK=!_PC_WC_SAVED_STACK!"
+set "STACK=!_PC_SAVED_STACK!"
 if not "!_WC_INST_RC!"=="0" (
-    echo [ERROR] Failed to bootstrap win-cmd-rs via LibScript version manager. 1>&2
+    echo [ERROR] Failed to bootstrap win-cmd-rs ^(wincheck^) via LibScript version manager. 1>&2
     exit /b 1
 )
 call :load_wincheck_env
@@ -375,76 +429,88 @@ if errorlevel 1 (
 )
 exit /b 0
 
-:: ## run_wincheck_audit
-:: Executes WinCheck across candidate Windows Batch scripts using 4 parallel workers when PowerShell is available, falling back to pure Batch.
-:run_wincheck_audit
-set "_WC_LIST_TMP=%TEMP%\libscript_wc_files_!RANDOM!.txt"
-!GIT_FILE_CMD! -- "*.cmd" "*.bat" > "!_WC_LIST_TMP!" 2>nul
-if not exist "!_WC_LIST_TMP!" exit /b 0
-for %%S in ("!_WC_LIST_TMP!") do if "%%~zS"=="0" (
-    del /f /q "!_WC_LIST_TMP!" >nul 2>&1
+:: ## cspell_worker_entry
+:: Runs cspell spellcheck against the candidate list file %~2 when cspell or npx is available.
+:cspell_worker_entry
+set "_CSW_LIST=%~2"
+if "!_CSW_LIST!"=="" exit /b 0
+if not exist "!_CSW_LIST!" exit /b 0
+where cspell >nul 2>&1
+if not errorlevel 1 (
+    echo Running spellcheck...
+    call cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "!_CSW_LIST!"
+    if errorlevel 1 (
+        echo [ERROR] Spellcheck failed. Fix typos or add words to .cspell.json. 1>&2
+        exit /b 1
+    )
     exit /b 0
 )
-
-REM wincheck disable=CMD3006
-call :ensure_wincheck_bootstrapped
-if errorlevel 1 (
-    del /f /q "!_WC_LIST_TMP!" >nul 2>&1
-    exit /b 1
-)
-echo Running wincheck...
-set "_WC_EXCL=%LIBSCRIPT_WINCHECK_EXCLUDE%"
-if "!_WC_EXCL!"=="" set "_WC_EXCL=CMD1002,CMD2001,CMD2012,CMD2013,CMD3009,CMD4010"
-
-set "_WC_PS="
-where pwsh.exe >nul 2>&1
-if not errorlevel 1 set "_WC_PS=pwsh.exe"
-if not defined _WC_PS (
-    where powershell.exe >nul 2>&1
-    if not errorlevel 1 set "_WC_PS=powershell.exe"
-)
-
-if defined _WC_PS (
-    set "_LS_WC_LIST=!_WC_LIST_TMP!"
-    set "_LS_WC_EXCL=!_WC_EXCL!"
-    "!_WC_PS!" -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $wcExe = (Get-Command wincheck -ErrorAction Stop).Source; $cwd = (Get-Location).Path; $raw = [System.IO.File]::ReadAllLines($env:_LS_WC_LIST); $files = New-Object 'System.Collections.Generic.List[string]'; foreach ($f in $raw) { if ([string]::IsNullOrWhiteSpace($f)) { continue }; $n = $f.Replace([char]92, [char]47); if ($n -match '(^|/)(node_modules|\.git|gen|tests_tmp|cache|build)/') { continue }; $full = [System.IO.Path]::Combine($cwd, $f); if ([System.IO.File]::Exists($full)) { [void]$files.Add($f) } }; if ($files.Count -eq 0) { exit 0 }; $excl = $env:_LS_WC_EXCL; $running = New-Object 'System.Collections.Generic.List[object]'; $failed = $false; for ($i = 0; $i -lt $files.Count; $i += 80) { while ($running.Count -ge 4) { $doneIdx = -1; for ($k = 0; $k -lt $running.Count; $k++) { if ($running[$k].Proc.HasExited) { $doneIdx = $k; break } }; if ($doneIdx -lt 0) { Start-Sleep -Milliseconds 20; continue }; $item = $running[$doneIdx]; $running.RemoveAt($doneIdx); $item.Proc.WaitForExit(); $outStr = $item.Out.GetAwaiter().GetResult(); $errStr = $item.Err.GetAwaiter().GetResult(); if ($outStr) { [Console]::Out.Write($outStr) }; if ($errStr) { [Console]::Error.Write($errStr) }; if ($item.Proc.ExitCode -ne 0) { $failed = $true }; $item.Proc.Dispose() }; $end = [Math]::Min($i + 79, $files.Count - 1); $quoted = for ($j = $i; $j -le $end; $j++) { [char]34 + $files[$j] + [char]34 }; $argStr = '--exclude ' + $excl + ' ' + ($quoted -join ' '); $psi = New-Object System.Diagnostics.ProcessStartInfo; $psi.FileName = $wcExe; $psi.Arguments = $argStr; $psi.UseShellExecute = $false; $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true; $p = [System.Diagnostics.Process]::Start($psi); [void]$running.Add(@{ Proc = $p; Out = $p.StandardOutput.ReadToEndAsync(); Err = $p.StandardError.ReadToEndAsync() }) }; foreach ($item in $running) { $item.Proc.WaitForExit(); $outStr = $item.Out.GetAwaiter().GetResult(); $errStr = $item.Err.GetAwaiter().GetResult(); if ($outStr) { [Console]::Out.Write($outStr) }; if ($errStr) { [Console]::Error.Write($errStr) }; if ($item.Proc.ExitCode -ne 0) { $failed = $true }; $item.Proc.Dispose() }; if ($failed) { exit 1 } else { exit 0 }"
-    set "_WC_RC=!ERRORLEVEL!"
-    del /f /q "!_WC_LIST_TMP!" >nul 2>&1
-    exit /b !_WC_RC!
-)
-
-set "_WC_BATCH="
-set "_WC_COUNT=0"
-set "_WC_FAILED=0"
-for /f "usebackq delims=" %%F in ("!_WC_LIST_TMP!") do (
-    set "_WC_CAND=%%F"
-    set "_WC_NORM=!_WC_CAND:\=/!"
-    set "_WC_MATCH=1"
-    if not "!_WC_NORM:node_modules/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
-    if not "!_WC_NORM:.git/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
-    if /i "!_WC_NORM:~0,4!"=="gen/" set "_WC_MATCH=0"
-    if not "!_WC_NORM:/gen/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
-    if /i "!_WC_NORM:~0,10!"=="tests_tmp/" set "_WC_MATCH=0"
-    if not "!_WC_NORM:/tests_tmp/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
-    if /i "!_WC_NORM:~0,6!"=="cache/" set "_WC_MATCH=0"
-    if not "!_WC_NORM:/cache/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
-    if /i "!_WC_NORM:~0,6!"=="build/" set "_WC_MATCH=0"
-    if not "!_WC_NORM:/build/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
-    if "!_WC_MATCH!"=="1" if exist "%%F" (
-        set "_WC_BATCH=!_WC_BATCH! "%%F""
-        set /a "_WC_COUNT+=1"
-        if "!_WC_COUNT!"=="40" (
-            wincheck --exclude "!_WC_EXCL!" !_WC_BATCH!
-            if errorlevel 1 set "_WC_FAILED=1"
-            set "_WC_BATCH="
-            set "_WC_COUNT=0"
-        )
+where npx >nul 2>&1
+if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
+    echo Running spellcheck...
+    call npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "!_CSW_LIST!"
+    if errorlevel 1 (
+        echo [ERROR] Spellcheck failed. Fix typos or add words to .cspell.json. 1>&2
+        exit /b 1
     )
 )
-del /f /q "!_WC_LIST_TMP!" >nul 2>&1
-if not "!_WC_COUNT!"=="0" (
-    wincheck --exclude "!_WC_EXCL!" !_WC_BATCH!
-    if errorlevel 1 set "_WC_FAILED=1"
+exit /b 0
+
+:: ## sc_worker_entry
+:: Runs shellcheck in pure Batch batches of 50 across shard file %~2.
+:sc_worker_entry
+set "_SCW_SHARD=%~2"
+if "!_SCW_SHARD!"=="" exit /b 0
+if not exist "!_SCW_SHARD!" exit /b 0
+call :load_shellcheck_env
+set "SHELLCHECK_OPT_ARGS="
+shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
+if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
+set "_SCW_B="
+set /a "_SCW_N=0"
+set "_SCW_FAIL=0"
+for /f "usebackq delims=" %%F in ("!_SCW_SHARD!") do (
+    set "_SCW_B=!_SCW_B! "%%F""
+    set /a "_SCW_N+=1"
+    if "!_SCW_N!"=="50" (
+        shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SCW_B!
+        if errorlevel 1 set "_SCW_FAIL=1"
+        set "_SCW_B="
+        set /a "_SCW_N=0"
+    )
 )
-if "!_WC_FAILED!"=="1" exit /b 1
+if not "!_SCW_N!"=="0" (
+    shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SCW_B!
+    if errorlevel 1 set "_SCW_FAIL=1"
+)
+if "!_SCW_FAIL!"=="1" exit /b 1
+exit /b 0
+
+:: ## wc_worker_entry
+:: Runs wincheck in pure Batch batches of 60 across shard file %~2.
+:wc_worker_entry
+set "_WCW_SHARD=%~2"
+if "!_WCW_SHARD!"=="" exit /b 0
+if not exist "!_WCW_SHARD!" exit /b 0
+call :load_wincheck_env
+set "_WCW_EXCL=%LIBSCRIPT_WINCHECK_EXCLUDE%"
+if "!_WCW_EXCL!"=="" set "_WCW_EXCL=CMD1002,CMD2001,CMD2012,CMD2013,CMD3009,CMD4010"
+set "_WCW_B="
+set /a "_WCW_N=0"
+set "_WCW_FAIL=0"
+for /f "usebackq delims=" %%F in ("!_WCW_SHARD!") do (
+    set "_WCW_B=!_WCW_B! "%%F""
+    set /a "_WCW_N+=1"
+    if "!_WCW_N!"=="60" (
+        wincheck --exclude "!_WCW_EXCL!" !_WCW_B!
+        if errorlevel 1 set "_WCW_FAIL=1"
+        set "_WCW_B="
+        set /a "_WCW_N=0"
+    )
+)
+if not "!_WCW_N!"=="0" (
+    wincheck --exclude "!_WCW_EXCL!" !_WCW_B!
+    if errorlevel 1 set "_WCW_FAIL=1"
+)
+if "!_WCW_FAIL!"=="1" exit /b 1
 exit /b 0

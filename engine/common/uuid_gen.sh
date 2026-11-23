@@ -95,7 +95,7 @@ if [ -z "${NAMESPACE}" ]; then
 fi
 
 if [ -z "${SEED_NAME}" ]; then
-  printf 'Usage: %s [NAMESPACE_UUID] <NAME>\n' "$(basename "$0")" >&2
+  printf 'Usage: %s [NAMESPACE_UUID] <NAME>\n' "$(basename "${THIS_FILE}")" >&2
   exit 1
 fi
 

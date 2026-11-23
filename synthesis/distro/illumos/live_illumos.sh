@@ -77,7 +77,7 @@ ILLUMOS_OPT_LIBSCRIPT="${ILLUMOS_OPT_LIBSCRIPT:-/opt/libscript}"
 mkdir -p "${ROOTFS}${ILLUMOS_OPT_LIBSCRIPT}/msi-rs/bin"
 
 # Embed msi-rs toolchain
-MSI_PREFIX="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/latest/bin"
+MSI_PREFIX="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/latest/bin"
 if [ -d "$MSI_PREFIX" ]; then
   cp -R "$MSI_PREFIX"/* "${ROOTFS}${ILLUMOS_OPT_LIBSCRIPT}/msi-rs/bin/" 2>/dev/null || true
 fi

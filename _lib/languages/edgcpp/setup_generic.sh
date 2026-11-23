@@ -660,7 +660,7 @@ build_edgcpp_multibackend_from_source() {
 # Installs or builds edgcpp according to EDGCPP_INSTALL_METHOD and stages its binaries and wrappers under LIBSCRIPT_HOME.
 install_edgcpp_component() {
   resolve_edgcpp_release_asset
-  TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}-${EDGCPP_FLAVOR}"
+  TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EXACT_VERSION}-${EDGCPP_FLAVOR}"
 
   _metadata_matches=1
   if [ -n "${EDGCPP_ASSET_SHA256}" ] && [ -f "${TARGET_DIR}/edgcpp-release-metadata.json" ]; then
@@ -750,7 +750,7 @@ install_edgcpp_component() {
 
 case "${ACTION}" in
   ls)
-    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/" 2>/dev/null || true
+    ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/" 2>/dev/null || true
     ;;
   ls-remote)
     printf '%s
@@ -772,21 +772,21 @@ case "${ACTION}" in
     ;;
   verify-modes)
     resolve_exact_version
-    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}" "all-modes"
+    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EXACT_VERSION}" "all-modes"
     ;;
   build-coverage)
     resolve_exact_version
-    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}" "${EDGCPP_BUILD_MODE:-llvm-cov}"
+    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EXACT_VERSION}" "${EDGCPP_BUILD_MODE:-llvm-cov}"
     ;;
   build-bug4-ablation)
     resolve_exact_version
-    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}" "bug4-legacy"
+    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EXACT_VERSION}" "bug4-legacy"
     ;;
   uninstall)
     resolve_exact_version
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}"*
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default"
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EXACT_VERSION}"*
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${VERSION}"
+    rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default"
     ;;
   *)
     install_edgcpp_component

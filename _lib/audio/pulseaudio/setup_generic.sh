@@ -41,7 +41,7 @@ VERSION="${VERSION:-latest}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 STAMP_FILE="${STAMPS_DIR}/.stamp.pulseaudio"
-TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pulseaudio/${VERSION}"
+TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pulseaudio/${VERSION}"
 
 if [ -x "${TARGET_DIR}/bin/pulseaudio" ]; then
   log_info "pulseaudio ${VERSION} is already installed at ${TARGET_DIR}."

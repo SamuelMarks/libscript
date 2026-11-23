@@ -39,7 +39,7 @@ done
 # ## print_usage
 # Prints usage instructions for the NFS storage trait driver.
 print_usage() {
-  printf '%s\n' "Usage: $0 <nfs_server_export> <mount_point> [--filestore-instance <name>]"
+  printf '%s\n' "Usage: ${THIS_FILE} <nfs_server_export> <mount_point> [--filestore-instance <name>]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

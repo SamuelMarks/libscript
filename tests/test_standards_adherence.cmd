@@ -1,7 +1,7 @@
 @echo off
 :: # test_standards_adherence.cmd
 :: ## Overview
-:: Regression test suite on Windows verifying Tier 3.5/4 Batch engine parity,
+:: Regression test suite on Windows verifying T0-T5 Batch engine parity,
 :: 2x idempotency, zero-PowerShell gawk/jq/certutil helpers, and experiment scaffolding.
 :: ## Usage
 :: test_standards_adherence.cmd
@@ -18,7 +18,8 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -191,6 +192,14 @@ if not "!_GH_DL_RC!"=="0" ( echo [FAIL] Expected pkg_mgr.cmd :libscript_download
 if not exist "!GH_TDIR!!_BS!out.zip" ( echo [FAIL] Expected rescued artifact at out.zip 1>&2 & goto :cleanup_fail )
 findstr /C:"mock-win-asset.zip" "!GH_TDIR!!_BS!checksums.txt" >nul 2>&1
 if not errorlevel 1 ( echo [FAIL] LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 failed to protect checksums.txt 1>&2 & goto :cleanup_fail )
+
+echo === 7. Test make.bat Delegation ^& Standards Auditor Rules ===
+findstr /C:"make.cmd" "!LIBSCRIPT_ROOT_DIR!!_BS!make.bat" >nul 2>&1
+if errorlevel 1 ( echo [FAIL] Expected make.bat to delegate directly to make.cmd 1>&2 & goto :cleanup_fail )
+findstr /C:"unzip_no_o_hits" "!LIBSCRIPT_ROOT_DIR!!_BS!devtools!_BS!audit!_BS!audit_standards.sh" >nul 2>&1
+if errorlevel 1 ( echo [FAIL] Expected unzip_no_o_hits rule in audit_standards.sh 1>&2 & goto :cleanup_fail )
+findstr /C:"stale_mklink_hits" "!LIBSCRIPT_ROOT_DIR!!_BS!devtools!_BS!audit!_BS!audit_standards.sh" >nul 2>&1
+if errorlevel 1 ( echo [FAIL] Expected stale_mklink_hits rule in audit_standards.sh 1>&2 & goto :cleanup_fail )
 
 if exist "!TEST_TMP!" rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo [PASS] All Windows standards adherence regression tests succeeded.

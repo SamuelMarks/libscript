@@ -61,8 +61,14 @@ exit /b 0
 :: Displays usage assistance.
 :help
 goto :--help
+
+:: ## --help
+:: Alias label forwarding --help to -h usage output.
 :--help
 goto :-h
+
+:: ## -h
+:: Prints CLI usage syntax and exits cleanly.
 :-h
 echo Usage: %~n0 [command] [options]
 exit /b 0

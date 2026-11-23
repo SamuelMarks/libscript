@@ -550,7 +550,7 @@ while true; do
                 ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
             else
                 "$REPO_ROOT/libscript.sh" uninstall "$target" >/dev/null 2>&1 || true
-                rm -rf "$HOME/.libscript/$_short_target" 2>/dev/null || true
+                rm -rf "${HOME:-/root}/.libscript/$_short_target" 2>/dev/null || true
             fi
         fi
     done

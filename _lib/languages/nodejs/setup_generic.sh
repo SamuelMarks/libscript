@@ -80,7 +80,7 @@ fi
 # Checks LIBSCRIPT_HOME/nodejs for an existing Node.js installation matching the requested major/minor prefix.
 find_local_matching_nodejs() {
   _flm_req=$(printf '%s' "$NODEJS_VERSION" | sed -e 's/^v//' -e 's/\.x$//' -e 's/\.\*$//')
-  _flm_base="${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs"
+  _flm_base="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs"
   [ -d "$_flm_base" ] || return 1
   if [ -x "${_flm_base}/${NODEJS_VERSION}/bin/node" ]; then
     _flm_v=$("${_flm_base}/${NODEJS_VERSION}/bin/node" -v 2>/dev/null | sed 's/^v//' || true)
@@ -143,7 +143,7 @@ case "$ACTION" in
     if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       node -v 2>/dev/null || true
     else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/" 2>/dev/null || true
+      ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs/" 2>/dev/null || true
     fi
     exit 0
     ;;
@@ -163,7 +163,7 @@ case "$ACTION" in
       libscript_symlink_alias "nodejs" "${NODEJS_VERSION}" "v${EXACT_VERSION}"
       libscript_symlink_alias "nodejs" "default" "v${EXACT_VERSION}"
       
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/v${EXACT_VERSION}"
+      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs/v${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "nodejs v${EXACT_VERSION} is not installed. Installing it now..."
         unset SCRIPT_NAME || true
@@ -287,8 +287,8 @@ case "$ACTION" in
       libscript_symlink_alias "nodejs" "latest" "v${EXACT_VERSION}"
       _node_owner="${SERVICE_USER:-${REMOTE_USER:-${SUDO_USER:-}}}"
       if [ -n "$_node_owner" ] && [ "$_node_owner" != "root" ]; then
-        chmod 0755 "${LIBSCRIPT_HOME:-$HOME/.libscript}" "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs" 2>/dev/null || true
-        chown -R "${_node_owner}:${SERVICE_GROUP:-${REMOTE_GROUP:-$_node_owner}}" "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs" 2>/dev/null || true
+        chmod 0755 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs" 2>/dev/null || true
+        chown -R "${_node_owner}:${SERVICE_GROUP:-${REMOTE_GROUP:-$_node_owner}}" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs" 2>/dev/null || true
       fi
     fi
     ;;

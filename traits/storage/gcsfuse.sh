@@ -32,7 +32,7 @@ export LIBSCRIPT_ROOT_DIR
 # ## print_usage
 # Prints usage instructions for traits/storage/gcsfuse.sh.
 print_usage() {
-  printf '%s\n' "Usage: $0 <bucket_name> <mount_point>"
+  printf '%s\n' "Usage: ${THIS_FILE} <bucket_name> <mount_point>"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

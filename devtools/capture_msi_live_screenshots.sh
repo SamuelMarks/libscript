@@ -77,7 +77,7 @@ find_qemu_monitor() {
   for _id_file in "${REPO_ROOT}/vagrant/${target_os}/.vagrant/machines"/*/qemu/id; do
     if [ -f "$_id_file" ]; then
       _id=$(cat "$_id_file")
-      _sock="${HOME}/.vagrant.d/tmp/vagrant-qemu/${_id}/qemu_socket"
+      _sock="${HOME:-/root}/.vagrant.d/tmp/vagrant-qemu/${_id}/qemu_socket"
       if [ -S "$_sock" ]; then
         printf '%s\n' "$_sock"
         return 0

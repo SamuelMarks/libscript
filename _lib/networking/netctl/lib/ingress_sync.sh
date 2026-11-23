@@ -90,11 +90,9 @@ netctl_synchronize_ingress() {
   )
 }
 
-case "$(basename -- "${0}")" in
-  ingress_sync.sh)
-    netctl_synchronize_ingress "$@"
-    ;;
-esac
+if ! (return 0 2>/dev/null); then
+  netctl_synchronize_ingress "$@"
+fi
 
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

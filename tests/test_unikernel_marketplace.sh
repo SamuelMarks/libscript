@@ -52,11 +52,12 @@ jq -e '.appliances | length == 8' "${TEST_TMP}/pod/pod-manifest.json" >/dev/null
 
 printf '%s\n' '=== 2. Multicloud Marketplace Publish (AWS CloudFormation + Azure Managed App + GCP Terraform) ==='
 OUT_MKT="${TEST_TMP}/mkt"
+OFFER_JSON="${LIBSCRIPT_ROOT_DIR}/workloads/constellations/openedx-unikernel-pod/marketplace/offer.json"
 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" publish-marketplace \
-  "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/openedx-unikernel/offer.json" \
+  "${OFFER_JSON}" \
   --clouds=aws,azure,gcp --out-dir="${OUT_MKT}" --dry-run --allow-stub-sdk
 OUT_SECOND=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" publish-marketplace \
-  "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/openedx-unikernel/offer.json" \
+  "${OFFER_JSON}" \
   --clouds=aws,azure,gcp --out-dir="${OUT_MKT}" --dry-run --allow-stub-sdk)
 
 printf '%s\n' "$OUT_SECOND" | grep -q '\[SKIP\]' || fail_mkt_test 'Second publish-marketplace run did not hit idempotent [SKIP]'
@@ -71,7 +72,7 @@ printf '%s\n' '=== 3. Pre-Marketplace Compliance Gate Rejects Leaked SSH Keys ==
 mkdir -p "${TEST_TMP}/dirty_sysroot/root/.ssh"
 printf 'ssh-ed25519 test-public-key-material\n' > "${TEST_TMP}/dirty_sysroot/root/.ssh/authorized_keys"
 if "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/verify_compliance.sh" \
-  "${LIBSCRIPT_ROOT_DIR}/infrastructure/marketplace/openedx-unikernel/offer.json" \
+  "${OFFER_JSON}" \
   --sysroot-dir="${TEST_TMP}/dirty_sysroot" >/dev/null 2>&1; then
   fail_mkt_test 'Compliance gate should have rejected leaked authorized_keys!'
 fi
