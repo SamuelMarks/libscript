@@ -1,49 +1,42 @@
-# systemd-boot
+# systemd-boot UEFI Boot Manager (`_lib/bootloaders/systemd-boot/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `systemd-boot` component
-(part of `_bootloaders`) within the LibScript ecosystem. UEFI boot manager (bootctl and
-systemd-bootx64.efi / systemd-bootaa64.efi) supporting Type #1 Boot Loader Specification entries and
-Type #2 UKIs.
+UEFI boot manager (bootctl and systemd-bootx64.efi / systemd-bootaa64.efi) supporting Type #1 Boot
+Loader Specification entries and Type #2 UKIs.
+
+- **Tier**: `T2` (`_lib/bootloaders/systemd-boot/`)
+- **Capabilities**: `sysroot-package`, `bootloader`
+- **Provides Virtual Capabilities**: `systemd-boot`, `bootctl`, `gummiboot`
+- **Target OS Whitelist (`manifest.json`)**: `linux`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **systemd-boot UEFI Boot
-Manager**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install systemd-boot
-libscript uninstall systemd-boot
+# Stage into an isolated T3 target sysroot or install on a compatible host
+LIBSCRIPT_TARGET_SYSROOT=/mnt/sysroot ./libscript.sh install systemd-boot latest
+./libscript.sh systemd-boot --help
+./_lib/bootloaders/systemd-boot/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start systemd-boot
-libscript stop systemd-boot
+```cmd
+:: Query component CLI or invoke test/Option-A boundary check on Windows
+.\libscript.cmd systemd-boot --help
+.\_lib\bootloaders\systemd-boot\cli.cmd test
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker systemd-boot
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install systemd-boot`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `SYSTEMD_BOOT_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -57,18 +50,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

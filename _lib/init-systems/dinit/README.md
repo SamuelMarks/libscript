@@ -1,5 +1,7 @@
 # Dinit
 
+**Tier**: `T2` (`_lib/init-systems/dinit/`) | **Capabilities**: `sysroot-package`, `service-daemon`
+
 ## Purpose & Overview
 
 Provides the modern dependency-based Dinit service supervisor, declarative service descriptor

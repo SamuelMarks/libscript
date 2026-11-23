@@ -1,43 +1,47 @@
-# gcsfuse Component
+# Cloud Storage FUSE (gcsfuse) (`_lib/storage-layers/gcsfuse/`)
 
 ## Overview
 
-This component manages the installation and execution of Google Cloud Storage FUSE (`gcsfuse`)
-within the libscript ecolibscript_native. It allows you to mount GCS buckets as local file
-libscript_natives, which is critical for large ML workloads to read datasets and write checkpoints
-without filling up local disk space.
+Cloud Storage FUSE allows you to mount Cloud Storage buckets as file systems on Linux or macOS
+systems.
+
+- **Tier**: `T1` (`_lib/storage-layers/gcsfuse/`)
+- **Capabilities**: `userland-package`
+- **Target OS Whitelist (`manifest.json`)**: `linux`, `darwin`
+- **Target OS Exclusions (`manifest.json`)**: `freebsd`, `windows`, `sunos`
 
 ## Usage
 
-Refer to the component's setup and cli scripts for specific operations.
-
-```bash
-# Mount a bucket
-./_lib/storage-layers/gcsfuse/cli.sh mount gs://my-bucket /mnt/my-bucket
-
-# Unmount
-./_lib/storage-layers/gcsfuse/cli.sh unmount /mnt/my-bucket
+```sh
+# Native version management (isolated under ${LIBSCRIPT_HOME}/gcsfuse/<version>)
+./libscript.sh ls-remote gcsfuse
+./libscript.sh install gcsfuse latest
+./libscript.sh use gcsfuse latest
+./libscript.sh which gcsfuse
+./_lib/storage-layers/gcsfuse/cli.sh test
 ```
 
-## Environment Variables
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote gcsfuse
+.\libscript.cmd install gcsfuse latest
+.\libscript.cmd use gcsfuse latest
+.\libscript.cmd which gcsfuse
+```
 
-This component honors standard `libscript` variables. Refer to `_common/base_vars.schema.json`.
+## Installation & Isolation
 
-Libscript manages gcsfuse versions natively by installing them into isolated directories under
-`LIBSCRIPT_HOME/gcsfuse/<version>`.
-
-## Configuration
-
-| Variable                 | Description                                                                                                                                                             | Default            | Required |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------- |
-| `GCSFUSE_INSTALL_METHOD` | How to install GCSFUSE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/gcsfuse/<version>`
+  (default `~/.libscript/gcsfuse/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `GCSFUSE_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
+
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running setup.
 
 <!-- BEGIN_VARS -->
 

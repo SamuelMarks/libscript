@@ -1,5 +1,8 @@
 # Minio
 
+**Tier**: `T1` (`_lib/storage-layers/minio/`) | **Capabilities**: `userland-package`,
+`service-daemon`
+
 High Performance Object Storage. S3 compatible API.
 
 ## Usage
@@ -15,12 +18,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `MINIO_INSTALL_METHOD` | How to install MINIO. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `MINIO_VERSION`        | Specific version of minio to install. Can be a numeric version or an alias.                                                                                           | `latest`           |                  |
-| `MINIO_DOWNLOAD_URL`   | Override URL for downloading minio binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `MINIO_RELEASES_URL`   | Override URL for querying minio available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `MINIO_INSTALL_METHOD` | Installation strategy for minio: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `MINIO_VERSION`        | Specific version of minio to install. Can be a numeric version or an alias.                                                                             | `latest`           |                  |
+| `MINIO_DOWNLOAD_URL`   | Override URL for downloading minio binary or archive artifacts.                                                                                         | `none`             |                  |
+| `MINIO_RELEASES_URL`   | Override URL for querying minio available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

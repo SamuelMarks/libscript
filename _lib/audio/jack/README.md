@@ -1,47 +1,40 @@
-# jack
+# JACK Audio Connection Kit (`_lib/audio/jack/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `jack` component (part of
-`_audio`) within the LibScript ecosystem. JACK2 low-latency professional real-time audio and MIDI
-server daemon (jackd).
+JACK2 low-latency professional real-time audio and MIDI server daemon (jackd).
+
+- **Tier**: `T2` (`_lib/audio/jack/`)
+- **Capabilities**: `sysroot-package`
+- **Provides Virtual Capabilities**: `jack`, `jack2`, `jackd`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **JACK Audio Connection
-Kit**. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install jack
-libscript uninstall jack
+# Stage into an isolated T3 target sysroot or install on a compatible host
+LIBSCRIPT_TARGET_SYSROOT=/mnt/sysroot ./libscript.sh install jack latest
+./libscript.sh jack --help
+./_lib/audio/jack/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start jack
-libscript stop jack
+```cmd
+:: Query component CLI or invoke test/Option-A boundary check on Windows
+.\libscript.cmd jack --help
+.\_lib\audio\jack\cli.cmd test
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker jack
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install jack`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `JACK_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +49,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

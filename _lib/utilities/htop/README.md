@@ -1,47 +1,46 @@
-# htop
+# htop (`_lib/utilities/htop/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `htop` component (part of
-`_utilities`) within the LibScript ecosystem. Cross-platform interactive ncurses system process
-viewer and resource monitor.
+Cross-platform interactive ncurses system process viewer and resource monitor.
+
+- **Tier**: `T1` (`_lib/utilities/htop/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `htop`, `process-viewer`
+- **Target OS Exclusions (`manifest.json`)**: `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **htop**. It is designed to
-be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install htop
-libscript uninstall htop
+# Native version management (isolated under ${LIBSCRIPT_HOME}/htop/<version>)
+./libscript.sh ls-remote htop
+./libscript.sh install htop latest
+./libscript.sh use htop latest
+./libscript.sh which htop
+./_lib/utilities/htop/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start htop
-libscript stop htop
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote htop
+.\libscript.cmd install htop latest
+.\libscript.cmd use htop latest
+.\libscript.cmd which htop
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker htop
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install htop`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/htop/<version>`
+  (default `~/.libscript/htop/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `HTOP_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

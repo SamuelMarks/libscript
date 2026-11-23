@@ -5,11 +5,11 @@
 Self-contained empirical research campaigns (`experiments/<suite-id>/`) auto-discovered by
 `experiments/engine.{sh,cmd}` and `./libscript.sh experiment <verb> <suite-id>` (or
 `.\libscript.cmd experiment <verb> <suite-id>` on Windows) without modifying core CLI routers or
-Tier 1 `_lib/` software recipes.
+atomic `T1`/`T2` `_lib/` software recipes.
 
 Every experiment plugin pairs declarative manifest validation
-(`experiments/schemas/experiment-suite.schema.json` and per-suite `vars.schema.json`), hermetic Tier
-1 dependency provisioning, idempotent benchmark or VM execution, provenance-stamped JSON/CSV
+(`experiments/schemas/experiment-suite.schema.json` and per-suite `vars.schema.json`), hermetic
+`T1`/`T2` dependency provisioning, idempotent benchmark or VM execution, provenance-stamped JSON/CSV
 telemetry, and deterministic LaTeX macro or Markdown table synthesis with zero hand-typed manuscript
 numbers.
 
@@ -127,7 +127,7 @@ All verbs can be invoked via `./libscript.sh experiment <verb> ...` (POSIX),
 | `list`          | _(none)_                 | Scans `experiments/*/suite.json` (or `$LIBSCRIPT_EXPERIMENTS_DIR/*/suite.json`) and prints `<id>\t<substrate>\t<title>`.                                                                          |
 | `scaffold`      | `<suite-id> [options]`   | Generates a complete, docstring-compliant `experiments/<suite-id>/` plugin (`--title=...`, `--substrate=...`, `--template=default\|installer-e2e`, `--packaging-manifest=...`, `--out-root=...`). |
 | `validate`      | `<suite-id> [--k=v ...]` | Validates `suite.json` required fields, substrate enum, `packaging_manifest` existence, `run.{sh,cmd}` parity, and `--key=value` flags against `vars.schema.json`.                                |
-| `provision`     | `<suite-id> [--k=v ...]` | Installs missing `.required_components` via LibScript Tier 1 recipes and prepares Vagrant workspaces (`--phase=provision`) for `installer-e2e` suites.                                            |
+| `provision`     | `<suite-id> [--k=v ...]` | Installs missing `.required_components` via LibScript `T1`/`T2` `_lib/` recipes and prepares Vagrant workspaces (`--phase=provision`) for `installer-e2e` suites.                                 |
 | `sync`          | `<suite-id> [--k=v ...]` | Resolves or builds target installer artifacts / synchronizes workspace inputs (`--phase=sync`).                                                                                                   |
 | `run`           | `<suite-id> [--k=v ...]` | Validates the manifest and flags, exports mapped environment variables, and executes `experiments/<suite-id>/run.{sh,cmd}`.                                                                       |
 | `collect`       | `<suite-id> [--k=v ...]` | Aggregates raw per-mode or per-worker results into unified summary JSON (`--phase=collect`).                                                                                                      |

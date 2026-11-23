@@ -1,117 +1,63 @@
-# Rust
+# Rust Toolchain (`_lib/languages/rust/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `rust` component (part of
-`_toolchain`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script
-framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+A language empowering everyone to build reliable and efficient software.
 
-**What is Rust?**: Rust is a multi-paradigm, general-purpose programming language that emphasizes
-performance, type safety, and concurrency, with a strict borrow checker ensuring memory safety
-without a garbage collector.
+- **Tier**: `T1` (`_lib/languages/rust/`)
+- **Capabilities**: `userland-package`, `cross-toolchain`
+- **Provides Virtual Capabilities**: `compiler`, `rust`, `cargo`
 
 ## Usage
 
-This directory contains the installation and configuration scripts for `rust`.
-
-### Local and Global Version Management
-
-The `rust` component works both as a **local version manager** (similar to tools like `rvm`, `nvm`,
-`pyenv`, or `uv`) and can be seamlessly invoked from the global version manager via `libscript`.
-This dual capability allows developers to manage specific versions per project locally or enforce
-system-wide global configurations.
-
-### Building Bigger Stacks
-
-Beyond isolated provisioning, this component can be deeply integrated by `libscript` to build,
-deploy, and manage larger stacks and complex applications. Whether you are scaffolding a CMS like
-WordPress, a learning platform like Open edX, or a collaboration suite like Nextcloud, LibScript can
-orchestrate `rust` alongside databases, web servers, and other services to form a cohesive,
-reproducible stack.
-
-You can install, start, stop, package, and uninstall rust using the global `libscript` command or
-the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install rust
-
-./cli.sh install rust
-
-./libscript.sh start rust
-./cli.sh start rust
-
-./libscript.sh stop rust
-./cli.sh stop rust
-
-./libscript.sh package-as docker rust
-./cli.sh package-as docker rust
-
-./libscript.sh uninstall rust
-./cli.sh uninstall rust
+# Native version management (isolated under ${LIBSCRIPT_HOME}/rust/<version>)
+./libscript.sh ls-remote rust
+./libscript.sh install rust latest
+./libscript.sh use rust latest
+./libscript.sh which rust
+./_lib/languages/rust/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install rust
-
-:: Local CLI
-cli.cmd install rust
-
-:: Start and Stop
-libscript.cmd start rust
-cli.cmd start rust
-
-libscript.cmd stop rust
-cli.cmd stop rust
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi rust
-cli.cmd package-as msi rust
-
-:: Uninstall
-libscript.cmd uninstall rust
-cli.cmd uninstall rust
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote rust
+.\libscript.cmd install rust latest
+.\libscript.cmd use rust latest
+.\libscript.cmd which rust
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/rust/<version>`
+  (default `~/.libscript/rust/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `RUST_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default                                                                                            | Aliases/Examples                |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `RUST_VERSION`        | Version of Rust demanded. Can be "nightly"                                                                                                                           | "beta"                                                                                             | "stable" xor a specific version | `stable` | stable, beta, nightly |
-| `RUST_INSTALL_METHOD` | How to install RUST. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native`                                                                                 |                                 |
-| `CARGO_NET_OFFLINE`   | Boolean flag ('true' or 'false') configuring Cargo to operate strictly offline.                                                                                      | `false`                                                                                            |                                 |
-| `CARGO_VENDOR_DIR`    | Directory path containing pre-vendored Cargo crates for offline builds.                                                                                              | `none`                                                                                             |                                 |
-| `RUST_DOWNLOAD_URL`   | Override URL for downloading rust binary or archive artifacts.                                                                                                       | `none`                                                                                             |                                 |
-| `RUST_RELEASES_URL`   | Override URL for querying rust available remote releases.                                                                                                            | `none`                                                                                             |                                 |
-| `RUST_RTOS_TARGETS`   | Comma-separated Rust no_std bare-metal targets registered via rustup target add for Zephyr and FreeRTOS.                                                             | `thumbv7m-none-eabi,riscv32imac-unknown-none-elf,riscv64imac-unknown-none-elf,x86_64-unknown-none` |                                 |
-| `RUST_TARGETS`        | Comma-separated cross-compilation target triples (e.g. wasm32-unknown-unknown,aarch64-unknown-none) installed into the isolated Rust toolchain.                      | `none`                                                                                             |                                 |
-| `RUST_COMPONENTS`     | Comma-separated optional Rust toolchain components (e.g. clippy,rustfmt,llvm-tools-preview,rust-src) installed into the isolated Rust toolchain.                     | `none`                                                                                             |                                 |
+| Variable              | Description                                                                                                                                            | Default                                                                                            | Aliases/Examples                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `RUST_VERSION`        | Version of Rust demanded. Can be "nightly"                                                                                                             | "beta"                                                                                             | "stable" xor a specific version | `stable` | stable, beta, nightly |
+| `RUST_INSTALL_METHOD` | Installation strategy for rust: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native`                                                                                 |                                 |
+| `CARGO_NET_OFFLINE`   | Boolean flag ('true' or 'false') configuring Cargo to operate strictly offline.                                                                        | `false`                                                                                            |                                 |
+| `CARGO_VENDOR_DIR`    | Directory path containing pre-vendored Cargo crates for offline builds.                                                                                | `none`                                                                                             |                                 |
+| `RUST_DOWNLOAD_URL`   | Override URL for downloading rust binary or archive artifacts.                                                                                         | `none`                                                                                             |                                 |
+| `RUST_RELEASES_URL`   | Override URL for querying rust available remote releases.                                                                                              | `none`                                                                                             |                                 |
+| `RUST_RTOS_TARGETS`   | Comma-separated Rust no_std bare-metal targets registered via rustup target add for Zephyr and FreeRTOS.                                               | `thumbv7m-none-eabi,riscv32imac-unknown-none-elf,riscv64imac-unknown-none-elf,x86_64-unknown-none` |                                 |
+| `RUST_TARGETS`        | Comma-separated cross-compilation target triples (e.g. wasm32-unknown-unknown,aarch64-unknown-none) installed into the isolated Rust toolchain.        | `none`                                                                                             |                                 |
+| `RUST_COMPONENTS`     | Comma-separated optional Rust toolchain components (e.g. clippy,rustfmt,llvm-tools-preview,rust-src) installed into the isolated Rust toolchain.       | `none`                                                                                             |                                 |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

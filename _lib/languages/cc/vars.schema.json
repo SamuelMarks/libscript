@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "CC_INSTALL_METHOD": {
-      "description": "How to install CC ('libscript_native' uses isolated version dirs, 'from-source' compiles from source, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools).",
+      "description": "Installation strategy for cc: 'libscript_native' installs into isolated versioned directories, 'from-source' compiles from source archives, and 'system' delegates to the host OS package manager.",
       "type": "string",
       "enum": ["libscript_native", "from-source", "system"],
       "default": "system"

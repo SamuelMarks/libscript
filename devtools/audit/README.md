@@ -1,42 +1,46 @@
-# Codebase Audit Utilities
+# Codebase & Architecture Audit Utilities (`devtools/audit/`)
 
 ## Overview
 
-Scripts for inspecting stacks, verifying component schemas, and validating standards across the
-LibScript repository.
+`devtools/audit/` enforces LibScript's static engineering invariants, strict `T0`–`T5` + Orthogonal
+Planes DAG boundaries, POSIX/Windows script parity, JSON Schema completeness, and 100% documentation
+coverage. All core auditors run automatically in `.pre-commit-config.yaml` and CI.
 
-## Utilities
+## Audit Scripts
 
-- `audit_standards.sh` / `audit_standards.cmd` / `audit_standards.ps1`: Audits files for strict
-  adherence to LibScript engineering standards:
+- **`audit_tiers.{sh,cmd}`**: Enforces the `T0`–`T5` + Orthogonal Planes (`Plane A: traits/`,
+  `Plane B: experiments/`) architecture:
+  - Strict downward-only imports (`T5 -> T4 -> T3 -> T2 -> T1 -> T0`); zero upward or circular
+    sourcing.
+  - Atomic `_lib/` purity: zero lateral cross-component sourcing inside `_lib/<cat>/<comp>/`.
+  - Zero fractional tier strings (`1.5`, `3.5`) and zero legacy redirect shims.
+- **`audit_standards.{sh,cmd,ps1}`**: Audits scripts and manifests for:
   - `POSIX_SHEBANG`, `SET_FEU_SAFETY`, `THIS_FILE_DANCE`, `RECURSION_GUARD`, `ROOT_DIR_RESOLUTION`
-  - `WINDOWS_PARITY` / `POSIX_PARITY`: Enforces 1:1 `.sh` and `.cmd` script pairing
-  - `RAW_NETWORK_FETCH`: Bans raw `curl`, `wget`, `aria2c`, `Invoke-WebRequest`,
-    `Invoke-RestMethod`, `iwr`, `irm`, and `certutil -urlcache` outside `engine/common/pkg_mgr.*`
-  - `RAW_PACKAGE_MANAGER`: Bans direct OS/language package manager mutations outside
-    `engine/common/pkg_mgr.*` and `_lib/package-managers/*`
-  - `UNNECESSARY_DOUBLE_QUOTES`: Enforces single quotes `'...'` for static literals in `.sh` scripts
-  - `IDEMPOTENCY`, `BAN_EVAL`, `REMOTE_SAFETY`, `BATCH_HYGIENE`, `STACK_HYGIENE`,
-    `CHECKSUM_INTEGRITY`, `JSON_VALIDITY`, `SCHEMA_DESCRIPTIONS`
-- `audit_posix.sh` / `audit_posix.cmd`: Dedicated POSIX `/bin/sh` compliance, bashism prohibition,
-  quoting hygiene, and Windows companion pairing audit.
-- `audit_cmd.sh` / `audit_cmd.cmd`: Cross-platform Windows Batch (`.cmd` and `.bat`) AST/CST static
-  analysis audit backed by `_lib/toolchains/win-cmd-rs` (`wincheck`), with automatic zero-PowerShell
-  bootstrapping when `wincheck` is missing from `PATH`.
-- `audit_version_manager.sh` / `audit_version_manager.cmd`: Audits all
-  `_lib/<category>/<component>/` directories for strict compliance with the Version Manager
-  Contract.
-- `audit_schema_vars.sh` / `audit_schema_vars.cmd` / `audit_schema_vars.ps1`: Verifies that every
-  component-scoped (`<COMP>_*`) and global (`LIBSCRIPT_*`) configuration variable referenced in
-  component scripts is declared and documented in `vars.schema.json` or `base_vars.schema.json`
-  (`MISSING_JSON_VAR`).
-- `doc_coverage.sh` / `doc_coverage.cmd` / `doc_coverage.ps1`: Audits documentation coverage across
-  component `README.md` files, script header markdown docstrings (`.sh`, `.cmd`, `.ps1`), shell
-  functions, batch labels, and JSON schemas, and updates the `% doc coverage` shield in `README.md`
-  (`--update-readme`).
-- `audit_stacks.sh` / `audit_stacks.cmd` / `audit_stacks.ps1`: Scans stack definitions for missing
-  scripts, broken references, or schema errors.
-- `audit_windows.sh` / `audit_windows.cmd` / `audit_windows.ps1`: Audits LibScript components on a
-  Windows 11 VM to test installers and runtime compatibility.
-- `ice_validation.sh` / `ice_validation.cmd`: Orchestrates Windows ICE validation for generated MSI
-  packages.
+  - `WINDOWS_PARITY` / `POSIX_PARITY` (1:1 `.sh` and `.cmd` pairing) & `CLI_VERB_PARITY`
+  - `BAN_EVAL` (no `eval` or `Invoke-Expression`) & `IDEMPOTENCY` (`mkdir -p`, `ln -sf`)
+  - `RAW_NETWORK_FETCH` (all downloads must route through `engine/common/pkg_mgr.*`)
+  - `EMPTY_SERVICE_STUB` (`service.{sh,cmd}` allowed strictly on `"service-daemon"` components)
+  - `RAW_GCLOUD_TPU` & `EXP_IN_LIB`
+- **`audit_posix.{sh,cmd}`**: Runs `shellcheck` and strict POSIX `/bin/sh` syntax validation.
+- **`audit_cmd.{sh,cmd}`**: Validates Windows Batch `.cmd`/`.bat` syntax, labels, and `wincheck`
+  rules.
+- **`audit_version_manager.{sh,cmd}`**: Verifies `T1` version-manager lifecycle verbs (`ls-remote`,
+  `install`, `ls`, `use`, `uninstall`, `env`, `which`) and `${LIBSCRIPT_HOME}` isolation.
+- **`audit_schema_vars.{sh,cmd}`**: Verifies that environment variables consumed by scripts are
+  declared and documented in `vars.schema.json`, `schemas/vars/*.schema.json`, or
+  `base_vars.schema.json`.
+- **`audit_stacks.{sh,cmd}`**: Validates stack, constellation, cluster, and profile JSON manifests
+  against their respective JSON Schemas.
+- **`doc_coverage.{sh,cmd}`**: Verifies 100% documentation coverage across component `README.md`
+  files, schema property descriptions, CLI flags, functions, and script `## Overview` / `## Usage`
+  headers.
+- **`audit_windows.{sh,cmd,ps1}` & `ice_validation.{sh,cmd}`**: Runs Windows 11 VM installer audits
+  and full 105-ICE Windows Installer `.msi` table validation (`darice.cub` / `msi-rs`).
+
+## Usage
+
+```sh
+./devtools/audit/audit_tiers.sh --all
+./devtools/audit/audit_standards.sh --all
+./devtools/audit/doc_coverage.sh --strict
+```

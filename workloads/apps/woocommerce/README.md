@@ -14,15 +14,16 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                  | Description                                                                        | Default | Aliases/Examples |
-| ------------------------- | ---------------------------------------------------------------------------------- | ------- | ---------------- |
-| `WOOCOMMERCE_SERVER_NAME` | Public virtual host domain name configured for the WooCommerce storefront.         | `none`  |                  |
-| `WOOCOMMERCE_LISTEN`      | HTTP bind address:port or UNIX socket exposed for the WooCommerce site.            | `none`  |                  |
-| `WOOCOMMERCE_VERSION`     | Target WooCommerce plugin release version or alias (e.g., latest) to install.      | `none`  |                  |
-| `WOOCOMMERCE_WWWROOT`     | Filesystem WordPress document root into which the WooCommerce plugin is installed. | `none`  |                  |
+| Variable                  | Description                                                                        | Default |
+| :------------------------ | :--------------------------------------------------------------------------------- | :------ |
+| `WOOCOMMERCE_SERVER_NAME` | Public virtual host domain name configured for the WooCommerce storefront.         | `-`     |
+| `WOOCOMMERCE_LISTEN`      | HTTP bind address:port or UNIX socket exposed for the WooCommerce site.            | `-`     |
+| `WOOCOMMERCE_VERSION`     | Target WooCommerce plugin release version or alias (e.g., latest) to install.      | `-`     |
+| `WOOCOMMERCE_WWWROOT`     | Filesystem WordPress document root into which the WooCommerce plugin is installed. | `-`     |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Usage

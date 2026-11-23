@@ -1,5 +1,7 @@
 # Mise
 
+**Tier**: `T1` (`_lib/package-managers/vfox/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for the `vfox` package manager/tool.
 
 ## Configuration Options
@@ -9,12 +11,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default            | Aliases/Examples |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `VFOX_INSTALL_METHOD` | How to install VFOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `VFOX_VERSION`        | Specific version of vfox to install.                                                                                                                                 | `latest`           |                  |
-| `VFOX_DOWNLOAD_URL`   | Override URL for downloading vfox binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `VFOX_RELEASES_URL`   | Override URL for querying vfox available remote releases.                                                                                                            | `none`             |                  |
+| Variable              | Description                                                                                                                                            | Default            | Aliases/Examples |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ---------------- |
+| `VFOX_INSTALL_METHOD` | Installation strategy for vfox: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `VFOX_VERSION`        | Installation strategy for vfox: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `latest`           |                  |
+| `VFOX_DOWNLOAD_URL`   | Installation strategy for vfox: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `none`             |                  |
+| `VFOX_RELEASES_URL`   | Installation strategy for vfox: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

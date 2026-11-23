@@ -1,27 +1,45 @@
-# nssm
+# NSSM (Non-Sucking Service Manager) (`_lib/init-systems/nssm/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `nssm` (Non-Sucking
-Service Manager) component within the LibScript ecosystem. `nssm` wraps native Windows executables
-(`waitress-serve.exe`, `celery.exe`, `caddy.exe`, `meilisearch.exe`) as resilient Windows Services
-with automatic restart, working directory binding (`AppDirectory`), environment variable injection
-(`AppEnvironmentExtra`), and stdout/stderr log rotation (`AppStdout`, `AppStderr`).
+Windows service wrapper and daemon supervisor for running native Win64 binaries (Waitress, Celery,
+Caddy, Meilisearch) as resilient Windows Services.
+
+- **Tier**: `T2` (`_lib/init-systems/nssm/`)
+- **Capabilities**: `sysroot-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `nssm`, `init-system`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
 ```sh
-libscript install nssm
-libscript test nssm
-libscript uninstall nssm
+# Install and manage the nssm service daemon
+./libscript.sh install nssm latest
+./libscript.sh start nssm
+./libscript.sh status nssm
+./libscript.sh logs nssm
+./libscript.sh stop nssm
 ```
+
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install nssm latest
+.\libscript.cmd start nssm
+.\libscript.cmd status nssm
+.\libscript.cmd stop nssm
+```
+
+## Sysroot & Synthesis Integration
+
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `NSSM_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -36,19 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh` / `setup.cmd`: Entrypoints that resolve the OS and invoke `setup_generic.sh` /
-  `setup_generic.cmd`.
-- `setup_generic.sh` / `setup_generic.cmd`: Installs `nssm.exe` (Win64) under `LIBSCRIPT_HOME`.
-- `env.sh` / `env.cmd`: Exports isolated `PATH` entries for `nssm`.
-- `test.sh` / `test.cmd`: Verifies `nssm` availability.
-- `vars.schema.json`: Schema definition for CLI and environment variables.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

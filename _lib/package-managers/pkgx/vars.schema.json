@@ -5,22 +5,22 @@
   "type": "object",
   "properties": {
     "PKGX_INSTALL_METHOD": {
-      "description": "How to install PKGX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for pkgx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "default": "libscript_native"
     },
     "PKGX_VERSION": {
-      "description": "Specific version of pkgx to install.",
+      "description": "Installation strategy for pkgx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "default": "latest"
     },
     "PKGX_DOWNLOAD_URL": {
       "type": "string",
-      "description": "Override URL for downloading pkgx binary or archive artifacts."
+      "description": "Installation strategy for pkgx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager."
     },
     "PKGX_RELEASES_URL": {
       "type": "string",
-      "description": "Override URL for querying pkgx available remote releases."
+      "description": "Installation strategy for pkgx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager."
     }
   },
   "description": "Configuration variables for pkgx"

@@ -1,5 +1,7 @@
 # systemd-networkd
 
+**Tier**: `T1` (`_lib/networking/systemd-networkd/`) | **Capabilities**: `userland-package`
+
 Network device manager integrated into systemd
 
 ## Usage

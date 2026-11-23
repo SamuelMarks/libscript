@@ -11,7 +11,7 @@ or operating system.
       Hetzner, DigitalOcean, Linode, and Vultr.
 - [ ] Complete Zero-PowerShell / Zero-`wmic` Win32 & MS-DOS (`dos32`) `engine/common/` substrate
       porting (`find_replace.cmd`, `envsubst_safe.cmd`, `uuid_gen.cmd`, `daemon_launcher.cmd`,
-      `priv.cmd`, FAT16/32 fallback — tracked in [TODO_PORT_FOR_WIN.md](TODO_PORT_FOR_WIN.md)).
+      `priv.cmd`, FAT16/32 fallback — documented in [WINDOWS.md](WINDOWS.md)).
 - [ ] Extended Hardware-Aware Auto-Tuning: Extending `engine/common/hw_tune.{sh,cmd}` CPU/RAM/ISA
       detection to dynamically tune compiler flags (`-march`), NVMe I/O schedulers, and kernel
       sysctl profiles.
@@ -175,8 +175,9 @@ or operating system.
       `infrastructure/clusters/gke-tpu-cluster/`).
 - [x] Automation for inference engines (`vLLM`, `JetStream`, `Ollama`).
 - [x] Real-Time Operating System (RTOS) & MCU Firmware Synthesis (`_lib/kernel/zephyr/`,
-      `_lib/kernel/freertos/`, `_lib/bootloaders/mcuboot/`, `synthesis/formats/firmware_bin`,
-      `workloads/constellations/iot-mqtt-edge-pod/`, and `workloads/schedulers/rtos_firmware`).
+      `_lib/kernel/freertos/`, `_lib/bootloaders/mcuboot/`,
+      `synthesis/formats/firmware_bin.{sh,cmd}`, `workloads/constellations/iot-mqtt-edge-pod/`, and
+      `workloads/schedulers/rtos_firmware.{sh,cmd}`).
 - [x] Bare-metal generic GPU passthrough setup for local development.
 
 ### Phase 4: Terminal UI & Structured Telemetry (Completed)

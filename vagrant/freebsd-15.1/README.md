@@ -1,25 +1,17 @@
-# FreeBSD 15.1 Test Environment
+# Vagrant Environment: FreeBSD 15.1 (`vagrant/freebsd-15.1/`)
 
 ## Overview
 
-Vagrant test harness using `bento/freebsd-15.1` for validating LibScript FreeBSD `pkg` and BSD init
-system compatibility on macOS Apple Silicon (AArch64) and x86_64 hosts.
-
-### Box Building
-
-The `bento/freebsd-15.1` box is built using the custom Bento fork:
-
-- **Repository**:
-  [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
-  (`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`)
-- **Supported Host Platforms**: macOS Apple Silicon (`aarch64`) and other `x86_64` hosts (Linux,
-  Windows, Intel macOS).
-- See [VAGRANT.md](../../VAGRANT.md) for detailed build and setup instructions.
+Pre-configured Vagrant environment (`bento/freebsd-15.1`) used for BSD `rc.d`, ZFS, `pkg`, and
+FreeBSD distribution synthesis verification.
 
 ## Usage
 
-Execute local tests for FreeBSD 15.1 via:
-
 ```sh
-./tests/run_local_tests.sh <component> --os freebsd-15.1
+cd vagrant/freebsd-15.1
+vagrant up
+vagrant ssh
 ```
+
+See [`../../VAGRANT.md`](../../VAGRANT.md) for custom Bento (`multi-os-qemu-aarch64`) box building
+and snapshot management instructions.

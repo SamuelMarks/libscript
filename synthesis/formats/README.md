@@ -1,34 +1,46 @@
-# LibScript System Packaging Commands (`package-as`)
+# Tier 3 (`T3`) Universal Package & Image Format Drivers (`synthesis/formats/`)
 
 ## Overview
 
-Provides commands to package target sysroot filesystems into bootable images, containers, and
-virtual machine disk appliances.
+`synthesis/formats/` implements the format-specific artifact compilers dispatched by
+`./libscript.sh package-as <format>` (`synthesis/cli.{sh,cmd}`). Each driver consumes resolved
+`T1`/`T2` components or `T3` sysroots and emits deterministic native installers, containers, virtual
+machine disks, cloud boot images, unikernels, or microcontroller firmware binaries.
 
-## Available Target Formats
+See [`../../PACKAGING_BRANDING_GUIDE.md`](../../PACKAGING_BRANDING_GUIDE.md) and
+[`freebsd_distro.md`](./freebsd_distro.md) for cross-format branding rules and FreeBSD image
+specifics.
 
-- `disk_builder`: Formats and partitions a bootable raw disk image (`.raw`) with ESP and root
-  filesystems.
-- `vagrant_box`: Packages a virtual machine disk image into a redistributable Vagrant `.box` archive
-  (QEMU/libvirt/VirtualBox).
-- `raw_img`: Packages a target sysroot into a partitioned, bootable raw disk image (`.img`).
-- `qcow2`: Packages a target sysroot into a QEMU Copy-On-Write (`.qcow2`) virtual disk image.
-- `vdi`: Packages a target sysroot into a VirtualBox Virtual Disk Image (`.vdi`).
-- `vmdk`: Packages a target sysroot into a VMware Virtual Machine Disk (`.vmdk`).
-- `live_iso`: Synthesizes an El Torito / EFI hybrid bootable Live ISO image.
-- `docker`: Builds an OCI/Docker container image directly from target sysroot rootfs.
-- `tarball`: Archives target sysroot into a compressed distribution tarball.
-- `freebsd_distro`: Packages modular FreeBSD distributions into raw, qcow2, vagrant box, vhd, vmdk,
-  or iso.
-- `illumos_distro`: Packages modular illumos distributions into raw, qcow2, vagrant box, vhd, vmdk,
-  or iso.
+## Format Drivers
+
+- **Native OS Packages & Installers**:
+  - `msi.{sh,cmd}` (WiX / `msi-rs` Windows `.msi`, backed by `synthesis/msi/`), `inno.{sh,cmd}`
+    (Inno Setup `.exe`), `nsis.{sh,cmd}` (NSIS `.exe`)
+  - `deb.{sh,cmd}` & `build_deb.{sh,cmd}` (Debian/Ubuntu `.deb`)
+  - `rpm.{sh,cmd}` & `build_rpm.{sh,cmd}` (Fedora/RHEL/Rocky `.rpm`)
+  - `apk.{sh,cmd}` & `build_apk.{sh,cmd}` (Alpine `.apk`)
+  - `txz.{sh,cmd}` (FreeBSD / illumos `.txz`), `pkg.{sh,cmd}` & `dmg.{sh,cmd}` (macOS)
+  - `tui_installer.{sh,cmd}` (self-extracting interactive TUI installer)
+- **Containers & Rootfs Tarballs**:
+  - `docker.{sh,cmd}`, `docker_archive.{sh,cmd}`, `docker_compose.{sh,cmd}`, `oci_image.{sh,cmd}`,
+    `rootfs_tar.{sh,cmd}`
+- **Virtual Machine, Live ISO & Cloud Disk Images**:
+  - `disk_builder.{sh,cmd}`, `raw_img.{sh,cmd}`, `qcow2.{sh,cmd}`, `vmdk.{sh,cmd}`, `vdi.{sh,cmd}`,
+    `hyperv_vhd.{sh,cmd}`, `iso.{sh,cmd}`, `vagrant_box.{sh,cmd}`, `proxmox_tpl.{sh,cmd}`
+  - `cloud_img.{sh,cmd}`, `aws_ami.{sh,cmd}`, `azure_vhd.{sh,cmd}`, `gcp_image.{sh,cmd}`
+- **BSD, illumos, ReactOS, Unikernel & RTOS Targets**:
+  - `bsd_img.{sh,cmd}`, `freebsd_distro.{sh,cmd}`, `freebsd_iso.{sh,cmd}`, `freebsd_qcow2.{sh,cmd}`,
+    `freebsd_raw.{sh,cmd}`, `freebsd_vagrant_box.{sh,cmd}`
+  - `illumos_distro.{sh,cmd}`, `reactos_distro.{sh,cmd}`
+  - `unikernel_img.{sh,cmd}` & `direct_kernel.{sh,cmd}` (OSv, Nanos, MirageOS, Unikraft, UEFI-GPT &
+    Azure Gen2 VHD cloud-boot unikernels)
+  - `firmware_bin.{sh,cmd}` (Zephyr & FreeRTOS `.bin`, `.hex`, `.uf2`, MCUboot-signed images)
 
 ## Usage
 
 ```sh
-# Generate a bootable raw disk image
-./libscript.sh package-as raw_img /target/sysroot /output/disk.img 20G uefi
-
-# Generate a qcow2 VM disk
-./libscript.sh package-as qcow2 /target/sysroot /output/disk.qcow2 20G uefi
+./libscript.sh package-as deb --stack workloads/apps/wordpress/packaging.json
+./libscript.sh package-as qcow2 --profile synthesis/profiles/linux/linux-minimal-headless-musl.json
+./libscript.sh package-as unikernel --cloud-boot=uefi-gpt
+./libscript.sh package-as firmware
 ```

@@ -2,7 +2,7 @@
   "$schema": "../../../schemas/payload.schema.json",
   "name": "gcp-gpu-vm-workload",
   "version": "1.0.0",
-  "description": "CUDA-accelerated model serving and training workload executing on Tier 3 GCP GPU VMs.",
+  "description": "CUDA-accelerated model serving and training workload executing on T4 GCP GPU VMs.",
   "type": "ai-inference",
   "artifact": {
     "format": "oci-image",

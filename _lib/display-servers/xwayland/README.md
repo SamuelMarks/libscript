@@ -1,5 +1,8 @@
 # Xwayland
 
+**Tier**: `T2` (`_lib/display-servers/xwayland/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 X11 server running as a Wayland client
 
 ## Usage

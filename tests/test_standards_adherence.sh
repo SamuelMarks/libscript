@@ -186,5 +186,128 @@ _t2_iptables=$(awk '/^### T2:/{in_t2=1;next} /^### T[345]:/{in_t2=0} in_t2 && /\
 [ -z "$_t1_iptables" ] || fail_test 'Expected iptables not to appear under T1 in README.md'
 [ -n "$_t2_iptables" ] || fail_test 'Expected iptables under T2 in README.md'
 
+printf '%s\n' '=== 6. Test GitHub HTTP 403 Authenticated Rescue & Checksum DB Guard ==='
+GH_TEST_DIR="${TEST_TMP}/gh_403"
+GH_SHIM_DIR="${GH_TEST_DIR}/shims"
+GH_CACHE_DIR="${GH_TEST_DIR}/cache"
+GH_API_DIR="${GH_TEST_DIR}/api"
+mkdir -p "${GH_SHIM_DIR}" "${GH_CACHE_DIR}" "${GH_API_DIR}/repos/SamuelMarks/win-cmd-rs/releases/tags"
+
+REAL_CURL=$(command -v curl 2>/dev/null || true)
+printf '%s\n' 'verified-github-release-binary-payload' > "${GH_TEST_DIR}/fixture.bin"
+if command -v sha256sum >/dev/null 2>&1; then
+  FIXTURE_SHA=$(sha256sum "${GH_TEST_DIR}/fixture.bin" | awk '{print $1}')
+else
+  FIXTURE_SHA=$(shasum -a 256 "${GH_TEST_DIR}/fixture.bin" | awk '{print $1}')
+fi
+printf '%s\n' '# mock checksum db' > "${GH_TEST_DIR}/checksums.txt"
+
+cat <<'EOF_ARIA2' > "${GH_SHIM_DIR}/aria2c"
+#!/bin/sh
+printf 'status=403\n' >&2
+exit 22
+EOF_ARIA2
+chmod +x "${GH_SHIM_DIR}/aria2c"
+
+cat <<'EOF_WGET' > "${GH_SHIM_DIR}/wget"
+#!/bin/sh
+exit 8
+EOF_WGET
+chmod +x "${GH_SHIM_DIR}/wget"
+
+cat <<EOF_CURL > "${GH_SHIM_DIR}/curl"
+#!/bin/sh
+for _a in "\$@"; do
+  case "\$_a" in
+    https://github.com/*)
+      printf 'curl: (56) The requested URL returned error: 403\n' >&2
+      exit 56
+      ;;
+  esac
+done
+if [ -n "${REAL_CURL}" ]; then
+  exec "${REAL_CURL}" "\$@"
+fi
+exit 1
+EOF_CURL
+chmod +x "${GH_SHIM_DIR}/curl"
+
+cat <<EOF_GH > "${GH_SHIM_DIR}/gh"
+#!/bin/sh
+if [ "\${1:-}" = "release" ] && [ "\${2:-}" = "download" ] && [ "\${GH_TOKEN:-}" = "mock-ci-token" ]; then
+  _pat=''
+  _dir=''
+  while [ \$# -gt 0 ]; do
+    case "\$1" in
+      -p) _pat="\$2"; shift 2 ;;
+      -D) _dir="\$2"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  if [ -n "\$_dir" ] && [ -n "\$_pat" ]; then
+    cp -f "${GH_TEST_DIR}/fixture.bin" "\${_dir}/\${_pat}"
+    exit 0
+  fi
+fi
+exit 1
+EOF_GH
+chmod +x "${GH_SHIM_DIR}/gh"
+
+cat <<'EOF_RUN_DL' > "${GH_TEST_DIR}/run_dl.sh"
+#!/bin/sh
+set -feu
+unset SCRIPT_NAME || true
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mgr.sh"
+export SCRIPT_NAME
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+libscript_download "$1" "$2" "$3"
+EOF_RUN_DL
+chmod +x "${GH_TEST_DIR}/run_dl.sh"
+
+env \
+  PATH="${GH_SHIM_DIR}:${PATH}" \
+  GITHUB_TOKEN='mock-ci-token' \
+  GH_TOKEN='' \
+  DOWNLOAD_DIR="${GH_CACHE_DIR}/dl1" \
+  LIBSCRIPT_CACHE_DIR="${GH_CACHE_DIR}/dl1" \
+  LIBSCRIPT_CHECKSUM_DB="${GH_TEST_DIR}/checksums.txt" \
+  LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 \
+  LIBSCRIPT_DOWNLOAD_RETRIES=1 \
+  LIBSCRIPT_DOWNLOAD_RETRY_DELAY=0 \
+  LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
+  STACK='' \
+  sh "${GH_TEST_DIR}/run_dl.sh" 'https://github.com/SamuelMarks/win-cmd-rs/releases/download/v9.9.9/mock-asset.tar.gz' "${GH_TEST_DIR}/out1.tar.gz" "${FIXTURE_SHA}" \
+  || fail_test 'Expected libscript_download to rescue HTTP 403 via gh release download'
+
+cmp -s "${GH_TEST_DIR}/fixture.bin" "${GH_TEST_DIR}/out1.tar.gz" || fail_test 'Downloaded payload from gh release download did not match fixture'
+if grep -q 'mock-asset\.tar\.gz' "${GH_TEST_DIR}/checksums.txt"; then
+  fail_test 'LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 failed to prevent _lib/checksums.txt mutation'
+fi
+
+rm -f "${GH_SHIM_DIR}/gh"
+if [ -n "${REAL_CURL}" ]; then
+  cp -f "${GH_TEST_DIR}/fixture.bin" "${GH_API_DIR}/asset_blob.bin"
+  cat <<EOF_REL_JSON > "${GH_API_DIR}/repos/SamuelMarks/win-cmd-rs/releases/tags/v9.9.9"
+{"tag_name":"v9.9.9","assets":[{"url":"file://${GH_API_DIR}/asset_blob.bin","id":770524828,"name":"mock-api-asset.tar.gz","uploader":{"login":"SamuelMarks","url":"https://api.github.com/users/SamuelMarks"}}]}
+EOF_REL_JSON
+  env \
+    PATH="${GH_SHIM_DIR}:${PATH}" \
+    GITHUB_TOKEN='mock-ci-token' \
+    GH_TOKEN='' \
+    LIBSCRIPT_GITHUB_API_BASE="file://${GH_API_DIR}" \
+    DOWNLOAD_DIR="${GH_CACHE_DIR}/dl2" \
+    LIBSCRIPT_CACHE_DIR="${GH_CACHE_DIR}/dl2" \
+    LIBSCRIPT_CHECKSUM_DB="${GH_TEST_DIR}/checksums.txt" \
+    LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 \
+    LIBSCRIPT_DOWNLOAD_RETRIES=1 \
+    LIBSCRIPT_DOWNLOAD_RETRY_DELAY=0 \
+    LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
+    STACK='' \
+    sh "${GH_TEST_DIR}/run_dl.sh" 'https://github.com/SamuelMarks/win-cmd-rs/releases/download/v9.9.9/mock-api-asset.tar.gz' "${GH_TEST_DIR}/out2.tar.gz" "${FIXTURE_SHA}" \
+    || fail_test 'Expected libscript_download to rescue HTTP 403 via authenticated GitHub REST API asset endpoint'
+  cmp -s "${GH_TEST_DIR}/fixture.bin" "${GH_TEST_DIR}/out2.tar.gz" || fail_test 'Downloaded payload from GitHub REST API fallback did not match fixture'
+fi
+
 printf '%s\n' '[PASS] All standards adherence regression tests succeeded.'
 exit 0

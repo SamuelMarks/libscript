@@ -1,28 +1,37 @@
-# Linode
+# Tier 4 (`T4`) Cloud Provider: Linode (Akamai Connected Cloud) (`infrastructure/providers/linode/`)
 
-Linode (Akamai Connected Cloud) cloud provider component for LibScript systems.
+## Overview
+
+Provisions and manages Akamai / Linode cloud instances, VLANs, firewalls, and block storage volumes.
 
 ## Usage
 
 ```sh
-./libscript.sh install linode
+# Invoke provider CLI operations
+./libscript.sh infrastructure linode --help
+
+# Provision a node and deploy a stack
+./libscript.sh provision linode my-node default-net default-region ./ ~/app
+```
+
+```cmd
+.\libscript.cmd infrastructure linode --help
+.\libscript.cmd provision linode my-node default-net default-region .\ ~/app
 ```
 
 ## Configuration Options
 
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                                                                                                            | Default            | Aliases/Examples |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `LINODE_VERSION`        | Specific version of linode CLI (linode-cli) to install.                                                                                                                | `latest`           | latest, stable   |
-| `LINODE_INSTALL_METHOD` | How to install LINODE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `LINODE_REGION`         | Configuration variable LINODE_REGION for linode.                                                                                                                       | `none`             |                  |
+| Variable                | Description                                                                                                                                              | Default            |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
+| `LINODE_VERSION`        | Specific version of linode CLI (linode-cli) to install.                                                                                                  | `latest`           |
+| `LINODE_INSTALL_METHOD` | Installation strategy for linode: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |
+| `LINODE_REGION`         | Akamai/Linode region identifier (e.g., us-east, eu-central) where compute instances are deployed.                                                        | `-`                |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

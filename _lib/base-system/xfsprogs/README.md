@@ -1,5 +1,7 @@
 # XFS Progs
 
+**Tier**: `T2` (`_lib/base-system/xfsprogs/`) | **Capabilities**: `sysroot-package`
+
 XFS filesystem administration utilities
 
 ## Usage

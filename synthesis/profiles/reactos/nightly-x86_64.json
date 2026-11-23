@@ -1,5 +1,5 @@
 {
-  "$schema": "../../synthesis/schemas/execution-plan.reactos.schema.json",
+  "$schema": "../../schemas/execution-plan.reactos.schema.json",
   "schema_version": "1.0.0",
   "profile_name": "nightly-x86_64",
   "description": "64-bit ReactOS x86_64 nightly NT6+ target on NTFS with hybrid BIOS/UEFI boot and strict 64-bit PE binary enforcement.",

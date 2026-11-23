@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "AWSCLI_INSTALL_METHOD": {
-      "description": "How to install AWSCLI. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for awscli: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "default": "libscript_native"
     },

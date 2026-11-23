@@ -1,5 +1,8 @@
 # libseat
 
+**Tier**: `T2` (`_lib/display-servers/libseat/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 Universal seat management client library
 
 ## Usage

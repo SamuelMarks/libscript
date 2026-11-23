@@ -1,47 +1,45 @@
-# imagemagick
+# ImageMagick (`_lib/utilities/imagemagick/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `imagemagick` component
-(part of `_utilities`) within the LibScript ecosystem. Raster and vector digital image creation,
-editing, composition, and conversion CLI suite (magick).
+Raster and vector digital image creation, editing, composition, and conversion CLI suite (magick).
+
+- **Tier**: `T1` (`_lib/utilities/imagemagick/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `imagemagick`, `magick`, `image-converter`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **ImageMagick**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install imagemagick
-libscript uninstall imagemagick
+# Native version management (isolated under ${LIBSCRIPT_HOME}/imagemagick/<version>)
+./libscript.sh ls-remote imagemagick
+./libscript.sh install imagemagick latest
+./libscript.sh use imagemagick latest
+./libscript.sh which imagemagick
+./_lib/utilities/imagemagick/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start imagemagick
-libscript stop imagemagick
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote imagemagick
+.\libscript.cmd install imagemagick latest
+.\libscript.cmd use imagemagick latest
+.\libscript.cmd which imagemagick
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker imagemagick
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install imagemagick`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/imagemagick/<version>` (default `~/.libscript/imagemagick/<version>`) and
+  synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `IMAGEMAGICK_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

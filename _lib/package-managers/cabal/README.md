@@ -1,5 +1,7 @@
 # Cabal
 
+**Tier**: `T1` (`_lib/package-managers/cabal/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for `cabal` (Haskell package manager).
 
 ## Usage
@@ -13,12 +15,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `CABAL_INSTALL_METHOD` | How to install CABAL. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `CABAL_VERSION`        | Specific version of cabal to install.                                                                                                                                 | `latest`           |                  |
-| `CABAL_DOWNLOAD_URL`   | Override URL for downloading cabal binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `CABAL_RELEASES_URL`   | Override URL for querying cabal available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `CABAL_INSTALL_METHOD` | Installation strategy for cabal: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `CABAL_VERSION`        | Specific version of cabal to install.                                                                                                                   | `latest`           |                  |
+| `CABAL_DOWNLOAD_URL`   | Override URL for downloading cabal binary or archive artifacts.                                                                                         | `none`             |                  |
+| `CABAL_RELEASES_URL`   | Override URL for querying cabal available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

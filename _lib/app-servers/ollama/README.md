@@ -1,5 +1,7 @@
 # ollama Component
 
+**Tier**: `T1` (`_lib/app-servers/ollama/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 ## Overview
 
 Libscript manages ollama versions natively by installing them into isolated directories under
@@ -22,7 +24,7 @@ isolated by default in `~/.libscript/<component>/<version>` and do not pollute g
 
 | Variable                   | Description                                                                                                                                                                                    | Default                   | Aliases/Examples |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ---------------- |
-| `OLLAMA_INSTALL_METHOD`    | How to install OLLAMA. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.                         | `libscript_native`        |                  |
+| `OLLAMA_INSTALL_METHOD`    | Installation strategy for ollama: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.                                       | `libscript_native`        |                  |
 | `OLLAMA_MODELS`            | Directory path where Ollama stores downloaded model weights and manifests.                                                                                                                     | `/mnt/data/ollama_models` |                  |
 | `OLLAMA_DOWNLOAD_URL`      | Override URL for downloading ollama binary or archive artifacts.                                                                                                                               | `none`                    |                  |
 | `OLLAMA_RELEASES_URL`      | Override URL for querying ollama available remote releases.                                                                                                                                    | `none`                    |                  |

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../synthesis/schemas/execution-plan.reactos.schema.json",
+  "$schema": "../../schemas/execution-plan.reactos.schema.json",
   "schema_version": "1.0.0",
   "profile_name": "minimal-headless-i686",
   "description": "Minimal headless 32-bit ReactOS 0.4.16 appliance with cmd-minimal shell, FASTFAT root, COM1 115200 serial console, and portable Win32 bootstrap tools.",

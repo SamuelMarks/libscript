@@ -19,14 +19,14 @@
       "description": "AWS Secret Access Key"
     },
     "AWS_INSTALL_METHOD": {
-      "description": "How to install AWS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for aws: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "AWS_AMI_NAME": {
       "type": "string",
-      "description": "Configuration variable AWS_AMI_NAME for aws."
+      "description": "Target Amazon Machine Image (AMI) name registered or looked up during AWS EC2 provisioning and image import."
     },
     "AWS_DOWNLOAD_URL": {
       "type": "string",
@@ -38,7 +38,7 @@
     },
     "AWS_S3_BUCKET": {
       "type": "string",
-      "description": "Configuration variable AWS_S3_BUCKET for aws."
+      "description": "Amazon S3 bucket name used for VM Import/Export staging, state artifacts, or backup blobs."
     },
     "AWS_VERSION": {
       "type": "string",

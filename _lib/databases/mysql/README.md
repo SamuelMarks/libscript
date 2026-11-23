@@ -1,5 +1,7 @@
 # MySQL
 
+**Tier**: `T1` (`_lib/databases/mysql/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 MySQL 8.x relational database management system.
 
 ## Usage

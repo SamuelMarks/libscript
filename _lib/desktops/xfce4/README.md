@@ -1,5 +1,7 @@
 # XFCE Desktop
 
+**Tier**: `T2` (`_lib/desktops/xfce4/`) | **Capabilities**: `sysroot-package`
+
 Fast and lightweight desktop environment
 
 ## Usage

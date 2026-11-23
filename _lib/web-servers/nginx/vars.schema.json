@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "NGINX_INSTALL_METHOD": {
-      "description": "How to install NGINX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for nginx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "enum": ["libscript_native", "system"],
       "default": "system"
@@ -96,7 +96,7 @@
     },
     "NGINX_FRAGMENT_CONF": {
       "type": "string",
-      "description": "Configuration variable NGINX_FRAGMENT_CONF for nginx."
+      "description": "Path (absolute or relative to LIBSCRIPT_ROOT_DIR) to a custom Nginx location/server configuration template fragment."
     },
     "NGINX_LISTEN": {
       "type": "string",
@@ -112,11 +112,11 @@
     },
     "NGINX_SERVER_NAME": {
       "type": "string",
-      "description": "Configuration variable NGINX_SERVER_NAME for nginx."
+      "description": "Virtual host server_name directive (domain or IP) written into generated Nginx site configurations."
     },
     "NGINX_WWWROOT": {
       "type": "string",
-      "description": "Configuration variable NGINX_WWWROOT for nginx."
+      "description": "Document root filesystem directory served by the generated Nginx virtual host or location block."
     }
   }
 }

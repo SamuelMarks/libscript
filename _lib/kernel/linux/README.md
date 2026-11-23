@@ -1,5 +1,7 @@
 # Linux
 
+**Tier**: `T2` (`_lib/kernel/linux/`) | **Capabilities**: `sysroot-package`, `kernel-image`
+
 Linux component for LibScript systems.
 
 ## Usage
@@ -39,7 +41,7 @@ running the setup script.
 | `LINUX_SOURCE_URL`               | Optional explicit download URL for the Linux kernel source tarball.                                                                                                                                                                                                 | `none`                  |                                    |
 | `LINUX_SHA256`                   | Optional SHA-256 checksum for verifying the downloaded Linux kernel source archive.                                                                                                                                                                                 | `none`                  |                                    |
 | `LINUX_SYNTHETIC_FALLBACK`       | Whether to compile a freestanding multi-TU kernel ELF harness with the target compiler when full Linux kernel source is not cached locally.                                                                                                                         | `true`                  |                                    |
-| `LINUX_COMPARE_COMPILERS`        | Configuration variable LINUX_COMPARE_COMPILERS for linux.                                                                                                                                                                                                           | `none`                  |                                    |
+| `LINUX_COMPARE_COMPILERS`        | Space-separated list of compiler toolchains (e.g., gcc, clang, tcc, edgcpp+gcc, edgcpp+llvm) evaluated in Linux kernel build matrices.                                                                                                                              | `none`                  |                                    |
 | `LINUX_SOURCE_DIR`               | Filesystem directory or path configuration for linux (LINUX_SOURCE_DIR).                                                                                                                                                                                            | `none`                  |                                    |
 | `LINUX_COMPARE_VERSIONS`         | Space-separated list of Linux kernel versions to evaluate in compare_compilers.sh (e.g., '4.19.322 5.4.284 5.10.226 5.15.167 6.1.112 6.6.52 6.11.2 6.12.1').                                                                                                        | `none`                  |                                    |
 | `LINUX_COMPARE_EDGCPP_BACKENDS`  | Space-separated list of edgcpp codegen backends ('llvm_backend gcc_backend') to evaluate when comparing Linux kernel builds.                                                                                                                                        | `none`                  |                                    |

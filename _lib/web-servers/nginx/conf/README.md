@@ -1,16 +1,12 @@
-# conf
+# Nginx Configuration Templates (`_lib/web-servers/nginx/conf/`)
 
-This directory contains the conf module.
+## Overview
 
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.
+Parameterized Nginx `server`, `location`, reverse-proxy, FastCGI/PHP-FPM, static root, and TLS
+configuration fragments rendered without `eval` by `create_server_block.{sh,cmd}`,
+`create_location_block.{sh,cmd}`, and `merge_location_into_server.{sh,cmd}`.
 
 ## Configuration Options
-
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
 
 <!-- BEGIN_VARS -->
 <!-- END_VARS -->
@@ -18,4 +14,9 @@ running the setup script.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
+
+- Linux
+- macOS
+- Windows
+
 <!-- END_PLATFORMS -->

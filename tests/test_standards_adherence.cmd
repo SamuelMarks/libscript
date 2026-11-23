@@ -126,6 +126,72 @@ if errorlevel 1 ( echo [FAIL] Missing workloads/services allowlist in audit_stan
 findstr /C:"synthesis\msi\/" "!LIBSCRIPT_ROOT_DIR!!_BS!synthesis!_BS!msi!_BS!harvest_payload.cmd" >nul 2>&1
 if not errorlevel 1 ( echo [FAIL] Malformed gawk \m escape found in harvest_payload.cmd 1>&2 & goto :cleanup_fail )
 
+echo === 6. Test GitHub HTTP 403 Authenticated Rescue ^& Checksum DB Guard ===
+set "GH_TDIR=!TEST_TMP!!_BS!gh_403"
+set "GH_SHIMS=!GH_TDIR!!_BS!shims"
+set "GH_DL=!GH_TDIR!!_BS!dl"
+if not exist "!GH_SHIMS!" mkdir "!GH_SHIMS!"
+if not exist "!GH_DL!" mkdir "!GH_DL!"
+> "!GH_TDIR!!_BS!fixture.bin" echo verified-github-release-win32-payload
+> "!GH_TDIR!!_BS!checksums.txt" echo # mock checksum db
+
+(
+    echo @echo off
+    echo echo curl: ^(56^) The requested URL returned error: 403 1^>^&2
+    echo exit /b 56
+) > "!GH_SHIMS!!_BS!curl.cmd"
+
+(
+    echo @echo off
+    echo exit /b 8
+) > "!GH_SHIMS!!_BS!wget.cmd"
+
+(
+    echo @echo off
+    echo if /i not "%%GH_TOKEN%%"=="mock-ci-token" exit /b 1
+    echo set "_G_PAT="
+    echo set "_G_DIR="
+    echo :gh_arg_loop
+    echo if "%%~1"=="" goto :gh_arg_done
+    echo if "%%~1"=="-p" ^( set "_G_PAT=%%~2" ^& shift ^& shift ^& goto :gh_arg_loop ^)
+    echo if "%%~1"=="-D" ^( set "_G_DIR=%%~2" ^& shift ^& shift ^& goto :gh_arg_loop ^)
+    echo shift
+    echo goto :gh_arg_loop
+    echo :gh_arg_done
+    echo if "%%_G_DIR%%"=="" exit /b 1
+    echo if "%%_G_PAT%%"=="" exit /b 1
+    echo copy /y "!GH_TDIR!!_BS!fixture.bin" "%%_G_DIR%%\%%_G_PAT%%" ^>nul
+    echo exit /b 0
+) > "!GH_SHIMS!!_BS!gh.cmd"
+
+set "_SAVED_PATH=!PATH!"
+set "PATHEXT=.CMD;.BAT;.EXE;.COM"
+set "PATH=!GH_SHIMS!;!PATH!"
+set "GITHUB_TOKEN=mock-ci-token"
+set "GH_TOKEN="
+set "DOWNLOAD_DIR=!GH_DL!"
+set "LIBSCRIPT_CACHE_DIR=!GH_DL!"
+set "LIBSCRIPT_CHECKSUM_DB=!GH_TDIR!!_BS!checksums.txt"
+set "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1"
+set "LIBSCRIPT_DOWNLOAD_RETRIES=1"
+set "LIBSCRIPT_DOWNLOAD_RETRY_DELAY=0"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!engine!_BS!common!_BS!pkg_mgr.cmd" :libscript_download "https://github.com/SamuelMarks/win-cmd-rs/releases/download/v9.9.9/mock-win-asset.zip" "!GH_TDIR!!_BS!out.zip"
+set "_GH_DL_RC=!ERRORLEVEL!"
+set "PATH=!_SAVED_PATH!"
+set "GITHUB_TOKEN="
+set "GH_TOKEN="
+set "DOWNLOAD_DIR="
+set "LIBSCRIPT_CACHE_DIR="
+set "LIBSCRIPT_CHECKSUM_DB="
+set "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB="
+set "LIBSCRIPT_DOWNLOAD_RETRIES="
+set "LIBSCRIPT_DOWNLOAD_RETRY_DELAY="
+if not "!_GH_DL_RC!"=="0" ( echo [FAIL] Expected pkg_mgr.cmd :libscript_download to rescue HTTP 403 via gh release download 1>&2 & goto :cleanup_fail )
+if not exist "!GH_TDIR!!_BS!out.zip" ( echo [FAIL] Expected rescued artifact at out.zip 1>&2 & goto :cleanup_fail )
+findstr /C:"mock-win-asset.zip" "!GH_TDIR!!_BS!checksums.txt" >nul 2>&1
+if not errorlevel 1 ( echo [FAIL] LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 failed to protect checksums.txt 1>&2 & goto :cleanup_fail )
+
 if exist "!TEST_TMP!" rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo [PASS] All Windows standards adherence regression tests succeeded.
 exit /b 0

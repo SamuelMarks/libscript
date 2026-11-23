@@ -1,48 +1,19 @@
-# unikernel_pod
+# Tier 5 (`T5`) Unikernel Pod Orchestrator (`workloads/constellations/unikernel_pod/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `unikernel_pod` component
-(part of `_orchestration`) within the LibScript ecosystem. Decomposes multi-daemon component stacks
-into isolated single-process unikernel appliances with virtual bridge networking and service
-discovery.
+`workloads/constellations/unikernel_pod/` orchestrates multi-appliance single-address-space
+unikernel constellations (OSv, Nanos, MirageOS, Unikraft) connected over isolated host TAP bridges
+and exposed through `_lib/networking/netctl/` reverse-proxy ingress.
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Unikernel Pod Composer**.
-It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install unikernel_pod
-libscript uninstall unikernel_pod
+./workloads/constellations/unikernel_pod/cli.sh --help
+./libscript.sh constellation up workloads/constellations/openedx-unikernel-pod/topology.json
 ```
-
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start unikernel_pod
-libscript stop unikernel_pod
-```
-
-**Package (e.g., as a Docker container):**
-
-```sh
-libscript package-as docker unikernel_pod
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install unikernel_pod`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
 
 ## Configuration Options
-
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
 
 <!-- BEGIN_VARS -->
 
@@ -85,18 +56,6 @@ running the setup script.
 | `UNIKERNEL_POD_TOPOLOGY`        | Path to a topology.schema.json constellation manifest decomposing node groups into single-image unikernel profiles.                                            | `none`             |                         |
 
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,5 +1,7 @@
 # Initramfs
 
+**Tier**: `T2` (`_lib/kernel/initramfs/`) | **Capabilities**: `sysroot-package`, `kernel-image`
+
 Initramfs component for LibScript systems.
 
 ## Usage

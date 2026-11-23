@@ -1,47 +1,45 @@
-# openocd
+# OpenOCD On-Chip Debugger (`_lib/toolchains/openocd/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `openocd` component (part
-of `_toolchains`) within the LibScript ecosystem. Open On-Chip Debugger providing SWD/JTAG hardware
-flashing and GDB remote server support for ARM, RISC-V, and Xtensa targets.
+Open On-Chip Debugger providing SWD/JTAG hardware flashing and GDB remote server support for ARM,
+RISC-V, and Xtensa targets.
+
+- **Tier**: `T1` (`_lib/toolchains/openocd/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **OpenOCD On-Chip Debugger**.
-It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install openocd
-libscript uninstall openocd
+# Native version management (isolated under ${LIBSCRIPT_HOME}/openocd/<version>)
+./libscript.sh ls-remote openocd
+./libscript.sh install openocd latest
+./libscript.sh use openocd latest
+./libscript.sh which openocd
+./_lib/toolchains/openocd/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start openocd
-libscript stop openocd
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote openocd
+.\libscript.cmd install openocd latest
+.\libscript.cmd use openocd latest
+.\libscript.cmd which openocd
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker openocd
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install openocd`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/openocd/<version>`
+  (default `~/.libscript/openocd/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `OPENOCD_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

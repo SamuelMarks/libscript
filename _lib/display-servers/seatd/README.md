@@ -1,5 +1,8 @@
 # seatd
 
+**Tier**: `T2` (`_lib/display-servers/seatd/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 Minimal seat management daemon and library
 
 ## Usage

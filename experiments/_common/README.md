@@ -26,6 +26,11 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 running the setup script.
 
 <!-- BEGIN_VARS -->
+
+> **Global Framework Variables**: Core paths, offline cache controls, and experiment schema packs
+> (`schemas/vars/experiment.schema.json`) are documented in
+> [`engine/common/README.md`](../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

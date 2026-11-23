@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/databases/gitlab/vars.schema.json",
-  "title": "gitlab storage vars",
-  "description": "gitlab storage vars that can be set",
+  "$id": "/_lib/git-servers/gitlab/vars.schema.json",
+  "title": "GitLab variables",
+  "description": "Configuration variables for the GitLab DevSecOps and Git server.",
   "type": "object",
   "properties": {
     "GITLAB_VERSION": {
@@ -12,7 +12,7 @@
       "version_aliases": ["latest", "stable"]
     },
     "GITLAB_INSTALL_METHOD": {
-      "description": "How to install GITLAB. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for gitlab: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "enum": ["libscript_native", "system"],
       "default": "libscript_native"

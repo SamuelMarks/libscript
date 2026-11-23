@@ -1,10 +1,12 @@
 # Scoop
 
+**Tier**: `T1` (`_lib/package-managers/scoop/`) | **Capabilities**: `userland-package`
+
 ## Usage
 
-This document describes the **Scoop** bootstrap component within the LibScript ecolibscript_native.
-Scoop is a command-line installer for Windows that eliminates permission popup windows and hides GUI
-wizard dialogs.
+This document describes the **Scoop** bootstrap component within the LibScript ecosystem. Scoop is a
+command-line installer for Windows that eliminates permission popup windows and hides GUI wizard
+dialogs.
 
 The Scoop component functions as a **local version manager** (similar to rvm, nvm, pyenv, uv) for
 managing Windows tools, while also being capable of being invoked directly from the **global version
@@ -23,11 +25,7 @@ the local CLI.
 
 ./cli.sh install scoop
 
-./libscript.sh start scoop
-./cli.sh start scoop
 
-./libscript.sh stop scoop
-./cli.sh stop scoop
 
 ./libscript.sh package-as docker scoop
 ./cli.sh package-as docker scoop
@@ -46,11 +44,7 @@ libscript.cmd install scoop
 cli.cmd install scoop
 
 :: Start and Stop
-libscript.cmd start scoop
-cli.cmd start scoop
 
-libscript.cmd stop scoop
-cli.cmd stop scoop
 
 :: Package (e.g., as MSI installer)
 libscript.cmd package-as msi scoop
@@ -68,12 +62,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `SCOOP_INSTALL_METHOD` | How to install SCOOP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `SCOOP_VERSION`        | Specific version of scoop to install.                                                                                                                                 | `latest`           |                  |
-| `SCOOP_DOWNLOAD_URL`   | Override URL for downloading scoop binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `SCOOP_RELEASES_URL`   | Override URL for querying scoop available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `SCOOP_INSTALL_METHOD` | Installation strategy for scoop: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `SCOOP_VERSION`        | Specific version of scoop to install.                                                                                                                   | `latest`           |                  |
+| `SCOOP_DOWNLOAD_URL`   | Override URL for downloading scoop binary or archive artifacts.                                                                                         | `none`             |                  |
+| `SCOOP_RELEASES_URL`   | Override URL for querying scoop available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

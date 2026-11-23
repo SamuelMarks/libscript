@@ -2,7 +2,7 @@
 
 ## Usage
 
-This document describes the `JupyterHub` component located in the `third_party` folder within the
+This document describes the `JupyterHub` component located in the `workloads/apps` folder within the
 LibScript ecosystem. It provides the installation and configuration scripts required to provision
 JupyterHub.
 
@@ -38,21 +38,22 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                   | Description                                                                           | Default | Aliases/Examples |
-| -------------------------- | ------------------------------------------------------------------------------------- | ------- | ---------------- |
-| `JUPYTERHUB_SERVICE_USER`  | System user account running the JupyterHub daemon (created if nonexistent).           | `none`  |                  |
-| `JUPYTERHUB_SERVICE_GROUP` | Primary system group assigned to the JupyterHub daemon user.                          | `none`  |                  |
-| `JUPYTERHUB_IP`            | Bind IP address on which JupyterHub listens for incoming HTTP connections.            | `none`  |                  |
-| `JUPYTERHUB_PORT`          | TCP port on which JupyterHub listens for incoming HTTP connections.                   | `none`  |                  |
-| `JUPYTERHUB_NOTEBOOK_DIR`  | Default working directory for spawned user notebook servers (created if nonexistent). | `none`  |                  |
-| `JUPYTERHUB_VENV`          | Filesystem path to the isolated Python virtual environment hosting JupyterHub.        | `none`  |                  |
-| `JUPYTERHUB_USERNAME`      | Initial administrative JupyterHub login username.                                     | `none`  |                  |
-| `JUPYTERHUB_PASSWORD`      | Initial administrative password or salted Argon2 password hash for JupyterHub.        | `none`  |                  |
-| `GROUP`                    | Fallback system group name used when creating the JupyterHub service account.         | `none`  |                  |
-| `PYTHON_VERSION`           | Python interpreter version provisioned for the JupyterHub virtual environment.        | `none`  |                  |
+| Variable                   | Description                                                                           | Default |
+| :------------------------- | :------------------------------------------------------------------------------------ | :------ |
+| `JUPYTERHUB_SERVICE_USER`  | System user account running the JupyterHub daemon (created if nonexistent).           | `-`     |
+| `JUPYTERHUB_SERVICE_GROUP` | Primary system group assigned to the JupyterHub daemon user.                          | `-`     |
+| `JUPYTERHUB_IP`            | Bind IP address on which JupyterHub listens for incoming HTTP connections.            | `-`     |
+| `JUPYTERHUB_PORT`          | TCP port on which JupyterHub listens for incoming HTTP connections.                   | `-`     |
+| `JUPYTERHUB_NOTEBOOK_DIR`  | Default working directory for spawned user notebook servers (created if nonexistent). | `-`     |
+| `JUPYTERHUB_VENV`          | Filesystem path to the isolated Python virtual environment hosting JupyterHub.        | `-`     |
+| `JUPYTERHUB_USERNAME`      | Initial administrative JupyterHub login username.                                     | `-`     |
+| `JUPYTERHUB_PASSWORD`      | Initial administrative password or salted Argon2 password hash for JupyterHub.        | `-`     |
+| `GROUP`                    | Fallback system group name used when creating the JupyterHub service account.         | `-`     |
+| `PYTHON_VERSION`           | Python interpreter version provisioned for the JupyterHub virtual environment.        | `-`     |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Architecture
@@ -62,14 +63,6 @@ and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
   correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Configuration Options
-
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
-<!-- BEGIN_VARS -->
-<!-- END_VARS -->
 
 ## Platform Support
 

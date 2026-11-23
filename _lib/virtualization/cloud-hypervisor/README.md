@@ -1,5 +1,7 @@
 # Cloud Hypervisor
 
+**Tier**: `T1` (`_lib/virtualization/cloud-hypervisor/`) | **Capabilities**: `userland-package`
+
 Cloud Hypervisor component for LibScript systems.
 
 ## Usage

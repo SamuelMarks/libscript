@@ -1,5 +1,7 @@
 # Packer Component
 
+**Tier**: `T1` (`_lib/iac/packer/`) | **Capabilities**: `userland-package`
+
 Installs HashiCorp Packer via official repository, brew, or native release binary.
 
 ## Usage

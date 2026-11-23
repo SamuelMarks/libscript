@@ -1,5 +1,7 @@
 # ReactOS Build Environment (`rosbe`)
 
+**Tier**: `T1` (`_lib/toolchains/rosbe/`) | **Capabilities**: `userland-package`, `cross-toolchain`
+
 Standalone LibScript cross-toolchain component provisioning the **ReactOS Build Environment
 (`RosBE`)** with `i686-w64-mingw32` (`i386`) and `x86_64-w64-mingw32` (`amd64`) target support,
 composing `_lib/toolchains/cmake` and `_lib/toolchains/ninja`.

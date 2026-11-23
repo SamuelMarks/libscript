@@ -7,7 +7,7 @@
   "properties": {
     "WAIT4X_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install WAIT4X. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for wait4x: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "default": "libscript_native"
     },
     "WAIT4X_VERSION": {

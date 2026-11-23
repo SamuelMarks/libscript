@@ -1,37 +1,51 @@
-# T5: Topologies & Consensus Choreography (`topologies/`)
+# Tier 5 (`T5`): Stateful High-Availability Constellations (`workloads/constellations/`)
 
 ## Overview
 
-`topologies/` implements multi-node cluster orchestration, consensus bootstrapping, distributed
-lease locking, and split-brain fencing across Tier 3 cloud providers and hypervisors.
+`workloads/constellations/` orchestrates multi-node stateful database, cache, object-storage,
+unikernel, edge, and enterprise web constellations governed by `constellation.schema.json`. It pairs
+`T0` distributed lease locking (`engine/consensus/lock.{sh,cmd}`) and automated split-brain fencing
+(`engine/consensus/fence.{sh,cmd}`) with live `Plane A` traits (`traits/mesh/`, `traits/tls/`,
+`traits/ingress/`, `traits/backup/`) atop `T4` cloud providers or cluster substrates
+(`infrastructure/clusters/`).
 
-## Core Capabilities
+> **Note:** Underlying compute/container cluster substrates (`gke-tpu-cluster`, `k0s-ha`,
+> `k8s-marathon-paas`, `kubernetes-thw`, `mesos-marathon-ha`) live in `T4`
+> [`infrastructure/clusters/`](../../infrastructure/clusters/README.md) and are managed via
+> `./libscript.sh cluster <verb> ...`.
 
-- **Deterministic State Machine (`.topology_state.json`)**: Governed by
-  `engine/schemas/consensus-state.schema.json`, tracking cluster epochs, active leader IDs, per-node
-  state transitions (`PENDING` -> `PROVISIONED` -> `SUBSTRATE_READY` -> `CONFIGURED` -> `JOINED` ->
-  `DRAINING` -> `FENCED` -> `DESTROYED`), and cloud resource identifiers with atomic
-  write-then-rename checkpointing.
-- **Distributed Lease Locking (`lock.{sh,cmd}`)**: Prevents concurrent mutations via shared state
-  locks in `s3://`, `gs://`, `azure://`, `etcd`, or local lockfiles.
-- **Split-Brain Fencing (`fence.{sh,cmd}`)**: Demotes and firewall-isolates unreachable leaders or
-  invokes Tier 3 Cloud IaaS APIs (NIC/volume detach or power-off) prior to promoting a replica.
-- **Turnkey HA Blueprints**:
-  - `postgres-ha/`: PostgreSQL + Patroni + `etcd` consensus + PgBouncer + `netctl` VIP routing.
-  - `valkey-cluster/`: Distributed Valkey cluster with slot sharding and automatic failover.
-  - `redis-cluster/`: Distributed Redis cluster with Sentinel/Cluster failover.
-  - `openedx-ha/`: Multi-node Open edX LMS/CMS + Celery + MariaDB/MongoDB/Redis/Meilisearch HA.
-  - `mesos-marathon-ha/`: Apache Mesos + Marathon v2 PaaS cluster with ZooKeeper quorum election.
-  - `k8s-marathon-paas/`: Kubernetes HA cluster with Marathon-compatible PaaS orchestration.
-  - `k0s-ha/`: Multi-control-plane Kubernetes (`k0s`) HA cluster.
-  - `minio-distributed/`: Erasure-coded distributed MinIO object storage cluster.
-  - `gke-tpu-cluster/`: Multi-pool GKE + TPU node-pool topology.
+## Constellation Blueprints
+
+- [`postgres-ha/`](./postgres-ha/README.md): Patroni + etcd Raft quorum + PostgreSQL streaming
+  replication + PgBouncer connection pooling with fenced leader failover.
+- [`redis-cluster/`](./redis-cluster/README.md): 6-node Redis Cluster (16384 hash slots) + Sentinel
+  quorum over WireGuard mesh peering.
+- [`valkey-cluster/`](./valkey-cluster/README.md): High-availability Valkey cluster with automated
+  shard rebalancing and replica promotion.
+- [`minio-distributed/`](./minio-distributed/README.md): Erasure-coded multi-node S3-compatible
+  MinIO object storage constellation.
+- [`openedx-ha/`](./openedx-ha/README.md): Multi-node Open edX production constellation separating
+  stateless LMS/CMS/MFE/Celery tiers from HA MariaDB, MongoDB, Redis, and Meilisearch quorums.
+- [`openedx-unikernel-pod/`](./openedx-unikernel-pod/README.md): 8-appliance single-process
+  unikernel constellation (OSv / Nanos / Unikraft) with cloud Marketplace offer packaging.
+- [`iot-mqtt-edge-pod/`](./iot-mqtt-edge-pod/README.md): Edge MQTT broker + Zephyr/FreeRTOS sensor
+  fleet + time-series ingestion constellation.
+- [`unikernel_pod/`](./unikernel_pod/README.md): Composable multi-unikernel pod orchestrator over
+  isolated TAP bridges and `netctl` ingress.
 
 ## Usage
 
 ```sh
-./libscript.sh topology up workloads/constellations/postgres-ha/topology.json
-./libscript.sh topology status workloads/constellations/postgres-ha/topology.json
-./libscript.sh topology failover workloads/constellations/postgres-ha/topology.json node-follower-1
-./libscript.sh topology destroy workloads/constellations/postgres-ha/topology.json
+./libscript.sh constellation up workloads/constellations/postgres-ha/topology.json
+./libscript.sh constellation status workloads/constellations/postgres-ha/topology.json
+./libscript.sh constellation scale workloads/constellations/postgres-ha/topology.json pg-replicas=4
+./libscript.sh constellation failover workloads/constellations/postgres-ha/topology.json node-follower-1
+./libscript.sh constellation destroy workloads/constellations/postgres-ha/topology.json
+```
+
+```cmd
+.\libscript.cmd constellation up workloads\constellations\postgres-ha\topology.json
+.\libscript.cmd constellation status workloads\constellations\postgres-ha\topology.json
+.\libscript.cmd constellation failover workloads\constellations\postgres-ha\topology.json node-follower-1
+.\libscript.cmd constellation destroy workloads\constellations\postgres-ha\topology.json
 ```

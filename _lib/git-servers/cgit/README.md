@@ -1,47 +1,54 @@
-# cgit
+# cgit (`_lib/git-servers/cgit/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `cgit` component (part of
-`_git-servers`) within the LibScript ecosystem. Hyperfast C CGI web frontend for Git repositories
-with built-in caching.
+Hyperfast C CGI web frontend for Git repositories with built-in caching.
+
+- **Tier**: `T1` (`_lib/git-servers/cgit/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `cgit`, `git-web`
+- **Target OS Exclusions (`manifest.json`)**: `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **cgit**. It is designed to
-be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install cgit
-libscript uninstall cgit
+# Install and manage the cgit service daemon
+./libscript.sh install cgit latest
+./libscript.sh start cgit
+./libscript.sh status cgit
+./libscript.sh logs cgit
+./libscript.sh stop cgit
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start cgit
-libscript stop cgit
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install cgit latest
+.\libscript.cmd start cgit
+.\libscript.cmd status cgit
+.\libscript.cmd stop cgit
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker cgit
-```
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/cgit/<version>`
+  (default `~/.libscript/cgit/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `CGIT_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
-_Note: On Unix environments, you can also use `./cli.sh install cgit`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+## Lifecycle Hooks (`hooks/`)
+
+Provides dual-layer lifecycle hooks invoked by `T0` `engine/common/hooks.{sh,cmd}` and `Plane A`
+traits (`traits/`): `announce.{sh,cmd}`, `backup.{sh,cmd}`, `backup_tenant.{sh,cmd}`,
+`configure.{sh,cmd}`, `deprovision_tenant.{sh,cmd}`, `log_stream.{sh,cmd}`, `maintenance.{sh,cmd}`,
+`metrics.{sh,cmd}`, `probe.{sh,cmd}`, `provision_tenant.{sh,cmd}`, `restore.{sh,cmd}`,
+`restore_tenant.{sh,cmd}`, `rollback.{sh,cmd}`, `upgrade.{sh,cmd}`.
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +63,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

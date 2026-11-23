@@ -1,101 +1,59 @@
-# C
+# C# Toolchain (`_lib/languages/csharp/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `csharp` component (part
-of `_toolchain`) within the LibScript ecosystem. This component manages the installation of the C#
-and .NET platform toolchain, providing the necessary SDKs and runtimes to build and execute .NET
-applications.
+C# compiler and .NET runtime.
 
-Crucially, this module allows `csharp` to function both as a **local version manager** (similar to
-tools like `rvm`, `nvm`, `pyenv`, or `uv`) and as a component invoked seamlessly by the global
-version manager, `libscript`. Furthermore, `libscript` can utilize this `csharp` toolchain as a
-foundational building block to provision and orchestrate much larger, complex software stacks (such
-as WordPress, Open edX, Nextcloud, and more).
+- **Tier**: `T1` (`_lib/languages/csharp/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `compiler`, `c#`, `csharp`, `dotnet`
+- **Target OS Exclusions (`manifest.json`)**: `sunos`
 
-## Usage with LibScript
-
-This directory contains the installation and configuration scripts for `csharp`. It is designed to
-be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-You can install, start, stop, package, and uninstall csharp using the global `libscript` command or
-the local CLI.
-
-**Unix (Linux/macOS):**
+## Usage
 
 ```sh
-
-./libscript.sh install csharp
-
-./cli.sh install csharp
-
-./libscript.sh start csharp
-./cli.sh start csharp
-
-./libscript.sh stop csharp
-./cli.sh stop csharp
-
-./libscript.sh package-as docker csharp
-./cli.sh package-as docker csharp
-
-./libscript.sh uninstall csharp
-./cli.sh uninstall csharp
+# Native version management (isolated under ${LIBSCRIPT_HOME}/csharp/<version>)
+./libscript.sh ls-remote csharp
+./libscript.sh install csharp latest
+./libscript.sh use csharp latest
+./libscript.sh which csharp
+./_lib/languages/csharp/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install csharp
-
-:: Local CLI
-cli.cmd install csharp
-
-:: Start and Stop
-libscript.cmd start csharp
-cli.cmd start csharp
-
-libscript.cmd stop csharp
-cli.cmd stop csharp
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi csharp
-cli.cmd package-as msi csharp
-
-:: Uninstall
-libscript.cmd uninstall csharp
-cli.cmd uninstall csharp
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote csharp
+.\libscript.cmd install csharp latest
+.\libscript.cmd use csharp latest
+.\libscript.cmd which csharp
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/csharp/<version>`
+  (default `~/.libscript/csharp/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `CSHARP_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                                                                                                            | Default            | Aliases/Examples |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `CSHARP_INSTALL_METHOD` | How to install CSHARP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `CSHARP_VERSION`        | Version of C# Toolchain to install                                                                                                                                     | `latest`           |                  |
-| `CSHARP_DOWNLOAD_URL`   | Override URL for downloading csharp binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `CSHARP_RELEASES_URL`   | Override URL for querying csharp available remote releases.                                                                                                            | `none`             |                  |
+| Variable                | Description                                                                                                                                              | Default            | Aliases/Examples |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `CSHARP_INSTALL_METHOD` | Installation strategy for csharp: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `CSHARP_VERSION`        | Version of C# Toolchain to install                                                                                                                       | `latest`           |                  |
+| `CSHARP_DOWNLOAD_URL`   | Override URL for downloading csharp binary or archive artifacts.                                                                                         | `none`             |                  |
+| `CSHARP_RELEASES_URL`   | Override URL for querying csharp available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

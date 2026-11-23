@@ -1,5 +1,7 @@
 # Chrony NTP
 
+**Tier**: `T1` (`_lib/networking/chrony/`) | **Capabilities**: `userland-package`
+
 Versatile Network Time Protocol daemon
 
 ## Usage

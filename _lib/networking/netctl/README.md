@@ -1,5 +1,7 @@
 # Netctl
 
+**Tier**: `T2` (`_lib/networking/netctl/`) | **Capabilities**: `sysroot-package`
+
 ## Purpose & Current State
 
 This document describes the `netctl` routing and reverse proxy configuration component within the

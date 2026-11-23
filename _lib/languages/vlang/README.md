@@ -1,47 +1,45 @@
-# vlang
+# V (Vlang) (`_lib/languages/vlang/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `vlang` component (part of
-`_languages`) within the LibScript ecosystem. Simple, fast, safe, compiled systems programming
-language (v) with rapid C/native compilation.
+Simple, fast, safe, compiled systems programming language (v) with rapid C/native compilation.
+
+- **Tier**: `T1` (`_lib/languages/vlang/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `vlang`, `v`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **V (Vlang)**. It is designed
-to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install vlang
-libscript uninstall vlang
+# Native version management (isolated under ${LIBSCRIPT_HOME}/vlang/<version>)
+./libscript.sh ls-remote vlang
+./libscript.sh install vlang latest
+./libscript.sh use vlang latest
+./libscript.sh which vlang
+./_lib/languages/vlang/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start vlang
-libscript stop vlang
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote vlang
+.\libscript.cmd install vlang latest
+.\libscript.cmd use vlang latest
+.\libscript.cmd which vlang
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker vlang
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install vlang`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/vlang/<version>`
+  (default `~/.libscript/vlang/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `VLANG_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,6 +1,6 @@
 # GNU Compiler Collection (`gcc`)
 
-Standalone Tier 1 LibScript recipe for the GNU C/C++ Compiler (`gcc`).
+Standalone T1 LibScript recipe for the GNU C/C++ Compiler (`gcc`).
 
 ## Installation Modes
 

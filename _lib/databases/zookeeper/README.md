@@ -1,5 +1,8 @@
 # Apache ZooKeeper (`_lib/databases/zookeeper`)
 
+**Tier**: `T1` (`_lib/databases/zookeeper/`) | **Capabilities**: `userland-package`,
+`service-daemon`
+
 ## Overview
 
 Standalone Version Manager for **Apache ZooKeeper** (`zookeeper`, `zkServer.sh`, `zkCli.sh`).

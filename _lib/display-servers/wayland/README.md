@@ -1,5 +1,8 @@
 # Wayland Protocol
 
+**Tier**: `T2` (`_lib/display-servers/wayland/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 Core Wayland display server library and protocols
 
 ## Usage

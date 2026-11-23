@@ -1,97 +1,29 @@
-# LibScript Test Suite
+# Multi-OS Verification, Boot & Idempotency Test Suite (`tests/`)
 
-This directory contains automated cross-platform test runners, batch execution harnesses, and
-validation suites for LibScript components and stacks.
+## Overview
 
-## Test Runners
+`tests/` contains LibScript's cross-platform verification harnesses spanning `T0`–`T5` and both
+orthogonal planes (`traits/` and `experiments/`). See [`../TEST.md`](../TEST.md) for the complete
+verification architecture.
 
-- **`run_native_tests.*`**: Executes test suites directly on the native host environment across
-  specified categories or components without requiring Vagrant or virtual machines.
-  - POSIX Shell: `tests/run_native_tests.sh`
-  - Windows Command Prompt: `tests\run_native_tests.cmd`
-  - PowerShell: `tests\run_native_tests.ps1`
-- **`run_local_tests.*`**: Executes test suites locally inside isolated Vagrant virtual machines
-  across supported guest operating systems (Alpine 3.24, Debian 13, FreeBSD 15.1, Rocky Linux 10.2).
-- **`run_all_batches.*`**: Executes all test batches sequentially across components.
-- **`run_next_batch.*`**: Incremental batch test executor for CI environments.
-- **`update_results.*`**: Aggregates test results (`*.success`, `*.failure`) from `tests_tmp/`,
-  updates the Supported Components compatibility matrix in `README.md`, updates completed items in
-  `TODO_PLAN.md`, and optionally exports a JSON results matrix.
+## Test Suites
 
-## Running Native Tests
-
-To test components directly on your current machine or CI runner:
-
-POSIX (`/bin/sh`):
-
-```sh
-# Run tests for specific components
-./tests/run_native_tests.sh sqlite curl
-
-# Run tests for a category
-./tests/run_native_tests.sh --category databases
-
-# Run dry-run simulation
-./tests/run_native_tests.sh --dry-run sqlite
-```
-
-Windows (`cmd.exe`):
-
-```cmd
-:: Run tests for specific components
-call tests\run_native_tests.cmd sqlite curl
-
-:: Run tests for a category
-call tests\run_native_tests.cmd --category databases
-
-:: Run dry-run simulation
-call tests\run_native_tests.cmd --dry-run sqlite
-```
-
-````
-
-## Running Isolated Vagrant Tests
-
-Run local Vagrant test suites across guest distributions:
-
-```sh
-# Default: Alpine Linux 3.24
-./tests/run_local_tests.sh sqlite
-
-# Specific target OS
-./tests/run_local_tests.sh sqlite --os debian-13
-./tests/run_local_tests.sh sqlite --os freebsd-15.1
-./tests/run_local_tests.sh sqlite --os rockylinux-10.2
-````
-
-## Central Results Reporting
-
-Aggregate test output artifacts and update the root `README.md` compatibility table:
-
-```sh
-# Update root README.md
-./tests/update_results.sh
-
-# Update a custom report file and export JSON matrix
-./tests/update_results.sh --output REPORT.md --json tests_tmp/matrix_results.json
-```
-
-Windows equivalent:
-
-```cmd
-call tests\update_results.cmd --output REPORT.md --json tests_tmp\matrix_results.json
-```
-
-## Artifact Naming Conventions
-
-All test outputs and status markers are stored in `tests_tmp/`:
-
-| Artifact                       | Purpose                                                    |
-| ------------------------------ | ---------------------------------------------------------- |
-| `<component>.<os_tag>.stdout`  | Standard output stream from `install` and `test` execution |
-| `<component>.<os_tag>.stderr`  | Standard error stream from `install` and `test` execution  |
-| `<component>.<os_tag>.success` | Marker file created upon zero exit code                    |
-| `<component>.<os_tag>.failure` | Marker file created upon non-zero exit code                |
-
-Supported `<os_tag>` values include `linux.alpine`, `linux.debian`, `linux.rhel`, `freebsd`, and
-`windows`.
+- **Idempotency & Standards Verification**:
+  - `test_idempotency_matrix.{sh,cmd}`: Executes recipes twice consecutively and verifies zero
+    unintended state mutation.
+  - `test_win_dos_component_pm.{sh,cmd}`: Verifies native Windows PE and 32-bit MS-DOS (`dos32`)
+    component package managers.
+- **Synthesized OS, Unikernel & RTOS Headless Boot Harnesses**:
+  - `os_boot_test.{sh,cmd}`, `freebsd_boot_test.{sh,cmd}`, `illumos_boot_test.{sh,cmd}`,
+    `reactos_boot_test.{sh,cmd}`, `zephyr_boot_test.{sh,cmd}`, `freertos_boot_test.{sh,cmd}`, and
+    [`boot_matrix/`](./boot_matrix/README.md).
+  - `os_gui_smoke_test.{sh,cmd}`, `freebsd_gui_smoke_test.{sh,cmd}`,
+    `illumos_gui_smoke_test.{sh,cmd}`, `reactos_gui_smoke_test.{sh,cmd}`: Headless `virtio-gpu`
+    Wayland/X11/PipeWire desktop verification.
+  - `test_airgap_boot.{sh,cmd}` & `test_live_installer_matrix.{sh,cmd}`: Strict
+    `LIBSCRIPT_OFFLINE=1` air-gapped boot and `msi-rs` quad-OS live installer verification.
+- **Container, Vagrant & Compatibility Aggregation**:
+  - `run_alpine_tests.*`, `run_debian_tests.*`, `run_native_tests.*`, `run_local_tests.*`,
+    `distro_pkg_roundtrip_test.*`, `cloud_image_test.*`, `container_smoke_test.*`.
+  - `update_results.{sh,cmd,ps1}`: Aggregates test markers and updates the Supported Components
+    compatibility table in [`../README.md`](../README.md).

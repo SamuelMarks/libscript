@@ -1,5 +1,8 @@
 # Vulkan Loader
 
+**Tier**: `T2` (`_lib/graphics/vulkan-loader/`) | **Capabilities**: `sysroot-package`,
+`sysroot-library`
+
 Khronos Vulkan ICD loader and headers
 
 ## Usage

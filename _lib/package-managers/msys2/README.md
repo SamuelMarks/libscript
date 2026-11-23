@@ -1,9 +1,10 @@
 # Msys2
 
+**Tier**: `T1` (`_lib/package-managers/msys2/`) | **Capabilities**: `userland-package`
+
 MSYS2 is a collection of tools and libraries providing an easy-to-use environment for building,
 installing, and running native Windows software. It consists of a command-line terminal called
-mintty, bash, version control libscript_natives like git, and various build libscript_natives like
-autotools and GCC.
+mintty, bash, version control systems like git, and various build systems like autotools and GCC.
 
 ## Integration with Libscript
 
@@ -29,12 +30,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `MSYS2_INSTALL_METHOD` | How to install MSYS2. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `MSYS2_VERSION`        | Specific version of msys2 to install.                                                                                                                                 | `latest`           |                  |
-| `MSYS2_DOWNLOAD_URL`   | Override URL for downloading msys2 binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `MSYS2_RELEASES_URL`   | Override URL for querying msys2 available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `MSYS2_INSTALL_METHOD` | Installation strategy for msys2: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `MSYS2_VERSION`        | Specific version of msys2 to install.                                                                                                                   | `latest`           |                  |
+| `MSYS2_DOWNLOAD_URL`   | Override URL for downloading msys2 binary or archive artifacts.                                                                                         | `none`             |                  |
+| `MSYS2_RELEASES_URL`   | Override URL for querying msys2 available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

@@ -1,5 +1,7 @@
 # WPA Supplicant
 
+**Tier**: `T2` (`_lib/networking/wpa_supplicant/`) | **Capabilities**: `sysroot-package`
+
 WPA/WPA2/WPA3 wireless security daemon
 
 ## Usage

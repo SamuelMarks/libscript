@@ -1,18 +1,9 @@
-# SQL Provisioner Custom Action
+# MSI Logical SQL Database Provisioner (`synthesis/msi/src/sql_provisioner/`)
 
-Zero-.exe in-process SQL database provisioner DLL for Windows Installer packages.
+## Overview
 
-## Purpose & Current State
-
-This component compiles into a lightweight C++ custom action DLL (`sql_provisioner.dll`) that
-executes inside `msiexec.exe`. It configures MySQL/MariaDB database schemas, user permissions, and
-character sets directly during MSI transactions without requiring external shell executables or
-external tooling.
-
-## API Functions
-
-- `ProvisionDatabase(MSIHANDLE hInstall)`: Reads database parameters from MSI properties
-  (`PROP_MYSQL_HOST`, `PROP_MYSQL_PORT`, `PROP_PROVISION_DB_NAME`, `PROP_PROVISION_USER`,
-  `PROP_PROVISION_PASSWORD`, `PROP_PROVISION_COLLATION`) and executes creation and grant statements.
-- `DeprovisionDatabase(MSIHANDLE hInstall)`: Drops schemas and users upon package uninstallation
-  when `PURGE_DATA` is set to `1`.
+`synthesis/msi/src/sql_provisioner/` implements transactional logical database, role, and schema
+provisioning for Windows MSI installers (`ARCHITECTURE_LOGICAL_PROVISIONING.md`). It supports both
+newly installed local database daemons (`USER_DB_STRATEGY=local`, with automatic `DROP DATABASE`
+cleanup on MSI rollback) and pre-existing remote database clusters (`USER_DB_STRATEGY=remote`,
+performing non-destructive connectivity verification without dropping remote state on rollback).

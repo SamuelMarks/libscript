@@ -1,5 +1,7 @@
 # wget
 
+**Tier**: `T1` (`_lib/utilities/wget/`) | **Capabilities**: `userland-package`
+
 GNU Wget is a free software package for retrieving files using HTTP, HTTPS, FTP, and FTPS, the most
 widely used Internet protocols. It is a non-interactive command-line tool, so it may easily be
 called from scripts, cron jobs, or terminals without X-Windows support.
@@ -30,12 +32,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default  | Aliases/Examples |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `WGET_INSTALL_METHOD` | How to install WGET. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |                  |
-| `WGET_VERSION`        | Specific version of wget to install.                                                                                                                                 | `latest` |                  |
-| `WGET_DOWNLOAD_URL`   | Override URL for downloading wget binary or archive artifacts.                                                                                                       | `none`   |                  |
-| `WGET_RELEASES_URL`   | Override URL for querying wget available remote releases.                                                                                                            | `none`   |                  |
+| Variable              | Description                                                                                                                                            | Default  | Aliases/Examples |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------- |
+| `WGET_INSTALL_METHOD` | Installation strategy for wget: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `system` |                  |
+| `WGET_VERSION`        | Specific version of wget to install.                                                                                                                   | `latest` |                  |
+| `WGET_DOWNLOAD_URL`   | Override URL for downloading wget binary or archive artifacts.                                                                                         | `none`   |                  |
+| `WGET_RELEASES_URL`   | Override URL for querying wget available remote releases.                                                                                              | `none`   |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

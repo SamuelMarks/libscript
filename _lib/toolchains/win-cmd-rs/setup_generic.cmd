@@ -312,10 +312,18 @@ if "!_SRC_DIR!"=="" (
     if not exist "!_SRC_TMP!" mkdir "!_SRC_TMP!"
     set "PACKAGE_NAME=win-cmd-rs"
     call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_download "https://github.com/SamuelMarks/win-cmd-rs/archive/refs/tags/v!EXACT_VERSION!.zip" "!_SRC_TMP!\src.zip" "%WIN_CMD_RS_CHECKSUM%"
-    if errorlevel 1 exit /b 1
-    call :extract_wcr_zip "!_SRC_TMP!\src.zip" "!_SRC_TMP!\tree"
-    if errorlevel 1 exit /b 1
-    for /d %%D in ("!_SRC_TMP!\tree\*") do set "_SRC_DIR=%%~fD"
+    if not errorlevel 1 (
+        call :extract_wcr_zip "!_SRC_TMP!\src.zip" "!_SRC_TMP!\tree"
+        if errorlevel 1 exit /b 1
+        for /d %%D in ("!_SRC_TMP!\tree\*") do set "_SRC_DIR=%%~fD"
+    ) else (
+        call :clone_wcr_source "!_SRC_TMP!\repo"
+        if errorlevel 1 (
+            if exist "!_SRC_TMP!" rmdir /s /q "!_SRC_TMP!" >nul 2>&1
+            exit /b 1
+        )
+        set "_SRC_DIR=!_SRC_TMP!\repo"
+    )
     set "_CLEAN_SRC=1"
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
@@ -331,6 +339,17 @@ if "!_CLEAN_SRC!"=="1" if exist "!_SRC_TMP!" rmdir /s /q "!_SRC_TMP!" >nul 2>&1
 if not "!_CB_RC!"=="0" exit /b !_CB_RC!
 call :update_aliases
 exit /b 0
+
+:: ## clone_wcr_source
+:: Clones the tagged win-cmd-rs repository shallowly via git when archive download is unavailable.
+:clone_wcr_source
+if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
+if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
+where git >nul 2>&1
+if errorlevel 1 exit /b 1
+echo [INFO] Source archive download unavailable; cloning tag v!EXACT_VERSION! via git...
+git clone --depth 1 --branch "v!EXACT_VERSION!" "https://github.com/SamuelMarks/win-cmd-rs.git" "%~1"
+exit /b !errorlevel!
 
 :: ## resolve_version
 :: Resolves latest, stable, or lts version aliases into EXACT_VERSION and strips any leading 'v'.

@@ -1,5 +1,7 @@
 # HashiCorp Nomad (`_lib/schedulers/nomad`)
 
+**Tier**: `T1` (`_lib/schedulers/nomad/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 ## Overview
 
 Standalone Version Manager for **HashiCorp Nomad** (`nomad`), orchestrating `service` and `batch`
@@ -47,7 +49,7 @@ running the setup script.
 | `NOMAD_INSTALL_METHOD` | How to install HashiCorp Nomad ('libscript_native' isolates binaries in LIBSCRIPT_HOME, 'system' uses OS packages). | `libscript_native` |                  |
 | `NOMAD_HTTP_PORT`      | TCP port on which the Nomad HTTP API listens.                                                                       | `4646`             |                  |
 | `NOMAD_DATA_DIR`       | Filesystem directory path for Nomad Raft state and allocation sandboxes.                                            | `/var/lib/nomad`   |                  |
-| `NOMAD_ADDR`           | Configuration variable NOMAD_ADDR for nomad.                                                                        | `none`             |                  |
+| `NOMAD_ADDR`           | HTTP/HTTPS address of the HashiCorp Nomad API server (e.g., http://127.0.0.1:4646).                                 | `none`             |                  |
 | `NOMAD_HOME`           | Filesystem directory or path configuration for nomad (NOMAD_HOME).                                                  | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,

@@ -135,12 +135,14 @@ C:\Program Files (x86)\OpenEdX\
 └── libscript\                   # Full embedded LibScript engine
     ├── libscript.cmd            # Root Windows batch engine
     ├── libscript.sh             # Root POSIX /bin/sh engine
-    ├── _lib\                    # Core runtime, database, cache, and netctl recipes
-    ├── cli\                     # CLI dispatchers
-    ├── synthesis\msi\               # WiX generators, branding tools, and browser launcher
-    ├── payloads\                # Declarative workload definitions and schedulers
-    ├── topologies\              # Multi-node HA cluster topologies
-    └── traits\                  # Cross-cutting node traits (storage, secrets, firewall, backup)
+    ├── engine\                  # T0 stdlib, DAG solver, hooks, and consensus substrate
+    ├── cli\                     # CLI subcommand dispatchers (core, deps, config, scaffold)
+    ├── _lib\                    # T1/T2 atomic runtime, database, cache, and netctl recipes
+    ├── synthesis\               # T3 OS/image synthesis and WiX/MSI installer infrastructure
+    ├── infrastructure\          # T4 cloud IaaS providers, resources, and cluster substrates
+    ├── workloads\               # T5 application stacks, schedulers, payloads, and HA constellations
+    ├── traits\                  # Plane A cross-cutting node traits (storage, secrets, firewall, backup)
+    └── schemas\                 # Shared domain variable JSON Schemas
 ```
 
 ### WiX Multi-Fragment Synthesis

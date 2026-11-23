@@ -322,10 +322,10 @@ LibScript natively orchestrates the zero-hallucination **EDG C/C++ Multi-Backend
 
 LibScript orchestrates reproducible single-host and multi-host Google Cloud TPU benchmarks under
 strict `$0.00` TPU Research Cloud (TFRC) guardrails (`experiments/gemma-tpu/`,
-`engine/schemas/tfrc-policy.schema.json`, `engine/common/tfrc_guard.{sh,cmd}`,
-`workloads/ai/_common/tpu_matrix.{sh,cmd}`, and legacy wrapper `experiments/gemma-tpu/`) across all
-seven Gemma 4 ML framework configurations (`hf_transformers`, `pytorch_native`, `keras_jax`,
-`keras_tensorflow`, `keras_pytorch`, `maxtext`, and `jax_native`):
+`engine/schemas/tfrc-policy.schema.json`, `engine/common/tfrc_guard.{sh,cmd}`, and
+`workloads/ai/_common/tpu_matrix.{sh,cmd}`) across all seven Gemma 4 ML framework configurations
+(`hf_transformers`, `pytorch_native`, `keras_jax`, `keras_tensorflow`, `keras_pytorch`, `maxtext`,
+and `jax_native`):
 
 - **Zero-Cost TFRC Policy Guardrails:** Requires an explicit `tfrc.policy.json`, blocks GKE/XPK,
   strips `DISK_SIZE_GB` / `TPU_DATA_DISK_SIZE`, enforces same-region GCS parity when `--gcs-bucket`
@@ -354,8 +354,9 @@ call ..\libscript\libscript.cmd experiment tpu_matrix "--tfrc-config=tfrc.policy
 
 ## 8. Declarative Cross-OS Installer & Guest-UI Experiment Plugins (`substrate: "installer-e2e"`)
 
-Any stack with a `_lib/<category>/<app>/packaging.json` manifest (`openedx`, `wordpress`, `odoo`,
-etc.) can run end-to-end Vagrant + native package + guest UI/browser login experiments via
+Any application stack with a `workloads/apps/<app>/packaging.json` (or component
+`_lib/<category>/<comp>/packaging.json`) manifest (`openedx`, `wordpress`, `odoo`, etc.) can run
+end-to-end Vagrant + native package + guest UI/browser login experiments via
 `experiments/_common/pkg_ui_runner.{sh,cmd}` without writing custom runner logic:
 
 ```sh

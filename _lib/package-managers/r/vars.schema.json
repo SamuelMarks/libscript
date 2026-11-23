@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/package-managers/R/vars.schema.json",
+  "$id": "/_lib/package-managers/r/vars.schema.json",
   "title": "R variables",
   "description": "Configuration variables for R",
   "type": "object",
   "properties": {
     "R_INSTALL_METHOD": {
-      "description": "How to install R. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for r: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "default": "system"
     },

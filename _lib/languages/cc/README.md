@@ -1,104 +1,61 @@
-# Cc
+# C Compiler (`_lib/languages/cc/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `cc` component (part of
-`_toolchain`) within the LibScript ecosystem. This component manages the installation of standard
-C/C++ compiler toolchains (such as GCC or Clang), which are essential for compiling and linking C
-and C++ programs.
+Generic C compiler interface.
 
-Crucially, this module allows `cc` to function both as a **local version manager** (similar to tools
-like `rvm`, `nvm`, `pyenv`, or `uv`) and as a component invoked seamlessly by the global version
-manager, `libscript`. Furthermore, `libscript` can utilize this `cc` toolchain as a foundational
-building block to provision and orchestrate much larger, complex software stacks (such as WordPress,
-Open edX, Nextcloud, and more).
+- **Tier**: `T1` (`_lib/languages/cc/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `cc`, `toolchain`
 
-## Usage with LibScript
-
-This directory contains the installation and configuration scripts for `cc`. It is designed to be
-executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-You can install, start, stop, package, and uninstall cc using the global `libscript` command or the
-local CLI.
-
-**Unix (Linux/macOS):**
+## Usage
 
 ```sh
-
-./libscript.sh install cc
-
-./cli.sh install cc
-
-./libscript.sh start cc
-./cli.sh start cc
-
-./libscript.sh stop cc
-./cli.sh stop cc
-
-./libscript.sh package-as docker cc
-./cli.sh package-as docker cc
-
-./libscript.sh uninstall cc
-./cli.sh uninstall cc
+# Native version management (isolated under ${LIBSCRIPT_HOME}/cc/<version>)
+./libscript.sh ls-remote cc
+./libscript.sh install cc latest
+./libscript.sh use cc latest
+./libscript.sh which cc
+./_lib/languages/cc/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install cc
-
-:: Local CLI
-cli.cmd install cc
-
-:: Start and Stop
-libscript.cmd start cc
-cli.cmd start cc
-
-libscript.cmd stop cc
-cli.cmd stop cc
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi cc
-cli.cmd package-as msi cc
-
-:: Uninstall
-libscript.cmd uninstall cc
-cli.cmd uninstall cc
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote cc
+.\libscript.cmd install cc latest
+.\libscript.cmd use cc latest
+.\libscript.cmd which cc
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/cc/<version>`
+  (default `~/.libscript/cc/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `CC_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable             | Description                                                                                                                                                                                             | Default   | Aliases/Examples |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------------- |
-| `CC_INSTALL_METHOD`  | How to install CC ('libscript_native' uses isolated version dirs, 'from-source' compiles from source, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools). | `system`  |                  |
-| `CC_VERSION`         | Version of C Compiler to install                                                                                                                                                                        | `latest`  |                  |
-| `CC_BACKEND`         | Active C compiler backend routed by cc ('default', 'gcc', 'clang', 'tcc', 'edgcpp', 'custom-cc').                                                                                                       | `default` |                  |
-| `CC_PKG_MGR`         | Explicit package manager override for CC installation.                                                                                                                                                  | `none`    |                  |
-| `CC_BUILD_TOOLCHAIN` | Bootstrap C toolchain used when building CC from source.                                                                                                                                                | `default` |                  |
-| `CC_DOWNLOAD_URL`    | Override URL for downloading cc binary or archive artifacts.                                                                                                                                            | `none`    |                  |
-| `CC_RELEASES_URL`    | Override URL for querying cc available remote releases.                                                                                                                                                 | `none`    |                  |
+| Variable             | Description                                                                                                                                                                                        | Default   | Aliases/Examples |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------------- |
+| `CC_INSTALL_METHOD`  | Installation strategy for cc: 'libscript_native' installs into isolated versioned directories, 'from-source' compiles from source archives, and 'system' delegates to the host OS package manager. | `system`  |                  |
+| `CC_VERSION`         | Version of C Compiler to install                                                                                                                                                                   | `latest`  |                  |
+| `CC_BACKEND`         | Active C compiler backend routed by cc ('default', 'gcc', 'clang', 'tcc', 'edgcpp', 'custom-cc').                                                                                                  | `default` |                  |
+| `CC_PKG_MGR`         | Explicit package manager override for CC installation.                                                                                                                                             | `none`    |                  |
+| `CC_BUILD_TOOLCHAIN` | Bootstrap C toolchain used when building CC from source.                                                                                                                                           | `default` |                  |
+| `CC_DOWNLOAD_URL`    | Override URL for downloading cc binary or archive artifacts.                                                                                                                                       | `none`    |                  |
+| `CC_RELEASES_URL`    | Override URL for querying cc available remote releases.                                                                                                                                            | `none`    |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

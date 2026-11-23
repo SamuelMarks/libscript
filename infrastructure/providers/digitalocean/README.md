@@ -1,28 +1,38 @@
-# DigitalOcean
+# Tier 4 (`T4`) Cloud Provider: DigitalOcean (`infrastructure/providers/digitalocean/`)
 
-DigitalOcean cloud provider component for LibScript systems.
+## Overview
+
+Provisions and manages DigitalOcean Droplets, VPC networks, Cloud Firewalls, and Block Storage
+volumes via `doctl` / REST APIs.
 
 ## Usage
 
 ```sh
-./libscript.sh install digitalocean
+# Invoke provider CLI operations
+./libscript.sh infrastructure digitalocean --help
+
+# Provision a node and deploy a stack
+./libscript.sh provision digitalocean my-node default-net default-region ./ ~/app
+```
+
+```cmd
+.\libscript.cmd infrastructure digitalocean --help
+.\libscript.cmd provision digitalocean my-node default-net default-region .\ ~/app
 ```
 
 ## Configuration Options
 
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
 <!-- BEGIN_VARS -->
 
-| Variable                      | Description                                                                                                                                                                  | Default            | Aliases/Examples |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `DIGITALOCEAN_VERSION`        | Specific version of digitalocean CLI (doctl) to install.                                                                                                                     | `latest`           | latest, stable   |
-| `DIGITALOCEAN_INSTALL_METHOD` | How to install DIGITALOCEAN. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `DIGITALOCEAN_REGION`         | Configuration variable DIGITALOCEAN_REGION for digitalocean.                                                                                                                 | `none`             |                  |
+| Variable                      | Description                                                                                                                                                    | Default            |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
+| `DIGITALOCEAN_VERSION`        | Specific version of digitalocean CLI (doctl) to install.                                                                                                       | `latest`           |
+| `DIGITALOCEAN_INSTALL_METHOD` | Installation strategy for digitalocean: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |
+| `DIGITALOCEAN_REGION`         | DigitalOcean datacenter region slug (e.g., nyc3, sfo3, fra1) where Droplets and volumes are provisioned.                                                       | `-`                |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

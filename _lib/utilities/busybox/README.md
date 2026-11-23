@@ -1,73 +1,47 @@
-# BusyBox
+# BusyBox (`_lib/utilities/busybox/`)
 
-## Purpose & Current State
+## Overview
 
-This directory contains the installation and configuration scripts for **Busybox** within the
-LibScript ecolibscript_native. Busybox is a software suite that provides several Unix utilities in a
-single executable file.
+Multi-call UNIX command suite combining common POSIX utilities with native Windows (MSVC) builds via
+SamuelMarks/busybox-windows.
 
-This module works both as a local version manager for Busybox (similar to `rvm`, `nvm`, `pyenv`, or
-`uv`) and can be seamlessly invoked from the global version manager `libscript`. It allows LibScript
-to use Busybox as a core dependency to build bigger, more complex software stacks (such as
-WordPress, Open edX, Nextcloud, etc.).
+- **Tier**: `T1` (`_lib/utilities/busybox/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `busybox`, `busybox-windows`
+- **Target OS Exclusions (`manifest.json`)**: `sunos`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-You can install, start, stop, package, and uninstall busybox using the global `libscript` command or
-the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install busybox
-
-./cli.sh install busybox
-
-./libscript.sh start busybox
-./cli.sh start busybox
-
-./libscript.sh stop busybox
-./cli.sh stop busybox
-
-./libscript.sh package-as docker busybox
-./cli.sh package-as docker busybox
-
-./libscript.sh uninstall busybox
-./cli.sh uninstall busybox
+# Native version management (isolated under ${LIBSCRIPT_HOME}/busybox/<version>)
+./libscript.sh ls-remote busybox
+./libscript.sh install busybox latest
+./libscript.sh use busybox latest
+./libscript.sh which busybox
+./_lib/utilities/busybox/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install busybox
-
-:: Local CLI
-cli.cmd install busybox
-
-:: Start and Stop
-libscript.cmd start busybox
-cli.cmd start busybox
-
-libscript.cmd stop busybox
-cli.cmd stop busybox
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi busybox
-cli.cmd package-as msi busybox
-
-:: Uninstall
-libscript.cmd uninstall busybox
-cli.cmd uninstall busybox
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote busybox
+.\libscript.cmd install busybox latest
+.\libscript.cmd use busybox latest
+.\libscript.cmd which busybox
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/busybox/<version>`
+  (default `~/.libscript/busybox/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `BUSYBOX_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 

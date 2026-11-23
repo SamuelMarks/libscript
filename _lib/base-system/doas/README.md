@@ -1,5 +1,7 @@
 # Doas
 
+**Tier**: `T2` (`_lib/base-system/doas/`) | **Capabilities**: `sysroot-package`
+
 Lightweight OpenBSD privilege escalation utility
 
 ## Usage

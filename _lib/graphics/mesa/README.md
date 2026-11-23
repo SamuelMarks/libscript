@@ -1,5 +1,7 @@
 # Mesa 3D Graphics
 
+**Tier**: `T2` (`_lib/graphics/mesa/`) | **Capabilities**: `sysroot-package`, `sysroot-library`
+
 Open-source OpenGL and Vulkan driver collection
 
 ## Usage

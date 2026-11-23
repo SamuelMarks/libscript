@@ -1,5 +1,7 @@
 # Sway Compositor
 
+**Tier**: `T2` (`_lib/desktops/sway/`) | **Capabilities**: `sysroot-package`
+
 i3-compatible tiling Wayland compositor
 
 ## Usage

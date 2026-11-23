@@ -1,22 +1,18 @@
-# Docker Assets and Base Images
+# Hermetic Container Builders & Base Dockerfiles (`docker/`)
 
-This directory contains base Dockerfiles, templates, and builder helpers for LibScript
-containerization workflows.
+## Overview
 
-## Base Images
+`docker/` contains base Alpine and Debian container definitions, non-interactive environment presets
+(`conf_no_all.env.{sh,cmd,ps1}`), and Dockerfile templates (`Dockerfile.tpl`,
+`Dockerfile.no_body.tpl`) used by `T3` `synthesis/formats/docker.{sh,cmd}`
+(`./libscript.sh package-as docker`) and isolated CI component test runners.
 
-- **Alpine (`base.alpine.Dockerfile`)**: Minimalist, security-hardened Alpine Linux base container
-  configured for LibScript bootstrapping.
-- **Debian (`base.debian.Dockerfile`)**: Standard Debian container base with essential system
-  utilities for LibScript component operations.
-- **Templates (`Dockerfile.tpl`, `Dockerfile.no_body.tpl`)**: Dynamic Dockerfile templates
-  interpolated during `package-as docker` runs.
+## Files
 
-## Usage
-
-Generate Docker assets from any stack definition using:
-
-```sh
-./libscript.sh package-as docker
-./libscript.sh package-as docker_compose
-```
+- **`base.alpine.Dockerfile` & `base.debian.Dockerfile`**: Minimal POSIX `/bin/sh` container test
+  environments for Alpine musl and Debian glibc verification.
+- **`postgres.debian.Dockerfile`**: Reference stateful service container image definition.
+- **`Dockerfile.tpl` & `Dockerfile.no_body.tpl`**: Templates rendered during `package-as docker`.
+- **`create_docker_builder.{sh,cmd}`**: Configures multi-arch `docker buildx` builder instances.
+- **`conf_no_all.env.{sh,cmd,ps1}`**: Disables optional auxiliary daemons during minimal container
+  builds.

@@ -1,5 +1,7 @@
 # ALSA UCM Conf
 
+**Tier**: `T2` (`_lib/audio/alsa-ucm-conf/`) | **Capabilities**: `sysroot-package`
+
 ALSA Use Case Manager configuration files
 
 ## Usage

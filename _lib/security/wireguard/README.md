@@ -1,47 +1,45 @@
-# wireguard
+# WireGuard Tools (`_lib/security/wireguard/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `wireguard` component
-(part of `_security`) within the LibScript ecosystem. Fast, modern, cryptographically opinionated
-VPN tunnel configuration utilities (wg and wg-quick).
+Fast, modern, cryptographically opinionated VPN tunnel configuration utilities (wg and wg-quick).
+
+- **Tier**: `T1` (`_lib/security/wireguard/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `wireguard`, `wg`, `vpn`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **WireGuard Tools**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install wireguard
-libscript uninstall wireguard
+# Install and manage the wireguard service daemon
+./libscript.sh install wireguard latest
+./libscript.sh start wireguard
+./libscript.sh status wireguard
+./libscript.sh logs wireguard
+./libscript.sh stop wireguard
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start wireguard
-libscript stop wireguard
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install wireguard latest
+.\libscript.cmd start wireguard
+.\libscript.cmd status wireguard
+.\libscript.cmd stop wireguard
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker wireguard
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install wireguard`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/wireguard/<version>`
+  (default `~/.libscript/wireguard/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `WIREGUARD_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

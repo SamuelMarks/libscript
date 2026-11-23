@@ -1,5 +1,7 @@
 # Util-Linux
 
+**Tier**: `T2` (`_lib/base-system/util-linux/`) | **Capabilities**: `sysroot-package`
+
 Essential system administration and disk utilities
 
 ## Usage

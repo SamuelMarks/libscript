@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../experiments/schemas/experiment-suite.schema.json",
+  "$schema": "../schemas/experiment-suite.schema.json",
   "id": "gemma_tpu",
   "title": "Gemma 4 7-Backend Cloud TPU & TFRC Zero-Cost Evaluation Suite",
   "protocol_version": "1.0.0",

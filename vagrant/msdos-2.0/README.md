@@ -1,15 +1,23 @@
-# Vagrant `bento/msdos-2.0` (`GUEST-DOS32`)
+# Vagrant Environment: Microsoft MS-DOS 2.0 (`vagrant/msdos-2.0/`)
 
-Provides reproducible 16-bit and 32-bit protected-mode (`DOS32A.EXE` + OpenWatcom v2 `wcl386` `LE`)
-execution inside the `../bento` MS-DOS 2.0 box using `Bento::VagrantMsdos` (`:msdos` Telnet/Serial
-`COM1` communicator and bidirectional `:msdos_sync` `D:` drive).
+## Overview
+
+Pre-configured Vagrant environment (`bento/msdos-2.0`) used for hierarchical directory MS-DOS
+boundary and `COM1` serial harness testing.
 
 ## Usage
 
 ```sh
-./vagrant/msdos-2.0/run_dos_ctest.sh --suite=auto-win-msvc --out=results/dos_ctest.json
+cd vagrant/msdos-2.0
+vagrant up
+vagrant ssh
 ```
 
-```cmd
-vagrant\msdos-2.0\run_dos_ctest.cmd --suite=auto-win-msvc --out=results\dos_ctest.json
+Run the automated serial `CTest` suite:
+
+```sh
+./vagrant/msdos-2.0/run_dos_ctest.sh
 ```
+
+See [`../../VAGRANT.md`](../../VAGRANT.md) for custom Bento (`multi-os-qemu-aarch64`) box building
+and snapshot management instructions.

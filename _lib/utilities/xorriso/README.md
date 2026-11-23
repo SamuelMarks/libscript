@@ -1,47 +1,46 @@
-# xorriso
+# GNU xorriso (`_lib/utilities/xorriso/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `xorriso` component (part
-of `_utilities`) within the LibScript ecosystem. ISO-9660 and Rock Ridge filesystem image
-manipulation, El Torito bootable ISO creation, and burning tool.
+ISO-9660 and Rock Ridge filesystem image manipulation, El Torito bootable ISO creation, and burning
+tool.
+
+- **Tier**: `T1` (`_lib/utilities/xorriso/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `xorriso`, `iso-builder`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **GNU xorriso**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install xorriso
-libscript uninstall xorriso
+# Native version management (isolated under ${LIBSCRIPT_HOME}/xorriso/<version>)
+./libscript.sh ls-remote xorriso
+./libscript.sh install xorriso latest
+./libscript.sh use xorriso latest
+./libscript.sh which xorriso
+./_lib/utilities/xorriso/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start xorriso
-libscript stop xorriso
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote xorriso
+.\libscript.cmd install xorriso latest
+.\libscript.cmd use xorriso latest
+.\libscript.cmd which xorriso
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker xorriso
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install xorriso`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/xorriso/<version>`
+  (default `~/.libscript/xorriso/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `XORRISO_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,103 +1,59 @@
-# Wait4X
+# wait4x (`_lib/utilities/wait4x/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `wait4x` component (part
-of `_toolchain`) within the LibScript ecolibscript_native. `wait4x` is a command-line tool that
-allows you to wait for various ports and services (like databases, HTTP servers, or generic TCP
-sockets) to become available, making it invaluable for reliable CI/CD and orchestration flows.
+Wait4X is a command-line tool that allows you to wait for various services or conditions to become
+available before executing a command.
 
-Crucially, this module allows `wait4x` to function both as a **local version manager** (similar to
-tools like `rvm`, `nvm`, `pyenv`, or `uv`) and as a component invoked seamlessly by the global
-version manager, `libscript`. Furthermore, `libscript` can utilize this `wait4x` toolchain as a
-foundational building block to provision and orchestrate much larger, complex software stacks (such
-as WordPress, Open edX, Nextcloud, and more) where service startup synchronization is required.
+- **Tier**: `T1` (`_lib/utilities/wait4x/`)
+- **Capabilities**: `userland-package`
+- **Target OS Whitelist (`manifest.json`)**: `linux`, `darwin`, `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._ with LibScript
-
-This directory contains the installation and configuration scripts for `wait4x`. It is designed to
-be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-You can install, start, stop, package, and uninstall wait4x using the global `libscript` command or
-the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install wait4x
-
-./cli.sh install wait4x
-
-./libscript.sh start wait4x
-./cli.sh start wait4x
-
-./libscript.sh stop wait4x
-./cli.sh stop wait4x
-
-./libscript.sh package-as docker wait4x
-./cli.sh package-as docker wait4x
-
-./libscript.sh uninstall wait4x
-./cli.sh uninstall wait4x
+# Native version management (isolated under ${LIBSCRIPT_HOME}/wait4x/<version>)
+./libscript.sh ls-remote wait4x
+./libscript.sh install wait4x latest
+./libscript.sh use wait4x latest
+./libscript.sh which wait4x
+./_lib/utilities/wait4x/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install wait4x
-
-:: Local CLI
-cli.cmd install wait4x
-
-:: Start and Stop
-libscript.cmd start wait4x
-cli.cmd start wait4x
-
-libscript.cmd stop wait4x
-cli.cmd stop wait4x
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi wait4x
-cli.cmd package-as msi wait4x
-
-:: Uninstall
-libscript.cmd uninstall wait4x
-cli.cmd uninstall wait4x
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote wait4x
+.\libscript.cmd install wait4x latest
+.\libscript.cmd use wait4x latest
+.\libscript.cmd which wait4x
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/wait4x/<version>`
+  (default `~/.libscript/wait4x/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `WAIT4X_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                                                                                                            | Default            | Aliases/Examples |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `WAIT4X_INSTALL_METHOD` | How to install WAIT4X. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `WAIT4X_VERSION`        | Specific version of Wait4X to install.                                                                                                                                 | `latest`           |                  |
-| `WAIT4X_DOWNLOAD_URL`   | Override URL for downloading wait4x binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `WAIT4X_RELEASES_URL`   | Override URL for querying wait4x available remote releases.                                                                                                            | `none`             |                  |
+| Variable                | Description                                                                                                                                              | Default            | Aliases/Examples |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `WAIT4X_INSTALL_METHOD` | Installation strategy for wait4x: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `WAIT4X_VERSION`        | Specific version of Wait4X to install.                                                                                                                   | `latest`           |                  |
+| `WAIT4X_DOWNLOAD_URL`   | Override URL for downloading wait4x binary or archive artifacts.                                                                                         | `none`             |                  |
+| `WAIT4X_RELEASES_URL`   | Override URL for querying wait4x available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

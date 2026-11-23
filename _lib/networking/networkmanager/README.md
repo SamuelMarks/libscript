@@ -1,5 +1,7 @@
 # NetworkManager
 
+**Tier**: `T2` (`_lib/networking/networkmanager/`) | **Capabilities**: `sysroot-package`
+
 Universal network configuration and management daemon
 
 ## Usage

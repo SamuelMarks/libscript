@@ -1,5 +1,7 @@
 # Slurm Workload Manager (`_lib/schedulers/slurm`)
 
+**Tier**: `T1` (`_lib/schedulers/slurm/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 ## Overview
 
 Standalone Version Manager for **Slurm Workload Manager** (`slurm`, `sbatch`, `srun`, `squeue`,

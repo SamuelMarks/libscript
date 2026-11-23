@@ -1,5 +1,7 @@
 # msi-rs
 
+**Tier**: `T1` (`_lib/package-managers/msi-rs/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for the `msi-rs` package manager and Windows Installer (`.msi`) manipulation and
 execution toolchain.
 

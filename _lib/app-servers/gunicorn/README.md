@@ -1,5 +1,8 @@
 # Gunicorn
 
+**Tier**: `T1` (`_lib/app-servers/gunicorn/`) | **Capabilities**: `userland-package`,
+`service-daemon`
+
 Python WSGI HTTP Server for UNIX / POSIX.
 
 ## Usage

@@ -1,5 +1,7 @@
 # Pkgx
 
+**Tier**: `T1` (`_lib/package-managers/pkgx/`) | **Capabilities**: `userland-package`
+
 ## Usage
 
 This document describes **pkgx**, a blazing-fast, standalone, and cross-platform package manager
@@ -20,11 +22,7 @@ the local CLI.
 
 ./cli.sh install pkgx
 
-./libscript.sh start pkgx
-./cli.sh start pkgx
 
-./libscript.sh stop pkgx
-./cli.sh stop pkgx
 
 ./libscript.sh package-as docker pkgx
 ./cli.sh package-as docker pkgx
@@ -43,11 +41,7 @@ libscript.cmd install pkgx
 cli.cmd install pkgx
 
 :: Start and Stop
-libscript.cmd start pkgx
-cli.cmd start pkgx
 
-libscript.cmd stop pkgx
-cli.cmd stop pkgx
 
 :: Package (e.g., as MSI installer)
 libscript.cmd package-as msi pkgx
@@ -65,12 +59,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default            | Aliases/Examples |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `PKGX_INSTALL_METHOD` | How to install PKGX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `PKGX_VERSION`        | Specific version of pkgx to install.                                                                                                                                 | `latest`           |                  |
-| `PKGX_DOWNLOAD_URL`   | Override URL for downloading pkgx binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `PKGX_RELEASES_URL`   | Override URL for querying pkgx available remote releases.                                                                                                            | `none`             |                  |
+| Variable              | Description                                                                                                                                            | Default            | Aliases/Examples |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ---------------- |
+| `PKGX_INSTALL_METHOD` | Installation strategy for pkgx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `PKGX_VERSION`        | Installation strategy for pkgx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `latest`           |                  |
+| `PKGX_DOWNLOAD_URL`   | Installation strategy for pkgx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `none`             |                  |
+| `PKGX_RELEASES_URL`   | Installation strategy for pkgx: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

@@ -1,5 +1,7 @@
 # ALSA Utilities
 
+**Tier**: `T2` (`_lib/audio/alsa-utils/`) | **Capabilities**: `sysroot-package`
+
 Command-line tools for ALSA sound subsystem
 
 ## Usage

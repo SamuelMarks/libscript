@@ -47,7 +47,7 @@
     },
     "MARATHON_URL": {
       "type": "string",
-      "description": "Configuration variable MARATHON_URL for marathon."
+      "description": "HTTP base URL of the Marathon scheduler API endpoint (e.g., http://127.0.0.1:8080)."
     }
   }
 }

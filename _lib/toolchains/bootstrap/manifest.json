@@ -2,7 +2,7 @@
   "$schema": "../../../engine/schemas/manifest.schema.json",
   "capabilities": ["userland-package"],
   "category": "toolchains",
-  "description": "Tier 1 Linux LFS multi-stage cross-toolchain bootstrapping",
+  "description": "T1 Linux LFS multi-stage cross-toolchain bootstrapping",
   "name": "bootstrap",
   "os_blacklist": ["windows"],
   "os_whitelist": ["linux"],

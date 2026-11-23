@@ -1,47 +1,41 @@
-# zephyr
+# Zephyr RTOS Kernel (`_lib/kernel/zephyr/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `zephyr` component (part
-of `_kernel`) within the LibScript ecosystem. Zephyr Real-Time Operating System kernel source
-manager, Kconfig/Devicetree synthesizer, and multi-board firmware builder.
+Zephyr Real-Time Operating System kernel source manager, Kconfig/Devicetree synthesizer, and
+multi-board firmware builder.
+
+- **Tier**: `T2` (`_lib/kernel/zephyr/`)
+- **Capabilities**: `sysroot-package`, `kernel-image`
+- **Provides Virtual Capabilities**: `zephyr-kernel`, `zephyr-lts`, `zephyr-mainline`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Zephyr RTOS Kernel**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install zephyr
-libscript uninstall zephyr
+# Stage into an isolated T3 target sysroot or install on a compatible host
+LIBSCRIPT_TARGET_SYSROOT=/mnt/sysroot ./libscript.sh install zephyr latest
+./libscript.sh zephyr --help
+./_lib/kernel/zephyr/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start zephyr
-libscript stop zephyr
+```cmd
+:: Query component CLI or invoke test/Option-A boundary check on Windows
+.\libscript.cmd zephyr --help
+.\_lib\kernel\zephyr\cli.cmd test
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker zephyr
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install zephyr`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `ZEPHYR_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -91,18 +85,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,32 +1,17 @@
-# Windows 11 Test Environment
+# Vagrant Environment: Windows 11 (`vagrant/windows-11/`)
 
 ## Overview
 
-Vagrant test harness using `bento/windows-11` for validating LibScript Windows compatibility (`.cmd`
-/ PowerShell execution, Windows package management, services, and native environments) on
-QEMU/AArch64 systems (including macOS Apple Silicon) and x86_64 hosts.
-
-### Box Building
-
-The `bento/windows-11` box is built using the custom Bento fork:
-
-- **Repository**:
-  [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
-  (`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`)
-- **Supported Host Platforms**: macOS Apple Silicon (`aarch64`) and other `x86_64` hosts (Linux,
-  Windows).
-- See [VAGRANT.md](../../VAGRANT.md) for detailed build and setup instructions.
+Pre-configured Vagrant environment (`bento/windows-11`) used for native `.cmd`/PowerShell parity,
+Win32 PE helpers, WiX/`msi-rs` `.msi` installers, and GUI screenshot verification.
 
 ## Usage
 
-Execute local tests for Windows 11 via:
-
 ```sh
-./tests/run_local_tests.sh <component> --os windows-11
+cd vagrant/windows-11
+vagrant up
+vagrant ssh
 ```
 
-Or run automated batches across all components:
-
-```sh
-./tests/run_all_batches.sh --os windows-11
-```
+See [`../../VAGRANT.md`](../../VAGRANT.md) for custom Bento (`multi-os-qemu-aarch64`) box building
+and snapshot management instructions.

@@ -1,49 +1,45 @@
-# gcc-torture
+# Upstream GCC C Torture Execute Conformance Suite (`_lib/toolchains/gcc-torture/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `gcc-torture` component
-(part of `_toolchains`) within the LibScript ecosystem. Standalone version manager for the upstream
-GCC gcc.c-torture/execute C execution test corpus with DejaGnu .x and nested-function filter
-manifests.
+Standalone version manager for the upstream GCC gcc.c-torture/execute C execution test corpus with
+DejaGnu .x and nested-function filter manifests.
+
+- **Tier**: `T1` (`_lib/toolchains/gcc-torture/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Upstream GCC C Torture
-Execute Conformance Suite**. It is designed to be executed via the global `libscript.sh` router or
-directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install gcc-torture
-libscript uninstall gcc-torture
+# Native version management (isolated under ${LIBSCRIPT_HOME}/gcc-torture/<version>)
+./libscript.sh ls-remote gcc-torture
+./libscript.sh install gcc-torture latest
+./libscript.sh use gcc-torture latest
+./libscript.sh which gcc-torture
+./_lib/toolchains/gcc-torture/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start gcc-torture
-libscript stop gcc-torture
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote gcc-torture
+.\libscript.cmd install gcc-torture latest
+.\libscript.cmd use gcc-torture latest
+.\libscript.cmd which gcc-torture
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker gcc-torture
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install gcc-torture`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/gcc-torture/<version>` (default `~/.libscript/gcc-torture/<version>`) and
+  synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `GCC_TORTURE_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -59,18 +55,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

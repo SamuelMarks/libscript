@@ -1,47 +1,54 @@
-# passenger
+# Phusion Passenger (`_lib/app-servers/passenger/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `passenger` component
-(part of `_app-servers`) within the LibScript ecosystem. Polyglot web and application server
-supporting Ruby, Node.js, Python, and Meteor workloads.
+Polyglot web and application server supporting Ruby, Node.js, Python, and Meteor workloads.
+
+- **Tier**: `T1` (`_lib/app-servers/passenger/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `passenger`, `rack-server`, `app-server`
+- **Target OS Exclusions (`manifest.json`)**: `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Phusion Passenger**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install passenger
-libscript uninstall passenger
+# Install and manage the passenger service daemon
+./libscript.sh install passenger latest
+./libscript.sh start passenger
+./libscript.sh status passenger
+./libscript.sh logs passenger
+./libscript.sh stop passenger
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start passenger
-libscript stop passenger
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install passenger latest
+.\libscript.cmd start passenger
+.\libscript.cmd status passenger
+.\libscript.cmd stop passenger
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker passenger
-```
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/passenger/<version>`
+  (default `~/.libscript/passenger/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `PASSENGER_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
-_Note: On Unix environments, you can also use `./cli.sh install passenger`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+## Lifecycle Hooks (`hooks/`)
+
+Provides dual-layer lifecycle hooks invoked by `T0` `engine/common/hooks.{sh,cmd}` and `Plane A`
+traits (`traits/`): `announce.{sh,cmd}`, `backup.{sh,cmd}`, `backup_tenant.{sh,cmd}`,
+`configure.{sh,cmd}`, `deprovision_tenant.{sh,cmd}`, `log_stream.{sh,cmd}`, `maintenance.{sh,cmd}`,
+`metrics.{sh,cmd}`, `probe.{sh,cmd}`, `provision_tenant.{sh,cmd}`, `restore.{sh,cmd}`,
+`restore_tenant.{sh,cmd}`, `rollback.{sh,cmd}`, `upgrade.{sh,cmd}`.
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +63,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

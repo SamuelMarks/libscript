@@ -1,5 +1,8 @@
 # hMailServer
 
+**Tier**: `T1` (`_lib/utilities/hmailserver/`) | **Capabilities**: `userland-package`,
+`service-daemon`
+
 Free, open-source e-mail server for Microsoft Windows with SMTP relay support.
 
 ## Usage

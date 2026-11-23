@@ -1,86 +1,59 @@
-# RabbitMQ
+# RabbitMQ (`_lib/message-brokers/rabbitmq/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `rabbitmq` component (part
-of `_storage`) within the LibScript ecolibscript_native. LibScript is a modular, zero-dependency
-shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS,
-and Windows.
+The most widely deployed open source message broker.
+
+- **Tier**: `T1` (`_lib/message-brokers/rabbitmq/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `message-broker`, `rabbitmq`
+- **Target OS Exclusions (`manifest.json`)**: `sunos`
 
 ## Usage
 
-This directory contains the installation, configuration, and lifecycle management scripts for
-**RabbitMQ**.
-
-Crucially, this component works both as a **local version manager** (similar to tools like `rvm`,
-`nvm`, `pyenv`, or `uv`) for managing isolated instances of RabbitMQ, and it can be invoked
-seamlessly from the **global version manager**, `libscript`.
-
-Furthermore, `libscript` can utilize this RabbitMQ component as a foundational building block to
-provision and build **bigger stacks** (such as WordPress, Open edX, Nextcloud, and more).
-
-You can install, start, stop, package, and uninstall rabbitmq using the global `libscript` command
-or the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-libscript install rabbitmq
-
-libscript start rabbitmq
-libscript stop rabbitmq
-
-libscript package-as docker rabbitmq
-
-libscript uninstall rabbitmq
+# Install and manage the rabbitmq service daemon
+./libscript.sh install rabbitmq latest
+./libscript.sh start rabbitmq
+./libscript.sh status rabbitmq
+./libscript.sh logs rabbitmq
+./libscript.sh stop rabbitmq
 ```
-
-**Windows:**
 
 ```cmd
-:: Install
-libscript.cmd install rabbitmq
-
-:: Start and Stop
-libscript.cmd start rabbitmq
-libscript.cmd stop rabbitmq
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi rabbitmq
-
-:: Uninstall
-libscript.cmd uninstall rabbitmq
+:: Windows Batch equivalent
+.\libscript.cmd install rabbitmq latest
+.\libscript.cmd start rabbitmq
+.\libscript.cmd status rabbitmq
+.\libscript.cmd stop rabbitmq
 ```
 
-_Alternatively, you can execute these locally from within this directory using
-`./cli.sh install rabbitmq` or `cli.cmd install rabbitmq`._
+## Installation & Isolation
 
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/rabbitmq/<version>`
+  (default `~/.libscript/rabbitmq/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `RABBITMQ_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable                  | Description                                                                                                                                                              | Default            | Aliases/Examples |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ---------------- |
-| `RABBITMQ_LISTEN_ADDRESS` | Address for RabbitMQ to listen on.                                                                                                                                       | `none`             |                  |
-| `RABBITMQ_LISTEN_PORT`    | Port for RabbitMQ to listen on.                                                                                                                                          | `none`             |                  |
-| `RABBITMQ_LISTEN_SOCKET`  | UNIX socket path for RabbitMQ to listen on.                                                                                                                              | `none`             |                  |
-| `RABBITMQ_VERSION`        | Version of RabbitMQ to install                                                                                                                                           | `latest`           |                  |
-| `RABBITMQ_INSTALL_METHOD` | How to install RABBITMQ. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `RABBITMQ_DOWNLOAD_URL`   | Override URL for downloading rabbitmq binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `RABBITMQ_LISTEN`         | Listen endpoint (address:port or socket) for rabbitmq.                                                                                                                   | `none`             |                  |
-| `RABBITMQ_RELEASES_URL`   | Override URL for querying rabbitmq available remote releases.                                                                                                            | `none`             |                  |
+| Variable                  | Description                                                                                                                                                | Default            | Aliases/Examples |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `RABBITMQ_LISTEN_ADDRESS` | Address for RabbitMQ to listen on.                                                                                                                         | `none`             |                  |
+| `RABBITMQ_LISTEN_PORT`    | Port for RabbitMQ to listen on.                                                                                                                            | `none`             |                  |
+| `RABBITMQ_LISTEN_SOCKET`  | UNIX socket path for RabbitMQ to listen on.                                                                                                                | `none`             |                  |
+| `RABBITMQ_VERSION`        | Version of RabbitMQ to install                                                                                                                             | `latest`           |                  |
+| `RABBITMQ_INSTALL_METHOD` | Installation strategy for rabbitmq: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `RABBITMQ_DOWNLOAD_URL`   | Override URL for downloading rabbitmq binary or archive artifacts.                                                                                         | `none`             |                  |
+| `RABBITMQ_LISTEN`         | Listen endpoint (address:port or socket) for rabbitmq.                                                                                                     | `none`             |                  |
+| `RABBITMQ_RELEASES_URL`   | Override URL for querying rabbitmq available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

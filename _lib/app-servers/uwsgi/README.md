@@ -1,5 +1,7 @@
 # uWSGI
 
+**Tier**: `T1` (`_lib/app-servers/uwsgi/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 Fast, self-healing, developer-friendly WSGI server and application container.
 
 ## Usage

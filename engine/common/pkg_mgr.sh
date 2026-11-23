@@ -718,6 +718,125 @@ depends() {
   libscript_depends "$@"
 }
 
+# ## libscript_resolve_gh_token
+# Returns GITHUB_TOKEN or GH_TOKEN when available for authenticated GitHub API requests.
+libscript_resolve_gh_token() {
+  if [ -n "${GITHUB_TOKEN:-}" ]; then
+    printf '%s\n' "${GITHUB_TOKEN}"
+    return 0
+  fi
+  if [ -n "${GH_TOKEN:-}" ]; then
+    printf '%s\n' "${GH_TOKEN}"
+    return 0
+  fi
+  return 1
+}
+
+# ## libscript_download_github_authenticated
+# Bypasses unauthenticated github.com web edge rate limits (HTTP 403/429) via gh CLI, GitHub REST API release assets, or codeload.github.com.
+libscript_download_github_authenticated() {
+  _gda_url="${1:-}"
+  _gda_dest="${2:-}"
+  _gda_dl_dir="${3:-}"
+  case "${_gda_url}" in
+    https://github.com/*/*/releases/download/*/*)
+      _gda_rest="${_gda_url#https://github.com/}"
+      _gda_owner="${_gda_rest%%/*}"
+      _gda_rest="${_gda_rest#*/}"
+      _gda_repo="${_gda_rest%%/*}"
+      _gda_rest="${_gda_rest#*/releases/download/}"
+      _gda_tag="${_gda_rest%%/*}"
+      _gda_asset="${_gda_rest#*/}"
+      _gda_asset="${_gda_asset%%\?*}"
+      _gda_tok=$(libscript_resolve_gh_token || true)
+      if command -v gh >/dev/null 2>&1; then
+        if [ -n "${_gda_tok}" ] || gh auth status >/dev/null 2>&1; then
+          rm -f "${_gda_dest}" "${_gda_dl_dir}/${_gda_asset}"
+          if GH_TOKEN="${_gda_tok:-${GH_TOKEN:-}}" gh release download "${_gda_tag}" -R "${_gda_owner}/${_gda_repo}" -p "${_gda_asset}" -D "${_gda_dl_dir}" --clobber >/dev/null 2>&1; then
+            if [ "${_gda_dl_dir}/${_gda_asset}" != "${_gda_dest}" ] && [ -s "${_gda_dl_dir}/${_gda_asset}" ]; then
+              mv -f "${_gda_dl_dir}/${_gda_asset}" "${_gda_dest}"
+            fi
+            [ -s "${_gda_dest}" ] && return 0
+          fi
+        fi
+      fi
+      if [ -n "${_gda_tok}" ] && command -v curl >/dev/null 2>&1; then
+        _gda_api_base="${LIBSCRIPT_GITHUB_API_BASE:-https://api.github.com}"
+        _gda_rel_json=$(curl -fsSL -A 'libscript/1.0' -H 'Accept: application/vnd.github+json' -H "Authorization: Bearer ${_gda_tok}" "${_gda_api_base}/repos/${_gda_owner}/${_gda_repo}/releases/tags/${_gda_tag}" 2>/dev/null || true)
+        if [ -n "${_gda_rel_json}" ]; then
+          _gda_asset_api=''
+          if command -v jq >/dev/null 2>&1; then
+            _gda_asset_api=$(printf '%s\n' "${_gda_rel_json}" | jq -r --arg n "${_gda_asset}" '.assets[]? | select(.name == $n) | .url' 2>/dev/null | head -n 1 || true)
+          fi
+          if [ -z "${_gda_asset_api}" ]; then
+            _gda_asset_api=$(printf '%s\n' "${_gda_rel_json}" | awk -v target="${_gda_asset}" '
+              BEGIN { RS="\\{"; last_u="" }
+              {
+                if (match($0, /"url"[[:space:]]*:[[:space:]]*"[^"]+\/releases\/assets\/[0-9]+"/)) {
+                  s = substr($0, RSTART, RLENGTH)
+                  sub(/^"url"[[:space:]]*:[[:space:]]*"/, "", s)
+                  sub(/"$/, "", s)
+                  last_u = s
+                }
+                if (match($0, /"name"[[:space:]]*:[[:space:]]*"[^"]+"/)) {
+                  s = substr($0, RSTART, RLENGTH)
+                  sub(/^"name"[[:space:]]*:[[:space:]]*"/, "", s)
+                  sub(/"$/, "", s)
+                  if (s == target && last_u != "") {
+                    print last_u
+                    exit
+                  }
+                }
+              }
+            ' || true)
+          fi
+          if [ -n "${_gda_asset_api}" ]; then
+            rm -f "${_gda_dest}"
+            if curl -fsSL -A 'libscript/1.0' -H 'Accept: application/octet-stream' -H "Authorization: Bearer ${_gda_tok}" -o "${_gda_dest}" "${_gda_asset_api}" && [ -s "${_gda_dest}" ]; then
+              return 0
+            fi
+          fi
+        fi
+      fi
+      ;;
+    https://github.com/*/*/archive/*)
+      if command -v curl >/dev/null 2>&1; then
+        _gda_rest="${_gda_url#https://github.com/}"
+        _gda_owner="${_gda_rest%%/*}"
+        _gda_rest="${_gda_rest#*/}"
+        _gda_repo="${_gda_rest%%/*}"
+        _gda_arch="${_gda_rest#*/archive/}"
+        _gda_arch="${_gda_arch%%\?*}"
+        _gda_codeload=''
+        case "${_gda_arch}" in
+          *.tar.gz)
+            _gda_ref="${_gda_arch%.tar.gz}"
+            _gda_codeload="https://codeload.github.com/${_gda_owner}/${_gda_repo}/tar.gz/${_gda_ref}"
+            ;;
+          *.zip)
+            _gda_ref="${_gda_arch%.zip}"
+            _gda_codeload="https://codeload.github.com/${_gda_owner}/${_gda_repo}/zip/${_gda_ref}"
+            ;;
+        esac
+        if [ -n "${_gda_codeload}" ]; then
+          _gda_tok=$(libscript_resolve_gh_token || true)
+          rm -f "${_gda_dest}"
+          if [ -n "${_gda_tok}" ]; then
+            if curl -fsSL -A 'libscript/1.0' -H "Authorization: Bearer ${_gda_tok}" -o "${_gda_dest}" "${_gda_codeload}" && [ -s "${_gda_dest}" ]; then
+              return 0
+            fi
+          fi
+          rm -f "${_gda_dest}"
+          if curl -fsSL -A 'libscript/1.0' -o "${_gda_dest}" "${_gda_codeload}" && [ -s "${_gda_dest}" ]; then
+            return 0
+          fi
+        fi
+      fi
+      ;;
+  esac
+  return 1
+}
+
 # ## libscript_download
 # Unified Caching Downloader for remote artifacts.
 libscript_download() {
@@ -852,22 +971,55 @@ libscript_download() {
 
     # Strategy A: aria2c
     if [ "$download_success" -eq 0 ] && command -v aria2c >/dev/null 2>&1; then
-      rm -f "$cache_file"
-      if [ -n "$auth_header" ]; then
-        if aria2c --header="$auth_header" -d "$dl_dir" -o "$filename" --allow-overwrite=true --auto-file-renaming=false "$url" && [ -s "$cache_file" ]; then download_success=1; fi
-      else
-        if aria2c -d "$dl_dir" -o "$filename" --allow-overwrite=true --auto-file-renaming=false "$url" && [ -s "$cache_file" ]; then download_success=1; fi
-      fi
+      case "$url" in
+        file://*) ;;
+        *)
+          rm -f "$cache_file"
+          if [ -n "$auth_header" ]; then
+            if aria2c --user-agent='libscript/1.0' --max-tries=2 --retry-wait=1 --connect-timeout=15 --timeout=60 --header="$auth_header" -d "$dl_dir" -o "$filename" --allow-overwrite=true --auto-file-renaming=false "$url" && [ -s "$cache_file" ]; then download_success=1; fi
+          else
+            if aria2c --user-agent='libscript/1.0' --max-tries=2 --retry-wait=1 --connect-timeout=15 --timeout=60 -d "$dl_dir" -o "$filename" --allow-overwrite=true --auto-file-renaming=false "$url" && [ -s "$cache_file" ]; then download_success=1; fi
+          fi
+          ;;
+      esac
     fi
 
-    # Strategy B: curl
+    # Strategy A2: Authenticated GitHub Releases / Archive bypass (rescues shared-NAT HTTP 403 immediately when GH_TOKEN/GITHUB_TOKEN or gh CLI is present)
+    if [ "$download_success" -eq 0 ]; then
+      case "$url" in
+        https://github.com/*)
+          if libscript_download_github_authenticated "$url" "$cache_file" "$dl_dir"; then
+            download_success=1
+          fi
+          ;;
+      esac
+    fi
+
+    # Strategy B: curl (with bounded transient retry/backoff for HTTP/HTTPS)
     if [ "$download_success" -eq 0 ] && command -v curl >/dev/null 2>&1; then
-      rm -f "$cache_file"
-      if [ -n "$auth_header" ]; then
-        if curl -#fL -H "$auth_header" -o "$cache_file" "$url" && [ -s "$cache_file" ]; then download_success=1; fi
-      else
-        if curl -#fL -o "$cache_file" "$url" && [ -s "$cache_file" ]; then download_success=1; fi
-      fi
+      _pm_max_tries="${LIBSCRIPT_DOWNLOAD_RETRIES:-3}"
+      case "$url" in
+        file://*) _pm_max_tries=1 ;;
+      esac
+      _pm_try=1
+      while [ "$_pm_try" -le "$_pm_max_tries" ]; do
+        rm -f "$cache_file"
+        if [ -n "$auth_header" ]; then
+          if curl -#fL -A 'libscript/1.0' --connect-timeout 15 -H "$auth_header" -o "$cache_file" "$url" && [ -s "$cache_file" ]; then
+            download_success=1
+            break
+          fi
+        else
+          if curl -#fL -A 'libscript/1.0' --connect-timeout 15 -o "$cache_file" "$url" && [ -s "$cache_file" ]; then
+            download_success=1
+            break
+          fi
+        fi
+        if [ "$_pm_try" -lt "$_pm_max_tries" ]; then
+          sleep "${LIBSCRIPT_DOWNLOAD_RETRY_DELAY:-${_pm_try}}"
+        fi
+        _pm_try=$((_pm_try + 1))
+      done
     fi
 
     # Strategy C: wget
@@ -937,7 +1089,7 @@ libscript_download() {
         return 1
       fi
     fi
-  elif [ -n "$cache_file" ] && [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != "1" ] && [ -f "$cache_file" ]; then
+  elif [ -n "$cache_file" ] && [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != '1' ] && [ "${LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE:-0}" != '1' ] && [ -f "$cache_file" ]; then
     # Auto-populate checksum DB if missing (excluding local file:// fixtures)
     case "$url" in
       file://*) ;;
@@ -953,7 +1105,7 @@ libscript_download() {
 
   # Auto-populate DB with dynamically fetched checksum if we didn't have it in DB
   if [ "$checksum_from_db" -eq 0 ] && [ -n "$expected_checksum" ] && [ "$expected_checksum" != "SKIP" ]; then
-    if [ "${LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE:-0}" != "1" ]; then
+    if [ "${LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE:-0}" != '1' ] && [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != '1' ]; then
        if ! grep -qF "$url ${expected_checksum#sha-256=}" "$checksum_db" 2>/dev/null; then
          log_info "Updating _lib/checksums.txt with fetched checksum for $url"
          printf '%s\n' "$url ${expected_checksum#sha-256=}" >> "$checksum_db"
@@ -990,17 +1142,38 @@ libscript_fetch() {
 }
 
 # ## libscript_fetch_stdout
-# Fetches the contents of a URL to stdout while respecting offline mode and curl/wget fallbacks.
+# Fetches the contents of a URL to stdout while respecting offline mode, GitHub API authentication, and curl/wget fallbacks.
 libscript_fetch_stdout() {
   _lfs_url="${1:-}"
   [ -n "$_lfs_url" ] || return 1
   if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${LIBSCRIPT_FORCE_OFFLINE:-0}" = "1" ]; then
     return 1
   fi
+  _lfs_hdr="${LIBSCRIPT_DOWNLOAD_AUTH_HEADER:-}"
+  if [ -z "${_lfs_hdr}" ]; then
+    case "${_lfs_url}" in
+      https://api.github.com/*)
+        _lfs_tok=$(libscript_resolve_gh_token || true)
+        if [ -n "${_lfs_tok}" ]; then
+          _lfs_hdr="Authorization: Bearer ${_lfs_tok}"
+        fi
+        ;;
+    esac
+  fi
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$_lfs_url" 2>/dev/null
+    if [ -n "${_lfs_hdr}" ]; then
+      if curl -fsSL -A 'libscript/1.0' -H "${_lfs_hdr}" "$_lfs_url" 2>/dev/null; then
+        return 0
+      fi
+    fi
+    curl -fsSL -A 'libscript/1.0' "$_lfs_url" 2>/dev/null
     return $?
   elif command -v wget >/dev/null 2>&1; then
+    if [ -n "${_lfs_hdr}" ]; then
+      if wget -qO- --header="${_lfs_hdr}" "$_lfs_url" 2>/dev/null; then
+        return 0
+      fi
+    fi
     wget -qO- "$_lfs_url" 2>/dev/null
     return $?
   else

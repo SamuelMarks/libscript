@@ -1,83 +1,61 @@
-# Ruby
+# Ruby Runtime (`_lib/languages/ruby/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `ruby` component (part of
-`_toolchain`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script
-framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+A dynamic, open source programming language with a focus on simplicity and productivity.
+
+- **Tier**: `T1` (`_lib/languages/ruby/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `runtime`, `ruby`, `gem`
+- **Target OS Exclusions (`manifest.json`)**: `sunos`
 
 ## Usage
 
-This directory contains the installation and configuration scripts for **Ruby**, a dynamic,
-open-source programming language with a focus on simplicity and productivity, featuring an elegant
-syntax that is natural to read and easy to write. It is designed to be executed via the global
-`libscript.sh` router or directly via `cli.sh`.
-
-Crucially, this component works both as a **local version manager** (similar to tools like `rvm`,
-`nvm`, `pyenv`, or `uv`), allowing you to isolate and manage specific versions of Ruby per project,
-and it can be seamlessly invoked from the **global version manager**, `libscript`.
-
-Furthermore, Ruby can be utilized by LibScript as a foundational dependency to **build bigger,
-complex application stacks** (such as WordPress, Open edX, Nextcloud, and more).
-
-### Lifecycle & Usage
-
-You can easily install, uninstall, start, stop, and package Ruby directly using LibScript:
-
-**Install / Uninstall:**
-
 ```sh
-libscript install ruby
-libscript uninstall ruby
+# Native version management (isolated under ${LIBSCRIPT_HOME}/ruby/<version>)
+./libscript.sh ls-remote ruby
+./libscript.sh install ruby latest
+./libscript.sh use ruby latest
+./libscript.sh which ruby
+./_lib/languages/ruby/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start ruby
-libscript stop ruby
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote ruby
+.\libscript.cmd install ruby latest
+.\libscript.cmd use ruby latest
+.\libscript.cmd which ruby
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker ruby
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install ruby`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/ruby/<version>`
+  (default `~/.libscript/ruby/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `RUBY_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default            | Aliases/Examples |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `RUBY_VERSION`        | Specific version of ruby to install. Can be a numeric version or an alias.                                                                                           | `latest`           | latest, stable   |
-| `RUBY_INSTALL_METHOD` | How to install RUBY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `GEM_OFFLINE`         | Flag (0 or 1) directing gem to install packages only from local archives.                                                                                            | `0`                |                  |
-| `BUNDLE_LOCAL`        | Flag ('true' or 'false') instructing Bundler to run in local offline mode without remote queries.                                                                    | `false`            |                  |
-| `RUBY_DOWNLOAD_URL`   | Override URL for downloading ruby binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `RUBY_RELEASES_URL`   | Override URL for querying ruby available remote releases.                                                                                                            | `none`             |                  |
+| Variable              | Description                                                                                                                                            | Default            | Aliases/Examples |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ---------------- |
+| `RUBY_VERSION`        | Specific version of ruby to install. Can be a numeric version or an alias.                                                                             | `latest`           | latest, stable   |
+| `RUBY_INSTALL_METHOD` | Installation strategy for ruby: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `GEM_OFFLINE`         | Flag (0 or 1) directing gem to install packages only from local archives.                                                                              | `0`                |                  |
+| `BUNDLE_LOCAL`        | Flag ('true' or 'false') instructing Bundler to run in local offline mode without remote queries.                                                      | `false`            |                  |
+| `RUBY_DOWNLOAD_URL`   | Override URL for downloading ruby binary or archive artifacts.                                                                                         | `none`             |                  |
+| `RUBY_RELEASES_URL`   | Override URL for querying ruby available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

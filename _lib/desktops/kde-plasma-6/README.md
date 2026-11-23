@@ -1,5 +1,7 @@
 # KDE Plasma 6
 
+**Tier**: `T2` (`_lib/desktops/kde-plasma-6/`) | **Capabilities**: `sysroot-package`
+
 Feature-rich desktop workspace by KDE
 
 ## Usage

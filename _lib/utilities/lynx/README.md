@@ -1,26 +1,44 @@
-# lynx
+# Lynx (`_lib/utilities/lynx/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `lynx` component within
-the LibScript ecosystem. `lynx` is a classic text-mode web browser and HTML-to-plaintext converter
-required by `openedx-platform` (`openedx/core/lib/html_to_text.py`) to render bulk HTML course
-emails and annotations into plaintext.
+Text-mode web browser and HTML-to-plaintext renderer used by Open edX bulk email and annotations.
+
+- **Tier**: `T1` (`_lib/utilities/lynx/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
 ```sh
-libscript install lynx
-libscript test lynx
-libscript uninstall lynx
+# Native version management (isolated under ${LIBSCRIPT_HOME}/lynx/<version>)
+./libscript.sh ls-remote lynx
+./libscript.sh install lynx latest
+./libscript.sh use lynx latest
+./libscript.sh which lynx
+./_lib/utilities/lynx/cli.sh test
 ```
+
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote lynx
+.\libscript.cmd install lynx latest
+.\libscript.cmd use lynx latest
+.\libscript.cmd which lynx
+```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/lynx/<version>`
+  (default `~/.libscript/lynx/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `LYNX_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -36,21 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh` / `setup.cmd`: Entrypoints that resolve the OS and invoke `setup_generic.sh` /
-  `setup_generic.cmd`.
-- `setup_generic.sh` / `setup_generic.cmd`: Installs `lynx` via system package manager or isolated
-  portable binary/filter under `LIBSCRIPT_HOME`.
-- `env.sh` / `env.cmd`: Exports isolated `PATH` entries for `lynx`.
-- `test.sh` / `test.cmd`: Verifies `lynx -version` and `lynx -stdin -dump -nolist` HTML-to-text
-  conversion.
-- `vars.schema.json`: Schema definition for CLI and environment variables.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

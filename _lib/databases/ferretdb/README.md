@@ -1,47 +1,53 @@
-# ferretdb
+# FerretDB (`_lib/databases/ferretdb/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `ferretdb` component (part
-of `_databases`) within the LibScript ecosystem. Truly open-source MongoDB alternative proxy backed
-by PostgreSQL or SQLite storage engines.
+Truly open-source MongoDB alternative proxy backed by PostgreSQL or SQLite storage engines.
+
+- **Tier**: `T1` (`_lib/databases/ferretdb/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `database`, `ferretdb`, `mongodb-compatible`, `mongodb-wire`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **FerretDB**. It is designed
-to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install ferretdb
-libscript uninstall ferretdb
+# Install and manage the ferretdb service daemon
+./libscript.sh install ferretdb latest
+./libscript.sh start ferretdb
+./libscript.sh status ferretdb
+./libscript.sh logs ferretdb
+./libscript.sh stop ferretdb
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start ferretdb
-libscript stop ferretdb
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install ferretdb latest
+.\libscript.cmd start ferretdb
+.\libscript.cmd status ferretdb
+.\libscript.cmd stop ferretdb
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker ferretdb
-```
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/ferretdb/<version>`
+  (default `~/.libscript/ferretdb/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `FERRETDB_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
-_Note: On Unix environments, you can also use `./cli.sh install ferretdb`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+## Lifecycle Hooks (`hooks/`)
+
+Provides dual-layer lifecycle hooks invoked by `T0` `engine/common/hooks.{sh,cmd}` and `Plane A`
+traits (`traits/`): `announce.{sh,cmd}`, `backup.{sh,cmd}`, `backup_tenant.{sh,cmd}`,
+`configure.{sh,cmd}`, `deprovision_tenant.{sh,cmd}`, `log_stream.{sh,cmd}`, `maintenance.{sh,cmd}`,
+`metrics.{sh,cmd}`, `probe.{sh,cmd}`, `provision_tenant.{sh,cmd}`, `restore.{sh,cmd}`,
+`restore_tenant.{sh,cmd}`, `rollback.{sh,cmd}`, `upgrade.{sh,cmd}`.
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +62,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

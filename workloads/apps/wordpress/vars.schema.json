@@ -210,7 +210,7 @@
     },
     "WORDPRESS_SKIP_DEPS": {
       "type": "string",
-      "description": "Configuration variable WORDPRESS_SKIP_DEPS for wordpress."
+      "description": "Flag (0 or 1) skipping automatic installation of PHP, database, and web-server dependencies when pre-provisioned."
     },
     "WORDPRESS_HOSTS_FILE": {
       "type": "string",

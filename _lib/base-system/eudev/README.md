@@ -1,5 +1,7 @@
 # Eudev
 
+**Tier**: `T2` (`_lib/base-system/eudev/`) | **Capabilities**: `sysroot-package`
+
 Device node manager daemon and library
 
 ## Usage

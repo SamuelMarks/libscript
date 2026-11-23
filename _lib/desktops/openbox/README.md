@@ -1,5 +1,7 @@
 # Openbox
 
+**Tier**: `T2` (`_lib/desktops/openbox/`) | **Capabilities**: `sysroot-package`
+
 ## Purpose & Overview
 
 Provides the lightweight Openbox floating X11 window manager, tint2 panel configuration, and default

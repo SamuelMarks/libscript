@@ -1,5 +1,5 @@
 {
-  "$schema": "../../synthesis/schemas/execution-plan.reactos.schema.json",
+  "$schema": "../../schemas/execution-plan.reactos.schema.json",
   "schema_version": "1.0.0",
   "profile_name": "desktop-classic-i686",
   "description": "Full 32-bit ReactOS 0.4.16 classic Win32 Explorer desktop with Lautus visual style, VBE 1024x768x32 graphics, AC97 audio, and pre-installed RAPPS default apps.",

@@ -1,5 +1,7 @@
 # psmux Component
 
+**Tier**: `T1` (`_lib/utilities/psmux/`) | **Capabilities**: `userland-package`
+
 ## Overview
 
 This component installs `psmux`, a native Windows terminal multiplexer (born in PowerShell, made in
@@ -24,12 +26,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `PSMUX_INSTALL_METHOD` | How to install PSMUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `PSMUX_VERSION`        | Version of psmux to install                                                                                                                                           | `v3.3.6`           |                  |
-| `PSMUX_DOWNLOAD_URL`   | Override URL for downloading psmux binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `PSMUX_RELEASES_URL`   | Override URL for querying psmux available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `PSMUX_INSTALL_METHOD` | Installation strategy for psmux: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `PSMUX_VERSION`        | Version of psmux to install                                                                                                                             | `v3.3.6`           |                  |
+| `PSMUX_DOWNLOAD_URL`   | Override URL for downloading psmux binary or archive artifacts.                                                                                         | `none`             |                  |
+| `PSMUX_RELEASES_URL`   | Override URL for querying psmux available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

@@ -1,11 +1,13 @@
 # Pyenv
 
+**Tier**: `T1` (`_lib/package-managers/pyenv/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for `pyenv` (Python Version Manager).
 
 ## Usage
 
 Ensures the `pyenv` executable/shell function is available. It installs `pyenv` on UNIX-like
-libscript_natives, and `pyenv-win` on Windows.
+systems, and `pyenv-win` on Windows.
 
 ## Configuration Options
 
@@ -14,12 +16,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `PYENV_INSTALL_METHOD` | How to install PYENV. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `PYENV_VERSION`        | Specific version of pyenv to install.                                                                                                                                 | `latest`           |                  |
-| `PYENV_DOWNLOAD_URL`   | Override URL for downloading pyenv binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `PYENV_RELEASES_URL`   | Override URL for querying pyenv available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `PYENV_INSTALL_METHOD` | Installation strategy for pyenv: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `PYENV_VERSION`        | Specific version of pyenv to install.                                                                                                                   | `latest`           |                  |
+| `PYENV_DOWNLOAD_URL`   | Override URL for downloading pyenv binary or archive artifacts.                                                                                         | `none`             |                  |
+| `PYENV_RELEASES_URL`   | Override URL for querying pyenv available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

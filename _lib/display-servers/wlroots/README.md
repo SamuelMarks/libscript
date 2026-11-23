@@ -1,5 +1,8 @@
 # wlroots
 
+**Tier**: `T2` (`_lib/display-servers/wlroots/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 Modular Wayland compositor library
 
 ## Usage

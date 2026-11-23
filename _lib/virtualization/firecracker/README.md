@@ -1,5 +1,7 @@
 # Firecracker
 
+**Tier**: `T1` (`_lib/virtualization/firecracker/`) | **Capabilities**: `userland-package`
+
 Firecracker component for LibScript systems.
 
 ## Usage

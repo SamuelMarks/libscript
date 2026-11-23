@@ -1,5 +1,7 @@
 # ReactOS Applications Manager (`rapps`)
 
+**Tier**: `T1` (`_lib/package-managers/rapps/`) | **Capabilities**: `userland-package`
+
 Standalone LibScript package and version manager recipe for **RAPPS** (ReactOS Applications
 Manager). On ReactOS/Windows guests it wraps `rapps.exe /install` and silent pre-fetched installer
 execution; on Linux, macOS, BSD, illumos, and Windows build hosts it parses `rapps-db` `.txt` INI

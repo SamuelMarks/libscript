@@ -1,5 +1,7 @@
 # VirtualBox Component
 
+**Tier**: `T1` (`_lib/virtualization/virtualbox/`) | **Capabilities**: `userland-package`
+
 Installs and configures Oracle VM VirtualBox 7.0+ with Oracle Extension Pack (TPM 2.0 and Secure
 Boot support).
 

@@ -1,5 +1,7 @@
 # Choco
 
+**Tier**: `T1` (`_lib/package-managers/choco/`) | **Capabilities**: `userland-package`
+
 ## Usage
 
 This document describes **Chocolatey (choco)**, a machine-level, command-line package manager and
@@ -20,11 +22,7 @@ the local CLI.
 
 ./cli.sh install choco
 
-./libscript.sh start choco
-./cli.sh start choco
 
-./libscript.sh stop choco
-./cli.sh stop choco
 
 ./libscript.sh package-as docker choco
 ./cli.sh package-as docker choco
@@ -43,11 +41,7 @@ libscript.cmd install choco
 cli.cmd install choco
 
 :: Start and Stop
-libscript.cmd start choco
-cli.cmd start choco
 
-libscript.cmd stop choco
-cli.cmd stop choco
 
 :: Package (e.g., as MSI installer)
 libscript.cmd package-as msi choco
@@ -65,13 +59,13 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `CHOCO_INSTALL_METHOD` | How to install CHOCO. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `CHOCO_VERSION`        | Specific version of choco to install.                                                                                                                                 | `latest`           |                  |
-| `CHOCO_DOWNLOAD_URL`   | Override URL for downloading choco binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `CHOCO_RELEASES_URL`   | Override URL for querying choco available remote releases.                                                                                                            | `none`             |                  |
-| `CHOCO_SOURCE`         | Configuration variable CHOCO_SOURCE for choco.                                                                                                                        | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `CHOCO_INSTALL_METHOD` | Installation strategy for choco: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `CHOCO_VERSION`        | Specific version of choco to install.                                                                                                                   | `latest`           |                  |
+| `CHOCO_DOWNLOAD_URL`   | Override URL for downloading choco binary or archive artifacts.                                                                                         | `none`             |                  |
+| `CHOCO_RELEASES_URL`   | Override URL for querying choco available remote releases.                                                                                              | `none`             |                  |
+| `CHOCO_SOURCE`         | Local directory or NuGet/Chocolatey feed URL used as the package source when installing Chocolatey packages (including offline caches).                 | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

@@ -1,5 +1,8 @@
 # Intel Media Driver
 
+**Tier**: `T2` (`_lib/graphics/intel-media-driver/`) | **Capabilities**: `sysroot-package`,
+`sysroot-library`
+
 VAAPI hardware accelerated video driver for Intel
 
 ## Usage

@@ -1,47 +1,47 @@
-# msitools
+# GNOME msitools (wixl) (`_lib/toolchains/msitools/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `msitools` component (part
-of `_toolchains`) within the LibScript ecosystem. GNOME msitools suite providing wixl, msiinfo,
-msibuild, msidump, and msiextract for MSI authoring baselines.
+GNOME msitools suite providing wixl, msiinfo, msibuild, msidump, and msiextract for MSI authoring
+baselines.
+
+- **Tier**: `T1` (`_lib/toolchains/msitools/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `msitools`, `wixl`
+- **Target OS Whitelist (`manifest.json`)**: `linux`, `darwin`, `freebsd`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **GNOME msitools (wixl)**. It
-is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install msitools
-libscript uninstall msitools
+# Native version management (isolated under ${LIBSCRIPT_HOME}/msitools/<version>)
+./libscript.sh ls-remote msitools
+./libscript.sh install msitools latest
+./libscript.sh use msitools latest
+./libscript.sh which msitools
+./_lib/toolchains/msitools/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start msitools
-libscript stop msitools
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote msitools
+.\libscript.cmd install msitools latest
+.\libscript.cmd use msitools latest
+.\libscript.cmd which msitools
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker msitools
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install msitools`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/msitools/<version>`
+  (default `~/.libscript/msitools/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `MSITOOLS_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +55,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

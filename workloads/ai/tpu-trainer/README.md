@@ -24,13 +24,14 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                           | Default           | Aliases/Examples |
-| --------------------- | ------------------------------------------------------------------------------------- | ----------------- | ---------------- |
-| `TPU_TRAINER_BACKEND` | ML backend framework initialized in /dev/shm uv virtualenvs across TPU slice workers. | `jax_native`      |                  |
-| `ML_SCRIPT`           | Training command executed in lockstep across all TPU slice workers.                   | `python train.py` |                  |
+| Variable              | Description                                                                           | Default           |
+| :-------------------- | :------------------------------------------------------------------------------------ | :---------------- |
+| `TPU_TRAINER_BACKEND` | ML backend framework initialized in /dev/shm uv virtualenvs across TPU slice workers. | `jax_native`      |
+| `ML_SCRIPT`           | Training command executed in lockstep across all TPU slice workers.                   | `python train.py` |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

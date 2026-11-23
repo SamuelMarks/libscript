@@ -1,5 +1,7 @@
 # GNOME Desktop
 
+**Tier**: `T2` (`_lib/desktops/gnome/`) | **Capabilities**: `sysroot-package`
+
 Modern desktop environment for Linux
 
 ## Usage

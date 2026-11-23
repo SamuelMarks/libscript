@@ -1,137 +1,99 @@
-# Databases
+# Relational, Document, Columnar & Consensus Databases (`_lib/databases/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the **Storage folder
-(`_storage`)** component within the LibScript ecosystem. This directory houses various database and
-storage solutions (e.g., PostgreSQL, MongoDB, SQLite).
+**Tier Scope**: `T1`
 
-The components inside this directory work both as local version managers (similar to `rvm`, `nvm`,
-`pyenv`, or `uv`) for their respective storage technologies, and can be invoked from the global
-version manager `libscript`. By providing these flexible storage primitives, LibScript can be used
-to seamlessly build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud,
-etc.).
+Transactional SQL, NoSQL document, time-series, analytical OLAP, graph, embedded, and Raft/quorum
+datastore engines (`postgres`, `mariadb`, `mysql`, `sqlite`, `duckdb`, `mongodb`, `clickhouse`,
+`etcd`, `zookeeper`, `cockroachdb`, `tidb`, `scylladb`, etc.).
+
+Each subdirectory in `_lib/databases/` is an atomic, self-contained LibScript component governed by
+its own `manifest.json` and `vars.schema.json`. Components in `_lib/databases/` never cross-source
+sibling components directly; instead, they source `T0` helpers from `engine/common/` and are
+composed upward by `T3` (`synthesis/`), `T4` (`infrastructure/`), `T5` (`workloads/`), and `Plane A`
+(`traits/`).
 
 ## Usage
 
-You can install, start, stop, package, and uninstall databases using the global `libscript` command
-or the local CLI.
-
-**Unix (Linux/macOS):**
+Install or manage individual components in this category via `libscript.sh` / `libscript.cmd` or the
+component's local `cli.sh` / `cli.cmd`:
 
 ```sh
-
-./libscript.sh install databases
-
-./cli.sh install databases
-
-./libscript.sh start databases
-./cli.sh start databases
-
-./libscript.sh stop databases
-./cli.sh stop databases
-
-./libscript.sh package-as docker databases
-./cli.sh package-as docker databases
-
-./libscript.sh uninstall databases
-./cli.sh uninstall databases
+./libscript.sh cassandra --help
+./libscript.sh install cassandra latest
+./_lib/databases/cassandra/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install databases
-
-:: Local CLI
-cli.cmd install databases
-
-:: Start and Stop
-libscript.cmd start databases
-cli.cmd start databases
-
-libscript.cmd stop databases
-cli.cmd stop databases
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi databases
-cli.cmd package-as msi databases
-
-:: Uninstall
-libscript.cmd uninstall databases
-cli.cmd uninstall databases
+.\libscript.cmd cassandra --help
+.\libscript.cmd install cassandra latest
+.\_lib\databases\cassandra\cli.cmd test
 ```
 
-## Dependency Installation Methods
-
-`libscript` provides a flexible dependency management system, allowing you to control how
-dependencies are installed—either globally across the entire setup or locally on a per-toolchain
-basis.
-
-### Global Configuration
-
-You can set a global preference for how tools should be installed by defining
-`LIBSCRIPT_DEFAULT_INSTALL_METHOD` in your environment or global configuration (`install.json`).
-
-Supported global methods typically include:
-
-- `system`: Uses the system's package manager (e.g., `apt`, `apk`, `pacman`).
-- `source`: Builds or downloads the tool from source/official binaries (fallback behavior depends on
-  the tool).
-
-Example:
-
-```sh
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
-```
-
-### Local Overrides
-
-You can override the global setting for specific dependencies by setting their respective
-`DATABASES_INSTALL_METHOD` variable. The local override takes highest precedence.
-
-For example, to globally use the system package manager but strictly install Python via `uv`:
-
-```sh
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
-export PYTHON_INSTALL_METHOD="uv"
-```
-
-### Python-Specific Support
-
-The Python toolchain (`_lib/languages/python`) is extensively integrated with this feature and
-supports the following `PYTHON_INSTALL_METHOD` values:
-
-- `uv` (default fallback): Installs Python and creates virtual environments using astral's `uv`
-  tool.
-- `pyenv`: Installs Python versions using `pyenv`, managing them in `~/.pyenv`.
-- `system`: Uses the system's package manager to provide Python.
-- `from-source`: Compiles Python directly from its source code.
-
-By combining global methods with local overrides, you can mix and match system-provided stable
-packages with newer or custom-compiled toolchains as needed.
-
-## Platform Support
-
-- Linux
-- macOS
-- Windows
-
-## Available Components
+## Components (25)
 
 <!-- BEGIN_COMPONENTS -->
 
-- [duckdb](./duckdb/README.md)
-- [etcd](./etcd/README.md)
-- [mariadb](./mariadb/README.md)
-- [mongodb](./mongodb/README.md)
-- [postgres](./postgres/README.md)
-- [sqlite](./sqlite/README.md)
+- [`cassandra`](./cassandra/README.md) (`T1` — `userland-package`, `service-daemon`): Distributed
+  wide-column NoSQL database designed to handle large amounts of data across commodity servers with
+  high availability.
+- [`clickhouse`](./clickhouse/README.md) (`T1` — `userland-package`, `service-daemon`):
+  High-performance column-oriented SQL database management system for online analytical processing
+  (OLAP).
+- [`cockroachdb`](./cockroachdb/README.md) (`T1` — `userland-package`, `service-daemon`):
+  Cloud-native distributed SQL database built for transactional consistency, horizontal scalability,
+  and survivability.
+- [`couchdb`](./couchdb/README.md) (`T1` — `userland-package`, `service-daemon`): Seamless
+  multi-master syncing document database with an intuitive HTTP/JSON API and reliability focus.
+- [`duckdb`](./duckdb/README.md) (`T1` — `userland-package`, `sysroot-library`): An in-process SQL
+  OLAP database management system.
+- [`etcd`](./etcd/README.md) (`T1` — `userland-package`, `service-daemon`): A distributed, reliable
+  key-value store for the most critical data of a distributed system.
+- [`ferretdb`](./ferretdb/README.md) (`T1` — `userland-package`, `service-daemon`): Truly
+  open-source MongoDB alternative proxy backed by PostgreSQL or SQLite storage engines.
+- [`firebird`](./firebird/README.md) (`T1` — `userland-package`, `service-daemon`): Open-source
+  relational SQL database management system offering ANSI SQL standard compliance and stored
+  procedures.
+- [`influxdb`](./influxdb/README.md) (`T1` — `userland-package`, `service-daemon`): Scalable
+  datastore purpose-built for metrics, events, and real-time time-series analytics.
+- [`lmdb`](./lmdb/README.md) (`T1` — `userland-package`, `sysroot-library`): Symas Lightning
+  Memory-Mapped Database ultra-fast, ultra-compact transactional embedded key-value store tools.
+- [`mariadb`](./mariadb/README.md) (`T1` — `userland-package`, `service-daemon`): A
+  community-developed, commercially supported fork of the MySQL relational database management
+  system.
+- [`mongodb`](./mongodb/README.md) (`T1` — `userland-package`, `service-daemon`): MongoDB is a
+  source-available cross-platform document-oriented database program.
+- [`mssql`](./mssql/README.md) (`T1` — `userland-package`, `service-daemon`): Microsoft SQL Server
+  relational database engine and sqlcmd command-line management utility.
+- [`mysql`](./mysql/README.md) (`T1` — `userland-package`, `service-daemon`): MySQL 8.x relational
+  database management system.
+- [`neo4j`](./neo4j/README.md) (`T1` — `userland-package`, `service-daemon`): High-performance
+  native graph database platform for connected data and Cypher query workloads.
+- [`postgres`](./postgres/README.md) (`T1` — `userland-package`, `service-daemon`): A powerful, open
+  source object-relational database system.
+- [`questdb`](./questdb/README.md) (`T1` — `userland-package`, `service-daemon`): High-throughput
+  open-source time-series database with fast SQL, InfluxDB Line Protocol, and PostgreSQL wire
+  support.
+- [`rethinkdb`](./rethinkdb/README.md) (`T1` — `userland-package`, `service-daemon`): Open-source
+  distributed JSON database built for real-time changefeeds and reactive web applications.
+- [`rocksdb`](./rocksdb/README.md) (`T1` — `userland-package`, `sysroot-library`): Embeddable
+  persistent LSM-tree key-value store library and ldb administration CLI tools optimized for fast
+  flash storage.
+- [`scylladb`](./scylladb/README.md) (`T1` — `userland-package`, `service-daemon`):
+  Ultra-low-latency C++ distributed wide-column NoSQL database compatible with Apache Cassandra and
+  Amazon DynamoDB.
+- [`sqlite`](./sqlite/README.md) (`T1` — `userland-package`, `sysroot-library`): A C-language
+  library that implements a small, fast, self-contained, high-reliability, full-featured, SQL
+  database engine.
+- [`surrealdb`](./surrealdb/README.md) (`T1` — `userland-package`, `service-daemon`): Scalable
+  distributed multi-model cloud database supporting relational, document, graph, and vector queries.
+- [`tidb`](./tidb/README.md) (`T1` — `userland-package`, `service-daemon`): Open-source distributed
+  Hybrid Transactional and Analytical Processing (HTAP) SQL database compatible with MySQL.
+- [`timescaledb`](./timescaledb/README.md) (`T1` — `userland-package`, `service-daemon`):
+  Open-source time-series SQL database extension and tuning toolkit engineered on PostgreSQL.
+- [`zookeeper`](./zookeeper/README.md) (`T1` — `userland-package`, `service-daemon`): Centralized
+  service for maintaining configuration information, naming, distributed synchronization, and quorum
+  leader election.
 
 <!-- END_COMPONENTS -->
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.

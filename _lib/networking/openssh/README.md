@@ -1,5 +1,7 @@
 # OpenSSH Server
 
+**Tier**: `T1` (`_lib/networking/openssh/`) | **Capabilities**: `userland-package`
+
 Hardened secure remote login and shell daemon
 
 ## Usage

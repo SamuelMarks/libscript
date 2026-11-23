@@ -96,11 +96,11 @@
     },
     "SQLITE_BIN": {
       "type": "string",
-      "description": "Configuration variable SQLITE_BIN for sqlite."
+      "description": "Explicit path to the sqlite3 CLI binary used for verification or query execution."
     },
     "SQLITE_COMPARE_COMPILERS": {
       "type": "string",
-      "description": "Configuration variable SQLITE_COMPARE_COMPILERS for sqlite."
+      "description": "Space-separated list of C compiler toolchains to benchmark and compare when building SQLite from source."
     },
     "SQLITE_DOWNLOAD_URL": {
       "type": "string",
@@ -108,11 +108,11 @@
     },
     "SQLITE_EFFECTIVE_CFLAGS": {
       "type": "string",
-      "description": "Configuration variable SQLITE_EFFECTIVE_CFLAGS for sqlite."
+      "description": "Resolved C compiler flags passed to the SQLite amalgamation or autoconf build."
     },
     "SQLITE_EFFECTIVE_LDFLAGS": {
       "type": "string",
-      "description": "Configuration variable SQLITE_EFFECTIVE_LDFLAGS for sqlite."
+      "description": "Resolved linker flags passed when linking the SQLite library and CLI binary."
     },
     "SQLITE_PATH": {
       "type": "string",
@@ -120,7 +120,7 @@
     },
     "SQLITE_PREFIX": {
       "type": "string",
-      "description": "Configuration variable SQLITE_PREFIX for sqlite."
+      "description": "Installation prefix directory where compiled SQLite binaries, headers, and libraries are staged."
     },
     "SQLITE_RELEASES_URL": {
       "type": "string",

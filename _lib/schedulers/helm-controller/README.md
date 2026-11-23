@@ -1,47 +1,45 @@
-# helm-controller
+# Helm Controller Operator (`_lib/schedulers/helm-controller/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `helm-controller`
-component (part of `_orchestration`) within the LibScript ecosystem. Kubernetes HelmChart custom
-resource operator (helm-controller) for declarative Helm release lifecycle management.
+Kubernetes HelmChart custom resource operator (helm-controller) for declarative Helm release
+lifecycle management.
+
+- **Tier**: `T1` (`_lib/schedulers/helm-controller/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Helm Controller Operator**.
-It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install helm-controller
-libscript uninstall helm-controller
+# Native version management (isolated under ${LIBSCRIPT_HOME}/helm-controller/<version>)
+./libscript.sh ls-remote helm-controller
+./libscript.sh install helm-controller latest
+./libscript.sh use helm-controller latest
+./libscript.sh which helm-controller
+./_lib/schedulers/helm-controller/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start helm-controller
-libscript stop helm-controller
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote helm-controller
+.\libscript.cmd install helm-controller latest
+.\libscript.cmd use helm-controller latest
+.\libscript.cmd which helm-controller
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker helm-controller
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install helm-controller`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/helm-controller/<version>` (default `~/.libscript/helm-controller/<version>`)
+  and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `HELM_CONTROLLER_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

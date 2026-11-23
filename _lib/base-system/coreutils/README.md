@@ -1,5 +1,7 @@
 # GNU Coreutils
 
+**Tier**: `T2` (`_lib/base-system/coreutils/`) | **Capabilities**: `sysroot-package`
+
 Basic file, shell and text manipulation utilities
 
 ## Usage

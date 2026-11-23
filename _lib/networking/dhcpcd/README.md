@@ -1,5 +1,7 @@
 # dhcpcd
 
+**Tier**: `T1` (`_lib/networking/dhcpcd/`) | **Capabilities**: `userland-package`
+
 RFC-compliant DHCP client daemon
 
 ## Usage

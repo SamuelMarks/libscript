@@ -537,12 +537,14 @@ if "!download_needed!"=="1" (
         REM Strategy A: curl (PATH, LIBSCRIPT_HOME, ReactOS bootstrap, or lazy _lib/utilities/curl bootstrap)
         call :resolve_pkg_mgr_curl
         if not "!_curl_bin!"=="" (
-                if not "!auth_header!"=="" (
-                        "!_curl_bin!" -L -H "!auth_header!" "!url!" -o "!cache_file!"
-                ) else (
-                        "!_curl_bin!" -L "!url!" -o "!cache_file!"
+                call :curl_download_with_retry
+        )
+
+        REM Strategy A1b: Authenticated GitHub Releases / Archive bypass (rescues shared-NAT HTTP 403/429)
+        if "!download_success!" equ "0" (
+                if /i "!url:~0,19!"=="https://github.com/" (
+                        call :download_github_authenticated
                 )
-                if "!errorlevel!" equ "0" set "download_success=1"
         )
 
         REM Strategy A2: wget or busybox wget
@@ -607,10 +609,12 @@ if not "!expected_checksum!"=="" (
         )
 ) else (
         if not "%LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB%"=="1" (
-                set "actual_checksum="
-                call :compute_sha256 "!cache_file!"
-                if not "!actual_checksum!"=="" (
-                        findstr /i /c:"!url! !actual_checksum!" "!checksum_db!" >nul 2>&1 || echo !url! !actual_checksum!>> "!checksum_db!"
+                if not "%LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE%"=="1" (
+                        set "actual_checksum="
+                        call :compute_sha256 "!cache_file!"
+                        if not "!actual_checksum!"=="" (
+                                findstr /i /c:"!url! !actual_checksum!" "!checksum_db!" >nul 2>&1 || echo !url! !actual_checksum!>> "!checksum_db!"
+                        )
                 )
         )
 )
@@ -836,6 +840,196 @@ exit /b 1
 call :libscript_download %*
 exit /b %errorlevel%
 
+:: ## resolve_gh_token
+:: Resolves GITHUB_TOKEN or GH_TOKEN into _pm_gh_tok when defined.
+:resolve_gh_token
+set "_pm_gh_tok=%GITHUB_TOKEN%"
+if "!_pm_gh_tok!"=="" set "_pm_gh_tok=%GH_TOKEN%"
+exit /b 0
+
+:: ## curl_download_with_retry
+:: Executes curl with -fL HTTP failure gating and bounded transient retry/backoff.
+:curl_download_with_retry
+set "_cdr_max=%LIBSCRIPT_DOWNLOAD_RETRIES%"
+if "!_cdr_max!"=="" set "_cdr_max=3"
+if /i "!url:~0,7!"=="file://" set "_cdr_max=1"
+set "_cdr_try=1"
+goto :curl_retry_loop
+
+:: ## curl_retry_loop
+:: Performs an individual curl download attempt and checks for non-empty output.
+:curl_retry_loop
+if exist "!cache_file!" del /f /q "!cache_file!" >nul 2>&1
+if not "!auth_header!"=="" (
+    "!_curl_bin!" -fL -A "libscript/1.0" --connect-timeout 15 -H "!auth_header!" "!url!" -o "!cache_file!"
+) else (
+    "!_curl_bin!" -fL -A "libscript/1.0" --connect-timeout 15 "!url!" -o "!cache_file!"
+)
+if "!errorlevel!" equ "0" (
+    if exist "!cache_file!" (
+        for %%Z in ("!cache_file!") do (
+            if not "%%~zZ"=="0" (
+                set "download_success=1"
+                exit /b 0
+            )
+        )
+    )
+)
+set /a "_cdr_rem=_cdr_max - _cdr_try"
+if "!_cdr_rem!"=="0" exit /b 1
+if "!_cdr_rem:~0,1!"=="-" exit /b 1
+if not "%LIBSCRIPT_DOWNLOAD_RETRY_DELAY%"=="0" ping -n 3 127.0.0.1 >nul 2>&1
+set /a "_cdr_try+=1"
+goto :curl_retry_loop
+
+:: ## download_github_authenticated
+:: Rescues GitHub release asset and archive downloads via gh CLI, GitHub REST API, or codeload.github.com.
+:download_github_authenticated
+call :resolve_gh_token
+set "_gda_rest=!url:~19!"
+for /f "tokens=1,2* delims=/" %%A in ("!_gda_rest!") do (
+    set "_gda_owner=%%A"
+    set "_gda_repo=%%B"
+    set "_gda_tail=%%C"
+)
+if "!_gda_owner!"=="" exit /b 1
+if "!_gda_repo!"=="" exit /b 1
+if /i "!_gda_tail:~0,18!"=="releases/download/" (
+    set "_gda_rel_tail=!_gda_tail:~18!"
+    for /f "tokens=1* delims=/" %%T in ("!_gda_rel_tail!") do (
+        set "_gda_tag=%%T"
+        set "_gda_asset=%%U"
+    )
+    for /f "tokens=1 delims=?" %%Q in ("!_gda_asset!") do set "_gda_asset=%%Q"
+    if not "!_gda_tag!"=="" if not "!_gda_asset!"=="" (
+        call :download_github_release_asset
+        if "!download_success!" equ "1" exit /b 0
+    )
+    exit /b 1
+)
+if /i "!_gda_tail:~0,8!"=="archive/" (
+    set "_gda_arch=!_gda_tail:~8!"
+    for /f "tokens=1 delims=?" %%Q in ("!_gda_arch!") do set "_gda_arch=%%Q"
+    call :download_github_codeload_archive
+    if "!download_success!" equ "1" exit /b 0
+)
+exit /b 1
+
+:: ## download_github_release_asset
+:: Downloads a GitHub release asset using gh release download or authenticated api.github.com REST endpoint.
+:download_github_release_asset
+where gh >nul 2>&1
+if "!errorlevel!" equ "0" (
+    set "_gh_can_use=0"
+    if not "!_pm_gh_tok!"=="" set "_gh_can_use=1"
+    if "!_gh_can_use!"=="0" (
+        gh auth status >nul 2>&1
+        if "!errorlevel!" equ "0" set "_gh_can_use=1"
+    )
+    if "!_gh_can_use!"=="1" (
+        if exist "!cache_file!" del /f /q "!cache_file!" >nul 2>&1
+        if exist "!dl_dir!\!_gda_asset!" del /f /q "!dl_dir!\!_gda_asset!" >nul 2>&1
+        if not "!_pm_gh_tok!"=="" set "GH_TOKEN=!_pm_gh_tok!"
+        gh release download "!_gda_tag!" -R "!_gda_owner!/!_gda_repo!" -p "!_gda_asset!" -D "!dl_dir!" --clobber >nul 2>&1
+        if "!errorlevel!" equ "0" (
+            if /i not "!dl_dir!\!_gda_asset!"=="!cache_file!" (
+                if exist "!dl_dir!\!_gda_asset!" move /y "!dl_dir!\!_gda_asset!" "!cache_file!" >nul 2>&1
+            )
+            if exist "!cache_file!" (
+                for %%Z in ("!cache_file!") do (
+                    if not "%%~zZ"=="0" (
+                        set "download_success=1"
+                        exit /b 0
+                    )
+                )
+            )
+        )
+    )
+)
+if "!_pm_gh_tok!"=="" exit /b 1
+if "!_curl_bin!"=="" call :resolve_pkg_mgr_curl
+if "!_curl_bin!"=="" exit /b 1
+set "_gda_api_base=%LIBSCRIPT_GITHUB_API_BASE%"
+if "!_gda_api_base!"=="" set "_gda_api_base=https://api.github.com"
+set "_gda_jq="
+where jq >nul 2>&1 && set "_gda_jq=jq"
+if "!_gda_jq!"=="" (
+    set "_gda_home=%LIBSCRIPT_HOME%"
+    if "!_gda_home!"=="" set "_gda_home=%USERPROFILE%\.libscript"
+    if exist "!_gda_home!\bin\jq.exe" set "_gda_jq=!_gda_home!\bin\jq.exe"
+    if "!_gda_jq!"=="" if exist "!_gda_home!\jq\default\bin\jq.exe" set "_gda_jq=!_gda_home!\jq\default\bin\jq.exe"
+)
+if "!_gda_jq!"=="" exit /b 1
+set "_gda_json=%TEMP%\ls_gh_rel_!RANDOM!_!RANDOM!.json"
+set "_gda_url_out=%TEMP%\ls_gh_url_!RANDOM!_!RANDOM!.txt"
+"!_curl_bin!" -fsSL -A "libscript/1.0" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer !_pm_gh_tok!" "!_gda_api_base!/repos/!_gda_owner!/!_gda_repo!/releases/tags/!_gda_tag!" -o "!_gda_json!" 2>nul
+set "_gda_asset_api="
+if exist "!_gda_json!" (
+    "!_gda_jq!" -r --arg n "!_gda_asset!" ".assets[]? | select(.name == $n) | .url" "!_gda_json!" > "!_gda_url_out!" 2>nul
+    del /f /q "!_gda_json!" >nul 2>&1
+    if exist "!_gda_url_out!" (
+        for /f "usebackq delims=" %%U in ("!_gda_url_out!") do if "!_gda_asset_api!"=="" set "_gda_asset_api=%%U"
+        del /f /q "!_gda_url_out!" >nul 2>&1
+    )
+)
+if "!_gda_asset_api!"=="" exit /b 1
+if exist "!cache_file!" del /f /q "!cache_file!" >nul 2>&1
+"!_curl_bin!" -fsSL -A "libscript/1.0" -H "Accept: application/octet-stream" -H "Authorization: Bearer !_pm_gh_tok!" "!_gda_asset_api!" -o "!cache_file!" 2>nul
+if "!errorlevel!" equ "0" (
+    if exist "!cache_file!" (
+        for %%Z in ("!cache_file!") do (
+            if not "%%~zZ"=="0" (
+                set "download_success=1"
+                exit /b 0
+            )
+        )
+    )
+)
+exit /b 1
+
+:: ## download_github_codeload_archive
+:: Downloads a GitHub tag/branch archive directly from codeload.github.com to bypass github.com web 403 limits.
+:download_github_codeload_archive
+if "!_curl_bin!"=="" call :resolve_pkg_mgr_curl
+if "!_curl_bin!"=="" exit /b 1
+set "_gda_cl_url="
+if /i "!_gda_arch:~-7!"==".tar.gz" (
+    set "_gda_ref=!_gda_arch:~0,-7!"
+    set "_gda_cl_url=https://codeload.github.com/!_gda_owner!/!_gda_repo!/tar.gz/!_gda_ref!"
+)
+if /i "!_gda_arch:~-4!"==".zip" (
+    set "_gda_ref=!_gda_arch:~0,-4!"
+    set "_gda_cl_url=https://codeload.github.com/!_gda_owner!/!_gda_repo!/zip/!_gda_ref!"
+)
+if "!_gda_cl_url!"=="" exit /b 1
+if not "!_pm_gh_tok!"=="" (
+    if exist "!cache_file!" del /f /q "!cache_file!" >nul 2>&1
+    "!_curl_bin!" -fsSL -A "libscript/1.0" -H "Authorization: Bearer !_pm_gh_tok!" "!_gda_cl_url!" -o "!cache_file!" 2>nul
+    if "!errorlevel!" equ "0" (
+        if exist "!cache_file!" (
+            for %%Z in ("!cache_file!") do (
+                if not "%%~zZ"=="0" (
+                    set "download_success=1"
+                    exit /b 0
+                )
+            )
+        )
+    )
+)
+if exist "!cache_file!" del /f /q "!cache_file!" >nul 2>&1
+"!_curl_bin!" -fsSL -A "libscript/1.0" "!_gda_cl_url!" -o "!cache_file!" 2>nul
+if "!errorlevel!" equ "0" (
+    if exist "!cache_file!" (
+        for %%Z in ("!cache_file!") do (
+            if not "%%~zZ"=="0" (
+                set "download_success=1"
+                exit /b 0
+            )
+        )
+    )
+)
+exit /b 1
+
 :: ## libscript_fetch_stdout
 :: Fetches the contents of a URL to stdout via curl (_lib/utilities/curl) before falling back to libscript_download.
 :libscript_fetch_stdout
@@ -844,8 +1038,19 @@ if "!_lfs_url!"=="" exit /b 1
 if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
 if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
 call :resolve_pkg_mgr_curl
+set "_lfs_hdr=%LIBSCRIPT_DOWNLOAD_AUTH_HEADER%"
+if "!_lfs_hdr!"=="" (
+    if /i "!_lfs_url:~0,23!"=="https://api.github.com/" (
+        call :resolve_gh_token
+        if not "!_pm_gh_tok!"=="" set "_lfs_hdr=Authorization: Bearer !_pm_gh_tok!"
+    )
+)
 if not "!_curl_bin!"=="" (
-    "!_curl_bin!" -fsSL "!_lfs_url!" 2>nul
+    if not "!_lfs_hdr!"=="" (
+        "!_curl_bin!" -fsSL -A "libscript/1.0" -H "!_lfs_hdr!" "!_lfs_url!" 2>nul
+        if "!errorlevel!" equ "0" exit /b 0
+    )
+    "!_curl_bin!" -fsSL -A "libscript/1.0" "!_lfs_url!" 2>nul
     exit /b !errorlevel!
 )
 set "_lfs_tmp=%TEMP%\libscript_fetch_%RANDOM%.tmp"
@@ -865,6 +1070,7 @@ if "!_lrgt_url!"=="" exit /b 1
 if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
 if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
 call :resolve_pkg_mgr_curl
+call :resolve_gh_token
 set "_lrgt_jq="
 where jq >nul 2>&1 && set "_lrgt_jq=jq"
 if "!_lrgt_jq!"=="" (
@@ -877,7 +1083,12 @@ if not "!_curl_bin!"=="" (
     if not "!_lrgt_jq!"=="" (
         set "_lrgt_tmp=%TEMP%\ls_gh_tag_!RANDOM!_!RANDOM!.json"
         set "_lrgt_out=%TEMP%\ls_gh_tag_!RANDOM!_!RANDOM!.out"
-        "!_curl_bin!" -fsSL "!_lrgt_url!" -o "!_lrgt_tmp!" 2>nul
+        if not "!_pm_gh_tok!"=="" (
+            "!_curl_bin!" -fsSL -A "libscript/1.0" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer !_pm_gh_tok!" "!_lrgt_url!" -o "!_lrgt_tmp!" 2>nul
+        )
+        if not exist "!_lrgt_tmp!" (
+            "!_curl_bin!" -fsSL -A "libscript/1.0" "!_lrgt_url!" -o "!_lrgt_tmp!" 2>nul
+        )
         if exist "!_lrgt_tmp!" (
             "!_lrgt_jq!" -r ".tag_name // empty" "!_lrgt_tmp!" > "!_lrgt_out!" 2>nul
             del /f /q "!_lrgt_tmp!" >nul 2>&1

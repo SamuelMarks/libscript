@@ -3,12 +3,12 @@
   "capabilities": ["userland-package"],
   "category": "toolchains",
   "conflicts": [],
-  "description": "A fast, scalable, multi-language and extensible build system, installed via huggingface_hubisk.",
+  "description": "Official Hugging Face Hub CLI (huggingface-cli / hf) for downloading models, datasets, and managing repositories.",
   "name": "huggingface_hub",
   "os_blacklist": [],
   "os_whitelist": ["all"],
   "ports": [],
-  "provides": ["build-system", "huggingface_hub", "huggingface_hubisk"],
+  "provides": ["huggingface-cli", "huggingface_hub"],
   "tier": "T1",
-  "title": "huggingface_hub"
+  "title": "Hugging Face Hub CLI"
 }

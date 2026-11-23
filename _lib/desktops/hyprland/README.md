@@ -1,5 +1,7 @@
 # Hyprland
 
+**Tier**: `T2` (`_lib/desktops/hyprland/`) | **Capabilities**: `sysroot-package`
+
 Dynamic tiling Wayland compositor with animations
 
 ## Usage

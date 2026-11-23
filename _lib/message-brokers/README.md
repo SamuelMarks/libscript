@@ -1,137 +1,58 @@
-# Message Brokers
+# Message Brokers, Event Streaming & MQTT (`_lib/message-brokers/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `_daemon` component (a
-directory under `_lib`) within the LibScript ecosystem. It describes the directory responsible for
-configuring and managing system service daemons and background tasks across different operating
-systems.
+**Tier Scope**: `T1 / T2`
+
+Distributed event streaming, AMQP/NATS messaging, and embedded IoT MQTT libraries (`kafka`,
+`redpanda`, `pulsar`, `rabbitmq`, `nats`, `activemq`, `mosquitto`, `zeromq`, `coremqtt`).
+
+Each subdirectory in `_lib/message-brokers/` is an atomic, self-contained LibScript component
+governed by its own `manifest.json` and `vars.schema.json`. Components in `_lib/message-brokers/`
+never cross-source sibling components directly; instead, they source `T0` helpers from
+`engine/common/` and are composed upward by `T3` (`synthesis/`), `T4` (`infrastructure/`), `T5`
+(`workloads/`), and `Plane A` (`traits/`).
 
 ## Usage
 
-The components inside this directory work both as local version managers (similar to rvm, nvm,
-pyenv, uv) and can be invoked directly from the global version manager `libscript`.
-
-Additionally, daemon controllers contained here can be used by libscript to build bigger stacks
-(like WordPress, Open edX, Nextcloud, etc.) by enabling components to run reliably in the background
-on system startup.
-
-You can install, start, stop, package, and uninstall message-brokers using the global `libscript`
-command or the local CLI.
-
-**Unix (Linux/macOS):**
+Install or manage individual components in this category via `libscript.sh` / `libscript.cmd` or the
+component's local `cli.sh` / `cli.cmd`:
 
 ```sh
-
-./libscript.sh install message-brokers
-
-./cli.sh install message-brokers
-
-./libscript.sh start message-brokers
-./cli.sh start message-brokers
-
-./libscript.sh stop message-brokers
-./cli.sh stop message-brokers
-
-./libscript.sh package-as docker message-brokers
-./cli.sh package-as docker message-brokers
-
-./libscript.sh uninstall message-brokers
-./cli.sh uninstall message-brokers
+./libscript.sh activemq --help
+./libscript.sh install activemq latest
+./_lib/message-brokers/activemq/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install message-brokers
-
-:: Local CLI
-cli.cmd install message-brokers
-
-:: Start and Stop
-libscript.cmd start message-brokers
-cli.cmd start message-brokers
-
-libscript.cmd stop message-brokers
-cli.cmd stop message-brokers
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi message-brokers
-cli.cmd package-as msi message-brokers
-
-:: Uninstall
-libscript.cmd uninstall message-brokers
-cli.cmd uninstall message-brokers
+.\libscript.cmd activemq --help
+.\libscript.cmd install activemq latest
+.\_lib\message-brokers\activemq\cli.cmd test
 ```
 
-## Dependency Installation Methods
-
-`libscript` provides a flexible dependency management system, allowing you to control how
-dependencies are installed—either globally across the entire setup or locally on a per-toolchain
-basis.
-
-### Global Configuration
-
-You can set a global preference for how tools should be installed by defining
-`LIBSCRIPT_DEFAULT_INSTALL_METHOD` in your environment or global configuration (`install.json`).
-
-Supported global methods typically include:
-
-- `system`: Uses the system's package manager (e.g., `apt`, `apk`, `pacman`).
-- `source`: Builds or downloads the tool from source/official binaries (fallback behavior depends on
-  the tool).
-
-Example:
-
-```sh
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
-```
-
-### Local Overrides
-
-You can override the global setting for specific dependencies by setting their respective
-`MESSAGE_BROKERS_INSTALL_METHOD` variable. The local override takes highest precedence.
-
-For example, to globally use the system package manager but strictly install Python via `uv`:
-
-```sh
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
-export PYTHON_INSTALL_METHOD="uv"
-```
-
-### Python-Specific Support
-
-The Python toolchain (`_lib/languages/python`) is extensively integrated with this feature and
-supports the following `PYTHON_INSTALL_METHOD` values:
-
-- `uv` (default fallback): Installs Python and creates virtual environments using astral's `uv`
-  tool.
-- `pyenv`: Installs Python versions using `pyenv`, managing them in `~/.pyenv`.
-- `system`: Uses the system's package manager to provide Python.
-- `from-source`: Compiles Python directly from its source code.
-
-By combining global methods with local overrides, you can mix and match system-provided stable
-packages with newer or custom-compiled toolchains as needed.
-
-## Platform Support
-
-- Linux
-- macOS
-- Windows
-
-## Available Components
+## Components (9)
 
 <!-- BEGIN_COMPONENTS -->
 
-- [kafka](./kafka/README.md)
-- [mosquitto](./mosquitto/README.md)
-- [nats](./nats/README.md)
-- [rabbitmq](./rabbitmq/README.md)
+- [`activemq`](./activemq/README.md) (`T1` — `userland-package`, `service-daemon`): Multi-protocol
+  Java message broker supporting JMS, AMQP, STOMP, MQTT, and OpenWire.
+- [`coremqtt`](./coremqtt/README.md) (`T1` — `userland-package`, `service-daemon`):
+  Zero-dynamic-allocation C11 MQTT 3.1.1 and MQTT 5.0 client library for FreeRTOS and Zephyr IoT
+  appliances.
+- [`kafka`](./kafka/README.md) (`T1` — `userland-package`, `service-daemon`): A distributed event
+  store and stream-processing platform.
+- [`mosquitto`](./mosquitto/README.md) (`T1` — `userland-package`, `service-daemon`): An open source
+  message broker that implements the MQTT protocol versions 5.0, 3.1.1 and 3.1.
+- [`nats`](./nats/README.md) (`T1` — `userland-package`, `service-daemon`): A simple, secure and
+  performant communications system for digital systems, services and devices.
+- [`pulsar`](./pulsar/README.md) (`T1` — `userland-package`, `service-daemon`): Cloud-native
+  distributed messaging and streaming platform with tiered storage and multi-tenancy.
+- [`rabbitmq`](./rabbitmq/README.md) (`T1` — `userland-package`, `service-daemon`): The most widely
+  deployed open source message broker.
+- [`redpanda`](./redpanda/README.md) (`T1` — `userland-package`, `service-daemon`): C++
+  Kafka-compatible streaming data platform and rpk CLI engineered without JVM or ZooKeeper
+  dependencies.
+- [`zeromq`](./zeromq/README.md) (`T1` — `userland-package`, `service-daemon`): High-performance
+  asynchronous distributed messaging library (libzmq) and CurveZMQ key generation tools.
 
 <!-- END_COMPONENTS -->
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.

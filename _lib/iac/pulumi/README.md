@@ -1,48 +1,45 @@
-# pulumi
+# Pulumi Infrastructure as Code CLI (`_lib/iac/pulumi/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `pulumi` component (part
-of `_orchestration`) within the LibScript ecosystem. Pulumi open-source Infrastructure-as-Code SDK
-and CLI supporting TypeScript, Python, Go, C#, Java, and YAML.
+Pulumi open-source Infrastructure-as-Code SDK and CLI supporting TypeScript, Python, Go, C#, Java,
+and YAML.
+
+- **Tier**: `T1` (`_lib/iac/pulumi/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Pulumi Infrastructure as
-Code CLI**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install pulumi
-libscript uninstall pulumi
+# Native version management (isolated under ${LIBSCRIPT_HOME}/pulumi/<version>)
+./libscript.sh ls-remote pulumi
+./libscript.sh install pulumi latest
+./libscript.sh use pulumi latest
+./libscript.sh which pulumi
+./_lib/iac/pulumi/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start pulumi
-libscript stop pulumi
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote pulumi
+.\libscript.cmd install pulumi latest
+.\libscript.cmd use pulumi latest
+.\libscript.cmd which pulumi
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker pulumi
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install pulumi`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/pulumi/<version>`
+  (default `~/.libscript/pulumi/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `PULUMI_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

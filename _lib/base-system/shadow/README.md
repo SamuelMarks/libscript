@@ -1,5 +1,7 @@
 # Shadow
 
+**Tier**: `T2` (`_lib/base-system/shadow/`) | **Capabilities**: `sysroot-package`
+
 User account and password management suite
 
 ## Usage

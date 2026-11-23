@@ -1,5 +1,8 @@
 # Uvicorn
 
+**Tier**: `T1` (`_lib/app-servers/uvicorn/`) | **Capabilities**: `userland-package`,
+`service-daemon`
+
 An ASGI web server implementation for Python with native Windows support.
 
 ## Usage

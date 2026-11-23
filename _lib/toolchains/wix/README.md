@@ -1,5 +1,7 @@
 # WiX Toolset
 
+**Tier**: `T1` (`_lib/toolchains/wix/`) | **Capabilities**: `userland-package`
+
 Windows Installer XML (WiX) Toolset (`candle.exe`, `light.exe`, `heat.exe`) for building `.msi`
 packages.
 

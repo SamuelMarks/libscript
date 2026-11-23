@@ -1,5 +1,7 @@
 # LFS Temp Tools
 
+**Tier**: `T2` (`_lib/base-system/lfs-temp-tools/`) | **Capabilities**: `sysroot-package`
+
 Stage 2 Linux From Scratch (LFS) temporary cross-compiled tools orchestrator.
 
 ## Overview

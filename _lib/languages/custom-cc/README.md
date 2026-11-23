@@ -1,7 +1,7 @@
 # Custom C Compiler (`custom-cc`)
 
-Standalone Tier 1 LibScript recipe for registering, building, wrapping, and testing a custom C
-compiler (`custom-cc`).
+Standalone T1 LibScript recipe for registering, building, wrapping, and testing a custom C compiler
+(`custom-cc`).
 
 ## Usage
 
@@ -46,8 +46,8 @@ running the setup script.
 | `CUSTOM_CC_STRIP_GNU_FLAGS`   | Whether cc_wrapper should strip GCC/Clang-specific warning and hardening flags unsupported by minimal C compilers.                                                                                                                                                  | `true`         |                  |
 | `CUSTOM_CC_FALLBACK_CC`       | Optional fallback C compiler binary invoked when custom-cc encounters unsupported GNU extensions or when running in CI wrapper mode.                                                                                                                                | ``             |                  |
 | `CUSTOM_CC_FALLBACK_ON_ERROR` | Whether cc_wrapper should retry failed compilation units with CUSTOM_CC_FALLBACK_CC and record fallback telemetry.                                                                                                                                                  | `none`         |                  |
-| `CUSTOM_CC_LOG_FILE`          | Configuration variable CUSTOM_CC_LOG_FILE for custom-cc.                                                                                                                                                                                                            | `none`         |                  |
-| `CUSTOM_CC_REAL_BIN`          | Configuration variable CUSTOM_CC_REAL_BIN for custom-cc.                                                                                                                                                                                                            | `none`         |                  |
+| `CUSTOM_CC_LOG_FILE`          | Filesystem path to the JSONL telemetry log recording custom-cc compiler invocations, fallback events, and elapsed durations.                                                                                                                                        | `none`         |                  |
+| `CUSTOM_CC_REAL_BIN`          | Path to the underlying custom C compiler executable invoked by the custom-cc wrapper before any fallback.                                                                                                                                                           | `none`         |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

@@ -1,12 +1,13 @@
 # PowerShell
 
+**Tier**: `T1` (`_lib/utilities/powershell/`) | **Capabilities**: `userland-package`
+
 ## Usage
 
 _Note: libscript manages versions natively for this component._
 
-This document describes the **PowerShell** bootstrap component within the LibScript
-ecolibscript_native. It is responsible for provisioning and managing the PowerShell environment on
-target libscript_natives.
+This document describes the **PowerShell** bootstrap component within the LibScript ecosystem. It is
+responsible for provisioning and managing the PowerShell environment on target systems.
 
 This component operates efficiently as a **local version manager** (similar to rvm, nvm, pyenv, uv)
 to manage your PowerShell installation. Furthermore, it can be directly invoked from the **global
@@ -24,11 +25,7 @@ or the local CLI.
 
 ./cli.sh install powershell
 
-./libscript.sh start powershell
-./cli.sh start powershell
 
-./libscript.sh stop powershell
-./cli.sh stop powershell
 
 ./libscript.sh package-as docker powershell
 ./cli.sh package-as docker powershell
@@ -47,11 +44,7 @@ libscript.cmd install powershell
 cli.cmd install powershell
 
 :: Start and Stop
-libscript.cmd start powershell
-cli.cmd start powershell
 
-libscript.cmd stop powershell
-cli.cmd stop powershell
 
 :: Package (e.g., as MSI installer)
 libscript.cmd package-as msi powershell
@@ -69,12 +62,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                    | Description                                                                                                                                                                | Default  | Aliases/Examples |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `POWERSHELL_INSTALL_METHOD` | How to install POWERSHELL. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |                  |
-| `POWERSHELL_VERSION`        | Specific version of PowerShell to install.                                                                                                                                 | `latest` |                  |
-| `POWERSHELL_DOWNLOAD_URL`   | Override URL for downloading powershell binary or archive artifacts.                                                                                                       | `none`   |                  |
-| `POWERSHELL_RELEASES_URL`   | Override URL for querying powershell available remote releases.                                                                                                            | `none`   |                  |
+| Variable                    | Description                                                                                                                                                  | Default  | Aliases/Examples |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------- |
+| `POWERSHELL_INSTALL_METHOD` | Installation strategy for powershell: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `system` |                  |
+| `POWERSHELL_VERSION`        | Specific version of PowerShell to install.                                                                                                                   | `latest` |                  |
+| `POWERSHELL_DOWNLOAD_URL`   | Override URL for downloading powershell binary or archive artifacts.                                                                                         | `none`   |                  |
+| `POWERSHELL_RELEASES_URL`   | Override URL for querying powershell available remote releases.                                                                                              | `none`   |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

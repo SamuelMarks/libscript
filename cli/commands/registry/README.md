@@ -1,10 +1,25 @@
-# LibScript Registry Commands
+# Component Registry & Index Commands (`cli/commands/registry/`)
 
 ## Overview
 
-Manages local and remote component metadata catalogs, indices, and checksum databases.
+`cli/commands/registry/` manages local component catalog indices, SQLite/JSON metadata caches, and
+upstream release table refreshes.
 
-## Subcommands
+## Scripts
 
-- `search`: Queries local cache and remote metadata for matching packages.
-- `update`: Refreshes component manifests, checksum definitions, and release tables.
+- **`search.{sh,cmd,ps1}`**: Queries indexed component manifests and cached release metadata for
+  matching packages and capabilities.
+- **`update.{sh,cmd,ps1}`**: Rebuilds local component registry indices from `_lib/*/*/manifest.json`
+  and refreshes cached upstream release tables when online.
+
+## Usage
+
+```sh
+./cli/commands/registry/update.sh
+./cli/commands/registry/search.sh python
+```
+
+```cmd
+.\cli\commands\registry\update.cmd
+.\cli\commands\registry\search.cmd python
+```

@@ -7,7 +7,7 @@
   "properties": {
     "WGET_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install WGET. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for wget: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "default": "system"
     },
     "WGET_VERSION": {

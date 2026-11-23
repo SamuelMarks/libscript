@@ -1,5 +1,7 @@
 # Rbenv
 
+**Tier**: `T1` (`_lib/package-managers/rbenv/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for the `rbenv` package manager.
 
 ## Usage
@@ -14,12 +16,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `RBENV_INSTALL_METHOD` | How to install RBENV. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `RBENV_VERSION`        | Specific version of rbenv to install.                                                                                                                                 | `latest`           |                  |
-| `RBENV_DOWNLOAD_URL`   | Override URL for downloading rbenv binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `RBENV_RELEASES_URL`   | Override URL for querying rbenv available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `RBENV_INSTALL_METHOD` | Installation strategy for rbenv: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `RBENV_VERSION`        | Specific version of rbenv to install.                                                                                                                   | `latest`           |                  |
+| `RBENV_DOWNLOAD_URL`   | Override URL for downloading rbenv binary or archive artifacts.                                                                                         | `none`             |                  |
+| `RBENV_RELEASES_URL`   | Override URL for querying rbenv available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

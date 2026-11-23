@@ -1,47 +1,45 @@
-# west
+# Zephyr West Meta-Tool (`_lib/toolchains/west/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `west` component (part of
-`_toolchains`) within the LibScript ecosystem. Zephyr RTOS multi-repository manifest, build, flash,
-and debug meta-tool isolated in a component-managed virtual environment.
+Zephyr RTOS multi-repository manifest, build, flash, and debug meta-tool isolated in a
+component-managed virtual environment.
+
+- **Tier**: `T1` (`_lib/toolchains/west/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Zephyr West Meta-Tool**. It
-is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install west
-libscript uninstall west
+# Native version management (isolated under ${LIBSCRIPT_HOME}/west/<version>)
+./libscript.sh ls-remote west
+./libscript.sh install west latest
+./libscript.sh use west latest
+./libscript.sh which west
+./_lib/toolchains/west/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start west
-libscript stop west
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote west
+.\libscript.cmd install west latest
+.\libscript.cmd use west latest
+.\libscript.cmd which west
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker west
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install west`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/west/<version>`
+  (default `~/.libscript/west/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `WEST_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -77,18 +75,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

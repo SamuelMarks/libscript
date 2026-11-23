@@ -1,5 +1,7 @@
 # Weston
 
+**Tier**: `T2` (`_lib/desktops/weston/`) | **Capabilities**: `sysroot-package`
+
 Reference Wayland compositor implementation
 
 ## Usage

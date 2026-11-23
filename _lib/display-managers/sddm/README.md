@@ -1,5 +1,8 @@
 # SDDM
 
+**Tier**: `T2` (`_lib/display-managers/sddm/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 QML-based modern display manager
 
 ## Usage

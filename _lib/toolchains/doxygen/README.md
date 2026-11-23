@@ -1,48 +1,44 @@
-# doxygen
+# Doxygen Documentation Generator (`_lib/toolchains/doxygen/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `doxygen` component (part
-of `_toolchains`) within the LibScript ecosystem. Doxygen documentation analyzer and XML symbol
-extractor for auditing C89 docstring coverage.
+Doxygen documentation analyzer and XML symbol extractor for auditing C89 docstring coverage.
+
+- **Tier**: `T1` (`_lib/toolchains/doxygen/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Doxygen Documentation
-Generator**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install doxygen
-libscript uninstall doxygen
+# Native version management (isolated under ${LIBSCRIPT_HOME}/doxygen/<version>)
+./libscript.sh ls-remote doxygen
+./libscript.sh install doxygen latest
+./libscript.sh use doxygen latest
+./libscript.sh which doxygen
+./_lib/toolchains/doxygen/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start doxygen
-libscript stop doxygen
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote doxygen
+.\libscript.cmd install doxygen latest
+.\libscript.cmd use doxygen latest
+.\libscript.cmd which doxygen
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker doxygen
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install doxygen`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/doxygen/<version>`
+  (default `~/.libscript/doxygen/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `DOXYGEN_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +52,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

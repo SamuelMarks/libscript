@@ -1,5 +1,8 @@
 # greetd
 
+**Tier**: `T2` (`_lib/display-managers/greetd/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 Minimal, generic and agnostic login daemon
 
 ## Usage

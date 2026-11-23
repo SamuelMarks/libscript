@@ -5,7 +5,7 @@
   "type": "object",
   "properties": {
     "CHOCO_INSTALL_METHOD": {
-      "description": "How to install CHOCO. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for choco: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "default": "libscript_native"
     },
@@ -24,7 +24,7 @@
     },
     "CHOCO_SOURCE": {
       "type": "string",
-      "description": "Configuration variable CHOCO_SOURCE for choco."
+      "description": "Local directory or NuGet/Chocolatey feed URL used as the package source when installing Chocolatey packages (including offline caches)."
     }
   },
   "description": "Configuration variables for choco"

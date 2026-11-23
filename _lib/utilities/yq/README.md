@@ -1,47 +1,45 @@
-# yq
+# yq (`_lib/utilities/yq/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `yq` component (part of
-`_utilities`) within the LibScript ecosystem. Portable command-line YAML, JSON, XML, CSV, and TOML
-processor using jq-like expression syntax.
+Portable command-line YAML, JSON, XML, CSV, and TOML processor using jq-like expression syntax.
+
+- **Tier**: `T1` (`_lib/utilities/yq/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `yq`, `yaml-processor`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **yq**. It is designed to be
-executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install yq
-libscript uninstall yq
+# Native version management (isolated under ${LIBSCRIPT_HOME}/yq/<version>)
+./libscript.sh ls-remote yq
+./libscript.sh install yq latest
+./libscript.sh use yq latest
+./libscript.sh which yq
+./_lib/utilities/yq/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start yq
-libscript stop yq
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote yq
+.\libscript.cmd install yq latest
+.\libscript.cmd use yq latest
+.\libscript.cmd which yq
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker yq
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install yq`. On Windows, use `libscript.cmd`
-or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/yq/<version>`
+  (default `~/.libscript/yq/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `YQ_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

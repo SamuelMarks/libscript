@@ -1,5 +1,7 @@
 # labwc
 
+**Tier**: `T2` (`_lib/desktops/labwc/`) | **Capabilities**: `sysroot-package`
+
 Openbox-like stacking Wayland compositor
 
 ## Usage

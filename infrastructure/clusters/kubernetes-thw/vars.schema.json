@@ -43,7 +43,7 @@
       "description": "Unix socket for KUBERNETES_THW to listen on"
     },
     "KUBERNETES_THW_INSTALL_METHOD": {
-      "description": "How to install KUBERNETES THW. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for kubernetes-thw: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "enum": ["libscript_native", "system"],
       "default": "libscript_native"

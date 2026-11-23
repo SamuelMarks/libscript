@@ -1,15 +1,23 @@
-# Vagrant `bento/msdos-4.0` (`GUEST-DOS32`)
+# Vagrant Environment: Microsoft MS-DOS 4.0 (`vagrant/msdos-4.0/`)
 
-Provides reproducible 16-bit and 32-bit protected-mode (`DOS32A.EXE` + OpenWatcom v2 `wcl386` `LE`)
-execution inside the `../bento` MS-DOS 4.0 box using `Bento::VagrantMsdos` (`:msdos` Telnet/Serial
-`COM1` communicator and bidirectional `:msdos_sync` `D:` drive).
+## Overview
+
+Pre-configured Vagrant environment (`bento/msdos-4.0`) used for FAT16 disk and `dos32` binary
+compatibility verification over QEMU `COM1`.
 
 ## Usage
 
 ```sh
-./vagrant/msdos-4.0/run_dos_ctest.sh --suite=auto-win-msvc --out=results/dos_ctest.json
+cd vagrant/msdos-4.0
+vagrant up
+vagrant ssh
 ```
 
-```cmd
-vagrant\msdos-4.0\run_dos_ctest.cmd --suite=auto-win-msvc --out=results\dos_ctest.json
+Run the automated serial `CTest` suite:
+
+```sh
+./vagrant/msdos-4.0/run_dos_ctest.sh
 ```
+
+See [`../../VAGRANT.md`](../../VAGRANT.md) for custom Bento (`multi-os-qemu-aarch64`) box building
+and snapshot management instructions.

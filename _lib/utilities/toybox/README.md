@@ -1,47 +1,46 @@
-# toybox
+# Toybox (`_lib/utilities/toybox/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `toybox` component (part
-of `_utilities`) within the LibScript ecosystem. All-in-one BSD-licensed POSIX, Windows native
-(MSVC), and MS-DOS command-line utility suite.
+All-in-one BSD-licensed POSIX, Windows native (MSVC), and MS-DOS (dos32) command-line utility suite
+via SamuelMarks/toybox-windows.
+
+- **Tier**: `T1` (`_lib/utilities/toybox/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `toybox`, `toybox-windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Toybox**. It is designed to
-be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install toybox
-libscript uninstall toybox
+# Native version management (isolated under ${LIBSCRIPT_HOME}/toybox/<version>)
+./libscript.sh ls-remote toybox
+./libscript.sh install toybox latest
+./libscript.sh use toybox latest
+./libscript.sh which toybox
+./_lib/utilities/toybox/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start toybox
-libscript stop toybox
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote toybox
+.\libscript.cmd install toybox latest
+.\libscript.cmd use toybox latest
+.\libscript.cmd which toybox
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker toybox
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install toybox`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/toybox/<version>`
+  (default `~/.libscript/toybox/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `TOYBOX_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +55,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,5 +1,7 @@
 # Cpanm
 
+**Tier**: `T1` (`_lib/package-managers/cpanm/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for `cpanm` (CPAN Minus - Perl).
 
 ## Usage
@@ -13,12 +15,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `CPANM_INSTALL_METHOD` | How to install CPANM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `CPANM_VERSION`        | Specific version of cpanm to install.                                                                                                                                 | `latest`           |                  |
-| `CPANM_DOWNLOAD_URL`   | Override URL for downloading cpanm binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `CPANM_RELEASES_URL`   | Override URL for querying cpanm available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `CPANM_INSTALL_METHOD` | Installation strategy for cpanm: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `CPANM_VERSION`        | Specific version of cpanm to install.                                                                                                                   | `latest`           |                  |
+| `CPANM_DOWNLOAD_URL`   | Override URL for downloading cpanm binary or archive artifacts.                                                                                         | `none`             |                  |
+| `CPANM_RELEASES_URL`   | Override URL for querying cpanm available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

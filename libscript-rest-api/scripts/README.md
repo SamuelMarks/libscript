@@ -1,10 +1,15 @@
-# LibScript REST API Scripts
+# REST API Dependency Bootstrap Scripts (`libscript-rest-api/scripts/`)
 
 ## Overview
 
-Build, test, and bootstrap automation for the LibScript REST API C server.
+`libscript-rest-api/scripts/` (`bootstrap.{sh,cmd}`) fetches, verifies, and stages third-party C
+dependencies (such as `c-rest-framework`) required to configure and build `libscript-rest-api` via
+CMake in online or cached CI environments.
 
-## Scripts
+## Usage
 
-- `bootstrap.sh` / `.cmd` / `.ps1`: Resolves build prerequisites, sets up dependencies, and compiles
-  the REST API server.
+```sh
+./libscript-rest-api/scripts/bootstrap.sh
+cmake -S libscript-rest-api -B libscript-rest-api/build
+cmake --build libscript-rest-api/build
+```

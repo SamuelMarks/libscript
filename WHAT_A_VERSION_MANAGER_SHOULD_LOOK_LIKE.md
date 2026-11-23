@@ -156,8 +156,8 @@ Components dynamically evaluate their method fallback sequence as follows:
 
 Supported methods:
 
-- **`libscript_native`**: (Default) The libscript_native isolated version manager logic detailed in
-  this document.
+- **`libscript_native`**: (Default) The native isolated version manager logic detailed in this
+  document.
 - **`from-source`**: Compiles the component from verified source code via
   `engine/common/source_builder.{sh,cmd}` using either the default platform C toolchain
   (`--toolchain=default`) or a specified C/C++ compiler
@@ -177,11 +177,11 @@ integration or prohibitive compilation requirements:
   OS headers, standard libraries (like `glibc`), and the extreme complexity of distributing
   universal pre-compiled binaries for systems-level toolchains, relying on the OS package manager
   (`apt`, `brew`, `apk`) is the only pragmatic approach for base compilation toolchains.
-- **Python Ecosystem CLI Tools (e.g., `xpk`, `huggingface-cli`)**: These are not standalone compiled
-  binaries but rather Python packages that rely entirely on `pip` and virtual environments (`venv`)
-  for their dependencies and execution context. They inherently use an alternative isolation
-  mechanism (the virtual environment) and do not fit the pure binary extraction model. Their
-  `INSTALL_METHOD` effectively delegates to Python package managers.
+- **Python Ecosystem CLI Tools (e.g., `huggingface-cli`, `tensorboard`, `ansible`)**: These are not
+  standalone compiled binaries but rather Python packages that rely on `pip`/`uv` and virtual
+  environments (`venv`) for their dependencies and execution context. They inherently use an
+  alternative isolation mechanism (the virtual environment) and delegate installation to isolated
+  Python environments.
 
 ---
 

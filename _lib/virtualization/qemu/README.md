@@ -1,5 +1,7 @@
 # QEMU Component
 
+**Tier**: `T1` (`_lib/virtualization/qemu/`) | **Capabilities**: `userland-package`
+
 Installs and configures QEMU, KVM hardware acceleration, libvirt virtualization daemon, swtpm TPM
 emulator, and OVMF / edk2 UEFI firmware files.
 

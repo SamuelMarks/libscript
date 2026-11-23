@@ -1,5 +1,7 @@
 # LibVA
 
+**Tier**: `T2` (`_lib/graphics/libva/`) | **Capabilities**: `sysroot-package`, `sysroot-library`
+
 Video Acceleration API library
 
 ## Usage

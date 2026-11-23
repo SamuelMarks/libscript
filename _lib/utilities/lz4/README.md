@@ -1,48 +1,45 @@
-# lz4
+# LZ4 Lossless Compression Library & CLI (`_lib/utilities/lz4/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `lz4` component (part of
-`_utilities`) within the LibScript ecosystem. Standalone version manager and custom-compiler source
-builder for LZ4 (pinned default 1.10.0) with upstream make check/test verification.
+Standalone version manager and custom-compiler source builder for LZ4 (pinned default 1.10.0) with
+upstream make check/test verification.
+
+- **Tier**: `T1` (`_lib/utilities/lz4/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **LZ4 Lossless Compression
-Library & CLI**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install lz4
-libscript uninstall lz4
+# Native version management (isolated under ${LIBSCRIPT_HOME}/lz4/<version>)
+./libscript.sh ls-remote lz4
+./libscript.sh install lz4 latest
+./libscript.sh use lz4 latest
+./libscript.sh which lz4
+./_lib/utilities/lz4/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start lz4
-libscript stop lz4
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote lz4
+.\libscript.cmd install lz4 latest
+.\libscript.cmd use lz4 latest
+.\libscript.cmd which lz4
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker lz4
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install lz4`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/lz4/<version>`
+  (default `~/.libscript/lz4/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `LZ4_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -57,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

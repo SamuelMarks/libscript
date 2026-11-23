@@ -1,5 +1,7 @@
 # iwd
 
+**Tier**: `T2` (`_lib/networking/iwd/`) | **Capabilities**: `sysroot-package`
+
 Intel Wireless Daemon for Linux
 
 ## Usage

@@ -64,8 +64,8 @@ architectural invariants:
 3. **`RECURSION_GUARD`**: Re-entrant `STACK` recursion guard (`*':'"${THIS_FILE}"':'*` in POSIX,
    `:!THIS_FILE!:` `findstr` in Batch within the first 25 lines).
 4. **`WINDOWS_PARITY` & `CLI_VERB_PARITY`**: Exact paired `.cmd` companion for every `.sh` script
-   and matching CLI verb sets across domain engines (`topologies`, `payloads`, `traits`,
-   `experiments`).
+   and matching CLI verb sets across domain engines (`synthesis`, `infrastructure`, `workloads`,
+   `traits`, `experiments`).
 5. **`BATCH_THIS_FILE`**: Canonical `set "THIS_FILE=%~f0"` and delayed expansion within the first 25
    lines of `.cmd` files.
 6. **`IDEMPOTENCY`**: Banned unguarded `mkdir` (requires `mkdir -p` or `if not exist ... mkdir`);
@@ -79,9 +79,12 @@ architectural invariants:
 10. **`RAW_NETWORK_FETCH`, `RAW_GCLOUD_TPU` & `EXP_IN_LIB`**: Bans raw `curl`/`wget`/`aria2c`
     fetches outside `engine/common/pkg_mgr.{sh,cmd}` (`libscript_download` /
     `libscript_fetch_stdout`), requires `gcloud compute tpus tpu-vm` calls to route through
-    TFRC-guarded providers (`infrastructure/providers/gcp-tpu-vm/`), and keeps new empirical paper
-    campaigns inside `experiments/<suite-id>/` (outside the 3 grandfathered compatibility wrappers
-    in `_lib/toolchains/*-suite/`).
+    TFRC-guarded providers (`infrastructure/providers/gcp-tpu-vm/`), and keeps empirical paper
+    campaigns strictly inside `Plane B` (`experiments/<suite-id>/`).
+11. **`T0_T5_TIER_BOUNDARIES` (`devtools/audit/audit_tiers.{sh,cmd}`)**: Statically verifies strict
+    downward-only DAG imports (`T5 -> T4 -> T3 -> T2 -> T1 -> T0`), zero lateral cross-sourcing
+    between atomic `_lib/` components, zero fractional tier designations (`1.5`, `3.5`), and zero
+    legacy redirect shims.
 
 ### Domain & Subsystem Hermetic Test Suites (`tests/test_*.{sh,cmd}`)
 

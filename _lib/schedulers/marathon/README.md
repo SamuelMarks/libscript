@@ -1,5 +1,8 @@
 # Marathon Framework (`_lib/schedulers/marathon`)
 
+**Tier**: `T1` (`_lib/schedulers/marathon/`) | **Capabilities**: `userland-package`,
+`service-daemon`
+
 ## Overview
 
 Standalone Version Manager for the **Marathon** container and application orchestration framework on
@@ -54,7 +57,7 @@ running the setup script.
 | `MARATHON_HOSTNAME`       | Advertised hostname or IP address for the Marathon scheduler node.                                                  | `127.0.0.1`                    |                  |
 | `MARATHON_HOME`           | Filesystem directory or path configuration for marathon (MARATHON_HOME).                                            | `none`                         |                  |
 | `MARATHON_STATE_DIR`      | Filesystem directory or path configuration for marathon (MARATHON_STATE_DIR).                                       | `none`                         |                  |
-| `MARATHON_URL`            | Configuration variable MARATHON_URL for marathon.                                                                   | `none`                         |                  |
+| `MARATHON_URL`            | HTTP base URL of the Marathon scheduler API endpoint (e.g., http://127.0.0.1:8080).                                 | `none`                         |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

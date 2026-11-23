@@ -1,8 +1,8 @@
 # Android SDK (`android-sdk`)
 
-Tier 1 toolchain recipe for Google's Android SDK Command-Line Tools (`sdkmanager`),
-`platform-tools`, `platforms;android-34`, and `build-tools;34.0.0`. Enables autonomous Android and
-Kotlin Multiplatform (`androidTarget`) compilation without manual Android Studio setup.
+T1 toolchain recipe for Google's Android SDK Command-Line Tools (`sdkmanager`), `platform-tools`,
+`platforms;android-34`, and `build-tools;34.0.0`. Enables autonomous Android and Kotlin
+Multiplatform (`androidTarget`) compilation without manual Android Studio setup.
 
 ## Usage
 

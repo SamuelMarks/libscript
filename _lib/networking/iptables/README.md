@@ -1,5 +1,7 @@
 # iptables
 
+**Tier**: `T2` (`_lib/networking/iptables/`) | **Capabilities**: `sysroot-package`
+
 Traditional Linux packet filter userland utility
 
 ## Usage

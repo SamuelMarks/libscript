@@ -1,135 +1,51 @@
-# Openrc
+# OpenRC Init System (`_lib/init-systems/openrc/`)
+
+## Overview
+
+Dependency-based `T2` init system and service supervisor used across Alpine Linux, Gentoo, Artix,
+FreeBSD, and custom musl/glibc Linux From Scratch (`LFS`) distributions synthesized by `synthesis/`.
+
+- **Tier**: `T2` (`_lib/init-systems/openrc/`)
+- **Capabilities**: `sysroot-package`, `service-daemon`
+- **Target OS Exclusions (`manifest.json`)**: `windows`, `macos`
 
 ## Usage
 
-This document describes the **OpenRC** component (part of the `_daemon` stack) within the LibScript
-ecolibscript_native. OpenRC is a dependency-based init libscript_native that works with the
-libscript_native-provided init program.
-
-This component functions both as a **local version manager** (similar to rvm, nvm, pyenv, uv) for
-OpenRC setups and can also be invoked seamlessly from the **global version manager**, `libscript`.
-Because of this flexibility, OpenRC can be utilized by `libscript` to build and manage services for
-bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
-
-You can install, start, stop, package, and uninstall openrc using the global `libscript` command or
-the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install openrc
-
-./cli.sh install openrc
-
-./libscript.sh start openrc
-./cli.sh start openrc
-
-./libscript.sh stop openrc
-./cli.sh stop openrc
-
-./libscript.sh package-as docker openrc
-./cli.sh package-as docker openrc
-
-./libscript.sh uninstall openrc
-./cli.sh uninstall openrc
+# Stage OpenRC into a T3 target sysroot or install on a compatible host
+LIBSCRIPT_TARGET_SYSROOT=/mnt/sysroot ./libscript.sh install openrc latest
+./libscript.sh openrc --help
+./_lib/init-systems/openrc/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install openrc
-
-:: Local CLI
-cli.cmd install openrc
-
-:: Start and Stop
-libscript.cmd start openrc
-cli.cmd start openrc
-
-libscript.cmd stop openrc
-cli.cmd stop openrc
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi openrc
-cli.cmd package-as msi openrc
-
-:: Uninstall
-libscript.cmd uninstall openrc
-cli.cmd uninstall openrc
+:: Query CLI or verify Option-A boundary behavior on Windows
+.\libscript.cmd openrc --help
+.\_lib\init-systems\openrc\cli.cmd test
 ```
 
-## Purpose & Current State
+## Sysroot & Synthesis Integration
 
-**Purpose**: This document provides context and technical details for the `openrc` component (part
-of `_daemon`) within the LibScript ecolibscript_native. LibScript is a modular, zero-dependency
-shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS,
-and Windows.
-
-## Dependency Installation Methods
-
-`libscript` provides a flexible dependency management libscript_native, allowing you to control how
-dependencies are installed—either globally across the entire setup or locally on a per-toolchain
-basis.
-
-### Global Configuration
-
-You can set a global preference for how tools should be installed by defining
-`LIBSCRIPT_DEFAULT_INSTALL_METHOD` in your environment or global configuration (`install.json`).
-
-Supported global methods typically include:
-
-- `libscript_native`: Uses the libscript_native's package manager (e.g., `apt`, `apk`, `pacman`).
-- `source`: Builds or downloads the tool from source/official binaries (fallback behavior depends on
-  the tool).
-
-Example:
-
-```sh
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="libscript_native"
-```
-
-### Local Overrides
-
-You can override the global setting for specific dependencies by setting their respective
-`OPENRC_INSTALL_METHOD` variable. The local override takes highest precedence.
-
-For example, to globally use the libscript_native package manager but strictly install Python via
-`uv`:
-
-```sh
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="libscript_native"
-export PYTHON_INSTALL_METHOD="uv"
-```
-
-### Python-Specific Support
-
-The Python toolchain (`_lib/languages/python`) is extensively integrated with this feature and
-supports the following `PYTHON_INSTALL_METHOD` values:
-
-- `uv` (default fallback): Installs Python and creates virtual environments using astral's `uv`
-  tool.
-- `pyenv`: Installs Python versions using `pyenv`, managing them in `~/.pyenv`.
-- `libscript_native`: Uses the libscript_native's package manager to provide Python.
-- `from-source`: Compiles Python directly from its source code.
-
-By combining global methods with local overrides, you can mix and match libscript_native-provided
-stable packages with newer or custom-compiled toolchains as needed.
+- **`T3` Sysroot Staging**: Installs `/sbin/openrc`, `/sbin/openrc-run`, and `/etc/runlevels/*`
+  hierarchies into `LIBSCRIPT_TARGET_SYSROOT`, enabling `T1` `service-daemon` components and `T5`
+  `workloads/schedulers/native.*` to emit declarative OpenRC init scripts offline during image
+  synthesis.
+- **Override Strategy**: Control acquisition via `OPENRC_INSTALL_METHOD` (`libscript_native` or
+  `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                                                                                                            | Default            | Aliases/Examples |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `OPENRC_INSTALL_METHOD` | How to install OPENRC. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `OPENRC_DOWNLOAD_URL`   | Override URL for downloading openrc binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `OPENRC_RELEASES_URL`   | Override URL for querying openrc available remote releases.                                                                                                            | `none`             |                  |
-| `OPENRC_VERSION`        | Specific version of openrc to install (e.g., latest, lts, or exact version).                                                                                           | `none`             |                  |
+| Variable                | Description                                                                                                                                              | Default            | Aliases/Examples |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `OPENRC_INSTALL_METHOD` | Installation strategy for openrc: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `OPENRC_DOWNLOAD_URL`   | Override URL for downloading openrc binary or archive artifacts.                                                                                         | `none`             |                  |
+| `OPENRC_RELEASES_URL`   | Override URL for querying openrc available remote releases.                                                                                              | `none`             |                  |
+| `OPENRC_VERSION`        | Specific version of openrc to install (e.g., latest, lts, or exact version).                                                                             | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

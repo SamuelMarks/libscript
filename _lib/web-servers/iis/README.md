@@ -1,10 +1,12 @@
 # IIS
 
+**Tier**: `T1` (`_lib/web-servers/iis/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 ## Purpose
 
-This document provides context and technical details for the `iis` component (part of `_server`)
-within the LibScript ecolibscript_native. This module enables and configures Microsoft Internet
-Information Services (IIS) on Windows platforms.
+This document provides context and technical details for the `iis` component (part of
+`_lib/web-servers`) within the LibScript ecosystem. This module enables and configures Microsoft
+Internet Information Services (IIS) on Windows platforms.
 
 ## Usage
 
@@ -75,12 +77,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable             | Description                                                                                                                                                         | Default            | Aliases/Examples |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `IIS_INSTALL_METHOD` | How to install IIS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `IIS_VERSION`        | Version of IIS to install                                                                                                                                           | `latest`           |                  |
-| `IIS_DOWNLOAD_URL`   | Override URL for downloading iis binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `IIS_RELEASES_URL`   | Override URL for querying iis available remote releases.                                                                                                            | `none`             |                  |
+| Variable             | Description                                                                                                                                           | Default            | Aliases/Examples |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `IIS_INSTALL_METHOD` | Installation strategy for iis: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `IIS_VERSION`        | Version of IIS to install                                                                                                                             | `latest`           |                  |
+| `IIS_DOWNLOAD_URL`   | Override URL for downloading iis binary or archive artifacts.                                                                                         | `none`             |                  |
+| `IIS_RELEASES_URL`   | Override URL for querying iis available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

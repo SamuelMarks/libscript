@@ -2,7 +2,7 @@
   "$schema": "../../../engine/schemas/manifest.schema.json",
   "name": "reactos-distro",
   "title": "ReactOS Distribution Synthesizer",
-  "description": "Synthesizes bootable ReactOS distributions, unattended BootCD/LiveCD ISO images, offline RAPPS/MSI/Tier 1 workloads, and virtual machine disk images.",
+  "description": "Synthesizes bootable ReactOS distributions, unattended BootCD/LiveCD ISO images, offline RAPPS/MSI/T1 workloads, and virtual machine disk images.",
   "category": "reactos",
   "provides": ["reactos-distro"],
   "conflicts": [],

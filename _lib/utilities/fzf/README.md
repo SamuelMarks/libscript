@@ -1,47 +1,45 @@
-# fzf
+# fzf (`_lib/utilities/fzf/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `fzf` component (part of
-`_utilities`) within the LibScript ecosystem. General-purpose interactive command-line fuzzy finder
-written in Go.
+General-purpose interactive command-line fuzzy finder written in Go.
+
+- **Tier**: `T1` (`_lib/utilities/fzf/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `fzf`, `fuzzy-finder`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **fzf**. It is designed to be
-executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install fzf
-libscript uninstall fzf
+# Native version management (isolated under ${LIBSCRIPT_HOME}/fzf/<version>)
+./libscript.sh ls-remote fzf
+./libscript.sh install fzf latest
+./libscript.sh use fzf latest
+./libscript.sh which fzf
+./_lib/utilities/fzf/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start fzf
-libscript stop fzf
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote fzf
+.\libscript.cmd install fzf latest
+.\libscript.cmd use fzf latest
+.\libscript.cmd which fzf
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker fzf
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install fzf`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/fzf/<version>`
+  (default `~/.libscript/fzf/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `FZF_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

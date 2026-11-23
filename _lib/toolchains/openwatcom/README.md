@@ -1,48 +1,47 @@
-# openwatcom
+# OpenWatcom v2 C/C++ Cross-Compiler (`_lib/toolchains/openwatcom/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `openwatcom` component
-(part of `_toolchains`) within the LibScript ecosystem. OpenWatcom v2 16/32-bit C/C++ cross-compiler
-(wcl386, wlink, wstrip, DOS32A.EXE) targeting MS-DOS LE and Win32.
+OpenWatcom v2 16/32-bit C/C++ cross-compiler (wcl386, wlink, wstrip, DOS32A.EXE) targeting MS-DOS LE
+and Win32.
+
+- **Tier**: `T1` (`_lib/toolchains/openwatcom/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `openwatcom`, `wcl386`, `wlink`, `wstrip`
+- **Target OS Whitelist (`manifest.json`)**: `linux`, `darwin`, `windows`, `freebsd`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **OpenWatcom v2 C/C++
-Cross-Compiler**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install openwatcom
-libscript uninstall openwatcom
+# Native version management (isolated under ${LIBSCRIPT_HOME}/openwatcom/<version>)
+./libscript.sh ls-remote openwatcom
+./libscript.sh install openwatcom latest
+./libscript.sh use openwatcom latest
+./libscript.sh which openwatcom
+./_lib/toolchains/openwatcom/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start openwatcom
-libscript stop openwatcom
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote openwatcom
+.\libscript.cmd install openwatcom latest
+.\libscript.cmd use openwatcom latest
+.\libscript.cmd which openwatcom
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker openwatcom
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install openwatcom`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/openwatcom/<version>`
+  (default `~/.libscript/openwatcom/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `OPENWATCOM_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -57,18 +56,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

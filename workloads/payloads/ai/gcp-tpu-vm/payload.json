@@ -2,7 +2,7 @@
   "$schema": "../../../schemas/payload.schema.json",
   "name": "gcp-tpu-vm-workload",
   "version": "1.0.0",
-  "description": "AI training and evaluation workload wrapper executing over Tier 3 GCP Cloud TPU VMs with gcsfuse and TensorBoard.",
+  "description": "AI training and evaluation workload wrapper executing over T4 GCP Cloud TPU VMs with gcsfuse and TensorBoard.",
   "type": "ai-training",
   "artifact": {
     "format": "libscript-component",

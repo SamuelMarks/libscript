@@ -1,47 +1,51 @@
-# tailscale
+# Tailscale Mesh VPN (`_lib/networking/tailscale/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `tailscale` component
-(part of `_networking`) within the LibScript ecosystem. Tailscale zero-config WireGuard mesh VPN
-client and daemon (tailscale and tailscaled).
+Tailscale zero-config WireGuard mesh VPN client and daemon (tailscale and tailscaled).
+
+- **Tier**: `T2` (`_lib/networking/tailscale/`)
+- **Capabilities**: `sysroot-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `tailscale`, `tailscaled`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Tailscale Mesh VPN**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install tailscale
-libscript uninstall tailscale
+# Install and manage the tailscale service daemon
+./libscript.sh install tailscale latest
+./libscript.sh start tailscale
+./libscript.sh status tailscale
+./libscript.sh logs tailscale
+./libscript.sh stop tailscale
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start tailscale
-libscript stop tailscale
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install tailscale latest
+.\libscript.cmd start tailscale
+.\libscript.cmd status tailscale
+.\libscript.cmd stop tailscale
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker tailscale
-```
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `TAILSCALE_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
-_Note: On Unix environments, you can also use `./cli.sh install tailscale`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+## Lifecycle Hooks (`hooks/`)
+
+Provides dual-layer lifecycle hooks invoked by `T0` `engine/common/hooks.{sh,cmd}` and `Plane A`
+traits (`traits/`): `announce.{sh,cmd}`, `backup.{sh,cmd}`, `configure.{sh,cmd}`,
+`log_stream.{sh,cmd}`, `maintenance.{sh,cmd}`, `metrics.{sh,cmd}`, `probe.{sh,cmd}`,
+`restore.{sh,cmd}`, `rollback.{sh,cmd}`, `upgrade.{sh,cmd}`.
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +60,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

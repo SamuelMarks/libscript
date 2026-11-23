@@ -1,16 +1,11 @@
-# conf
+# Valkey Configuration Templates (`_lib/caches/valkey/conf/`)
 
-This directory contains the conf module.
+## Overview
 
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.
+Parameterized `valkey.conf` persistence (RDB/AOF), memory eviction, TLS, replica, and cluster
+configuration templates rendered during `_lib/caches/valkey/` setup and hook execution.
 
 ## Configuration Options
-
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
 
 <!-- BEGIN_VARS -->
 <!-- END_VARS -->
@@ -18,4 +13,9 @@ running the setup script.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
+
+- Linux
+- macOS
+- Windows
+
 <!-- END_PLATFORMS -->

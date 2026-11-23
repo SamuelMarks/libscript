@@ -1,47 +1,43 @@
-# limine
+# Limine Bootloader (`_lib/bootloaders/limine/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `limine` component (part
-of `_bootloaders`) within the LibScript ecosystem. Modern, portable, multiprotocol UEFI and BIOS
-bootloader supporting Linux, Limine boot protocol, multiboot2, and chainloading.
+Modern, portable, multiprotocol UEFI and BIOS bootloader supporting Linux, Limine boot protocol,
+multiboot2, and chainloading.
+
+- **Tier**: `T2` (`_lib/bootloaders/limine/`)
+- **Capabilities**: `sysroot-package`, `bootloader`
+- **Target OS Whitelist (`manifest.json`)**: `linux`, `freebsd`, `openbsd`, `netbsd`, `sunos`,
+  `macos`
+- **Target OS Exclusions (`manifest.json`)**: `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Limine Bootloader**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install limine
-libscript uninstall limine
+# Stage into an isolated T3 target sysroot or install on a compatible host
+LIBSCRIPT_TARGET_SYSROOT=/mnt/sysroot ./libscript.sh install limine latest
+./libscript.sh limine --help
+./_lib/bootloaders/limine/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start limine
-libscript stop limine
+```cmd
+:: Query component CLI or invoke test/Option-A boundary check on Windows
+.\libscript.cmd limine --help
+.\_lib\bootloaders\limine\cli.cmd test
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker limine
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install limine`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `LIMINE_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +51,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

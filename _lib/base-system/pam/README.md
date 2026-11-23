@@ -1,5 +1,7 @@
 # Linux PAM
 
+**Tier**: `T2` (`_lib/base-system/pam/`) | **Capabilities**: `sysroot-package`
+
 Pluggable Authentication Modules library
 
 ## Usage

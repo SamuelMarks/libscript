@@ -1,5 +1,7 @@
 # nodeenv
 
+**Tier**: `T1` (`_lib/package-managers/nodeenv/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for the `nodeenv` Node.js virtual environment manager.
 
 ## Usage

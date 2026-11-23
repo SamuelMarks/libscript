@@ -1,48 +1,46 @@
-# smf
+# illumos/Solaris Service Management Facility (SMF) (`_lib/init-systems/smf/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `smf` component (part of
-`_init-systems`) within the LibScript ecosystem. illumos and Solaris Service Management Facility
-(SMF) manifest and service control adapter (svcadm, svccfg, svcs).
+illumos and Solaris Service Management Facility (SMF) manifest and service control adapter (svcadm,
+svccfg, svcs).
+
+- **Tier**: `T2` (`_lib/init-systems/smf/`)
+- **Capabilities**: `sysroot-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `smf`, `svcadm`, `svccfg`
+- **Target OS Whitelist (`manifest.json`)**: `sunos`, `illumos`, `solaris`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **illumos/Solaris Service
-Management Facility (SMF)**. It is designed to be executed via the global `libscript.sh` router or
-directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install smf
-libscript uninstall smf
+# Install and manage the smf service daemon
+./libscript.sh install smf latest
+./libscript.sh start smf
+./libscript.sh status smf
+./libscript.sh logs smf
+./libscript.sh stop smf
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start smf
-libscript stop smf
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install smf latest
+.\libscript.cmd start smf
+.\libscript.cmd status smf
+.\libscript.cmd stop smf
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker smf
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install smf`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `SMF_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

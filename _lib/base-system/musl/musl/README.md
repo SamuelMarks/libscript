@@ -5,8 +5,9 @@ Lightweight, fast, simple, standards-conformant C standard library.
 ## Purpose & Current State
 
 This document provides context and technical details for the **Musl C Library** component (part of
-the `base-system` module) within the LibScript ecosystem. Musl is an implementation of the C
-standard library designed for lightweight, statically-linkable, and secure POSIX environments.
+`_lib/base-system/musl/` (`T2` musl sysroot sub-recipe)) within the LibScript ecosystem. Musl is an
+implementation of the C standard library designed for lightweight, statically-linkable, and secure
+POSIX environments.
 
 ## Usage
 

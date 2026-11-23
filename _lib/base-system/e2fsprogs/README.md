@@ -1,5 +1,7 @@
 # e2fsprogs
 
+**Tier**: `T2` (`_lib/base-system/e2fsprogs/`) | **Capabilities**: `sysroot-package`
+
 Ext2/Ext3/Ext4 filesystem management utilities
 
 ## Usage

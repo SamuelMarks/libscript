@@ -1,5 +1,8 @@
 # Waitress
 
+**Tier**: `T1` (`_lib/app-servers/waitress/`) | **Capabilities**: `userland-package`,
+`service-daemon`
+
 Production-quality pure-Python WSGI server with native Windows support.
 
 ## Usage

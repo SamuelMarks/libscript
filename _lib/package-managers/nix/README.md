@@ -1,9 +1,10 @@
 # Nix
 
-Nix is a powerful package manager for Linux and other Unix libscript_natives that makes package
-management reliable and reproducible. It provides atomic upgrades and rollbacks, side-by-side
-installation of multiple versions of a package, multi-user package management, and easy setup of
-build environments.
+**Tier**: `T1` (`_lib/package-managers/nix/`) | **Capabilities**: `userland-package`
+
+Nix is a powerful package manager for Linux and other Unix systems that makes package management
+reliable and reproducible. It provides atomic upgrades and rollbacks, side-by-side installation of
+multiple versions of a package, multi-user package management, and easy setup of build environments.
 
 ## Integration with Libscript
 
@@ -29,12 +30,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable             | Description                                                                                                                                                         | Default            | Aliases/Examples |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `NIX_INSTALL_METHOD` | How to install NIX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `NIX_VERSION`        | Specific version of nix to install.                                                                                                                                 | `latest`           |                  |
-| `NIX_DOWNLOAD_URL`   | Override URL for downloading nix binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `NIX_RELEASES_URL`   | Override URL for querying nix available remote releases.                                                                                                            | `none`             |                  |
+| Variable             | Description                                                                                                                                           | Default            | Aliases/Examples |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `NIX_INSTALL_METHOD` | Installation strategy for nix: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `NIX_VERSION`        | Specific version of nix to install.                                                                                                                   | `latest`           |                  |
+| `NIX_DOWNLOAD_URL`   | Override URL for downloading nix binary or archive artifacts.                                                                                         | `none`             |                  |
+| `NIX_RELEASES_URL`   | Override URL for querying nix available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

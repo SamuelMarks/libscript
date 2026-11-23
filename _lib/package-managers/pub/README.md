@@ -1,5 +1,7 @@
 # Pub
 
+**Tier**: `T1` (`_lib/package-managers/pub/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for `pub` (Dart / Flutter package manager).
 
 ## Usage
@@ -13,12 +15,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable             | Description                                                                                                                                                         | Default            | Aliases/Examples |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `PUB_INSTALL_METHOD` | How to install PUB. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `PUB_VERSION`        | Specific version of pub to install.                                                                                                                                 | `latest`           |                  |
-| `PUB_DOWNLOAD_URL`   | Override URL for downloading pub binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `PUB_RELEASES_URL`   | Override URL for querying pub available remote releases.                                                                                                            | `none`             |                  |
+| Variable             | Description                                                                                                                                           | Default            | Aliases/Examples |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `PUB_INSTALL_METHOD` | Installation strategy for pub: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `PUB_VERSION`        | Specific version of pub to install.                                                                                                                   | `latest`           |                  |
+| `PUB_DOWNLOAD_URL`   | Override URL for downloading pub binary or archive artifacts.                                                                                         | `none`             |                  |
+| `PUB_RELEASES_URL`   | Override URL for querying pub available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

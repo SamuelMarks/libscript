@@ -1,48 +1,46 @@
-# windows-scm
+# Windows Service Control Manager (sc.exe) Adapter (`_lib/init-systems/windows-scm/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `windows-scm` component
-(part of `_init-systems`) within the LibScript ecosystem. Windows Service Control Manager (SCM /
-sc.exe) native service lifecycle adapter and cross-platform compatibility shim.
+Windows Service Control Manager (SCM / sc.exe) native service lifecycle adapter and cross-platform
+compatibility shim.
+
+- **Tier**: `T2` (`_lib/init-systems/windows-scm/`)
+- **Capabilities**: `sysroot-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `windows-scm`, `sc`, `sc.exe`
+- **Target OS Whitelist (`manifest.json`)**: `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Windows Service Control
-Manager (sc.exe) Adapter**. It is designed to be executed via the global `libscript.sh` router or
-directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install windows-scm
-libscript uninstall windows-scm
+# Install and manage the windows-scm service daemon
+./libscript.sh install windows-scm latest
+./libscript.sh start windows-scm
+./libscript.sh status windows-scm
+./libscript.sh logs windows-scm
+./libscript.sh stop windows-scm
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start windows-scm
-libscript stop windows-scm
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install windows-scm latest
+.\libscript.cmd start windows-scm
+.\libscript.cmd status windows-scm
+.\libscript.cmd stop windows-scm
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker windows-scm
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install windows-scm`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `WINDOWS_SCM_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,6 +1,6 @@
 # LLVM Clang (`clang`)
 
-Standalone Tier 1 LibScript recipe for the LLVM Clang C/C++ Compiler (`clang`).
+Standalone T1 LibScript recipe for the LLVM Clang C/C++ Compiler (`clang`).
 
 ## Installation Modes
 

@@ -61,15 +61,16 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                     | Default | Aliases/Examples |
-| --------------------- | ------------------------------------------------------------------------------- | ------- | ---------------- |
-| `FIRECRAWL_BUILD_DIR` | Scratch build directory used when compiling Firecrawl workspace dependencies.   | `none`  |                  |
-| `FIRECRAWL_DEST`      | Destination directory into which the Firecrawl repository is cloned or updated. | `none`  |                  |
-| `PYTHON_VENV`         | Python virtual environment path used by Firecrawl auxiliary worker processes.   | `none`  |                  |
-| `BUILD_DIR`           | Fallback scratch build directory override when FIRECRAWL_BUILD_DIR is unset.    | `none`  |                  |
+| Variable              | Description                                                                     | Default |
+| :-------------------- | :------------------------------------------------------------------------------ | :------ |
+| `FIRECRAWL_BUILD_DIR` | Scratch build directory used when compiling Firecrawl workspace dependencies.   | `-`     |
+| `FIRECRAWL_DEST`      | Destination directory into which the Firecrawl repository is cloned or updated. | `-`     |
+| `PYTHON_VENV`         | Python virtual environment path used by Firecrawl auxiliary worker processes.   | `-`     |
+| `BUILD_DIR`           | Fallback scratch build directory override when FIRECRAWL_BUILD_DIR is unset.    | `-`     |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Architecture
@@ -79,14 +80,6 @@ and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
   correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Configuration Options
-
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
-<!-- BEGIN_VARS -->
-<!-- END_VARS -->
 
 ## Platform Support
 

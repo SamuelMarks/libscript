@@ -1,47 +1,45 @@
-# timescaledb
+# TimescaleDB (`_lib/databases/timescaledb/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `timescaledb` component
-(part of `_databases`) within the LibScript ecosystem. Open-source time-series SQL database
-extension and tuning toolkit engineered on PostgreSQL.
+Open-source time-series SQL database extension and tuning toolkit engineered on PostgreSQL.
+
+- **Tier**: `T1` (`_lib/databases/timescaledb/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `timescaledb`, `tsdb`, `postgres-extension`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **TimescaleDB**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install timescaledb
-libscript uninstall timescaledb
+# Install and manage the timescaledb service daemon
+./libscript.sh install timescaledb latest
+./libscript.sh start timescaledb
+./libscript.sh status timescaledb
+./libscript.sh logs timescaledb
+./libscript.sh stop timescaledb
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start timescaledb
-libscript stop timescaledb
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install timescaledb latest
+.\libscript.cmd start timescaledb
+.\libscript.cmd status timescaledb
+.\libscript.cmd stop timescaledb
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker timescaledb
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install timescaledb`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/timescaledb/<version>` (default `~/.libscript/timescaledb/<version>`) and
+  synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `TIMESCALEDB_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

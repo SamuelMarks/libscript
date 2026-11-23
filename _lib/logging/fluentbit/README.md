@@ -1,100 +1,70 @@
-# Fluentbit
+# Fluent Bit (`_lib/logging/fluentbit/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `fluentbit` component
-within the LibScript ecolibscript_native. This component manages **Fluent Bit**, a super fast,
-lightweight, and highly scalable logging and metrics processor and forwarder. It allows you to
-collect data/logs from different sources, unify, and send them to multiple destinations. It's fully
-compatible with Docker and Kubernetes environments.
+A super fast, lightweight, and highly scalable logging and metrics processor and forwarder.
+
+- **Tier**: `T1` (`_lib/logging/fluentbit/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `fluentbit`, `logging`, `metrics`, `server`
+- **Target OS Exclusions (`manifest.json`)**: `sunos`
 
 ## Usage
 
-This directory contains the scripts to interact with `fluentbit`. It is designed to be executed via
-the global `libscript` command or directly via local CLI scripts.
-
-### Integration in `libscript`
-
-This module provides setup, test, and uninstall capabilities for `fluent-bit`.
-
-- **Windows Details**: On Windows, it installs via Chocolatey or falls back to natively downloading
-  and extracting the official `.zip` archive from `packages.fluentbit.io`.
-- **POSIX Details**: On Linux and macOS, it delegates to the libscript_native package manager (e.g.,
-  `apt-get`, `brew`, `apk`) to install `fluent-bit`.
-
-You can install, start, stop, uninstall, and package this component using `libscript`.
-
-**Install:**
-
 ```sh
-libscript install fluentbit
+# Install and manage the fluentbit service daemon
+./libscript.sh install fluentbit latest
+./libscript.sh start fluentbit
+./libscript.sh status fluentbit
+./libscript.sh logs fluentbit
+./libscript.sh stop fluentbit
 ```
 
-**Start:**
-
-```sh
-libscript start fluentbit
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install fluentbit latest
+.\libscript.cmd start fluentbit
+.\libscript.cmd status fluentbit
+.\libscript.cmd stop fluentbit
 ```
 
-**Stop:**
+## Installation & Isolation
 
-```sh
-libscript stop fluentbit
-```
-
-**Uninstall:**
-
-```sh
-libscript uninstall fluentbit
-```
-
-**Package:**
-
-```sh
-libscript package-as docker fluentbit
-
-```
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/fluentbit/<version>`
+  (default `~/.libscript/fluentbit/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `FLUENTBIT_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable                            | Description                                                                                                                                                               | Default               | Aliases/Examples |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------- |
-| `FLUENTBIT_VERSION`                 | Specific version of Fluent Bit to install. Can be a numeric version (e.g. '3.0.0') or an alias like 'latest'.                                                             | `latest`              | latest, stable   |
-| `FLUENTBIT_INSTALL_METHOD`          | How to install FLUENTBIT. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native`    |                  |
-| `FLUENTBIT_CONFIG_FILE`             | Absolute path to a pre-existing custom fluent-bit.conf file to use instead of the default configuration.                                                                  | `none`                |                  |
-| `FLUENTBIT_LOG_LEVEL`               | The logging verbosity level for the Fluent Bit daemon itself (e.g. info, debug, error).                                                                                   | `info`                |                  |
-| `FLUENTBIT_HTTP_SERVER`             | Enable the built-in HTTP server for metrics and health checks. Highly recommended for monitoring.                                                                         | `On`                  |                  |
-| `FLUENTBIT_LISTEN_PORT`             | Port for the Fluent Bit HTTP metrics interface to listen on.                                                                                                              | `2020`                |                  |
-| `FLUENTBIT_LISTEN_ADDRESS`          | Address for the Fluent Bit HTTP metrics interface to bind to.                                                                                                             | `0.0.0.0`             |                  |
-| `FLUENTBIT_LISTEN_SOCKET`           | Optional: Unix socket for the Fluent Bit metrics interface to listen on (Linux/macOS only).                                                                               | `none`                |                  |
-| `FLUENTBIT_DEFAULT_INPUT`           | Default input plugin to configure for collecting data (e.g. 'tail', 'forward', 'cpu', 'dummy').                                                                           | `dummy`               |                  |
-| `FLUENTBIT_DEFAULT_OUTPUT`          | Default output plugin to configure for routing data (e.g. 'stdout', 'es', 'loki', 'http').                                                                                | `stdout`              |                  |
-| `FLUENTBIT_SERVICE_RUN_AS_USER`     | Windows local user account to run the service under (leave empty to use Network Service / Local System).                                                                  | `none`                |                  |
-| `FLUENTBIT_SERVICE_RUN_AS_PASSWORD` | Password for the Windows local user account (if applicable).                                                                                                              | `none`                |                  |
-| `FLUENTBIT_SERVICE_NAME`            | Custom name for the Fluent Bit background service (allows side-by-side installations).                                                                                    | `libscript_fluentbit` |                  |
-| `FLUENTBIT_DOWNLOAD_URL`            | Override URL for downloading fluentbit binary or archive artifacts.                                                                                                       | `none`                |                  |
-| `FLUENTBIT_RELEASES_URL`            | Override URL for querying fluentbit available remote releases.                                                                                                            | `none`                |                  |
+| Variable                            | Description                                                                                                                                                 | Default               | Aliases/Examples |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------- |
+| `FLUENTBIT_VERSION`                 | Specific version of Fluent Bit to install. Can be a numeric version (e.g. '3.0.0') or an alias like 'latest'.                                               | `latest`              | latest, stable   |
+| `FLUENTBIT_INSTALL_METHOD`          | Installation strategy for fluentbit: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native`    |                  |
+| `FLUENTBIT_CONFIG_FILE`             | Absolute path to a pre-existing custom fluent-bit.conf file to use instead of the default configuration.                                                    | `none`                |                  |
+| `FLUENTBIT_LOG_LEVEL`               | The logging verbosity level for the Fluent Bit daemon itself (e.g. info, debug, error).                                                                     | `info`                |                  |
+| `FLUENTBIT_HTTP_SERVER`             | Enable the built-in HTTP server for metrics and health checks. Highly recommended for monitoring.                                                           | `On`                  |                  |
+| `FLUENTBIT_LISTEN_PORT`             | Port for the Fluent Bit HTTP metrics interface to listen on.                                                                                                | `2020`                |                  |
+| `FLUENTBIT_LISTEN_ADDRESS`          | Address for the Fluent Bit HTTP metrics interface to bind to.                                                                                               | `0.0.0.0`             |                  |
+| `FLUENTBIT_LISTEN_SOCKET`           | Optional: Unix socket for the Fluent Bit metrics interface to listen on (Linux/macOS only).                                                                 | `none`                |                  |
+| `FLUENTBIT_DEFAULT_INPUT`           | Default input plugin to configure for collecting data (e.g. 'tail', 'forward', 'cpu', 'dummy').                                                             | `dummy`               |                  |
+| `FLUENTBIT_DEFAULT_OUTPUT`          | Default output plugin to configure for routing data (e.g. 'stdout', 'es', 'loki', 'http').                                                                  | `stdout`              |                  |
+| `FLUENTBIT_SERVICE_RUN_AS_USER`     | Windows local user account to run the service under (leave empty to use Network Service / Local System).                                                    | `none`                |                  |
+| `FLUENTBIT_SERVICE_RUN_AS_PASSWORD` | Password for the Windows local user account (if applicable).                                                                                                | `none`                |                  |
+| `FLUENTBIT_SERVICE_NAME`            | Custom name for the Fluent Bit background service (allows side-by-side installations).                                                                      | `libscript_fluentbit` |                  |
+| `FLUENTBIT_DOWNLOAD_URL`            | Override URL for downloading fluentbit binary or archive artifacts.                                                                                         | `none`                |                  |
+| `FLUENTBIT_RELEASES_URL`            | Override URL for querying fluentbit available remote releases.                                                                                              | `none`                |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,10 +1,9 @@
-# Open edX Packaging & Branding Assets
+# Windows Installer Branding & Visual Assets (`synthesis/msi/assets/`)
 
-CC0-licensed branding graphics and assets for Windows Installer (.msi) synthesis:
+## Overview
 
-- openedx.ico: Multi-resolution Windows icon (16x16, 32x32, 48x48, 256x256).
-- openedx_lms.ico: Open edX Learning Management System shortcut icon.
-- openedx_studio.ico: Open edX Studio course authoring shortcut icon.
-- openedx_banner_top.bmp: 493x58 24-bit bitmap banner for WiX installer top header.
-- openedx_banner_side.bmp: 164x312 24-bit bitmap splash graphic for WiX dialog sidebar.
-- openedx_eula.rtf: Open edX EULA terms formatted in Rich Text Format.
+`synthesis/msi/assets/` stores default CC0-licensed icons (`.ico`), WiX top banners (`493x58` BMP),
+welcome/completion dialog splash bitmaps (`493x312` BMP), and RTF license templates consumed by
+`synthesis/msi/build_msi.{sh,cmd}`, `template_msi.{sh,cmd}`, `template_inno.{sh,cmd}`, and
+`template_nsis.{sh,cmd}` when custom `--icon`, `--banner-top`, `--banner-side`, or `--license`
+overrides are not supplied.

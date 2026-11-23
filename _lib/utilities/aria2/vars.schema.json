@@ -7,7 +7,7 @@
   "properties": {
     "ARIA2_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install ARIA2. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for aria2: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "default": "system"
     },
     "ARIA2_VERSION": {

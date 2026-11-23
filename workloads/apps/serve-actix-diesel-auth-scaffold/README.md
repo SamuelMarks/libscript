@@ -74,15 +74,16 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                                     | Description                                                                              | Default | Aliases/Examples |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------- | ------- | ---------------- |
-| `SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR` | Cargo target build directory used when compiling the Actix-Web + Diesel service.         | `none`  |                  |
-| `BUILD_DIR`                                  | Fallback Cargo build directory when SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR is unset. | `none`  |                  |
-| `REPOS_DIR`                                  | Parent directory containing cloned application source repositories.                      | `none`  |                  |
-| `SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST`      | Destination checkout path for the serve-actix-diesel-auth-scaffold source tree.          | `none`  |                  |
+| Variable                                     | Description                                                                              | Default |
+| :------------------------------------------- | :--------------------------------------------------------------------------------------- | :------ |
+| `SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR` | Cargo target build directory used when compiling the Actix-Web + Diesel service.         | `-`     |
+| `BUILD_DIR`                                  | Fallback Cargo build directory when SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR is unset. | `-`     |
+| `REPOS_DIR`                                  | Parent directory containing cloned application source repositories.                      | `-`     |
+| `SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST`      | Destination checkout path for the serve-actix-diesel-auth-scaffold source tree.          | `-`     |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

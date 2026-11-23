@@ -1,48 +1,45 @@
-# auto-win-msvc
+# auto-win-msvc C89 Compatibility Layer (`_lib/toolchains/auto-win-msvc/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `auto-win-msvc` component
-(part of `_toolchains`) within the LibScript ecosystem. 91-module C89 POSIX/BSD/Linux/Solaris/macOS
-compatibility header and static library layer for MSVC and OpenWatcom.
+91-module C89 POSIX/BSD/Linux/Solaris/macOS compatibility header and static library layer for MSVC
+and OpenWatcom.
+
+- **Tier**: `T1` (`_lib/toolchains/auto-win-msvc/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **auto-win-msvc C89
-Compatibility Layer**. It is designed to be executed via the global `libscript.sh` router or
-directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install auto-win-msvc
-libscript uninstall auto-win-msvc
+# Native version management (isolated under ${LIBSCRIPT_HOME}/auto-win-msvc/<version>)
+./libscript.sh ls-remote auto-win-msvc
+./libscript.sh install auto-win-msvc latest
+./libscript.sh use auto-win-msvc latest
+./libscript.sh which auto-win-msvc
+./_lib/toolchains/auto-win-msvc/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start auto-win-msvc
-libscript stop auto-win-msvc
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote auto-win-msvc
+.\libscript.cmd install auto-win-msvc latest
+.\libscript.cmd use auto-win-msvc latest
+.\libscript.cmd which auto-win-msvc
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker auto-win-msvc
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install auto-win-msvc`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/auto-win-msvc/<version>` (default `~/.libscript/auto-win-msvc/<version>`) and
+  synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `AUTO_WIN_MSVC_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -58,18 +55,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

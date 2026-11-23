@@ -1,5 +1,8 @@
 # LightDM
 
+**Tier**: `T2` (`_lib/display-managers/lightdm/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 Cross-desktop lightweight display manager
 
 ## Usage

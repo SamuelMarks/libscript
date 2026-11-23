@@ -1,5 +1,7 @@
 # Openvpn
 
+**Tier**: `T1` (`_lib/networking/openvpn/`) | **Capabilities**: `userland-package`
+
 ## Purpose & Current State
 
 This document describes the `openvpn` networking and VPN component within the LibScript ecosystem.
@@ -35,8 +37,7 @@ cli.cmd install openvpn
 ### Start & Stop
 
 ```sh
-./cli.sh start openvpn
-./cli.sh stop openvpn
+
 ```
 
 ### Uninstallation

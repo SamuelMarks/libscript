@@ -1,5 +1,7 @@
 # Npm
 
+**Tier**: `T1` (`_lib/package-managers/npm/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for the `npm` package manager.
 
 ## Usage
@@ -14,12 +16,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable             | Description                                                                                                                                                         | Default            | Aliases/Examples |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `NPM_INSTALL_METHOD` | How to install NPM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `NPM_VERSION`        | Specific version of npm to install.                                                                                                                                 | `latest`           |                  |
-| `NPM_DOWNLOAD_URL`   | Override URL for downloading npm binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `NPM_RELEASES_URL`   | Override URL for querying npm available remote releases.                                                                                                            | `none`             |                  |
+| Variable             | Description                                                                                                                                           | Default            | Aliases/Examples |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `NPM_INSTALL_METHOD` | Installation strategy for npm: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `NPM_VERSION`        | Specific version of npm to install.                                                                                                                   | `latest`           |                  |
+| `NPM_DOWNLOAD_URL`   | Override URL for downloading npm binary or archive artifacts.                                                                                         | `none`             |                  |
+| `NPM_RELEASES_URL`   | Override URL for querying npm available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

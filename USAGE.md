@@ -382,18 +382,18 @@ Blueprints (`infrastructure/marketplace/marketplace-offer.schema.json`):
 
 ```sh
 # Stage and validate the 8-appliance Open edX unikernel marketplace offer across AWS, Azure, and GCP
-./libscript.sh publish-marketplace infrastructure/marketplace/openedx-unikernel/offer.json --clouds=aws,azure,gcp --stage-only
+./libscript.sh publish-marketplace workloads/constellations/openedx-unikernel-pod/marketplace/offer.json --clouds=aws,azure,gcp --stage-only
 
 # Windows Batch equivalent
-libscript.cmd publish-marketplace infrastructure\marketplace\openedx-unikernel\offer.json --clouds=aws,azure,gcp --stage-only
+libscript.cmd publish-marketplace workloads\constellations\openedx-unikernel-pod\marketplace\offer.json --clouds=aws,azure,gcp --stage-only
 ```
 
 ### Hardware-Accelerated AI & TPU Workloads
 
 ```sh
 # Provision a Google Cloud TPU VM or GPU VM with GCS FUSE and TensorBoard telemetry
-./workloads/payloads/ai/gcp-tpu-vm/deploy.sh
-./workloads/payloads/ai/gcp-gpu-vm/deploy.sh
+./infrastructure/providers/gcp-tpu-vm/cli.sh create my-tpu --accelerator-type=v4-8 --zone=us-central2-b
+./infrastructure/providers/gcp-gpu-vm/cli.sh create my-gpu --gpu-type=nvidia-tesla-t4 --zone=us-central1-a
 
 # Launch distributed training or serving across TPU Pod slices via GKE/XPK or direct TPU VM lockstep
 ./libscript.sh payload submit workloads/payloads/ai/gke-xpk-training/payload.json --scheduler xpk

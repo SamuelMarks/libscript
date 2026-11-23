@@ -1,47 +1,45 @@
-# rsync
+# rsync (`_lib/utilities/rsync/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `rsync` component (part of
-`_utilities`) within the LibScript ecosystem. Fast incremental delta-transfer file synchronization
-and remote backup utility.
+Fast incremental delta-transfer file synchronization and remote backup utility.
+
+- **Tier**: `T1` (`_lib/utilities/rsync/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `rsync`, `file-sync`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **rsync**. It is designed to
-be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install rsync
-libscript uninstall rsync
+# Native version management (isolated under ${LIBSCRIPT_HOME}/rsync/<version>)
+./libscript.sh ls-remote rsync
+./libscript.sh install rsync latest
+./libscript.sh use rsync latest
+./libscript.sh which rsync
+./_lib/utilities/rsync/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start rsync
-libscript stop rsync
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote rsync
+.\libscript.cmd install rsync latest
+.\libscript.cmd use rsync latest
+.\libscript.cmd which rsync
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker rsync
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install rsync`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/rsync/<version>`
+  (default `~/.libscript/rsync/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `RSYNC_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

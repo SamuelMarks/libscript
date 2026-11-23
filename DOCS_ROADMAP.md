@@ -22,8 +22,11 @@ LibScript, maintaining 100% static documentation coverage (`devtools/audit/doc_c
       modular ReactOS (`i686`/`x86_64`) synthesis
       (`synthesis/schemas/execution-plan.reactos.schema.json`), quad-boot `msi-rs` live media, and
       the zero-emulation Windows PE & MS-DOS `dos32` binary porting architecture in
-      [WINDOWS.md](WINDOWS.md), [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md), and
-      [TODO_PORT_FOR_WIN.md](TODO_PORT_FOR_WIN.md).
+      [WINDOWS.md](WINDOWS.md) and [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+- [x] **Six-Tier (`T0`–`T5`) & Orthogonal Planes Architecture Guides:** Unified documentation across
+      `engine/` (`T0`), `_lib/` (`T1`/`T2`), `synthesis/` (`T3`), `infrastructure/` (`T4`),
+      `workloads/` (`T5`), `traits/` (`Plane A`), and `experiments/` + `libscript-rest-api/`
+      (`Plane B`) in [ARCHITECTURE.md](ARCHITECTURE.md) and [TODO_PLAN.md](TODO_PLAN.md).
 - [x] **Universal Live Installer Operator Guide:** Documented the `msi-rs` live multiboot installer,
       partitioning canvas, and multi-OS co-installation in
       [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).

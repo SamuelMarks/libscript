@@ -1,5 +1,7 @@
 # Musl
 
+**Tier**: `T2` (`_lib/base-system/musl/`) | **Capabilities**: `sysroot-package`
+
 Musl component for LibScript systems.
 
 ## Usage

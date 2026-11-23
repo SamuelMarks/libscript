@@ -1,47 +1,45 @@
-# vcpkg-tool
+# vcpkg-tool (`_lib/toolchains/vcpkg-tool/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `vcpkg-tool` component
-(part of `_toolchains`) within the LibScript ecosystem. Native C++ command-line binary frontend for
-the vcpkg package manager.
+Native C++ command-line binary frontend for the vcpkg package manager.
+
+- **Tier**: `T1` (`_lib/toolchains/vcpkg-tool/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `vcpkg-tool`, `vcpkg-cli`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **vcpkg-tool**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install vcpkg-tool
-libscript uninstall vcpkg-tool
+# Native version management (isolated under ${LIBSCRIPT_HOME}/vcpkg-tool/<version>)
+./libscript.sh ls-remote vcpkg-tool
+./libscript.sh install vcpkg-tool latest
+./libscript.sh use vcpkg-tool latest
+./libscript.sh which vcpkg-tool
+./_lib/toolchains/vcpkg-tool/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start vcpkg-tool
-libscript stop vcpkg-tool
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote vcpkg-tool
+.\libscript.cmd install vcpkg-tool latest
+.\libscript.cmd use vcpkg-tool latest
+.\libscript.cmd which vcpkg-tool
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker vcpkg-tool
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install vcpkg-tool`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/vcpkg-tool/<version>`
+  (default `~/.libscript/vcpkg-tool/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `VCPKG_TOOL_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

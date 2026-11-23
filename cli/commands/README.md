@@ -1,23 +1,41 @@
-# CLI Commands (`cli/commands`)
+# CLI Subcommand Modules (`cli/commands/`)
 
 ## Overview
 
-This directory contains modular command implementations dispatched by the LibScript CLI
-(`libscript.sh` / `libscript.cmd`).
+`cli/commands/` contains the core cross-platform (`POSIX .sh`, `Windows .cmd`, and `.ps1`) CLI
+subcommand handlers sourced or executed by `libscript.sh` and `libscript.cmd`.
 
 ## Submodules
 
-- **`cloud`**: Cloud infrastructure management commands for AWS, Azure, and GCP.
-- **`core`**: Core utilities including semantic versioning and platform resolution.
-- **`deps`**: Dependency resolution and JSON manifest parsing.
-- **`packaging`**: Multi-format packaging and installer generation logic.
-- **`registry`**: Component search and SQLite database indexing.
-- **`services`**: Service management actions (start, stop, status, healthcheck).
+- **`config/`**: OS synthesis configurator (`config.{sh,cmd,ps1}`), terminal UI engine
+  (`tui_engine.{sh,cmd,ps1}`), and Linux From Scratch profile validator
+  (`validate_lfs_profile.{sh,cmd}`).
+- **`core/`**: Catalog listing (`list.*`), manifest keyword search (`search.*`), semantic version
+  comparison (`semver.*`), and framework version reporting (`version.*`).
+- **`deps/`**: Stack dependency graph installation (`install.*` via `libscript install-deps`) and
+  batch download queue processing (`process_downloads.*`).
+- **`registry/`**: Local/remote component registry search (`search.*`) and index updates
+  (`update.*`).
+- **`scaffold/`**: Interactive and schema-driven (`component-scaffold.schema.json`) component
+  scaffolder (`scaffold.*` via `libscript scaffold` or `libscript new-component`).
+- **`resolve_env.{sh,cmd}`**: Evaluates workspace pinfiles (`.libscript-version`, `.nvmrc`,
+  `.python-version`, `rust-toolchain.toml`, `libscript.json`) and emits shell-compatible environment
+  exports.
 
 ## Usage
 
-Commands in this directory are invoked through the main CLI entry point:
-
 ```sh
-./libscript.sh [command] [args...]
+./libscript.sh list
+./libscript.sh search postgres
+./libscript.sh resolve-env --shell=posix
+./libscript.sh config os --profile=linux-minimal-headless-musl --export=os.json
+./libscript.sh scaffold --help
+```
+
+```cmd
+.\libscript.cmd list
+.\libscript.cmd search postgres
+.\libscript.cmd resolve-env --shell=cmd
+.\libscript.cmd config os --profile=linux-minimal-headless-musl --export=os.json
+.\libscript.cmd scaffold --help
 ```

@@ -1,5 +1,8 @@
 # X.Org Server
 
+**Tier**: `T2` (`_lib/display-servers/xorg-server/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 Traditional X Window System display server
 
 ## Usage

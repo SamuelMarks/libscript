@@ -1,5 +1,7 @@
 # Meilisearch
 
+**Tier**: `T1` (`_lib/search/meilisearch/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 A lightning-fast, ultra-relevant search engine built in Rust.
 
 ## Usage

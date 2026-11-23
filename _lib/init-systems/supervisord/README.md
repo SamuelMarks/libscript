@@ -1,48 +1,55 @@
-# supervisord
+# Supervisor Process Control System (`_lib/init-systems/supervisord/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `supervisord` component
-(part of `_init-systems`) within the LibScript ecosystem. Supervisor client/server process control
-daemon (supervisord and supervisorctl) for UNIX-like operating systems.
+Supervisor client/server process control daemon (supervisord and supervisorctl) for UNIX-like
+operating systems.
+
+- **Tier**: `T2` (`_lib/init-systems/supervisord/`)
+- **Capabilities**: `sysroot-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `supervisord`, `supervisor`, `supervisorctl`
+- **Target OS Whitelist (`manifest.json`)**: `linux`, `macos`, `freebsd`, `openbsd`, `netbsd`,
+  `sunos`
+- **Target OS Exclusions (`manifest.json`)**: `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Supervisor Process Control
-System**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install supervisord
-libscript uninstall supervisord
+# Install and manage the supervisord service daemon
+./libscript.sh install supervisord latest
+./libscript.sh start supervisord
+./libscript.sh status supervisord
+./libscript.sh logs supervisord
+./libscript.sh stop supervisord
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start supervisord
-libscript stop supervisord
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install supervisord latest
+.\libscript.cmd start supervisord
+.\libscript.cmd status supervisord
+.\libscript.cmd stop supervisord
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker supervisord
-```
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `SUPERVISORD_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
-_Note: On Unix environments, you can also use `./cli.sh install supervisord`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+## Lifecycle Hooks (`hooks/`)
+
+Provides dual-layer lifecycle hooks invoked by `T0` `engine/common/hooks.{sh,cmd}` and `Plane A`
+traits (`traits/`): `announce.{sh,cmd}`, `backup.{sh,cmd}`, `configure.{sh,cmd}`,
+`log_stream.{sh,cmd}`, `maintenance.{sh,cmd}`, `metrics.{sh,cmd}`, `probe.{sh,cmd}`,
+`restore.{sh,cmd}`, `rollback.{sh,cmd}`, `upgrade.{sh,cmd}`.
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -57,18 +64,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

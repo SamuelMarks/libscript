@@ -69,7 +69,7 @@
     },
     "LINUX_COMPARE_COMPILERS": {
       "type": "string",
-      "description": "Configuration variable LINUX_COMPARE_COMPILERS for linux."
+      "description": "Space-separated list of compiler toolchains (e.g., gcc, clang, tcc, edgcpp+gcc, edgcpp+llvm) evaluated in Linux kernel build matrices."
     },
     "LINUX_SOURCE_DIR": {
       "type": "string",

@@ -316,9 +316,20 @@ install_from_source_cargo() {
     _tmp_src=$(mktemp -d "${TMPDIR:-/tmp}/win-cmd-rs-src.XXXXXX")
     _src_tgz="${_tmp_src}/src.tar.gz"
     _src_url="https://github.com/SamuelMarks/win-cmd-rs/archive/refs/tags/v${EXACT_VERSION}.tar.gz"
-    PACKAGE_NAME='win-cmd-rs' libscript_download "${_src_url}" "${_src_tgz}" "${WIN_CMD_RS_CHECKSUM:-}"
     mkdir -p "${_tmp_src}/tree"
-    tar -xzf "${_src_tgz}" -C "${_tmp_src}/tree" --strip-components=1
+    if PACKAGE_NAME='win-cmd-rs' libscript_download "${_src_url}" "${_src_tgz}" "${WIN_CMD_RS_CHECKSUM:-}"; then
+      tar -xzf "${_src_tgz}" -C "${_tmp_src}/tree" --strip-components=1
+    elif [ "${LIBSCRIPT_OFFLINE:-0}" != '1' ] && [ "${LIBSCRIPT_FORCE_OFFLINE:-0}" != '1' ] && command -v git >/dev/null 2>&1; then
+      log_info "Source archive download unavailable; cloning tag v${EXACT_VERSION} via git..."
+      rm -rf "${_tmp_src}/tree"
+      if ! git clone --depth 1 --branch "v${EXACT_VERSION}" 'https://github.com/SamuelMarks/win-cmd-rs.git' "${_tmp_src}/tree"; then
+        rm -rf "${_tmp_src}"
+        return 1
+      fi
+    else
+      rm -rf "${_tmp_src}"
+      return 1
+    fi
     _src_dir="${_tmp_src}/tree"
   fi
 

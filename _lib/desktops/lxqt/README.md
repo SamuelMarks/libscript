@@ -1,5 +1,7 @@
 # LXQt Desktop
 
+**Tier**: `T2` (`_lib/desktops/lxqt/`) | **Capabilities**: `sysroot-package`
+
 Lightweight Qt-based desktop environment
 
 ## Usage

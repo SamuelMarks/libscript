@@ -1,47 +1,53 @@
-# varnish
+# Varnish Cache (`_lib/caches/varnish/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `varnish` component (part
-of `_caches`) within the LibScript ecosystem. High-performance caching HTTP reverse proxy
-accelerator with flexible VCL policy configuration.
+High-performance caching HTTP reverse proxy accelerator with flexible VCL policy configuration.
+
+- **Tier**: `T1` (`_lib/caches/varnish/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `varnish`, `http-cache`, `cache`
+- **Target OS Exclusions (`manifest.json`)**: `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Varnish Cache**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install varnish
-libscript uninstall varnish
+# Install and manage the varnish service daemon
+./libscript.sh install varnish latest
+./libscript.sh start varnish
+./libscript.sh status varnish
+./libscript.sh logs varnish
+./libscript.sh stop varnish
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start varnish
-libscript stop varnish
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install varnish latest
+.\libscript.cmd start varnish
+.\libscript.cmd status varnish
+.\libscript.cmd stop varnish
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker varnish
-```
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/varnish/<version>`
+  (default `~/.libscript/varnish/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `VARNISH_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
-_Note: On Unix environments, you can also use `./cli.sh install varnish`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+## Lifecycle Hooks (`hooks/`)
+
+Provides dual-layer lifecycle hooks invoked by `T0` `engine/common/hooks.{sh,cmd}` and `Plane A`
+traits (`traits/`): `announce.{sh,cmd}`, `backup.{sh,cmd}`, `configure.{sh,cmd}`,
+`log_stream.{sh,cmd}`, `maintenance.{sh,cmd}`, `metrics.{sh,cmd}`, `probe.{sh,cmd}`,
+`restore.{sh,cmd}`, `rollback.{sh,cmd}`, `upgrade.{sh,cmd}`.
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +62,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

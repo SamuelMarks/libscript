@@ -1,17 +1,27 @@
-# Storage & Persistent Volumes Trait (`traits/storage/`)
+# Plane A Block, Network & ML Object Storage Trait (`traits/storage/`)
 
 ## Overview
 
-`traits/storage/` manages persistent block storage, Copy-on-Write datasets, and network filesystems
-by delegating device discovery and formatting to `engine/common/disk_discovery.{sh,cmd}` and
-`engine/common/format_fs.{sh,cmd}`.
+`traits/storage/` binds host block devices, shared network filesystems, and high-throughput ML
+object buckets to `T1` datastores and `T5` workloads in both `T3` offline sysroot bake mode and
+`T4`/`T5` live host mode.
 
-## Safety & Dual-Mode Invariants
+## Scripts
 
-1. **Non-Destructive Formatting**: `mount.{sh,cmd}` inspects existing partition signatures (`blkid`
-   / `fstyp`) and never formats a device that already contains a valid filesystem.
-2. **Idempotent `/etc/fstab` & `/etc/vfstab` Reconciliation**: Entries are enclosed inside
-   `# BEGIN libscript-trait-storage: <mount>` / `# END libscript-trait-storage: <mount>` markers.
-3. **Tier 2 Offline Bake Mode (`LIBSCRIPT_TARGET_SYSROOT != /`)**: Emits `/etc/fstab` or
-   `/etc/vfstab` entries into `${LIBSCRIPT_TARGET_SYSROOT}/etc/` without invoking live `mount`
-   syscalls.
+- **`mount.{sh,cmd}`**: Formats uninitialized volumes via `T0` `engine/common/format_fs.{sh,cmd}`,
+  mounts persistent directories, and records idempotent `/etc/fstab` entries (or Windows volume
+  mounts).
+- **`nfs.{sh,cmd}` & `smb.{sh,cmd}`**: Configures resilient NFSv4 and SMB/CIFS shared mounts
+  (including GCP Filestore, AWS EFS, and Azure Files).
+- **`gcs_ml.{sh,cmd}`**: Enforces the 4-role regional Google Cloud Storage bucket architecture
+  (`engine/schemas/gcs-ml-storage.schema.json`: `datasets`, `checkpoints`, `logs`, `artifacts`) in
+  the exact TPU/GPU zone region to guarantee `$0.00` cross-region egress.
+- **`gcsfuse.{sh,cmd}`**: Mounts GCS buckets via `_lib/storage-layers/gcsfuse` with tuned parallel
+  readahead and metadata caching for ML training checkpoints and datasets.
+
+## Usage
+
+```sh
+./libscript.sh trait apply storage
+./traits/storage/gcs_ml.sh --region us-central2 --prefix my-tpu-run
+```

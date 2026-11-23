@@ -1,5 +1,5 @@
 {
-  "$schema": "../../synthesis/schemas/execution-plan.reactos.schema.json",
+  "$schema": "../../schemas/execution-plan.reactos.schema.json",
   "schema_version": "1.0.0",
   "profile_name": "developer-win32-i686",
   "description": "ReactOS 0.4.16 Win32 C/scripting workstation on WinBtrfs with Git, CMake, Ninja, SQLite, and the LibScript C11 REST API service.",

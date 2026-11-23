@@ -1,128 +1,38 @@
-# Vagrant
+# Multi-OS Bento Vagrant Test Environments (`vagrant/`)
+
+## Overview
+
+`vagrant/` contains pre-configured `Vagrantfile` environments used by `tests/` and `Plane B`
+empirical suites (`experiments/`) to verify LibScript across Linux, BSD, illumos, macOS, Windows 11,
+FreeDOS, and historic/32-bit MS-DOS guests—with native `aarch64` and `x86_64`
+QEMU/UTM/libvirt/VirtualBox support via the custom Bento fork (`SamuelMarks/bento` @
+`multi-os-qemu-aarch64`).
+
+> **Note:** To install the Vagrant CLI tool itself via LibScript, use the atomic `T1` recipe
+> `_lib/iac/vagrant` (`./libscript.sh install vagrant`). The subdirectories under `vagrant/` are VM
+> guest environments rather than an installable package. See [`../VAGRANT.md`](../VAGRANT.md) for
+> full box-building instructions.
+
+## Guest Environments
+
+- **Linux**: [`alpine-3.24/`](./alpine-3.24/README.md), [`debian-13/`](./debian-13/README.md),
+  [`rockylinux-10.2/`](./rockylinux-10.2/README.md)
+- **BSD & illumos**: [`freebsd-15.1/`](./freebsd-15.1/README.md), [`omnios/`](./omnios/README.md)
+- **Windows & macOS**: [`windows-11/`](./windows-11/README.md),
+  [`macos-14-arm64/`](./macos-14-arm64/README.md)
+- **Kubernetes The Hard Way Clusters**: [`k8s-thw-alpine/`](./k8s-thw-alpine/README.md),
+  [`k8s-thw-debian/`](./k8s-thw-debian/README.md)
+- **MS-DOS & FreeDOS (`dos32` Verification)**: [`freedos-1.3/`](./freedos-1.3/README.md),
+  [`freedos-1.4/`](./freedos-1.4/README.md), [`msdos-1.25/`](./msdos-1.25/README.md),
+  [`msdos-2.0/`](./msdos-2.0/README.md), [`msdos-4.0/`](./msdos-4.0/README.md), and shared serial
+  `CTest` harness [`_common/`](./_common/README.md).
 
 ## Usage
 
-**Purpose**: This document describes the `vagrant` folder and its contained environments within the
-LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for
-cross-platform software provisioning.
-
-**Capabilities**:
-
-- It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from
-  the global version manager `libscript`.
-- It can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.).
-
-You can natively manage these Vagrant environments using `libscript`:
-
-- **Install**: `libscript install vagrant`
-- **Start**: `libscript start vagrant`
-- **Stop**: `libscript stop vagrant`
-- **Uninstall**: `libscript uninstall vagrant`
-- **Package**: `libscript package vagrant`
-
-## Building Vagrant Boxes with Bento
-
-To build the required Vagrant boxes for **Windows** (`bento/windows-11`), **Alpine**
-(`bento/alpine-3.24`), latest **FreeBSD** (`bento/freebsd-15.1`), latest **Debian**
-(`bento/debian-13`), **Rocky Linux** (`bento/rockylinux-10.2`), **FreeDOS** (`bento/freedos-1.3`,
-`bento/freedos-1.4`), and **Microsoft MS-DOS** (`bento/msdos-1.25`, `bento/msdos-2.0`,
-`bento/msdos-4.0`), use the custom Bento fork:
-
-- **Repository**:
-  [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
-  (`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`)
-- **Supported Host Platforms**:
-  - **macOS Apple Silicon** (`aarch64` / ARM64)
-  - **x86_64 other hosts** (Linux, Windows, Intel macOS)
-
-Refer to [VAGRANT.md](../VAGRANT.md) for full instructions on building boxes with Packer and adding
-them to Vagrant.
-
-## Vagrant Usage
-
-You can start specific environments directly via Vagrant:
-
-vagrant up
-
-## Libscript Usage over SSH
-
-Then you can use it like any other SSH host, e.g., to install PostgreSQL:
-
-vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/\_lib/databases/postgres/setup.sh'
-
-### Test
-
-…and to test PostgreSQL:
-
-vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh &&
-"${LIBSCRIPT_ROOT_DIR}"/\_lib/databases/postgres/test.sh'
-
----
-
-So you can run it in a loop, like:
-
-previous_wd="$(pwd)" for dir in *; do if [ -f "${dir}"'/Vagrantfile' ]; then cd -- "${dir}"
-
-# then aforementioned vagrant ssh commands
-
-vagrant up vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh' vagrant ssh -c
-'. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/\_lib/databases/postgres/test.sh'
-
-cd -- "${previous_wd}" fi done
-
-(wrap in a subshell with a `&` at the end to run in parallel)
-
-## Dependency Installation Methods
-
-`libscript` provides a flexible dependency management system, allowing you to control how
-dependencies are installed—either globally across the entire setup or locally on a per-toolchain
-basis.
-
-### Global Configuration
-
-You can set a global preference for how tools should be installed by defining
-`LIBSCRIPT_GLOBAL_INSTALL_METHOD` in your environment or global configuration (`install.json`).
-
-Supported global methods typically include:
-
-- `system`: Uses the system's package manager (e.g., `apt`, `apk`, `pacman`).
-- `source`: Builds or downloads the tool from source/official binaries (fallback behavior depends on
-  the tool).
-
-Example:
-
 ```sh
-export LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"
+# Boot a specific guest environment
+cd vagrant/debian-13 && vagrant up
+
+# Provision multiple guest environments in parallel
+./vagrant/up_multiple.sh alpine-3.24 debian-13 freebsd-15.1
 ```
-
-### Local Overrides
-
-You can override the global setting for specific dependencies by setting their respective
-`VAGRANT_INSTALL_METHOD` variable. The local override takes highest precedence.
-
-For example, to globally use the system package manager but strictly install Python via `uv`:
-
-```sh
-export LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"
-export PYTHON_INSTALL_METHOD="uv"
-```
-
-### Python-Specific Support
-
-The Python toolchain (`_lib/languages/python`) is extensively integrated with this feature and
-supports the following `PYTHON_INSTALL_METHOD` values:
-
-- `uv` (default fallback): Installs Python and creates virtual environments using astral's `uv`
-  tool.
-- `pyenv`: Installs Python versions using `pyenv`, managing them in `~/.pyenv`.
-- `system`: Uses the system's package manager to provide Python.
-- `from-source`: Compiles Python directly from its source code.
-
-By combining global methods with local overrides, you can mix and match system-provided stable
-packages with newer or custom-compiled toolchains as needed.
-
-## Platform Support
-
-- Linux
-- macOS
-- Windows

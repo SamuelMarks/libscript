@@ -12,7 +12,7 @@
     },
     "SEVENZIP_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install SEVENZIP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for 7zip: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "default": "system"
     },
     "SEVENZIP_DOWNLOAD_URL": {

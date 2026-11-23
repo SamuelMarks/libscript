@@ -1,5 +1,8 @@
 # GDM
 
+**Tier**: `T2` (`_lib/display-managers/gdm/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 GNOME Display Manager daemon
 
 ## Usage

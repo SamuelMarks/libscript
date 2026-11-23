@@ -1,5 +1,7 @@
 # Sudo
 
+**Tier**: `T2` (`_lib/base-system/sudo/`) | **Capabilities**: `sysroot-package`
+
 Privilege escalation tool for system administration
 
 ## Usage

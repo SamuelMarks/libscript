@@ -286,12 +286,12 @@ emulation.
 When encountering Linux kernel boundaries on Windows:
 
 - Immediately halt execution with **exit code `86`** (`EX_UNAVAILABLE` / `ENOSYS`).
-- Output guidance redirecting the user to `vm_builder.cmd` or containerized builders.
+- Output guidance redirecting the user to `engine/common/vm_builder.cmd` or containerized builders.
 
 ```cmd
 :: Option A Win32 Proforma Example
 echo [ERROR] Native Linux kernel assembly (mount/unshare) is unavailable on Win32. >&2
-echo [ERROR] Please execute via container or VM builder: vm_builder.cmd >&2
+echo [ERROR] Please execute via container or VM builder: "%LIBSCRIPT_ROOT_DIR%\engine\common\vm_builder.cmd" >&2
 exit /b 86
 ```
 
@@ -400,8 +400,9 @@ states depend on the component and strategy.
 Before submitting changes, execute the repository's automated compliance and audit suites:
 
 ```sh
-# 1. Audit all modified scripts against engineering standards (POSIX, quoting, raw fetch/pkg-mgr, JSON, checksums)
+# 1. Audit all modified scripts against engineering standards (POSIX, T0-T5 DAG boundaries, quoting, raw fetch/pkg-mgr, JSON, checksums)
 ./devtools/audit/audit_standards.sh --all
+./devtools/audit/audit_tiers.sh --all
 ./devtools/audit/audit_posix.sh --all
 ./devtools/audit/audit_version_manager.sh
 ./devtools/audit/audit_schema_vars.sh --all

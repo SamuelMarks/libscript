@@ -1,48 +1,45 @@
-# kubeadm
+# Kubernetes kubeadm Bootstrapper (`_lib/schedulers/kubeadm/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `kubeadm` component (part
-of `_orchestration`) within the LibScript ecosystem. Official Kubernetes cluster lifecycle
-bootstrapper (kubeadm init, kubeadm join, kubeadm upgrade).
+Official Kubernetes cluster lifecycle bootstrapper (kubeadm init, kubeadm join, kubeadm upgrade).
+
+- **Tier**: `T1` (`_lib/schedulers/kubeadm/`)
+- **Capabilities**: `userland-package`
+- **Target OS Whitelist (`manifest.json`)**: `linux`, `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Kubernetes kubeadm
-Bootstrapper**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install kubeadm
-libscript uninstall kubeadm
+# Native version management (isolated under ${LIBSCRIPT_HOME}/kubeadm/<version>)
+./libscript.sh ls-remote kubeadm
+./libscript.sh install kubeadm latest
+./libscript.sh use kubeadm latest
+./libscript.sh which kubeadm
+./_lib/schedulers/kubeadm/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start kubeadm
-libscript stop kubeadm
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote kubeadm
+.\libscript.cmd install kubeadm latest
+.\libscript.cmd use kubeadm latest
+.\libscript.cmd which kubeadm
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker kubeadm
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install kubeadm`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/kubeadm/<version>`
+  (default `~/.libscript/kubeadm/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `KUBEADM_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

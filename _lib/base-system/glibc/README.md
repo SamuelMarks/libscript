@@ -1,5 +1,7 @@
 # GNU C Library
 
+**Tier**: `T2` (`_lib/base-system/glibc/`) | **Capabilities**: `sysroot-package`, `sysroot-library`
+
 Core C library and dynamic linker
 
 ## Usage

@@ -1,5 +1,7 @@
 # LFS Base
 
+**Tier**: `T2` (`_lib/base-system/lfs-base/`) | **Capabilities**: `sysroot-package`
+
 Stage 3 Linux From Scratch (LFS) base system installation and filesystem hierarchy configuration.
 
 ## Overview

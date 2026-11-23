@@ -59,7 +59,7 @@
     },
     "MESOS_MASTER": {
       "type": "string",
-      "description": "Configuration variable MESOS_MASTER for mesos."
+      "description": "Host:port or ZooKeeper URI of the leading Apache Mesos Master endpoint (e.g., 127.0.0.1:5050)."
     }
   }
 }

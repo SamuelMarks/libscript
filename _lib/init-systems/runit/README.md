@@ -1,5 +1,7 @@
 # Runit
 
+**Tier**: `T2` (`_lib/init-systems/runit/`) | **Capabilities**: `sysroot-package`, `service-daemon`
+
 ## Purpose & Overview
 
 Provides the lightweight Runit service supervisor suite, three-stage boot orchestration

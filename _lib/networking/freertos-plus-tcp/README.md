@@ -1,48 +1,45 @@
-# freertos-plus-tcp
+# FreeRTOS-Plus-TCP Embedded IPv4/IPv6 Stack (`_lib/networking/freertos-plus-tcp/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `freertos-plus-tcp`
-component (part of `_networking`) within the LibScript ecosystem. Thread-safe embedded IPv4/IPv6
-TCP/UDP/DNS/DHCP networking stack for FreeRTOS bare-metal appliances.
+Thread-safe embedded IPv4/IPv6 TCP/UDP/DNS/DHCP networking stack for FreeRTOS bare-metal appliances.
+
+- **Tier**: `T1` (`_lib/networking/freertos-plus-tcp/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **FreeRTOS-Plus-TCP Embedded
-IPv4/IPv6 Stack**. It is designed to be executed via the global `libscript.sh` router or directly
-via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install freertos-plus-tcp
-libscript uninstall freertos-plus-tcp
+# Native version management (isolated under ${LIBSCRIPT_HOME}/freertos-plus-tcp/<version>)
+./libscript.sh ls-remote freertos-plus-tcp
+./libscript.sh install freertos-plus-tcp latest
+./libscript.sh use freertos-plus-tcp latest
+./libscript.sh which freertos-plus-tcp
+./_lib/networking/freertos-plus-tcp/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start freertos-plus-tcp
-libscript stop freertos-plus-tcp
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote freertos-plus-tcp
+.\libscript.cmd install freertos-plus-tcp latest
+.\libscript.cmd use freertos-plus-tcp latest
+.\libscript.cmd which freertos-plus-tcp
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker freertos-plus-tcp
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install freertos-plus-tcp`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/freertos-plus-tcp/<version>` (default
+  `~/.libscript/freertos-plus-tcp/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `FREERTOS_PLUS_TCP_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -78,18 +75,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

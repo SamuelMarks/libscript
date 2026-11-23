@@ -1,5 +1,7 @@
 # Poetry
 
+**Tier**: `T1` (`_lib/package-managers/poetry/`) | **Capabilities**: `userland-package`
+
 Bootstrap script for [Poetry](https://python-poetry.org/), a tool for Python dependency management
 and packaging. Requires Python 3 to be installed.
 
@@ -10,13 +12,13 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                                                                                                            | Default  | Aliases/Examples |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `POETRY_INSTALL_METHOD` | How to install POETRY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |                  |
-| `POETRY_HOME`           | Directory where Poetry will be installed. Defaults to ~/.local or %APPDATA%\pypoetry.                                                                                  | `none`   |                  |
-| `POETRY_VERSION`        | Specific version of Poetry to install.                                                                                                                                 | `none`   |                  |
-| `POETRY_DOWNLOAD_URL`   | Override URL for downloading poetry binary or archive artifacts.                                                                                                       | `none`   |                  |
-| `POETRY_RELEASES_URL`   | Override URL for querying poetry available remote releases.                                                                                                            | `none`   |                  |
+| Variable                | Description                                                                                                                                              | Default  | Aliases/Examples |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
+| `POETRY_INSTALL_METHOD` | Installation strategy for poetry: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `system` |                  |
+| `POETRY_HOME`           | Directory where Poetry will be installed. Defaults to ~/.local or %APPDATA%\pypoetry.                                                                    | `none`   |                  |
+| `POETRY_VERSION`        | Specific version of Poetry to install.                                                                                                                   | `none`   |                  |
+| `POETRY_DOWNLOAD_URL`   | Override URL for downloading poetry binary or archive artifacts.                                                                                         | `none`   |                  |
+| `POETRY_RELEASES_URL`   | Override URL for querying poetry available remote releases.                                                                                              | `none`   |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

@@ -1,5 +1,7 @@
 # WirePlumber
 
+**Tier**: `T2` (`_lib/audio/wireplumber/`) | **Capabilities**: `sysroot-package`
+
 Modular session and policy manager for PipeWire
 
 ## Usage

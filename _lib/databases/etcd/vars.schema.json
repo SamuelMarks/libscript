@@ -63,7 +63,7 @@
       "description": "Group for etcd service."
     },
     "ETCD_INSTALL_METHOD": {
-      "description": "How to install ETCD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for etcd: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "enum": ["libscript_native", "system"],
       "default": "libscript_native"
@@ -74,7 +74,7 @@
     },
     "ETCD_PASSWORD_FILE": {
       "type": "string",
-      "description": "Configuration variable ETCD_PASSWORD_FILE for etcd."
+      "description": "Filesystem path to a file containing the etcd root/authentication password."
     },
     "ETCD_RELEASES_URL": {
       "type": "string",

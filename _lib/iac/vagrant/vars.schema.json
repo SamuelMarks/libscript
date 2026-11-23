@@ -22,7 +22,7 @@
     },
     "VAGRANT_INSTALL_QEMU_PLUGIN": {
       "type": "string",
-      "description": "Configuration variable VAGRANT_INSTALL_QEMU_PLUGIN for vagrant."
+      "description": "Flag (0 or 1) controlling whether the vagrant-qemu provider plugin is automatically installed alongside Vagrant."
     }
   }
 }

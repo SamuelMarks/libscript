@@ -1,14 +1,17 @@
-# Devtools CI Automation
+# Continuous Integration & Release Automation (`devtools/ci/`)
 
 ## Overview
 
-Continuous integration helper utilities and pre-commit automation scripts for LibScript.
+`devtools/ci/` contains deterministic CI workflow helpers for validating pre-commit idempotency,
+assembling cross-platform release bundles, and publishing GitHub Release artifacts.
 
-## Utilities
+## Scripts
 
-- `precommit_dance.sh`: Runs linting, shell checking, batch verification, and formatting before
-  commits.
-- `prepare_artifacts.sh`: Validates built installer packages and generates `.sha256` checksum files
-  (with Windows batch parity in `prepare_artifacts.cmd` and PowerShell in `prepare_artifacts.ps1`).
-- `publish_release.sh`: Idempotently creates releases and attaches assets via GitHub CLI (with
-  Windows batch parity in `publish_release.cmd` and PowerShell in `publish_release.ps1`).
+- **`precommit_dance.{sh,cmd}`**: Executes the repository pre-commit suite twice consecutively and
+  asserts `git diff --exit-code` cleanliness so code generators and formatters
+  (`generate_markdown_docs`, `prettier`, `cspell`, `audit_standards`, `audit_tiers`, `doc_coverage`)
+  converge in a single pass.
+- **`prepare_artifacts.{sh,cmd}`**: Collects, hashes (SHA-256), and organizes built `.msi`, `.deb`,
+  `.rpm`, `.apk`, `.dmg`, `.pkg`, and ISO artifacts prior to release upload.
+- **`publish_release.{sh,cmd}`**: Attaches verified build artifacts and checksum manifests to tagged
+  releases in CI workflows.

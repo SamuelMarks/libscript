@@ -15,21 +15,22 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                         | Default | Aliases/Examples |
-| ----------------------- | ----------------------------------------------------------------------------------- | ------- | ---------------- |
-| `JOOMLA_VERSION`        | Target Joomla CMS release version or semantic alias (e.g., latest) to install.      | `none`  |                  |
-| `JOOMLA_DB_PASS`        | Database password used by Joomla to authenticate against its relational database.   | `none`  |                  |
-| `JOOMLA_PHP_FPM_LISTEN` | PHP-FPM upstream FastCGI socket path or host:port endpoint serving Joomla requests. | `none`  |                  |
-| `JOOMLA_LISTEN`         | HTTP bind address:port or UNIX socket endpoint exposed by the Joomla web server.    | `none`  |                  |
-| `JOOMLA_DB_TYPE`        | Database driver backend for Joomla (e.g., mysqli, pgsql, mysql).                    | `none`  |                  |
-| `JOOMLA_WEBSERVER`      | Frontend web server component fronting Joomla (e.g., nginx, caddy, httpd).          | `none`  |                  |
-| `JOOMLA_WWWROOT`        | Filesystem document root directory where Joomla source files are deployed.          | `none`  |                  |
-| `JOOMLA_DB_USER`        | Database role or username granted ownership of the Joomla schema.                   | `none`  |                  |
-| `JOOMLA_SERVER_NAME`    | Virtual host domain or server_name configured for Joomla HTTP/TLS routing.          | `none`  |                  |
-| `JOOMLA_DB_NAME`        | Relational database name provisioned for Joomla content and metadata.               | `none`  |                  |
+| Variable                | Description                                                                         | Default |
+| :---------------------- | :---------------------------------------------------------------------------------- | :------ |
+| `JOOMLA_VERSION`        | Target Joomla CMS release version or semantic alias (e.g., latest) to install.      | `-`     |
+| `JOOMLA_DB_PASS`        | Database password used by Joomla to authenticate against its relational database.   | `-`     |
+| `JOOMLA_PHP_FPM_LISTEN` | PHP-FPM upstream FastCGI socket path or host:port endpoint serving Joomla requests. | `-`     |
+| `JOOMLA_LISTEN`         | HTTP bind address:port or UNIX socket endpoint exposed by the Joomla web server.    | `-`     |
+| `JOOMLA_DB_TYPE`        | Database driver backend for Joomla (e.g., mysqli, pgsql, mysql).                    | `-`     |
+| `JOOMLA_WEBSERVER`      | Frontend web server component fronting Joomla (e.g., nginx, caddy, httpd).          | `-`     |
+| `JOOMLA_WWWROOT`        | Filesystem document root directory where Joomla source files are deployed.          | `-`     |
+| `JOOMLA_DB_USER`        | Database role or username granted ownership of the Joomla schema.                   | `-`     |
+| `JOOMLA_SERVER_NAME`    | Virtual host domain or server_name configured for Joomla HTTP/TLS routing.          | `-`     |
+| `JOOMLA_DB_NAME`        | Relational database name provisioned for Joomla content and metadata.               | `-`     |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Example Usage
@@ -51,14 +52,6 @@ set JOOMLA_DB_TYPE=postgres
 set JOOMLA_VERSION=5.2.0
 setup.cmd
 ```
-
-## Configuration Options
-
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
-<!-- BEGIN_VARS -->
-<!-- END_VARS -->
 
 ## Platform Support
 

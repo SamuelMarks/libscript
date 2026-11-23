@@ -2,8 +2,8 @@
 
 ## Overview
 
-The `scaffold` (alias `new-component`) command automates the creation of new Tier 1 LibScript
-component-package-managers under `_lib/<category>/<component>/`. It supports both:
+The `scaffold` (alias `new-component`) command automates the creation of new `T1` and `T2` atomic
+LibScript component-package-managers under `_lib/<category>/<component>/`. It supports both:
 
 1. **Interactive Prompter Mode** (`--interactive` / default): Guides a human maintainer through
    selecting the component name, category, description, installation method, upstream version

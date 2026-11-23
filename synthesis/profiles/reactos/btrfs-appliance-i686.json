@@ -1,5 +1,5 @@
 {
-  "$schema": "../../synthesis/schemas/execution-plan.reactos.schema.json",
+  "$schema": "../../schemas/execution-plan.reactos.schema.json",
   "schema_version": "1.0.0",
   "profile_name": "btrfs-appliance-i686",
   "description": "Unattended ReactOS 0.4.16 WinBtrfs appliance staging silent Windows Installer (.msi) workloads via GuiRunOnce.",

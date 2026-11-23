@@ -1,6 +1,8 @@
 # Eopkg
 
-Bootstrap script for `eopkg`, the libscript_native package manager for Solus OS.
+**Tier**: `T1` (`_lib/package-managers/eopkg/`) | **Capabilities**: `userland-package`
+
+Bootstrap script for `eopkg`, the system package manager for Solus OS.
 
 ## Configuration Options
 
@@ -9,12 +11,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                                                                                                           | Default            | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `EOPKG_INSTALL_METHOD` | How to install EOPKG. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `EOPKG_VERSION`        | Specific version of eopkg to install.                                                                                                                                 | `latest`           |                  |
-| `EOPKG_DOWNLOAD_URL`   | Override URL for downloading eopkg binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `EOPKG_RELEASES_URL`   | Override URL for querying eopkg available remote releases.                                                                                                            | `none`             |                  |
+| Variable               | Description                                                                                                                                             | Default            | Aliases/Examples |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `EOPKG_INSTALL_METHOD` | Installation strategy for eopkg: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `EOPKG_VERSION`        | Specific version of eopkg to install.                                                                                                                   | `latest`           |                  |
+| `EOPKG_DOWNLOAD_URL`   | Override URL for downloading eopkg binary or archive artifacts.                                                                                         | `none`             |                  |
+| `EOPKG_RELEASES_URL`   | Override URL for querying eopkg available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

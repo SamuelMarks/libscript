@@ -1,5 +1,8 @@
 # Elasticsearch
 
+**Tier**: `T1` (`_lib/search/elasticsearch/`) | **Capabilities**: `userland-package`,
+`service-daemon`
+
 Distributed, RESTful search and analytics engine for Open edX legacy search backends.
 
 ## Usage

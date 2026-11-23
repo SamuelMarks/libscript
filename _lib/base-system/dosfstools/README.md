@@ -1,5 +1,7 @@
 # Dosfstools
 
+**Tier**: `T2` (`_lib/base-system/dosfstools/`) | **Capabilities**: `sysroot-package`
+
 FAT and VFAT filesystem utilities
 
 ## Usage

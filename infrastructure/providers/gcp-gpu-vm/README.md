@@ -1,52 +1,51 @@
-# gpu-vm Component
+# Tier 4 (`T4`) Cloud Provider: Google Cloud GPU Virtual Machines (`infrastructure/providers/gcp-gpu-vm/`)
 
 ## Overview
 
-This component manages the installation and execution of `gpu-vm` within the libscript ecosystem.
+Provisions CUDA-accelerated Google Compute Engine GPU VMs (`T4`, `L4`, `A100`, `H100`) with
+automated NVIDIA driver installation, `gcsfuse` dataset mounts, and TensorBoard telemetry.
 
 ## Usage
 
-Refer to the component's setup and cli scripts for specific operations.
+```sh
+# Invoke provider CLI operations
+./libscript.sh infrastructure gcp-gpu-vm --help
+
+# Provision a node and deploy a stack
+./libscript.sh provision gcp-gpu-vm my-node default-net default-region ./ ~/app
+```
+
+```cmd
+.\libscript.cmd infrastructure gcp-gpu-vm --help
+.\libscript.cmd provision gcp-gpu-vm my-node default-net default-region .\ ~/app
+```
 
 ## Configuration Options
 
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
 <!-- BEGIN_VARS -->
 
-| Variable                               | Description                                                                                                                                           | Default            | Aliases/Examples |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `LIBSCRIPT_TAG_ENABLE`                 | Flag (0 or 1) enabling resource tagging on cloud provider assets.                                                                                     | `none`             |                  |
-| `LIBSCRIPT_TAG_KEY`                    | Tag key applied to provisioned cloud provider resources.                                                                                              | `none`             |                  |
-| `LIBSCRIPT_TAG_VALUE`                  | Tag value applied to provisioned cloud provider resources.                                                                                            | `none`             |                  |
-| `LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION` | Flag (0 or 1) allowing cloud provider teardown operations to modify resources without matching tag filters.                                           | `none`             |                  |
-| `LIBSCRIPT_EXPORT_STAGE_DIR`           | Staging directory used when exporting application and database state archives.                                                                        | `none`             |                  |
-| `LIBSCRIPT_IMPORT_STAGE_DIR`           | Staging directory used when importing application and database state archives.                                                                        | `none`             |                  |
-| `GPU_VM_VERSION`                       | Specific version of gpu-vm to install. Can be a numeric version or an alias.                                                                          | `latest`           | latest, stable   |
-| `GPU_VM_INSTALL_METHOD`                | How to install GPU-VM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript_native` |                  |
-| `LIBSCRIPT_LISTEN_PORT`                | Global port to listen on                                                                                                                              | `none`             |                  |
-| `LIBSCRIPT_LISTEN_ADDRESS`             | Global address to listen on                                                                                                                           | `none`             |                  |
-| `LIBSCRIPT_LISTEN_SOCKET`              | Global unix socket to listen on                                                                                                                       | `none`             |                  |
-| `GPU_VM_LISTEN_PORT`                   | Port for GPU_VM to listen on                                                                                                                          | `none`             |                  |
-| `GPU_VM_LISTEN_ADDRESS`                | Address for GPU_VM to listen on                                                                                                                       | `none`             |                  |
-| `GPU_VM_LISTEN_SOCKET`                 | Unix socket for GPU_VM to listen on                                                                                                                   | `none`             |                  |
-| `GCP_GPU_VM_ENABLED`                   | Flag (0 or 1) indicating whether gcp-gpu-vm is enabled in the execution plan.                                                                         | `none`             |                  |
+| Variable                               | Description                                                                                                                                                  | Default            |
+| :------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
+| `LIBSCRIPT_TAG_ENABLE`                 | Flag (0 or 1) enabling resource tagging on cloud provider assets.                                                                                            | `-`                |
+| `LIBSCRIPT_TAG_KEY`                    | Tag key applied to provisioned cloud provider resources.                                                                                                     | `-`                |
+| `LIBSCRIPT_TAG_VALUE`                  | Tag value applied to provisioned cloud provider resources.                                                                                                   | `-`                |
+| `LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION` | Flag (0 or 1) allowing cloud provider teardown operations to modify resources without matching tag filters.                                                  | `-`                |
+| `LIBSCRIPT_EXPORT_STAGE_DIR`           | Staging directory used when exporting application and database state archives.                                                                               | `-`                |
+| `LIBSCRIPT_IMPORT_STAGE_DIR`           | Staging directory used when importing application and database state archives.                                                                               | `-`                |
+| `GPU_VM_VERSION`                       | Specific version of gpu-vm to install. Can be a numeric version or an alias.                                                                                 | `latest`           |
+| `GPU_VM_INSTALL_METHOD`                | Installation strategy for gcp-gpu-vm: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |
+| `LIBSCRIPT_LISTEN_PORT`                | Global port to listen on                                                                                                                                     | `-`                |
+| `LIBSCRIPT_LISTEN_ADDRESS`             | Global address to listen on                                                                                                                                  | `-`                |
+| `LIBSCRIPT_LISTEN_SOCKET`              | Global unix socket to listen on                                                                                                                              | `-`                |
+| `GPU_VM_LISTEN_PORT`                   | Port for GPU_VM to listen on                                                                                                                                 | `-`                |
+| `GPU_VM_LISTEN_ADDRESS`                | Address for GPU_VM to listen on                                                                                                                              | `-`                |
+| `GPU_VM_LISTEN_SOCKET`                 | Unix socket for GPU_VM to listen on                                                                                                                          | `-`                |
+| `GCP_GPU_VM_ENABLED`                   | Flag (0 or 1) indicating whether gcp-gpu-vm is enabled in the execution plan.                                                                                | `-`                |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
-
-## Install Method
-
-By default, `libscript` will install this component natively using the `libscript_native` method.
-You can override this behavior by setting `<COMPONENT>_INSTALL_METHOD` to `system`, `mise`, `asdf`,
-etc.
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.
 
 ## Platform Support
 

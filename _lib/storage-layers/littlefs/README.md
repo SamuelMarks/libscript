@@ -1,48 +1,41 @@
-# littlefs
+# ARM littlefs Fail-Safe Flash Filesystem (`_lib/storage-layers/littlefs/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `littlefs` component (part
-of `_storage-layers`) within the LibScript ecosystem. Power-loss resilient wear-leveling NOR/NAND
-flash filesystem C library for Zephyr and FreeRTOS appliances.
+Power-loss resilient wear-leveling NOR/NAND flash filesystem C library for Zephyr and FreeRTOS
+appliances.
+
+- **Tier**: `T2` (`_lib/storage-layers/littlefs/`)
+- **Capabilities**: `sysroot-package`, `sysroot-library`
+- **Provides Virtual Capabilities**: `littlefs`, `lfs-flash-fs`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **ARM littlefs Fail-Safe
-Flash Filesystem**. It is designed to be executed via the global `libscript.sh` router or directly
-via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install littlefs
-libscript uninstall littlefs
+# Stage into an isolated T3 target sysroot or install on a compatible host
+LIBSCRIPT_TARGET_SYSROOT=/mnt/sysroot ./libscript.sh install littlefs latest
+./libscript.sh littlefs --help
+./_lib/storage-layers/littlefs/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start littlefs
-libscript stop littlefs
+```cmd
+:: Query component CLI or invoke test/Option-A boundary check on Windows
+.\libscript.cmd littlefs --help
+.\_lib\storage-layers\littlefs\cli.cmd test
 ```
 
-**Package (e.g., as a Docker container):**
+## Sysroot & Synthesis Integration
 
-```sh
-libscript package-as docker littlefs
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install littlefs`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **`T3` Sysroot Staging**: Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
+  `LIBSCRIPT_TARGET_TRIPLET`, and `LIBSCRIPT_OFFLINE=1` when compiled into OS images or unikernels
+  by `synthesis/` and `engine/solver/execute_plan.*`.
+- **Override Strategy**: Control build/acquisition mode via `LITTLEFS_INSTALL_METHOD` or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD` (`libscript_native`, `from-source`, or `system`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -78,18 +71,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

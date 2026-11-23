@@ -1,71 +1,54 @@
-# SQLite
+# SQLite (`_lib/databases/sqlite/`)
 
-## Purpose & Current State
+## Overview
 
-This document provides context and technical details for the **SQLite** component (part of the
-`_storage` module) within the LibScript ecolibscript_native. SQLite is a C-language library that
-implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
+A C-language library that implements a small, fast, self-contained, high-reliability, full-featured,
+SQL database engine.
 
-This component works both as a local version manager for SQLite (similar to `rvm`, `nvm`, `pyenv`,
-or `uv`) and can be natively invoked from the global version manager `libscript`. Because of this
-flexibility, SQLite can be used by LibScript to provision and build bigger, more complex software
-stacks (like WordPress, Open edX, Nextcloud, etc.).
+- **Tier**: `T1` (`_lib/databases/sqlite/`)
+- **Capabilities**: `userland-package`, `sysroot-library`
+- **Provides Virtual Capabilities**: `database`, `sqlite`
 
 ## Usage
 
-You can install, start, stop, package, and uninstall sqlite using the global `libscript` command or
-the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install sqlite
-
-./cli.sh install sqlite
-
-./libscript.sh start sqlite
-./cli.sh start sqlite
-
-./libscript.sh stop sqlite
-./cli.sh stop sqlite
-
-./libscript.sh package-as docker sqlite
-./cli.sh package-as docker sqlite
-
-./libscript.sh uninstall sqlite
-./cli.sh uninstall sqlite
+# Native version management (isolated under ${LIBSCRIPT_HOME}/sqlite/<version>)
+./libscript.sh ls-remote sqlite
+./libscript.sh install sqlite latest
+./libscript.sh use sqlite latest
+./libscript.sh which sqlite
+./_lib/databases/sqlite/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install sqlite
-
-:: Local CLI
-cli.cmd install sqlite
-
-:: Start and Stop
-libscript.cmd start sqlite
-cli.cmd start sqlite
-
-libscript.cmd stop sqlite
-cli.cmd stop sqlite
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi sqlite
-cli.cmd package-as msi sqlite
-
-:: Uninstall
-libscript.cmd uninstall sqlite
-cli.cmd uninstall sqlite
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote sqlite
+.\libscript.cmd install sqlite latest
+.\libscript.cmd use sqlite latest
+.\libscript.cmd which sqlite
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/sqlite/<version>`
+  (default `~/.libscript/sqlite/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `SQLITE_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
+
+## Lifecycle Hooks (`hooks/`)
+
+Provides dual-layer lifecycle hooks invoked by `T0` `engine/common/hooks.{sh,cmd}` and `Plane A`
+traits (`traits/`): `announce.{sh,cmd}`, `backup.{sh,cmd}`, `backup_tenant.{sh,cmd}`,
+`configure.{sh,cmd}`, `deprovision_tenant.{sh,cmd}`, `log_stream.{sh,cmd}`, `maintenance.{sh,cmd}`,
+`metrics.{sh,cmd}`, `probe.{sh,cmd}`, `provision_tenant.{sh,cmd}`, `restore.{sh,cmd}`,
+`restore_tenant.{sh,cmd}`, `rollback.{sh,cmd}`, `upgrade.{sh,cmd}`.
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -119,13 +102,13 @@ running the setup script.
 | `SQLITE_LISTEN_PORT`            | Port for SQLITE to listen on                                                                                                                                                                                                                                        | `none`                                                                          |                         |
 | `SQLITE_LISTEN_ADDRESS`         | Address for SQLITE to listen on                                                                                                                                                                                                                                     | `none`                                                                          |                         |
 | `SQLITE_LISTEN_SOCKET`          | Unix socket for SQLITE to listen on                                                                                                                                                                                                                                 | `none`                                                                          |                         |
-| `SQLITE_BIN`                    | Configuration variable SQLITE_BIN for sqlite.                                                                                                                                                                                                                       | `none`                                                                          |                         |
-| `SQLITE_COMPARE_COMPILERS`      | Configuration variable SQLITE_COMPARE_COMPILERS for sqlite.                                                                                                                                                                                                         | `none`                                                                          |                         |
+| `SQLITE_BIN`                    | Explicit path to the sqlite3 CLI binary used for verification or query execution.                                                                                                                                                                                   | `none`                                                                          |                         |
+| `SQLITE_COMPARE_COMPILERS`      | Space-separated list of C compiler toolchains to benchmark and compare when building SQLite from source.                                                                                                                                                            | `none`                                                                          |                         |
 | `SQLITE_DOWNLOAD_URL`           | Override URL for downloading sqlite binary or archive artifacts.                                                                                                                                                                                                    | `none`                                                                          |                         |
-| `SQLITE_EFFECTIVE_CFLAGS`       | Configuration variable SQLITE_EFFECTIVE_CFLAGS for sqlite.                                                                                                                                                                                                          | `none`                                                                          |                         |
-| `SQLITE_EFFECTIVE_LDFLAGS`      | Configuration variable SQLITE_EFFECTIVE_LDFLAGS for sqlite.                                                                                                                                                                                                         | `none`                                                                          |                         |
+| `SQLITE_EFFECTIVE_CFLAGS`       | Resolved C compiler flags passed to the SQLite amalgamation or autoconf build.                                                                                                                                                                                      | `none`                                                                          |                         |
+| `SQLITE_EFFECTIVE_LDFLAGS`      | Resolved linker flags passed when linking the SQLite library and CLI binary.                                                                                                                                                                                        | `none`                                                                          |                         |
 | `SQLITE_PATH`                   | Filesystem directory or path configuration for sqlite (SQLITE_PATH).                                                                                                                                                                                                | `none`                                                                          |                         |
-| `SQLITE_PREFIX`                 | Configuration variable SQLITE_PREFIX for sqlite.                                                                                                                                                                                                                    | `none`                                                                          |                         |
+| `SQLITE_PREFIX`                 | Installation prefix directory where compiled SQLite binaries, headers, and libraries are staged.                                                                                                                                                                    | `none`                                                                          |                         |
 | `SQLITE_RELEASES_URL`           | Override URL for querying sqlite available remote releases.                                                                                                                                                                                                         | `none`                                                                          |                         |
 | `SQLITE_SRC_URL`                | Upstream sqlite-src archive URL providing test/speedtest1.c alongside the amalgamation.                                                                                                                                                                             | `none`                                                                          |                         |
 | `SQLITE_STAGE_DIR`              | Destination directory where stage-benchmark-inputs extracts sqlite3.c, shell.c, sqlite3.h, and speedtest1.c.                                                                                                                                                        | `none`                                                                          |                         |
@@ -133,22 +116,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh` / `setup_generic.cmd`: Multi-mode provisioner supporting Mode 1
-  (`--pkg-mgr=<pm>`), Mode 2 (`--from-source --toolchain=default`), and Mode 3
-  (`--from-source --toolchain=gcc|clang|tcc|custom-cc`).
-- `test.sh` / `test.cmd`: 6-stage relational SQL torture suite with deterministic SHA-256 output
-  digest verification.
-- `compare_compilers.sh` / `compare_compilers.cmd`: 4-way differential C compiler benchmark and
-  verification harness (`build/sqlite-compiler-comparison.json`).
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

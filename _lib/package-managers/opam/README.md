@@ -1,5 +1,7 @@
 # Opam
 
+**Tier**: `T1` (`_lib/package-managers/opam/`) | **Capabilities**: `userland-package`
+
 Bootstrap script for [opam](https://opam.ocaml.org/), the source-based package manager for OCaml.
 
 ## Configuration Options
@@ -9,12 +11,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default  | Aliases/Examples |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `OPAM_INSTALL_METHOD` | How to install OPAM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |                  |
-| `OPAM_VERSION`        | Specific version of opam to install.                                                                                                                                 | `latest` |                  |
-| `OPAM_DOWNLOAD_URL`   | Override URL for downloading opam binary or archive artifacts.                                                                                                       | `none`   |                  |
-| `OPAM_RELEASES_URL`   | Override URL for querying opam available remote releases.                                                                                                            | `none`   |                  |
+| Variable              | Description                                                                                                                                            | Default  | Aliases/Examples |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------- |
+| `OPAM_INSTALL_METHOD` | Installation strategy for opam: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `system` |                  |
+| `OPAM_VERSION`        | Specific version of opam to install.                                                                                                                   | `latest` |                  |
+| `OPAM_DOWNLOAD_URL`   | Override URL for downloading opam binary or archive artifacts.                                                                                         | `none`   |                  |
+| `OPAM_RELEASES_URL`   | Override URL for querying opam available remote releases.                                                                                              | `none`   |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

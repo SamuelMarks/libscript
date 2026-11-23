@@ -12,11 +12,18 @@ on:
   pull_request:
     branches: ["master"]
 
+permissions:
+  contents: read
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+  GH_TOKEN: ${{ github.token }}
+
 jobs:
   precommit:
     name: Pre-commit checks on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -37,6 +44,15 @@ jobs:
           repository: SamuelMarks/cc0-assets
           path: cc0-assets
 
+      - name: Restore Bootstrapped Toolchain Download Cache
+        uses: actions/cache/restore@v6
+        id: restore-dl-cache
+        with:
+          path: libscript/cache/downloads
+          key: ci-downloads-${{ runner.os }}-${{ hashFiles('libscript/_lib/checksums.txt') }}
+          restore-keys: |
+            ci-downloads-${{ runner.os }}-
+
       - name: Setup Node (for Prettier and cspell)
         uses: actions/setup-node@v7
         with:
@@ -51,6 +67,13 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: call devtools\ci\precommit_dance.cmd
+
+      - name: Save Bootstrapped Toolchain Download Cache
+        uses: actions/cache/save@v6
+        if: steps.restore-dl-cache.outputs.cache-hit != 'true'
+        with:
+          path: libscript/cache/downloads
+          key: ci-downloads-${{ runner.os }}-${{ hashFiles('libscript/_lib/checksums.txt') }}
 
   windows-zero-powershell:
     name: Zero-PowerShell Windows .cmd Suite

@@ -1,47 +1,52 @@
-# prometheus
+# Prometheus (`_lib/logging/prometheus/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `prometheus` component
-(part of `_logging`) within the LibScript ecosystem. Cloud-native dimensional time-series monitoring
-server, PromQL query engine, and alerting toolkit.
+Cloud-native dimensional time-series monitoring server, PromQL query engine, and alerting toolkit.
+
+- **Tier**: `T1` (`_lib/logging/prometheus/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `prometheus`, `metrics-server`, `observability`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Prometheus**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install prometheus
-libscript uninstall prometheus
+# Install and manage the prometheus service daemon
+./libscript.sh install prometheus latest
+./libscript.sh start prometheus
+./libscript.sh status prometheus
+./libscript.sh logs prometheus
+./libscript.sh stop prometheus
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start prometheus
-libscript stop prometheus
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install prometheus latest
+.\libscript.cmd start prometheus
+.\libscript.cmd status prometheus
+.\libscript.cmd stop prometheus
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker prometheus
-```
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/prometheus/<version>`
+  (default `~/.libscript/prometheus/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `PROMETHEUS_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
-_Note: On Unix environments, you can also use `./cli.sh install prometheus`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+## Lifecycle Hooks (`hooks/`)
+
+Provides dual-layer lifecycle hooks invoked by `T0` `engine/common/hooks.{sh,cmd}` and `Plane A`
+traits (`traits/`): `announce.{sh,cmd}`, `backup.{sh,cmd}`, `configure.{sh,cmd}`,
+`log_stream.{sh,cmd}`, `maintenance.{sh,cmd}`, `metrics.{sh,cmd}`, `probe.{sh,cmd}`,
+`restore.{sh,cmd}`, `rollback.{sh,cmd}`, `upgrade.{sh,cmd}`.
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +61,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

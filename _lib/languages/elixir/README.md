@@ -1,98 +1,59 @@
-# Elixir
+# Elixir Toolchain (`_lib/languages/elixir/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `elixir` component (part
-of `_toolchain`) within the LibScript ecosystem. Elixir is a dynamic, functional language designed
-for building scalable and maintainable applications, running on the Erlang VM (BEAM). LibScript is a
-modular, zero-dependency shell-script framework designed for cross-platform software provisioning
-across Linux, macOS, DOS, and Windows.
+A dynamic, functional language for building scalable and maintainable applications.
+
+- **Tier**: `T1` (`_lib/languages/elixir/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `compiler`, `elixir`, `erlang`, `beam`
+- **Target OS Exclusions (`manifest.json`)**: `sunos`
 
 ## Usage
 
-This directory contains the installation and configuration scripts for `elixir`. It works both as a
-local version manager (similar to rvm, nvm, pyenv, uv) for Elixir and can be invoked from the global
-version manager `libscript`. Furthermore, it can be used by libscript as a building block to
-assemble bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
-
-You can install, start, stop, package, and uninstall elixir using the global `libscript` command or
-the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install elixir
-
-./cli.sh install elixir
-
-./libscript.sh start elixir
-./cli.sh start elixir
-
-./libscript.sh stop elixir
-./cli.sh stop elixir
-
-./libscript.sh package-as docker elixir
-./cli.sh package-as docker elixir
-
-./libscript.sh uninstall elixir
-./cli.sh uninstall elixir
+# Native version management (isolated under ${LIBSCRIPT_HOME}/elixir/<version>)
+./libscript.sh ls-remote elixir
+./libscript.sh install elixir latest
+./libscript.sh use elixir latest
+./libscript.sh which elixir
+./_lib/languages/elixir/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install elixir
-
-:: Local CLI
-cli.cmd install elixir
-
-:: Start and Stop
-libscript.cmd start elixir
-cli.cmd start elixir
-
-libscript.cmd stop elixir
-cli.cmd stop elixir
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi elixir
-cli.cmd package-as msi elixir
-
-:: Uninstall
-libscript.cmd uninstall elixir
-cli.cmd uninstall elixir
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote elixir
+.\libscript.cmd install elixir latest
+.\libscript.cmd use elixir latest
+.\libscript.cmd which elixir
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/elixir/<version>`
+  (default `~/.libscript/elixir/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `ELIXIR_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                                                                                                            | Default            | Aliases/Examples |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `ELIXIR_VERSION`        | Specific version of elixir to install. Can be a numeric version or an alias.                                                                                           | `latest`           | latest, stable   |
-| `ELIXIR_INSTALL_METHOD` | How to install ELIXIR. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `ELIXIR_DOWNLOAD_URL`   | Override URL for downloading elixir binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `ELIXIR_RELEASES_URL`   | Override URL for querying elixir available remote releases.                                                                                                            | `none`             |                  |
+| Variable                | Description                                                                                                                                              | Default            | Aliases/Examples |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `ELIXIR_VERSION`        | Specific version of elixir to install. Can be a numeric version or an alias.                                                                             | `latest`           | latest, stable   |
+| `ELIXIR_INSTALL_METHOD` | Installation strategy for elixir: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `ELIXIR_DOWNLOAD_URL`   | Override URL for downloading elixir binary or archive artifacts.                                                                                         | `none`             |                  |
+| `ELIXIR_RELEASES_URL`   | Override URL for querying elixir available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

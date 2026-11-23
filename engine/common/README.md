@@ -1,86 +1,58 @@
-# Common
+# Tier 0 (`T0`) Core Standard Library (`engine/common/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `_common` component (part
-of `_lib`) within the LibScript ecosystem. This component provides shared utilities, core functions,
-and baseline scripts that are universally utilized by other modules across the LibScript framework
-to ensure consistent execution across different platforms.
+`engine/common/` is the zero-dependency `T0` standard library for the entire LibScript substrate. It
+is **not** an installable end-user package; instead, every atomic recipe in `_lib/` (`T1`/`T2`),
+artifact synthesizer in `synthesis/` (`T3`), cloud provider in `infrastructure/` (`T4`), workload
+driver in `workloads/` (`T5`), and cross-cutting trait in `traits/` (`Plane A`) sources these
+primitives in pure POSIX `/bin/sh` and native Windows Batch (`.cmd`) / PowerShell (`.ps1`).
 
-## Usage
+## Core Modules
 
-This directory contains the essential shared scripts for `_common`. It is designed to work both as a
-local version manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for managing common toolkit
-versions, and can be seamlessly invoked from the global version manager `libscript`.
+- **Package & Artifact Transport (`pkg_mgr.{sh,cmd}`, `pkg_mapper.{sh,cmd}`, `pkg_map.tsv`,
+  `fetch_checksum.{sh,cmd}`, `verify_signature.{sh,cmd}`)**:
+  - Centralized network download and checksum/signature verification layer (`libscript_download`,
+    `libscript_fetch_stdout`), enforcing air-gapped `LIBSCRIPT_OFFLINE=1` local cache resolution and
+    mapping logical package names across 20+ OS and ecosystem package managers (`apt-get`, `apk`,
+    `dnf`, `pacman`, `pkg`, `pkgin`, `brew`, `winget`, `choco`, `scoop`, `nix`, `spack`, `vcpkg`,
+    `rapps`, and native Win32/MS-DOS `libscript` component PMs).
+- **Version Manager & Component Lifecycle (`component_core.{sh,cmd,ps1}`, `versioning.{sh,cmd}`,
+  `semver.{jq,sh,cmd}`, `cli.{sh,cmd,ps1}`, `setup_base.{sh,cmd}`, `uninstall_base.{sh,cmd}`,
+  `test_base.{sh,cmd}`)**:
+  - Implements isolated `${LIBSCRIPT_HOME}/<component>/<version>` sandboxes, `O(1)` symlink/shim
+    synchronization in `${LIBSCRIPT_HOME}/bin` (`libscript_sync_active_bin` /
+    `libscript_cleanup_active_bin`), semantic version sorting, and standard component CLI verbs
+    (`install`, `uninstall`, `ls`, `ls-remote`, `use`, `which`, `env`, `test`).
+- **Source Compilation & Binary Patching (`source_builder.{sh,cmd}`, `elf_verneed_patch.{sh,cmd}`,
+  `hw_tune.{sh,cmd}`)**:
+  - Multi-toolchain source build engine
+    (`--from-source --toolchain=default|gcc|clang|tcc|edgcpp|custom-cc`) emitting
+    `build-metrics.json` telemetry, ELF `DT_VERNEED` compatibility patching, and CPU/RAM parallelism
+    auto-tuning.
+- **Daemon Supervision & Lifecycle Hooks (`service.{sh,cmd}`, `service_install.{sh,cmd}`,
+  `daemonize.{sh,cmd,ps1}`, `daemon_launcher.{sh,cmd,ps1}`, `hooks.{sh,cmd}`,
+  `component_hook_impl.{sh,cmd}`, `upgrade_engine.{sh,cmd}`)**:
+  - Unified service registration across `systemd`, `openrc`, `runit`, `s6`, `dinit`, `sysvinit`,
+    `launchd`, `smf`, and Windows Service Control Manager, plus physical/logical lifecycle hook
+    dispatch (`configure`, `probe`, `backup`, `restore`, `upgrade`, `rollback`, `provision_tenant`).
+- **Environment, Template & Filesystem Utilities (`context.{sh,cmd,ps1}`, `os_info.{sh,cmd}`,
+  `paths.{sh,cmd}`, `envsubst_safe.{sh,cmd}`, `find_replace.{sh,cmd}`, `settings_updater.{sh,cmd}`,
+  `cow_snapshot.{sh,cmd}`, `disk_discovery.{sh,cmd}`, `format_fs.{sh,cmd}`, `vm_builder.{sh,cmd}`,
+  `remote_sync.{sh,cmd}`, `tfrc_guard.{sh,cmd}`)**:
+  - Target OS/architecture/libc detection, safe template substitution without `eval`, Copy-on-Write
+    snapshot helpers (`ZFS`/`Btrfs`), filesystem formatting, VM builder delegation for Option A
+    Win32 boundaries, SSH/WinRM synchronization, and `$0.00` TFRC TPU quota guardrails.
+- **Zero-Emulation Native Helpers (`win32/`, `dos32/`, `dos_83.{sh,cmd}`, `dos_83_map.tsv`,
+  `_noop/`)**:
+  - Native C Win32 PE helpers (`ls_daemon.c`, `ls_elevate.c`, `ls_pe_arch.c`), 32-bit MS-DOS
+    (`DOS32A` + OpenWatcom) helpers (`ls_dash_dos.c`, `ls_watt_curl.c`, `ls_wincmd.c`), 8.3 short
+    filename mapping, and the `_noop` null-provider fallback module.
 
-Furthermore, these common utilities are foundational and can be used by LibScript to build and
-provision bigger stacks, such as WordPress, Open edX, Nextcloud, and other enterprise-grade
-application deployments.
+## Global Framework Variables
 
-You can install, start, stop, package, and uninstall \_common using the global `libscript` command
-or the local CLI.
-
-**Unix (Linux/macOS):**
-
-```sh
-
-./libscript.sh install _common
-
-./cli.sh install _common
-
-./libscript.sh start _common
-./cli.sh start _common
-
-./libscript.sh stop _common
-./cli.sh stop _common
-
-./libscript.sh package-as docker _common
-./cli.sh package-as docker _common
-
-./libscript.sh uninstall _common
-./cli.sh uninstall _common
-```
-
-**Windows:**
-
-```cmd
-:: Global Orchestrator
-libscript.cmd install _common
-
-:: Local CLI
-cli.cmd install _common
-
-:: Start and Stop
-libscript.cmd start _common
-cli.cmd start _common
-
-libscript.cmd stop _common
-cli.cmd stop _common
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi _common
-cli.cmd package-as msi _common
-
-:: Uninstall
-libscript.cmd uninstall _common
-cli.cmd uninstall _common
-```
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `pkg_mgr.sh` / `pkg_mgr.cmd`: Multi-ecosystem package manager abstraction supporting explicit
-  `--pkg-mgr=<pm>` overrides (`apt-get`, `apk`, `dnf`, `brew`, `winget`, `choco`, `scoop`, `nix`,
-  `spack`, `vcpkg`, etc.) and automatic package manager bootstrapping.
-- `source_builder.sh` / `source_builder.cmd`: Generic source compilation engine supporting Mode 2
-  (`--from-source --toolchain=default`) and Mode 3
-  (`--from-source --toolchain=gcc|clang|tcc|custom-cc`) with `build-metrics.json` telemetry.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `base_vars.schema.json`: Canonical JSON Schema for core framework-wide variables.
-
-## Core Global Variables (`base_vars.schema.json`)
+The following global environment variables (`engine/schemas/base_vars.schema.json`) apply across all
+LibScript tiers and components:
 
 <!-- BEGIN_VARS -->
 
@@ -120,35 +92,3 @@ cli.cmd uninstall _common
 | `FORCE_REBUILD`                    | Flag (0 or 1) forcing recompilation or service unit regeneration from scratch.                                                                                                                                                                                    | `0`                |                                 |
 
 <!-- END_VARS -->
-
-## Internal Runtime & Memoization Variables
-
-The following `LIBSCRIPT_*` variables are internal mutable/computed contracts passed between core
-modules (excluded from user-facing `vars.schema.json` files and validated via
-`is_internal_runtime_var` in `devtools/audit/audit_schema_vars.{sh,cmd,ps1}`):
-
-- `LIBSCRIPT_ROOT_DIR`: Resolved repository root directory.
-- `LIBSCRIPT_OVERRIDE_CHANGED`: Internal return flag set by `libscript_override_service_env`.
-- `LIBSCRIPT_RESOLVED_CC_BIN`, `LIBSCRIPT_RESOLVED_CC_ID`, `LIBSCRIPT_RESOLVED_CC_VERSION`,
-  `LIBSCRIPT_RESOLVED_CXX_BIN`, `LIBSCRIPT_LAST_PEAK_RSS_KB`, `LIBSCRIPT_LAST_COMPILE_TIME_MS`,
-  `LIBSCRIPT_EXTRACTED_SRC_DIR`, `LIBSCRIPT_BUILD_TARGET_DIR`, `LIBSCRIPT_BASE_DIR`: Internal
-  compiler/source-build outputs computed by `source_builder.{sh,cmd}`.
-- `LIBSCRIPT_HW_CPU_MODEL`, `LIBSCRIPT_HW_PHYS_CORES`, `LIBSCRIPT_HW_PERF_CORES`,
-  `LIBSCRIPT_HW_NUMA_NODES`: Hardware topology values probed by `hw_tune.{sh,cmd}`.
-- `LIBSCRIPT_BENCH_CLOCK_NS_BIN`, `LIBSCRIPT_BENCH_PROBE_BIN`,
-  `LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA`: Internal compiled timing probe paths and unit-test fault
-  injection toggles.
-- `LIBSCRIPT_INTERNAL_START`, `LIBSCRIPT_COMPONENT_CORE_LIB_ONLY`, `LIBSCRIPT_MOCK_SYSTEMD`,
-  `LIBSCRIPT_DUMMY_NO_RUN`, `LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB`,
-  `LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE`: Internal router, cache-hydration, and test-harness flags.
-
-## Platform Support
-
-- Linux
-- macOS
-- Windows
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.

@@ -65,11 +65,11 @@
     },
     "CUSTOM_CC_LOG_FILE": {
       "type": "string",
-      "description": "Configuration variable CUSTOM_CC_LOG_FILE for custom-cc."
+      "description": "Filesystem path to the JSONL telemetry log recording custom-cc compiler invocations, fallback events, and elapsed durations."
     },
     "CUSTOM_CC_REAL_BIN": {
       "type": "string",
-      "description": "Configuration variable CUSTOM_CC_REAL_BIN for custom-cc."
+      "description": "Path to the underlying custom C compiler executable invoked by the custom-cc wrapper before any fallback."
     }
   },
   "x-libscript-var-packs": ["source_toolchain"]

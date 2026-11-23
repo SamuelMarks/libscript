@@ -1,5 +1,7 @@
 # PulseAudio
 
+**Tier**: `T2` (`_lib/audio/pulseaudio/`) | **Capabilities**: `sysroot-package`
+
 Networked sound server daemon
 
 ## Usage

@@ -1,5 +1,7 @@
 # ALSA Library
 
+**Tier**: `T2` (`_lib/audio/alsa-lib/`) | **Capabilities**: `sysroot-package`
+
 Advanced Linux Sound Architecture userland library
 
 ## Usage

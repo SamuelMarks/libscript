@@ -1,5 +1,7 @@
 # Packet Filter (PF)
 
+**Tier**: `T2` (`_lib/networking/pf/`) | **Capabilities**: `sysroot-package`
+
 FreeBSD stateful packet inspection firewall
 
 ## Usage

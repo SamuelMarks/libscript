@@ -1,98 +1,60 @@
-# Zig
+# Zig Toolchain (`_lib/languages/zig/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `zig` component (part of
-`_toolchain`) within the LibScript ecosystem. Zig is a general-purpose programming language and
-toolchain for maintaining robust, optimal, and reusable software. LibScript is a modular,
-zero-dependency shell-script framework designed for cross-platform software provisioning across
-Linux, macOS, DOS, and Windows.
+A general-purpose programming language and toolchain for maintaining robust, optimal, and reusable
+software.
+
+- **Tier**: `T1` (`_lib/languages/zig/`)
+- **Capabilities**: `userland-package`, `cross-toolchain`
+- **Provides Virtual Capabilities**: `zig`, `toolchain`
+- **Target OS Exclusions (`manifest.json`)**: `sunos`
 
 ## Usage
 
-This directory contains the installation and configuration scripts for `zig`. It works both as a
-local version manager (similar to rvm, nvm, pyenv, uv) for Zig and can be invoked from the global
-version manager `libscript`. Furthermore, it can be used by libscript as a building block to
-assemble bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
-
-You can install, start, stop, package, and uninstall zig using the global `libscript` command or the
-local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install zig
-
-./cli.sh install zig
-
-./libscript.sh start zig
-./cli.sh start zig
-
-./libscript.sh stop zig
-./cli.sh stop zig
-
-./libscript.sh package-as docker zig
-./cli.sh package-as docker zig
-
-./libscript.sh uninstall zig
-./cli.sh uninstall zig
+# Native version management (isolated under ${LIBSCRIPT_HOME}/zig/<version>)
+./libscript.sh ls-remote zig
+./libscript.sh install zig latest
+./libscript.sh use zig latest
+./libscript.sh which zig
+./_lib/languages/zig/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install zig
-
-:: Local CLI
-cli.cmd install zig
-
-:: Start and Stop
-libscript.cmd start zig
-cli.cmd start zig
-
-libscript.cmd stop zig
-cli.cmd stop zig
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi zig
-cli.cmd package-as msi zig
-
-:: Uninstall
-libscript.cmd uninstall zig
-cli.cmd uninstall zig
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote zig
+.\libscript.cmd install zig latest
+.\libscript.cmd use zig latest
+.\libscript.cmd which zig
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/zig/<version>`
+  (default `~/.libscript/zig/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `ZIG_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable             | Description                                                                                                                                                         | Default            | Aliases/Examples |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `ZIG_VERSION`        | Specific version of zig to install. Can be a numeric version or an alias.                                                                                           | `latest`           | latest, stable   |
-| `ZIG_INSTALL_METHOD` | How to install ZIG. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `ZIG_DOWNLOAD_URL`   | Override URL for downloading zig binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `ZIG_RELEASES_URL`   | Override URL for querying zig available remote releases.                                                                                                            | `none`             |                  |
+| Variable             | Description                                                                                                                                           | Default            | Aliases/Examples |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `ZIG_VERSION`        | Specific version of zig to install. Can be a numeric version or an alias.                                                                             | `latest`           | latest, stable   |
+| `ZIG_INSTALL_METHOD` | Installation strategy for zig: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `ZIG_DOWNLOAD_URL`   | Override URL for downloading zig binary or archive artifacts.                                                                                         | `none`             |                  |
+| `ZIG_RELEASES_URL`   | Override URL for querying zig available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

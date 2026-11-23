@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../experiments/schemas/experiment-suite.schema.json",
+  "$schema": "../schemas/experiment-suite.schema.json",
   "id": "win_port",
   "title": "win_port 14-Repository Empirical Evaluation & Zero-Hallucination Benchmarking Protocol (E0-E7)",
   "protocol_version": "PLDI-2027-win-port-v1",
@@ -20,7 +20,12 @@
   ],
   "target_repo_dir": "../cdd-c",
   "ecosystem_repos": [
-    { "id": "cdd-c", "path": "../cdd-c", "language": "c89", "role": "core_compiler" },
+    {
+      "id": "cdd-c",
+      "path": "../cdd-c",
+      "language": "c89",
+      "role": "core_compiler"
+    },
     {
       "id": "auto-win-msvc",
       "path": "../auto-win-msvc",
@@ -28,9 +33,24 @@
       "exclude_globs": ["rewritten_src"],
       "role": "compat_layer"
     },
-    { "id": "msi-rs", "path": "../msi-rs", "language": "rust", "role": "packager" },
-    { "id": "win-cmd-rs", "path": "../win-cmd-rs", "language": "rust", "role": "linter" },
-    { "id": "bento", "path": "../bento", "language": "ruby", "role": "vm_substrate" },
+    {
+      "id": "msi-rs",
+      "path": "../msi-rs",
+      "language": "rust",
+      "role": "packager"
+    },
+    {
+      "id": "win-cmd-rs",
+      "path": "../win-cmd-rs",
+      "language": "rust",
+      "role": "linter"
+    },
+    {
+      "id": "bento",
+      "path": "../bento",
+      "language": "ruby",
+      "role": "vm_substrate"
+    },
     {
       "id": "busybox-windows",
       "path": "../busybox-windows",
@@ -55,7 +75,12 @@
       "language": "python",
       "role": "port_harness"
     },
-    { "id": "jq-windows", "path": "../jq-windows", "language": "python", "role": "port_harness" },
+    {
+      "id": "jq-windows",
+      "path": "../jq-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
     {
       "id": "memcached-windows",
       "path": "../memcached-windows",
@@ -80,7 +105,12 @@
       "language": "python",
       "role": "port_harness"
     },
-    { "id": "freebsd-src", "path": "../freebsd-src", "language": "c89", "role": "upstream_ref" }
+    {
+      "id": "freebsd-src",
+      "path": "../freebsd-src",
+      "language": "c89",
+      "role": "upstream_ref"
+    }
   ],
   "lockfiles": [
     {

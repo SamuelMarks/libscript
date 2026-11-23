@@ -1,33 +1,50 @@
-# Cloud-Init Generator
+# Tier 4 (`T4`) Infrastructure Resource: Cloud-Init Generator (`infrastructure/resources/cloudinit/`)
 
-The `cloudinit` component provides a helper for generating `#cloud-config` YAML blocks, specifically
-for automating block volume mounting.
+## Overview
 
-> **Note**: This component is an adapter-only generator utility; it renders declarative cloud-init
-> templates and does not provide local `setup.sh`/`env.sh` binary installer lifecycles.
+Helper component for generating cloud-init configurations for nodes. Adapter-only component without
+binary installer lifecycle.
+
+This `T4` resource module provides uniform cross-cloud operations across AWS, Azure, and GCP,
+dispatched through `./libscript.sh infrastructure cloudinit`
+(`infrastructure/resources/cloudinit/cli.{sh,cmd}`).
+
+## Scripts
+
+- `api.{sh,cmd}`
+- `cli.{sh,cmd}`
+- `env.{sh,cmd}`
+- `gen_nocloud_iso.{sh,cmd}`
+- `logs.{sh,cmd}`
+- `setup.{sh,cmd}`
+- `setup_generic.{sh,cmd}`
+- `status.{sh,cmd}`
+- `test.{sh,cmd}`
+- `uninstall.{sh,cmd}`
 
 ## Usage
 
 ```sh
-libscript cloudinit generate-mount [--device path] [--mount-point path] [--fs-type type]
+./libscript.sh infrastructure cloudinit --help
 ```
 
-### Commands
-
-- `generate-mount`: Outputs valid cloud-init YAML to partition, format, and mount a block device.
+```cmd
+.\libscript.cmd infrastructure cloudinit --help
+```
 
 ## Configuration Options
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                    | Default | Aliases/Examples |
-| ----------------------- | -------------------------------------------------------------- | ------- | ---------------- |
-| `LIBSCRIPT_DEVICE`      | The device path (e.g. /dev/sdf).                               | `none`  |                  |
-| `LIBSCRIPT_MOUNT_POINT` | The directory where the device should be mounted (e.g. /data). | `none`  |                  |
-| `LIBSCRIPT_FS_TYPE`     | The filesystem type (default: ext4).                           | `none`  |                  |
+| Variable                | Description                                                    | Default |
+| :---------------------- | :------------------------------------------------------------- | :------ |
+| `LIBSCRIPT_DEVICE`      | The device path (e.g. /dev/sdf).                               | `-`     |
+| `LIBSCRIPT_MOUNT_POINT` | The directory where the device should be mounted (e.g. /data). | `-`     |
+| `LIBSCRIPT_FS_TYPE`     | The filesystem type (default: ext4).                           | `-`     |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

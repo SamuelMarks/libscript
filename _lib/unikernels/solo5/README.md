@@ -1,5 +1,7 @@
 # Solo5
 
+**Tier**: `T2` (`_lib/unikernels/solo5/`) | **Capabilities**: `sysroot-package`
+
 Solo5 component for LibScript systems.
 
 ## Usage

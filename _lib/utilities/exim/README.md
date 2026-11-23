@@ -1,5 +1,7 @@
 # Exim
 
+**Tier**: `T1` (`_lib/utilities/exim/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 Exim mail transfer agent and local SMTP relay daemon.
 
 ## Usage

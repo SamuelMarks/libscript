@@ -1,14 +1,7 @@
-# Documentation Web Assets (`docs-web-template/assets`)
+# Documentation Website Styles & Scripts (`docs-web-template/assets/`)
 
 ## Overview
 
-Static assets for the LibScript HTML documentation site.
-
-## Contents
-
-- CSS stylesheets for typography and responsive documentation layout.
-- Icons, logos, and UI asset files.
-
-## Usage
-
-Assets are copied into the documentation output directory during the static site generation process.
+`docs-web-template/assets/` contains the stylesheet (`libscript_styles.css`) and client-side
+navigation/search scripts (`first_scripts.js`, `scripts.js`) bundled into static HTML documentation
+builds by `devtools/generate_html_docs.{sh,cmd,ps1}`.

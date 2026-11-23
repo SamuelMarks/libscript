@@ -1,48 +1,46 @@
-# lcov
+# LCOV Code Coverage Tooling (lcov / geninfo / genhtml) (`_lib/toolchains/lcov/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `lcov` component (part of
-`_toolchains`) within the LibScript ecosystem. Standalone version manager and installer for LCOV
-(lcov, geninfo, genhtml), extracting function, line, and branch gcov coverage metrics.
+Standalone version manager and installer for LCOV (lcov, geninfo, genhtml), extracting function,
+line, and branch gcov coverage metrics.
+
+- **Tier**: `T1` (`_lib/toolchains/lcov/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `lcov`, `geninfo`, `genhtml`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **LCOV Code Coverage Tooling
-(lcov / geninfo / genhtml)**. It is designed to be executed via the global `libscript.sh` router or
-directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install lcov
-libscript uninstall lcov
+# Native version management (isolated under ${LIBSCRIPT_HOME}/lcov/<version>)
+./libscript.sh ls-remote lcov
+./libscript.sh install lcov latest
+./libscript.sh use lcov latest
+./libscript.sh which lcov
+./_lib/toolchains/lcov/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start lcov
-libscript stop lcov
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote lcov
+.\libscript.cmd install lcov latest
+.\libscript.cmd use lcov latest
+.\libscript.cmd which lcov
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker lcov
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install lcov`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/lcov/<version>`
+  (default `~/.libscript/lcov/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `LCOV_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -22,12 +22,13 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                              | Default  | Aliases/Examples |
-| --------------------- | ---------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `INFERENCE_SCHEDULER` | Target scheduler driver used for inference deployment (tpu_vm, xpk, kubernetes, native). | `tpu_vm` |                  |
+| Variable              | Description                                                                              | Default  |
+| :-------------------- | :--------------------------------------------------------------------------------------- | :------- |
+| `INFERENCE_SCHEDULER` | Target scheduler driver used for inference deployment (tpu_vm, xpk, kubernetes, native). | `tpu_vm` |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

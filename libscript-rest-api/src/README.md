@@ -1,20 +1,19 @@
-# LibScript REST API Source
+# C11 REST API Server Source (`libscript-rest-api/src/`)
 
-This directory contains the C source implementation and build definitions for the native LibScript
-REST API server (`libscript-rest-api`).
+## Overview
 
-## Architecture
+`libscript-rest-api/src/` contains the strict C11 implementation of the `Plane B` LibScript HTTP
+control-plane daemon built atop `c-rest-framework` and conforming to
+[`../openapi.yaml`](../openapi.yaml) (OpenAPI 3.2.0).
 
-- **`main.c`**: Entry point for the LibScript daemon and REST API server, handling daemon lifecycle
-  and HTTP routing via `c-rest-framework`.
-- **`CMakeLists.txt`**: CMake build configuration targeting standard C99/C11 compilers, with vendor
-  dependencies dynamically linked or compiled in-tree.
+## Source Files
 
-## Building
-
-```sh
-cd libscript-rest-api
-mkdir -p build && cd build
-cmake ..
-cmake --build .
-```
+- **`CMakeLists.txt`**: Target compilation rules, C11 standard flags, and `c-rest-framework`
+  linkage.
+- **`rest_api.h`**: Public request/response structures, route registration declarations, and command
+  dispatch interfaces.
+- **`main.c`**: Daemon entry point, CLI flag/environment parsing, socket binding, and graceful
+  signal shutdown lifecycle.
+- **`rest_dispatch.c`**: Maps authenticated HTTP endpoints (`/components`, `/stacks`, `/clusters`,
+  `/constellations`, `/payloads`, `/traits`, `/health`) to non-shell-interpolated `libscript`
+  subprocess executions with structured JSON output framing.

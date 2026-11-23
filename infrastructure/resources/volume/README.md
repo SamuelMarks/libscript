@@ -1,49 +1,61 @@
-# Cloud Block Storage
+# Tier 4 (`T4`) Infrastructure Resource: Cloud Block Storage (`infrastructure/resources/volume/`)
 
-The `volume` component provides a unified multicloud interface for managing and attaching block
-storage volumes.
+## Overview
 
-> **Note**: This component is an adapter-only cloud wrapper; it manages block storage lifecycle via
-> cloud provider APIs and does not provide local `setup.sh`/`env.sh` binary installer lifecycles.
+Multicloud interface for managing and attaching block storage volumes. Adapter-only component
+without binary installer lifecycle.
+
+This `T4` resource module provides uniform cross-cloud operations across AWS, Azure, and GCP,
+dispatched through `./libscript.sh infrastructure volume`
+(`infrastructure/resources/volume/cli.{sh,cmd}`).
+
+## Scripts
+
+- `api.{sh,cmd}`
+- `cli.{sh,cmd}`
+- `env.{sh,cmd}`
+- `logs.{sh,cmd}`
+- `setup.{sh,cmd}`
+- `setup_generic.{sh,cmd}`
+- `status.{sh,cmd}`
+- `test.{sh,cmd}`
+- `uninstall.{sh,cmd}`
 
 ## Usage
 
 ```sh
-libscript volume [create|delete|list|attach|detach] [--cloud aws|gcp|azure] [--volume-id id] [--size gb] [--zone zone] [--type type] [--node-id id] [--device path]
+./libscript.sh infrastructure volume --help
 ```
 
-### Commands
-
-- `create`: Provision a new block storage volume.
-- `delete`: Delete an existing block storage volume.
-- `list`: List managed block storage volumes.
-- `attach`: Attach a block storage volume to a compute node.
-- `detach`: Detach a block storage volume from a compute node.
+```cmd
+.\libscript.cmd infrastructure volume --help
+```
 
 ## Configuration Options
 
 <!-- BEGIN_VARS -->
 
-| Variable                               | Description                                                                                                 | Default | Aliases/Examples |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------- | ---------------- |
-| `LIBSCRIPT_TAG_ENABLE`                 | Flag (0 or 1) enabling resource tagging on cloud provider assets.                                           | `none`  |                  |
-| `LIBSCRIPT_TAG_KEY`                    | Tag key applied to provisioned cloud provider resources.                                                    | `none`  |                  |
-| `LIBSCRIPT_TAG_VALUE`                  | Tag value applied to provisioned cloud provider resources.                                                  | `none`  |                  |
-| `LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION` | Flag (0 or 1) allowing cloud provider teardown operations to modify resources without matching tag filters. | `none`  |                  |
-| `LIBSCRIPT_EXPORT_STAGE_DIR`           | Staging directory used when exporting application and database state archives.                              | `none`  |                  |
-| `LIBSCRIPT_IMPORT_STAGE_DIR`           | Staging directory used when importing application and database state archives.                              | `none`  |                  |
-| `LIBSCRIPT_CLOUD`                      | Cloud provider (aws, gcp, azure).                                                                           | `none`  |                  |
-| `LIBSCRIPT_VOLUME_NAME`                | Logical storage volume name for persistent data mounts.                                                     | `none`  |                  |
-| `LIBSCRIPT_VOLUME_SIZE`                | Size of the volume in GB.                                                                                   | `none`  |                  |
-| `LIBSCRIPT_VOLUME_ZONE`                | Zone/region for the volume.                                                                                 | `none`  |                  |
-| `LIBSCRIPT_VOLUME_TYPE`                | Type of the volume (e.g., ssd, hdd).                                                                        | `none`  |                  |
-| `LIBSCRIPT_NODE_ID`                    | Node ID to attach/detach the volume.                                                                        | `none`  |                  |
-| `LIBSCRIPT_DEVICE`                     | Device path for attachment (e.g., /dev/sdf).                                                                | `none`  |                  |
-| `LIBSCRIPT_VOLUME_ID`                  | Volume ID for operations like delete, attach, detach.                                                       | `none`  |                  |
-| `LIBSCRIPT_AZURE_RESOURCE_GROUP`       | Azure Resource Group hosting managed disks when LIBSCRIPT_CLOUD='azure'.                                    | `none`  |                  |
+| Variable                               | Description                                                                                                 | Default |
+| :------------------------------------- | :---------------------------------------------------------------------------------------------------------- | :------ |
+| `LIBSCRIPT_TAG_ENABLE`                 | Flag (0 or 1) enabling resource tagging on cloud provider assets.                                           | `-`     |
+| `LIBSCRIPT_TAG_KEY`                    | Tag key applied to provisioned cloud provider resources.                                                    | `-`     |
+| `LIBSCRIPT_TAG_VALUE`                  | Tag value applied to provisioned cloud provider resources.                                                  | `-`     |
+| `LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION` | Flag (0 or 1) allowing cloud provider teardown operations to modify resources without matching tag filters. | `-`     |
+| `LIBSCRIPT_EXPORT_STAGE_DIR`           | Staging directory used when exporting application and database state archives.                              | `-`     |
+| `LIBSCRIPT_IMPORT_STAGE_DIR`           | Staging directory used when importing application and database state archives.                              | `-`     |
+| `LIBSCRIPT_CLOUD`                      | Cloud provider (aws, gcp, azure).                                                                           | `-`     |
+| `LIBSCRIPT_VOLUME_NAME`                | Logical storage volume name for persistent data mounts.                                                     | `-`     |
+| `LIBSCRIPT_VOLUME_SIZE`                | Size of the volume in GB.                                                                                   | `-`     |
+| `LIBSCRIPT_VOLUME_ZONE`                | Zone/region for the volume.                                                                                 | `-`     |
+| `LIBSCRIPT_VOLUME_TYPE`                | Type of the volume (e.g., ssd, hdd).                                                                        | `-`     |
+| `LIBSCRIPT_NODE_ID`                    | Node ID to attach/detach the volume.                                                                        | `-`     |
+| `LIBSCRIPT_DEVICE`                     | Device path for attachment (e.g., /dev/sdf).                                                                | `-`     |
+| `LIBSCRIPT_VOLUME_ID`                  | Volume ID for operations like delete, attach, detach.                                                       | `-`     |
+| `LIBSCRIPT_AZURE_RESOURCE_GROUP`       | Azure Resource Group hosting managed disks when LIBSCRIPT_CLOUD='azure'.                                    | `-`     |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

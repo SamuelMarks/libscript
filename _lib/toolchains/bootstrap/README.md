@@ -1,5 +1,7 @@
 # Bootstrap
 
+**Tier**: `T1` (`_lib/toolchains/bootstrap/`) | **Capabilities**: `userland-package`
+
 Bootstrap component for LibScript systems.
 
 ## Usage

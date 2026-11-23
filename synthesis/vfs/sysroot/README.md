@@ -1,27 +1,32 @@
-# Vfs
+# Tier 3 (`T3`) Sysroot Virtual Filesystem Lifecycle (`synthesis/vfs/sysroot/`)
 
-Vfs component for LibScript systems.
+## Overview
+
+`synthesis/vfs/sysroot/` manages idempotent mounting (`mount_target_vfs.{sh,cmd}`) and reverse-order
+unmounting (`umount_target_vfs.{sh,cmd}`) of virtual kernel filesystems (`/proc`, `/sys`, `/dev`,
+`/dev/pts`, `/dev/shm`, `/run`, and FreeBSD `devfs`) inside `LIBSCRIPT_TARGET_SYSROOT` during `T3`
+OS synthesis. Signal traps ensure host pseudo-filesystems are cleanly detached even on interrupted
+builds.
 
 ## Usage
 
 ```sh
-./libscript.sh install vfs
+./synthesis/vfs/sysroot/mount_target_vfs.sh /mnt/sysroot
+./synthesis/vfs/sysroot/umount_target_vfs.sh /mnt/sysroot
 ```
 
 ## Configuration Options
 
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
 <!-- BEGIN_VARS -->
 
-| Variable             | Description                                                                                          | Default  | Aliases/Examples |
-| -------------------- | ---------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `VFS_VERSION`        | Specific version of vfs to install.                                                                  | `latest` |                  |
-| `VFS_INSTALL_METHOD` | How to install VFS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager. | `system` |                  |
+| Variable             | Description                                                                                          | Default  |
+| :------------------- | :--------------------------------------------------------------------------------------------------- | :------- |
+| `VFS_VERSION`        | Specific version of vfs to install.                                                                  | `latest` |
+| `VFS_INSTALL_METHOD` | How to install VFS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager. | `system` |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

@@ -7,7 +7,8 @@ via `experiments/_common/pkg_ui_runner.{sh,cmd}` and `workloads/apps/openedx/pac
 
 Because all URLs, ports, credentials, CSS selectors, and desktop shortcut expectations are inherited
 declaratively from `workloads/apps/openedx/packaging.json` (`.verification.screenshots`), the exact
-same runner powers WordPress, Odoo, or any packaged Tier 1 web application without code changes.
+same runner powers WordPress, Odoo, or any packaged `T5` web application stack (`workloads/apps/`)
+without code changes.
 
 ---
 

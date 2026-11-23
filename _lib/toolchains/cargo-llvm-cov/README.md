@@ -1,48 +1,44 @@
-# cargo-llvm-cov
+# cargo-llvm-cov Rust Coverage Subcommand (`_lib/toolchains/cargo-llvm-cov/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `cargo-llvm-cov` component
-(part of `_toolchains`) within the LibScript ecosystem. Cargo subcommand for LLVM source-based line,
-region, and branch code coverage JSON extraction.
+Cargo subcommand for LLVM source-based line, region, and branch code coverage JSON extraction.
+
+- **Tier**: `T1` (`_lib/toolchains/cargo-llvm-cov/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **cargo-llvm-cov Rust
-Coverage Subcommand**. It is designed to be executed via the global `libscript.sh` router or
-directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install cargo-llvm-cov
-libscript uninstall cargo-llvm-cov
+# Native version management (isolated under ${LIBSCRIPT_HOME}/cargo-llvm-cov/<version>)
+./libscript.sh ls-remote cargo-llvm-cov
+./libscript.sh install cargo-llvm-cov latest
+./libscript.sh use cargo-llvm-cov latest
+./libscript.sh which cargo-llvm-cov
+./_lib/toolchains/cargo-llvm-cov/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start cargo-llvm-cov
-libscript stop cargo-llvm-cov
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote cargo-llvm-cov
+.\libscript.cmd install cargo-llvm-cov latest
+.\libscript.cmd use cargo-llvm-cov latest
+.\libscript.cmd which cargo-llvm-cov
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker cargo-llvm-cov
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install cargo-llvm-cov`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/cargo-llvm-cov/<version>` (default `~/.libscript/cargo-llvm-cov/<version>`) and
+  synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `CARGO_LLVM_COV_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +52,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

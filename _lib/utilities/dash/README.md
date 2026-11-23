@@ -1,5 +1,7 @@
 # Dash
 
+**Tier**: `T1` (`_lib/utilities/dash/`) | **Capabilities**: `userland-package`
+
 ## Usage
 
 _Note: libscript manages versions natively for this component._
@@ -22,11 +24,7 @@ the local CLI.
 
 ./cli.sh install dash
 
-./libscript.sh start dash
-./cli.sh start dash
 
-./libscript.sh stop dash
-./cli.sh stop dash
 
 ./libscript.sh package-as docker dash
 ./cli.sh package-as docker dash
@@ -45,11 +43,7 @@ libscript.cmd install dash
 cli.cmd install dash
 
 :: Start and Stop
-libscript.cmd start dash
-cli.cmd start dash
 
-libscript.cmd stop dash
-cli.cmd stop dash
 
 :: Package (e.g., as MSI installer)
 libscript.cmd package-as msi dash

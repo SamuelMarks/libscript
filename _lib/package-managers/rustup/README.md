@@ -1,5 +1,7 @@
 # Rustup
 
+**Tier**: `T1` (`_lib/package-managers/rustup/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for `rustup` (Rust toolchain installer).
 
 ## Usage
@@ -14,12 +16,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                                                                                                            | Default            | Aliases/Examples |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `RUSTUP_INSTALL_METHOD` | How to install RUSTUP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `RUSTUP_VERSION`        | Specific version of rustup to install.                                                                                                                                 | `latest`           |                  |
-| `RUSTUP_DOWNLOAD_URL`   | Override URL for downloading rustup binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `RUSTUP_RELEASES_URL`   | Override URL for querying rustup available remote releases.                                                                                                            | `none`             |                  |
+| Variable                | Description                                                                                                                                              | Default            | Aliases/Examples |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `RUSTUP_INSTALL_METHOD` | Installation strategy for rustup: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `RUSTUP_VERSION`        | Specific version of rustup to install.                                                                                                                   | `latest`           |                  |
+| `RUSTUP_DOWNLOAD_URL`   | Override URL for downloading rustup binary or archive artifacts.                                                                                         | `none`             |                  |
+| `RUSTUP_RELEASES_URL`   | Override URL for querying rustup available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

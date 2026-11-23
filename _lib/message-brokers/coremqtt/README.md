@@ -1,48 +1,46 @@
-# coremqtt
+# FreeRTOS coreMQTT C11 Library (`_lib/message-brokers/coremqtt/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `coremqtt` component (part
-of `_message-brokers`) within the LibScript ecosystem. Zero-dynamic-allocation C11 MQTT 3.1.1 and
-MQTT 5.0 client library for FreeRTOS and Zephyr IoT appliances.
+Zero-dynamic-allocation C11 MQTT 3.1.1 and MQTT 5.0 client library for FreeRTOS and Zephyr IoT
+appliances.
+
+- **Tier**: `T1` (`_lib/message-brokers/coremqtt/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `coremqtt`, `mqtt-embedded-client`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **FreeRTOS coreMQTT C11
-Library**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install coremqtt
-libscript uninstall coremqtt
+# Install and manage the coremqtt service daemon
+./libscript.sh install coremqtt latest
+./libscript.sh start coremqtt
+./libscript.sh status coremqtt
+./libscript.sh logs coremqtt
+./libscript.sh stop coremqtt
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start coremqtt
-libscript stop coremqtt
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install coremqtt latest
+.\libscript.cmd start coremqtt
+.\libscript.cmd status coremqtt
+.\libscript.cmd stop coremqtt
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker coremqtt
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install coremqtt`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/coremqtt/<version>`
+  (default `~/.libscript/coremqtt/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `COREMQTT_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -78,18 +76,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

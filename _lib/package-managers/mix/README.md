@@ -1,5 +1,7 @@
 # Mix
 
+**Tier**: `T1` (`_lib/package-managers/mix/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for `mix` (Elixir package manager and build tool).
 
 ## Usage
@@ -13,12 +15,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable             | Description                                                                                                                                                         | Default            | Aliases/Examples |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `MIX_INSTALL_METHOD` | How to install MIX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `MIX_VERSION`        | Specific version of mix to install.                                                                                                                                 | `latest`           |                  |
-| `MIX_DOWNLOAD_URL`   | Override URL for downloading mix binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `MIX_RELEASES_URL`   | Override URL for querying mix available remote releases.                                                                                                            | `none`             |                  |
+| Variable             | Description                                                                                                                                           | Default            | Aliases/Examples |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `MIX_INSTALL_METHOD` | Installation strategy for mix: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `MIX_VERSION`        | Specific version of mix to install.                                                                                                                   | `latest`           |                  |
+| `MIX_DOWNLOAD_URL`   | Override URL for downloading mix binary or archive artifacts.                                                                                         | `none`             |                  |
+| `MIX_RELEASES_URL`   | Override URL for querying mix available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

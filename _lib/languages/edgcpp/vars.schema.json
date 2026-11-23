@@ -86,15 +86,15 @@
     },
     "EDGCPP_ACTIVE_CODEGEN_BACKEND": {
       "type": "string",
-      "description": "Configuration variable EDGCPP_ACTIVE_CODEGEN_BACKEND for edgcpp."
+      "description": "Resolved active code-generation backend selected by the EDG C++ wrapper (e.g., llvm_backend, gcc_backend, c_backend, cpp_backend, or fe_only)."
     },
     "EDGCPP_BACKEND_MODE": {
       "type": "string",
-      "description": "Configuration variable EDGCPP_BACKEND_MODE for edgcpp."
+      "description": "Requested EDG C++ front-end translation and code-generation backend mode (fe_only, c_backend, cpp_backend, gcc_backend, or llvm_backend)."
     },
     "EDGCPP_BUILD_FROM_GIT": {
       "type": "string",
-      "description": "Configuration variable EDGCPP_BUILD_FROM_GIT for edgcpp."
+      "description": "Flag (0 or 1) forcing EDG C++ front-end and backend components to be cloned and compiled directly from Git sources."
     },
     "EDGCPP_DOWNLOAD_DIR": {
       "type": "string",
@@ -102,11 +102,11 @@
     },
     "EDGCPP_DRIVER_LANG": {
       "type": "string",
-      "description": "Configuration variable EDGCPP_DRIVER_LANG for edgcpp."
+      "description": "Source language mode enforced by the EDG driver wrapper (e.g., c or c++)."
     },
     "EDGCPP_FORCE_LINUX_LLVM_OBJ": {
       "type": "string",
-      "description": "Configuration variable EDGCPP_FORCE_LINUX_LLVM_OBJ for edgcpp."
+      "description": "Flag (0 or 1) forcing direct Linux ELF object emission via the LLVM code-generation backend."
     },
     "EDGCPP_HOME": {
       "type": "string",
@@ -114,11 +114,11 @@
     },
     "EDGCPP_STRICT_BACKEND": {
       "type": "string",
-      "description": "Configuration variable EDGCPP_STRICT_BACKEND for edgcpp."
+      "description": "Flag (0 or 1) disabling automatic fallback to host GCC/Clang when the requested EDG code-generation backend fails."
     },
     "EDGCPP_USE_NATIVE_CODEGEN": {
       "type": "string",
-      "description": "Configuration variable EDGCPP_USE_NATIVE_CODEGEN for edgcpp."
+      "description": "Flag (0 or 1) enabling direct native object code emission rather than intermediate C/C++ source translation."
     },
     "EDGCPP_CHECK_LATEST": {
       "type": "string",

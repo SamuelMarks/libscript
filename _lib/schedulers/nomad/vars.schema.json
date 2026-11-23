@@ -29,7 +29,7 @@
     },
     "NOMAD_ADDR": {
       "type": "string",
-      "description": "Configuration variable NOMAD_ADDR for nomad."
+      "description": "HTTP/HTTPS address of the HashiCorp Nomad API server (e.g., http://127.0.0.1:4646)."
     },
     "NOMAD_HOME": {
       "type": "string",

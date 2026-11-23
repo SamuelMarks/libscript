@@ -1,47 +1,45 @@
-# buck2
+# Buck2 (`_lib/toolchains/buck2/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `buck2` component (part of
-`_toolchains`) within the LibScript ecosystem. Fast, hermetic, multi-language large-scale build
-system from Meta.
+Fast, hermetic, multi-language large-scale build system from Meta.
+
+- **Tier**: `T1` (`_lib/toolchains/buck2/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `buck2`, `build-system`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Buck2**. It is designed to
-be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install buck2
-libscript uninstall buck2
+# Native version management (isolated under ${LIBSCRIPT_HOME}/buck2/<version>)
+./libscript.sh ls-remote buck2
+./libscript.sh install buck2 latest
+./libscript.sh use buck2 latest
+./libscript.sh which buck2
+./_lib/toolchains/buck2/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start buck2
-libscript stop buck2
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote buck2
+.\libscript.cmd install buck2 latest
+.\libscript.cmd use buck2 latest
+.\libscript.cmd which buck2
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker buck2
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install buck2`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/buck2/<version>`
+  (default `~/.libscript/buck2/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `BUCK2_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

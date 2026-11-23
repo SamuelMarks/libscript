@@ -1,5 +1,7 @@
 # nftables
 
+**Tier**: `T2` (`_lib/networking/nftables/`) | **Capabilities**: `sysroot-package`
+
 Netfilter project packet classification framework
 
 ## Usage

@@ -23,65 +23,65 @@ HA), LibScript handles the entire lifecycle through a single, idempotent interfa
 
 ```mermaid
 flowchart TD
-    subgraph T0["0. Universal Version Managers (nvm / rustup / rvm / pyenv replacement)"]
+    subgraph S0["0. Universal Version Managers (T1/T2: nvm / rustup / rvm / pyenv replacement)"]
         direction LR
-        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["360+ Recipes / 547+ Components..."]
+        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["492+ Atomic Recipes (_lib/)..."]
     end
 
-    subgraph T1["1. Native Installers & Container Packages (package-as)"]
+    subgraph S1["1. Native Installers & Container Packages (T3: package-as)"]
         direction LR
         p1[".msi / .exe"] ~~~ p2[".rpm / .deb / .apk"] ~~~ p3[".pkg / .dmg"] ~~~ p4["Dockerfile"] ~~~ p5["Docker Compose"] ~~~ p6["..."]
     end
 
-    subgraph T2["2. Virtual Machine & Disk Images (package-as)"]
+    subgraph S2["2. Virtual Machine & Disk Images (T3: package-as)"]
         direction LR
         v1["qcow2"] ~~~ v2["raw-img"] ~~~ v3["vmdk / vdi"] ~~~ v4["iso / vagrant-box"] ~~~ v5["bsd-img / reactos-distro"] ~~~ v6["..."]
     end
 
-    subgraph T3["3. Kernel, Unikernel & RTOS OS Bakery"]
+    subgraph S3["3. Kernel, Unikernel & RTOS OS Bakery (T2 + T3)"]
         direction LR
         k1["Unikernels (OSv, MirageOS, Unikraft)"] ~~~ k2["Linux Kernel & UKI"] ~~~ k3["FreeBSD, illumos & ReactOS"] ~~~ k4["RTOS (Zephyr & FreeRTOS)"]
     end
 
-    subgraph T4["4. Multicloud & Hardware Accelerator Deployment"]
+    subgraph S4["4. Multicloud & Hardware Accelerator Deployment (T4: infrastructure/)"]
         direction LR
         c1["Google Cloud (GCP)"] ~~~ c2["Amazon Web Services (AWS)"] ~~~ c3["Microsoft Azure"] ~~~ c4["Hetzner / Proxmox / Bare Metal"]
     end
 
-    subgraph T5["5. Multi-Node Cluster Schedulers (Side-by-Side Execution)"]
+    subgraph S5["5. Multi-Node Cluster Substrates & Schedulers (T4 + T5)"]
         direction LR
         s1["Kubernetes (k8s / k0s / k8s-thw)"] ~~~ s2["Apache Mesos & Marathon"] ~~~ s3["HashiCorp Nomad"] ~~~ s4["Slurm / Ray / XPK"]
     end
 
-    subgraph T6["6. Distributed Batch & AI Jobs"]
+    subgraph S6["6. Distributed Batch & AI Jobs (T5: workloads/)"]
         direction LR
         j1["ML Training (TPU / GPU)"] ~~~ j2["Search-Engine Reindexing (Elasticsearch / Meilisearch)"] ~~~ j3["vLLM & JetStream Inference"]
     end
 
-    subgraph T7["7. Stateful Backup & Restore"]
+    subgraph S7["7. Stateful Backup & Restore (Plane A: traits/)"]
         direction LR
         b1["Physical & Tenant Backups"] ~~~ b2["CoW Snapshots (ZFS / Btrfs)"] ~~~ b3["Object Storage Sync (S3 / GCS / Azure / Restic)"] ~~~ b4["Point-in-Time Restore"]
     end
 
-    subgraph T8["8. Application Upgrade & Downgrade"]
+    subgraph S8["8. Application Upgrade & Downgrade (T0 + Plane A)"]
         direction LR
         u1["Stateful Schema & Data Migration"] ~~~ u2["Rolling / Blue-Green / Canary"] ~~~ u3["Atomic Version Rollback / Downgrade"]
     end
 
-    subgraph T9["9. High-Availability (HA) Topologies"]
+    subgraph S9["9. High-Availability (HA) Constellations (T5: workloads/constellations/)"]
         direction LR
         h1["PostgreSQL HA (Patroni / etcd)"] ~~~ h2["Redis & Valkey HA (Sentinel / Cluster)"] ~~~ h3["RabbitMQ HA (Quorum Queues)"] ~~~ h4["Split-Brain Fencing & VIP"]
     end
 
-    T0 ==>|Export Packages| T1
-    T1 ==>|Assemble Disks| T2
-    T2 ==>|Embed & Bake Into| T3
-    T3 ==>|Deploy Images Onto| T4
-    T4 ==>|Run Multi-Node Clusters| T5
-    T5 ==>|Schedule Workloads| T6
-    T5 ==>|Snapshot & Ship| T7
-    T5 ==>|Migrate & Rollback| T8
-    T6 & T7 & T8 ==>|Converge Into| T9
+    S0 ==>|Export Packages| S1
+    S1 ==>|Assemble Disks| S2
+    S2 ==>|Embed & Bake Into| S3
+    S3 ==>|Deploy Images Onto| S4
+    S4 ==>|Run Multi-Node Clusters| S5
+    S5 ==>|Schedule Workloads| S6
+    S5 ==>|Snapshot & Ship| S7
+    S5 ==>|Migrate & Rollback| S8
+    S6 & S7 & S8 ==>|Converge Into| S9
 ```
 
 ---
@@ -266,8 +266,8 @@ native packages, virtual disk images, and custom kernels or unikernels from the 
 
 ```mermaid
 flowchart TD
-    Stack["libscript.json / os-config.json"] --> Solver["resolve_stack.jq<br/>(Tarjan SCC Solver)"]
-    Solver --> VFS["Isolated VFS Sandbox<br/>(mount_target_vfs.sh)"]
+    Stack["libscript.json / os-config.json"] --> Solver["engine/solver/resolve_stack.jq<br/>(Tarjan SCC Solver)"]
+    Solver --> VFS["Isolated VFS Sandbox<br/>(synthesis/vfs/sysroot/mount_target_vfs.sh)"]
 
     VFS --> Stage1["1. Native Installers & Containers<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, Dockerfile, Compose)"]
     VFS --> Stage3["3. Kernel, Unikernel & RTOS Bakery<br/>(OSv, MirageOS, Linux vmlinuz+UKI, FreeBSD, illumos, ReactOS)"]
@@ -385,15 +385,15 @@ Cloud**, **Proxmox VE**, and local hypervisors.
 ```sh
 # Deploy onto Google Cloud (GCP)
 ./libscript.sh provision gcp prod-cluster vpc-main us-central1-a ./ ~/app
-./libscript.sh cloud gcp firewall create allow-ingress --network vpc-main --allow tcp:80,tcp:443
+./libscript.sh infrastructure core gcp firewall create allow-ingress --network vpc-main --allow tcp:80,tcp:443
 
 # Deploy onto Amazon Web Services (AWS)
 ./libscript.sh provision aws prod-cluster vpc-main us-east-1 ./ ~/app
-./libscript.sh cloud aws network create vpc-main
+./libscript.sh infrastructure core aws network create vpc-main
 
 # Deploy onto Microsoft Azure
 ./libscript.sh provision azure prod-cluster rg-east eastus ./ ~/app
-./libscript.sh cloud azure node deploy worker-node-01 rg-east ./src ~/app
+./libscript.sh infrastructure core azure node deploy worker-node-01 rg-east ./src ~/app
 
 # Git-driven deployment, Marketplace offer publishing & multi-app remote host deployment
 ./libscript.sh deploy ./
@@ -661,9 +661,9 @@ feature variants in a single declarative manifest governed by
 }
 ```
 
-The underlying constraint solver (`resolve_stack.jq`) resolves dependencies across tiers (`deps` /
-`dependencies`) and uses Tarjan's Strongly Connected Components (SCC) algorithm to identify and
-break circular build cycles automatically.
+The underlying constraint solver (`engine/solver/resolve_stack.jq`) resolves dependencies across
+tiers (`deps` / `dependencies`) and uses Tarjan's Strongly Connected Components (SCC) algorithm to
+identify and break circular build cycles automatically.
 
 ---
 
@@ -679,15 +679,16 @@ LibScript is built for mission-critical, enterprise, and air-gapped environments
 4. **Universal Idempotency**: All operations check state stamps (`.built`, `.installed`,
    `.configured`) and pass 2x consecutive execution without mutating state.
 5. **Air-Gapped Modality**: Full offline capability via ahead-of-time cache hydration
-   (`hydrate_offline_cache.*`) and checksum verification (`offline_bundle.json`).
+   (`synthesis/repogen/hydrate_offline_cache.*`) and checksum verification (`offline_bundle.json`).
 6. **Git Safety Invariant**: Automated test suites and CI pipelines are strictly prohibited from
    invoking `git push`.
 
 Verify all standards locally using the built-in audit harnesses:
 
 ```sh
-# Run static engineering standards, POSIX compliance, version manager contract, and 100% doc coverage audits
+# Run static engineering standards, T0-T5 DAG boundaries, POSIX compliance, version manager contract, and 100% doc coverage audits
 ./devtools/audit/audit_standards.sh --all
+./devtools/audit/audit_tiers.sh --all
 ./devtools/audit/doc_coverage.sh --strict
 ./devtools/audit/audit_version_manager.sh
 ./devtools/audit/audit_posix.sh --all
@@ -748,10 +749,9 @@ cd libscript
   online/offline variants, and automated GUI screenshot verification.
 - [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md): Native GUI Live Installer and multiboot ISO
   architecture.
-- [WINDOWS.md](WINDOWS.md), [WINDOWS_MSI.md](WINDOWS_MSI.md) &
-  [TODO_PORT_FOR_WIN.md](TODO_PORT_FOR_WIN.md): Native Windows Batch/PowerShell/MS-DOS (`dos32`)
-  architecture, modular Windows Installer (`.msi`) generation, and zero-emulation binary porting
-  inventory.
+- [WINDOWS.md](WINDOWS.md) & [WINDOWS_MSI.md](WINDOWS_MSI.md): Native Windows
+  Batch/PowerShell/MS-DOS (`dos32`) architecture, modular Windows Installer (`.msi`) generation, and
+  zero-emulation binary porting architecture (`engine/common/win32/` & `engine/common/dos32/`).
 - [PAAS.md](PAAS.md): Universal PaaS orchestration, reverse proxy (`netctl`), and daemon
   supervision.
 - [DEPENDENCIES.md](DEPENDENCIES.md): Dependency management and Tarjan SCC solver mechanics.

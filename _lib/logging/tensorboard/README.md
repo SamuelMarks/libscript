@@ -1,39 +1,48 @@
-# TensorBoard Component
+# TensorBoard (`_lib/logging/tensorboard/`)
 
 ## Overview
 
-This component manages the installation and execution of TensorBoard within the libscript
-ecolibscript_native. It provides an isolated virtual environment to run the metric visualization
-server.
+TensorBoard is a suite of web applications for inspecting and understanding your TensorFlow runs and
+graphs.
+
+- **Tier**: `T1` (`_lib/logging/tensorboard/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `logging`, `tensorboard`
+- **Target OS Whitelist (`manifest.json`)**: `linux`, `darwin`
+- **Target OS Exclusions (`manifest.json`)**: `windows`, `freebsd`, `sunos`
 
 ## Usage
 
-Refer to the component's setup and cli scripts for specific operations.
-
-```bash
-# Start TensorBoard server tracking a specific directory
-./_lib/logging/tensorboard/cli.sh start /tmp/my_ml_logs 6006
+```sh
+# Install and manage the tensorboard service daemon
+./libscript.sh install tensorboard latest
+./libscript.sh start tensorboard
+./libscript.sh status tensorboard
+./libscript.sh logs tensorboard
+./libscript.sh stop tensorboard
 ```
 
-## Environment Variables
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install tensorboard latest
+.\libscript.cmd start tensorboard
+.\libscript.cmd status tensorboard
+.\libscript.cmd stop tensorboard
+```
 
-This component honors standard `libscript` variables. Refer to `_common/base_vars.schema.json`.
+## Installation & Isolation
 
-## Configuration
-
-| Variable                     | Description                                                                                                                                                                 | Default            | Required |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------- |
-| `TENSORBOARD_INSTALL_METHOD` | How to install TENSORBOARD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |
-
-Libscript manages tensorboard versions natively by installing them into isolated directories under
-`LIBSCRIPT_HOME/tensorboard/<version>`.
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/tensorboard/<version>` (default `~/.libscript/tensorboard/<version>`) and
+  synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `TENSORBOARD_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
+
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running setup.
 
 <!-- BEGIN_VARS -->
 

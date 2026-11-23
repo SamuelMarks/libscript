@@ -6,22 +6,22 @@
   "type": "object",
   "properties": {
     "MISE_INSTALL_METHOD": {
-      "description": "How to install MISE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for mise: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "default": "libscript_native"
     },
     "MISE_VERSION": {
-      "description": "Specific version of mise to install.",
+      "description": "Installation strategy for mise: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "default": "latest"
     },
     "MISE_DOWNLOAD_URL": {
       "type": "string",
-      "description": "Override URL for downloading mise binary or archive artifacts."
+      "description": "Installation strategy for mise: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager."
     },
     "MISE_RELEASES_URL": {
       "type": "string",
-      "description": "Override URL for querying mise available remote releases."
+      "description": "Installation strategy for mise: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager."
     }
   }
 }

@@ -1,47 +1,46 @@
-# cilium
+# Cilium CLI (`_lib/schedulers/cilium/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `cilium` component (part
-of `_orchestration`) within the LibScript ecosystem. Cilium CLI (cilium) for installing, managing,
-and troubleshooting eBPF-powered Kubernetes networking, observability, and security.
+Cilium CLI (cilium) for installing, managing, and troubleshooting eBPF-powered Kubernetes
+networking, observability, and security.
+
+- **Tier**: `T1` (`_lib/schedulers/cilium/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `cilium`, `cilium-cli`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Cilium CLI**. It is
-designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install cilium
-libscript uninstall cilium
+# Native version management (isolated under ${LIBSCRIPT_HOME}/cilium/<version>)
+./libscript.sh ls-remote cilium
+./libscript.sh install cilium latest
+./libscript.sh use cilium latest
+./libscript.sh which cilium
+./_lib/schedulers/cilium/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start cilium
-libscript stop cilium
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote cilium
+.\libscript.cmd install cilium latest
+.\libscript.cmd use cilium latest
+.\libscript.cmd which cilium
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker cilium
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install cilium`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/cilium/<version>`
+  (default `~/.libscript/cilium/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `CILIUM_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

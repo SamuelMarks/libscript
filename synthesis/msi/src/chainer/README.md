@@ -1,21 +1,9 @@
-# MSI Chainer Custom Action
+# Embedded MSI Chainer Engine (`synthesis/msi/src/chainer/`)
 
-Custom action DLL for nested package discovery and transaction chaining in Windows Installer.
+## Overview
 
-## Purpose & Current State
-
-This component compiles into a lightweight C++ custom action DLL (`chainer.dll`) that coordinates
-multi-package installations inside `msiexec.exe`. It handles Windows service detection, child
-package extraction, property pass-through, and atomic transaction execution across bundled
-sub-installers.
-
-## API Functions
-
-- `LibScriptChainer(MSIHANDLE hInstall)`: Main entrypoint orchestrating sub-package chain execution
-  and transaction boundaries.
-- `LibScriptDetectServices(MSIHANDLE hInstall)`: Queries active installations and service endpoints
-  prior to executing sub-package setups.
-- `LibScriptExtractChildPackages(MSIHANDLE hInstall)`: Extracts embedded binary streams to staging
-  directories.
-- `LibScriptExecuteTransaction(MSIHANDLE hInstall)`: Sequentially runs MSI installations within an
-  atomic transaction.
+`synthesis/msi/src/chainer/` contains the native Windows C/Rust embedded chainer invoked during WiX
+/ `msi-rs` Immediate, Deferred, and Rollback CustomAction sequences. It translates Windows Installer
+session properties (`INSTALL_*`, `PROP_*`, `USER_DB_*`) into deterministic `libscript.cmd` component
+installations, tracks transactional progress milestones, and triggers clean rollback handlers if any
+downstream service fails initialization.

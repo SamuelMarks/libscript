@@ -1,5 +1,8 @@
 # libxkbcommon
 
+**Tier**: `T2` (`_lib/display-servers/libxkbcommon/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 Keyboard description parser and keymap library
 
 ## Usage

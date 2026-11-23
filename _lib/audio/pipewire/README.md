@@ -1,5 +1,7 @@
 # PipeWire Audio
 
+**Tier**: `T2` (`_lib/audio/pipewire/`) | **Capabilities**: `sysroot-package`
+
 Modern multimedia graph processing server
 
 ## Usage

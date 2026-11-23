@@ -1,5 +1,7 @@
 # Kmod
 
+**Tier**: `T2` (`_lib/base-system/kmod/`) | **Capabilities**: `sysroot-package`
+
 Linux kernel module loader and management library
 
 ## Usage

@@ -1,25 +1,14 @@
-# Git Hooks (`.githooks`)
+# Repository Git Hooks (`.githooks/`)
 
 ## Overview
 
-This directory provides custom Git hooks used to maintain code quality, formatting, spelling, and
-standards across the repository before commits are recorded.
+`.githooks/` provides cross-platform (`pre-commit`, `pre-commit.sh`, `pre-commit.cmd`) Git
+pre-commit hooks enforcing spellcheck (`cspell`), engineering standards (`audit_standards`),
+`T0`–`T5` tier boundaries (`audit_tiers`), 100% documentation coverage (`doc_coverage`),
+schema-driven Markdown regeneration (`generate_markdown_docs`), and `prettier` formatting before
+commits are recorded.
 
-## Included Hooks
-
-- `pre-commit` (`pre-commit.sh`, `pre-commit.cmd`): Validates modified files prior to commit. It
-  runs Prettier formatting, cspell checks, dos2unix/unix2dos normalization, LibScript engineering
-  standards & POSIX audits, automatic `shellcheck` bootstrapping via `_lib/toolchains/shellcheck`
-  (installing `shellcheck` idempotently into `${LIBSCRIPT_HOME}/shellcheck` when nonexistent on
-  `PATH`) followed by POSIX `shellcheck -s sh` static analysis, automatic `wincheck` bootstrapping
-  via `_lib/toolchains/win-cmd-rs` (installing `wincheck` and `wincmd` idempotently into
-  `${LIBSCRIPT_HOME}/win-cmd-rs` when nonexistent on `PATH`) followed by Windows Batch `.cmd`/`.bat`
-  static analysis, component README regeneration, and updates the `% doc coverage` shield in
-  `README.md`.
-
-## Usage
-
-Configure Git to use this hooks directory locally:
+## Installation
 
 ```sh
 git config core.hooksPath .githooks

@@ -1,47 +1,45 @@
-# tcl
+# Tcl/Tk (`_lib/languages/tcl/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `tcl` component (part of
-`_languages`) within the LibScript ecosystem. Tool Command Language (tclsh) dynamic scripting
-interpreter and embeddable runtime.
+Tool Command Language (tclsh) dynamic scripting interpreter and embeddable runtime.
+
+- **Tier**: `T1` (`_lib/languages/tcl/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `tcl`, `tclsh`, `tk`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Tcl/Tk**. It is designed to
-be executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install tcl
-libscript uninstall tcl
+# Native version management (isolated under ${LIBSCRIPT_HOME}/tcl/<version>)
+./libscript.sh ls-remote tcl
+./libscript.sh install tcl latest
+./libscript.sh use tcl latest
+./libscript.sh which tcl
+./_lib/languages/tcl/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start tcl
-libscript stop tcl
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote tcl
+.\libscript.cmd install tcl latest
+.\libscript.cmd use tcl latest
+.\libscript.cmd which tcl
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker tcl
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install tcl`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/tcl/<version>`
+  (default `~/.libscript/tcl/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `TCL_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,47 +1,41 @@
-# yum
+# YUM (`_lib/package-managers/yum/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `yum` component (part of
-`_package-managers`) within the LibScript ecosystem. Legacy RHEL/CentOS Yellowdog Updater Modified
-(yum) RPM package manager wrapper.
+Legacy RHEL/CentOS Yellowdog Updater Modified (yum) RPM package manager wrapper.
+
+- **Tier**: `T1` (`_lib/package-managers/yum/`)
+- **Capabilities**: `userland-package`
+- **Target OS Whitelist (`manifest.json`)**: `rhel`, `fedora`, `centos`, `rocky`, `almalinux`,
+  `linux`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **YUM**. It is designed to be
-executed via the global `libscript.sh` router or directly via `cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install yum
-libscript uninstall yum
+# Bootstrap or invoke the yum package manager adapter
+./libscript.sh install yum latest
+./_lib/package-managers/yum/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start yum
-libscript stop yum
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd install yum latest
+.\_lib\package-managers\yum\cli.cmd test
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker yum
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install yum`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/yum/<version>`
+  (default `~/.libscript/yum/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `YUM_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -55,18 +49,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

@@ -1,47 +1,46 @@
-# Certbot (Let's Encrypt ACME Client)
+# Certbot (Let's Encrypt ACME Client) (`_lib/security/certbot/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `certbot` component within
-the `_lib/security` category of LibScript. Certbot is the Electronic Frontier Foundation's ACME
-client for acquiring and managing Let's Encrypt TLS certificates with persistent read-only storage
-on `/mnt/data/certs` and strict expiry-gated renewal.
+Electronic Frontier Foundation ACME client for automated Let's Encrypt TLS certificate acquisition
+and expiry-gated persistence.
+
+- **Tier**: `T1` (`_lib/security/certbot/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `certbot`, `acme-client`, `letsencrypt`
 
 ## Usage
 
-You can manage the lifecycle of `certbot` using the global `libscript` orchestrator or the local
-component CLI.
-
-**Unix (Linux/macOS/BSD):**
-
 ```sh
-./libscript.sh install certbot
-./_lib/security/certbot/cli.sh install
-
-./libscript.sh status certbot
-./_lib/security/certbot/cli.sh status
-
-./libscript.sh uninstall certbot
-./_lib/security/certbot/cli.sh uninstall
+# Native version management (isolated under ${LIBSCRIPT_HOME}/certbot/<version>)
+./libscript.sh ls-remote certbot
+./libscript.sh install certbot latest
+./libscript.sh use certbot latest
+./libscript.sh which certbot
+./_lib/security/certbot/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-libscript.cmd install certbot
-_lib\security\certbot\cli.cmd install
-
-libscript.cmd status certbot
-_lib\security\certbot\cli.cmd status
-
-libscript.cmd uninstall certbot
-_lib\security\certbot\cli.cmd uninstall
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote certbot
+.\libscript.cmd install certbot latest
+.\libscript.cmd use certbot latest
+.\libscript.cmd which certbot
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/certbot/<version>`
+  (default `~/.libscript/certbot/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `CERTBOT_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -64,15 +63,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `cli.sh` / `cli.cmd`: Primary CLI router delegating to `engine/common/component_core.*`.
-- `setup.sh` / `setup.cmd`: Main installation entrypoint delegating to `engine/common/setup_base.*`.
-- `setup_generic.sh` / `setup_generic.cmd`: Installs Certbot via `libscript_depends 'certbot'` and
-  disables automatic background renewal timers when `LETSENCRYPT_DISABLE_AUTO_RENEW=1`.
-- `env.sh` / `env.cmd`: Exports `CERT_STORE_DIR` and `LETSENCRYPT_RENEW_BEFORE_SECONDS`.
-- `test.sh` / `test.cmd`: Smoke tests verifying Certbot CLI routing and availability.
 
 ## Platform Support
 

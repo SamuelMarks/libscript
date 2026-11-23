@@ -1,5 +1,7 @@
 # Winget
 
+**Tier**: `T1` (`_lib/package-managers/winget/`) | **Capabilities**: `userland-package`
+
 ## Usage
 
 This document describes **Winget**, the official Windows Package Manager CLI that allows users to
@@ -21,11 +23,7 @@ the local CLI.
 
 ./cli.sh install winget
 
-./libscript.sh start winget
-./cli.sh start winget
 
-./libscript.sh stop winget
-./cli.sh stop winget
 
 ./libscript.sh package-as docker winget
 ./cli.sh package-as docker winget
@@ -44,11 +42,7 @@ libscript.cmd install winget
 cli.cmd install winget
 
 :: Start and Stop
-libscript.cmd start winget
-cli.cmd start winget
 
-libscript.cmd stop winget
-cli.cmd stop winget
 
 :: Package (e.g., as MSI installer)
 libscript.cmd package-as msi winget
@@ -66,12 +60,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                                                                                                                                                            | Default            | Aliases/Examples |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `WINGET_INSTALL_METHOD` | How to install WINGET. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `WINGET_VERSION`        | Specific version of winget to install.                                                                                                                                 | `latest`           |                  |
-| `WINGET_DOWNLOAD_URL`   | Override URL for downloading winget binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `WINGET_RELEASES_URL`   | Override URL for querying winget available remote releases.                                                                                                            | `none`             |                  |
+| Variable                | Description                                                                                                                                              | Default            | Aliases/Examples |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `WINGET_INSTALL_METHOD` | Installation strategy for winget: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `WINGET_VERSION`        | Specific version of winget to install.                                                                                                                   | `latest`           |                  |
+| `WINGET_DOWNLOAD_URL`   | Override URL for downloading winget binary or archive artifacts.                                                                                         | `none`             |                  |
+| `WINGET_RELEASES_URL`   | Override URL for querying winget available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

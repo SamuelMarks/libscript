@@ -1,5 +1,7 @@
 # NVIDIA Graphics Driver
 
+**Tier**: `T2` (`_lib/graphics/nvidia/`) | **Capabilities**: `sysroot-package`, `sysroot-library`
+
 Proprietary NVIDIA display driver and libraries
 
 ## Usage

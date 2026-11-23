@@ -1,48 +1,45 @@
-# cdd-c
+# cdd-c C89 CST Transformer (`_lib/toolchains/cdd-c/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `cdd-c` component (part of
-`_toolchains`) within the LibScript ecosystem. Lossless C89 Concrete Syntax Tree (CST) parser and
-4-pass lowering transformer (cdd-c-transform).
+Lossless C89 Concrete Syntax Tree (CST) parser and 4-pass lowering transformer (cdd-c-transform).
+
+- **Tier**: `T1` (`_lib/toolchains/cdd-c/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `cdd-c`, `cdd-c-transform`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **cdd-c C89 CST
-Transformer**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install cdd-c
-libscript uninstall cdd-c
+# Native version management (isolated under ${LIBSCRIPT_HOME}/cdd-c/<version>)
+./libscript.sh ls-remote cdd-c
+./libscript.sh install cdd-c latest
+./libscript.sh use cdd-c latest
+./libscript.sh which cdd-c
+./_lib/toolchains/cdd-c/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start cdd-c
-libscript stop cdd-c
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote cdd-c
+.\libscript.cmd install cdd-c latest
+.\libscript.cmd use cdd-c latest
+.\libscript.cmd which cdd-c
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker cdd-c
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install cdd-c`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/cdd-c/<version>`
+  (default `~/.libscript/cdd-c/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `CDD_C_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -57,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

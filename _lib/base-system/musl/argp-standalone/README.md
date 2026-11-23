@@ -5,8 +5,8 @@ Hierarchical argument parsing library for musl libc.
 ## Purpose & Current State
 
 This document provides context and technical details for the **Argp Standalone** component (part of
-the `base-system` module) within the LibScript ecosystem. It provides GNU-compatible argp interface
-routines for systems linking against musl libc.
+`_lib/base-system/musl/` (`T2` musl sysroot sub-recipe)) within the LibScript ecosystem. It provides
+GNU-compatible argp interface routines for systems linking against musl libc.
 
 ## Usage
 

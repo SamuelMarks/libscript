@@ -1,76 +1,45 @@
-# Git Servers
+# Git Servers Shared Utilities (`_lib/git-servers/utils/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `_git` component (part of
-`_lib`) within the LibScript ecolibscript_native. This component is responsible for installing,
-managing, and configuring **Git**, the widely used distributed version control libscript_native. It
-provides the necessary scripts to provision Git across supported operating libscript_natives
-efficiently.
+Shared functions and utilities for Git Server components (Gitea, GitLab).
+
+- **Tier**: `T1` (`_lib/git-servers/utils/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `git-servers-utils`
 
 ## Usage
 
-This directory contains the scripts for managing Git. It is designed to work both as a local version
-manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for isolated project-level Git installations,
-and can also be seamlessly invoked from the global version manager `libscript`.
-
-Additionally, this component can be utilized by LibScript as a foundational dependency to build and
-provision bigger stacks, such as WordPress, Open edX, Nextcloud, and other complex software
-environments.
-
-You can install, start, stop, package, and uninstall git-servers using the global `libscript`
-command or the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install git-servers
-
-./cli.sh install git-servers
-
-./libscript.sh start git-servers
-./cli.sh start git-servers
-
-./libscript.sh stop git-servers
-./cli.sh stop git-servers
-
-./libscript.sh package-as docker git-servers
-./cli.sh package-as docker git-servers
-
-./libscript.sh uninstall git-servers
-./cli.sh uninstall git-servers
+# Install and manage the utils service daemon
+./libscript.sh install utils latest
+./libscript.sh start utils
+./libscript.sh status utils
+./libscript.sh logs utils
+./libscript.sh stop utils
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install git-servers
-
-:: Local CLI
-cli.cmd install git-servers
-
-:: Start and Stop
-libscript.cmd start git-servers
-cli.cmd start git-servers
-
-libscript.cmd stop git-servers
-cli.cmd stop git-servers
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi git-servers
-cli.cmd package-as msi git-servers
-
-:: Uninstall
-libscript.cmd uninstall git-servers
-cli.cmd uninstall git-servers
+:: Windows Batch equivalent
+.\libscript.cmd install utils latest
+.\libscript.cmd start utils
+.\libscript.cmd status utils
+.\libscript.cmd stop utils
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/utils/<version>`
+  (default `~/.libscript/utils/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `UTILS_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -87,14 +56,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
 
 ## Platform Support
 

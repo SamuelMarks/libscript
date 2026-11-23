@@ -1,107 +1,67 @@
-# Python Server
+# Python App Server (`_lib/app-servers/python-server/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `python` server component
-within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework
-designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+Generic Python application server component (WSGI/ASGI).
+
+- **Tier**: `T1` (`_lib/app-servers/python-server/`)
+- **Capabilities**: `userland-package`, `service-daemon`
+- **Provides Virtual Capabilities**: `app-server`, `python`, `wsgi`, `asgi`
 
 ## Usage
 
-This directory contains the scripts for managing the Python server component. It works both as a
-local version manager (similar to rvm, nvm, pyenv, uv) for precise Python version control, and can
-be invoked seamlessly from the global version manager `libscript`.
-
-Furthermore, this component can be used by libscript to build bigger stacks (like WordPress, Open
-edX, nextcloud, etc.), serving as a robust foundation for multi-tier architectures.
-
-You can install, start, stop, package, and uninstall python-server using the global `libscript`
-command or the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install python
-
-./cli.sh install python
-
-./libscript.sh start python
-./cli.sh start python
-
-./libscript.sh stop python
-./cli.sh stop python
-
-./libscript.sh package-as docker python
-./cli.sh package-as docker python
-
-./libscript.sh uninstall python
-./cli.sh uninstall python
+# Install and manage the python-server service daemon
+./libscript.sh install python-server latest
+./libscript.sh start python-server
+./libscript.sh status python-server
+./libscript.sh logs python-server
+./libscript.sh stop python-server
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install python
-
-:: Local CLI
-cli.cmd install python
-
-:: Start and Stop
-libscript.cmd start python
-cli.cmd start python
-
-libscript.cmd stop python
-cli.cmd stop python
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi python
-cli.cmd package-as msi python
-
-:: Uninstall
-libscript.cmd uninstall python
-cli.cmd uninstall python
+:: Windows Batch equivalent
+.\libscript.cmd install python-server latest
+.\libscript.cmd start python-server
+.\libscript.cmd status python-server
+.\libscript.cmd stop python-server
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under
+  `${LIBSCRIPT_HOME}/python-server/<version>` (default `~/.libscript/python-server/<version>`) and
+  synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `PYTHON_SERVER_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
-| Variable                       | Description                                                                                                                                                                   | Default            | Aliases/Examples |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `PYTHON_SERVER_DEST`           | Destination (working directory)                                                                                                                                               | `none`             |                  |
-| `PYTHON_SERVER_VARS`           | Key/value in JSON format (as an escaped string)                                                                                                                               | `none`             |                  |
-| `PYTHON_SERVER_VENV`           | Path to a Python virtualenv                                                                                                                                                   | `none`             |                  |
-| `LIBSCRIPT_LISTEN_PORT`        | Global port to listen on                                                                                                                                                      | `none`             |                  |
-| `LIBSCRIPT_LISTEN_ADDRESS`     | Global address to listen on                                                                                                                                                   | `none`             |                  |
-| `LIBSCRIPT_LISTEN_SOCKET`      | Global unix socket to listen on                                                                                                                                               | `none`             |                  |
-| `PYTHON_SERVER_LISTEN_PORT`    | Port for PYTHON to listen on                                                                                                                                                  | `none`             |                  |
-| `PYTHON_SERVER_LISTEN_ADDRESS` | Address for PYTHON to listen on                                                                                                                                               | `none`             |                  |
-| `PYTHON_SERVER_LISTEN_SOCKET`  | Unix socket for PYTHON to listen on                                                                                                                                           | `none`             |                  |
-| `PYTHON_SERVER_INSTALL_METHOD` | How to install PYTHON SERVER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `PYTHON_SERVER_DOWNLOAD_URL`   | Override URL for downloading python-server binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `PYTHON_SERVER_RELEASES_URL`   | Override URL for querying python-server available remote releases.                                                                                                            | `none`             |                  |
-| `PYTHON_SERVER_VERSION`        | Specific version of python-server to install (e.g., latest, lts, or exact version).                                                                                           | `none`             |                  |
+| Variable                       | Description                                                                                                                                                     | Default            | Aliases/Examples |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `PYTHON_SERVER_DEST`           | Destination (working directory)                                                                                                                                 | `none`             |                  |
+| `PYTHON_SERVER_VARS`           | Key/value in JSON format (as an escaped string)                                                                                                                 | `none`             |                  |
+| `PYTHON_SERVER_VENV`           | Path to a Python virtualenv                                                                                                                                     | `none`             |                  |
+| `LIBSCRIPT_LISTEN_PORT`        | Global port to listen on                                                                                                                                        | `none`             |                  |
+| `LIBSCRIPT_LISTEN_ADDRESS`     | Global address to listen on                                                                                                                                     | `none`             |                  |
+| `LIBSCRIPT_LISTEN_SOCKET`      | Global unix socket to listen on                                                                                                                                 | `none`             |                  |
+| `PYTHON_SERVER_LISTEN_PORT`    | Port for PYTHON to listen on                                                                                                                                    | `none`             |                  |
+| `PYTHON_SERVER_LISTEN_ADDRESS` | Address for PYTHON to listen on                                                                                                                                 | `none`             |                  |
+| `PYTHON_SERVER_LISTEN_SOCKET`  | Unix socket for PYTHON to listen on                                                                                                                             | `none`             |                  |
+| `PYTHON_SERVER_INSTALL_METHOD` | Installation strategy for python-server: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `PYTHON_SERVER_DOWNLOAD_URL`   | Override URL for downloading python-server binary or archive artifacts.                                                                                         | `none`             |                  |
+| `PYTHON_SERVER_RELEASES_URL`   | Override URL for querying python-server available remote releases.                                                                                              | `none`             |                  |
+| `PYTHON_SERVER_VERSION`        | Specific version of python-server to install (e.g., latest, lts, or exact version).                                                                             | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

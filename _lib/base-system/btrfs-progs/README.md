@@ -1,5 +1,7 @@
 # Btrfs Progs
 
+**Tier**: `T2` (`_lib/base-system/btrfs-progs/`) | **Capabilities**: `sysroot-package`
+
 Btrfs filesystem creation and management tools
 
 ## Usage

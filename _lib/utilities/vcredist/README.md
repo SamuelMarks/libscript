@@ -1,5 +1,7 @@
 # Microsoft Visual C++ Redistributable (`vcredist`)
 
+**Tier**: `T1` (`_lib/utilities/vcredist/`) | **Capabilities**: `userland-package`
+
 Installs the Microsoft Visual C++ Redistributable (2015–2022) runtime libraries (`vcruntime140.dll`,
 `msvcp140.dll`).
 

@@ -1,6 +1,8 @@
 # Brew
 
-Homebrew is a free and open-source software package management libscript_native that simplifies the
+**Tier**: `T1` (`_lib/package-managers/brew/`) | **Capabilities**: `userland-package`
+
+Homebrew is a free and open-source software package management system that simplifies the
 installation of software on macOS and Linux. It builds packages from source and provides
 pre-compiled binaries, making it easy to manage dependencies and development tools.
 
@@ -29,12 +31,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default            | Aliases/Examples |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `BREW_INSTALL_METHOD` | How to install BREW. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `BREW_VERSION`        | Specific version of brew to install.                                                                                                                                 | `latest`           |                  |
-| `BREW_DOWNLOAD_URL`   | Override URL for downloading brew binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `BREW_RELEASES_URL`   | Override URL for querying brew available remote releases.                                                                                                            | `none`             |                  |
+| Variable              | Description                                                                                                                                            | Default            | Aliases/Examples |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ---------------- |
+| `BREW_INSTALL_METHOD` | Installation strategy for brew: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `BREW_VERSION`        | Specific version of brew to install.                                                                                                                   | `latest`           |                  |
+| `BREW_DOWNLOAD_URL`   | Override URL for downloading brew binary or archive artifacts.                                                                                         | `none`             |                  |
+| `BREW_RELEASES_URL`   | Override URL for querying brew available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

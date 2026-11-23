@@ -6,146 +6,92 @@ All notable changes to the LibScript framework are documented here.
 
 ### Added
 
+- **Six-Tier (`T0`–`T5`) & Orthogonal Planes (`Plane A`, `Plane B`) Clean-Break Architecture**:
+  - Replaced fractional tiers (`Tier 1.5`, `Tier 3.5`) and legacy cross-layer paths with 6 strictly
+    ordered compositional tiers (`T0` `engine/`, `T1` & `T2` atomic `_lib/`, `T3` `synthesis/`, `T4`
+    `infrastructure/`, `T5` `workloads/`) and 2 orthogonal planes (`Plane A` `traits/`, `Plane B`
+    `experiments/` & `libscript-rest-api/`), enforced statically by
+    `devtools/audit/audit_tiers.{sh,cmd}`.
+  - Split `T4` cluster substrates
+    (`infrastructure/clusters/{k0s-ha,gke-tpu-cluster,k8s-marathon-paas,mesos-marathon-ha,kubernetes-thw}`)
+    from `T5` stateful service constellations
+    (`workloads/constellations/{postgres-ha,redis-cluster,valkey-cluster,minio-distributed,openedx-ha,openedx-unikernel-pod,iot-mqtt-edge-pod}`),
+    backed by `T0` `engine/consensus/{lock,fence}.{sh,cmd}`.
+  - Unified all OS profiles, VFS sysroot scripts, disk formatters, distro builders, and `package-as`
+    drivers under `T3` `synthesis/`, and decomposed `base_vars.schema.json` into domain schema packs
+    (`schemas/vars/*.schema.json`).
 - **Native Windows (PE) & MS-DOS (`dos32`) Component-Level Package Managers (`_lib/utilities/`,
   `depends`)**:
   - Target-aware `msdos` (`IS_MSDOS=1`, `PKG_MGR=libscript`) detection in
-    `_lib/_common/os_info.{sh,cmd}` and `_lib/_common/pkg_map.tsv` routing across 6 standalone
+    `engine/common/os_info.{sh,cmd}` and `engine/common/pkg_map.tsv` routing across 6 standalone
     utilities (`jq`, `gawk`, `busybox`, `toybox`, `dash`, and `freebsd-usr-bin`) plus
     `_lib/toolchains/openwatcom/`, staging `dos32` + `DOS32A.EXE` binaries on MS-DOS and native PE
     (`X64`/`X86`/`ARM64`) binaries on Windows.
   - Pre-configured Vagrant environments for `vagrant/{freedos-1.4,msdos-1.25,msdos-2.0,msdos-4.0}/`
     and hermetic verification harness `tests/test_win_dos_component_pm.{sh,cmd}`.
-- **Declarative `installer-e2e` Experiment Substrate & `experiments/openedx/`**:
+- **Declarative `installer-e2e` Experiment Substrate & `experiments/openedx/` (`Plane B`)**:
   - Zero-code cross-OS installer and guest-UI evaluation runner
-    (`_lib/_common/experiment/pkg_ui_runner.{sh,cmd}`, `schemas/installer-experiment.schema.json`),
+    (`experiments/_common/pkg_ui_runner.{sh,cmd}`,
+    `experiments/schemas/installer-experiment.schema.json`),
     `./libscript.sh experiment scaffold <app> --template=installer-e2e`, and built-in
     `experiments/openedx/` suite.
-- **Built-in ReactOS Modular Distribution Synthesis (`_lib/reactos/`, `rapps`, `rosbe`)**:
-  - Declarative `execution-plan.reactos.schema.json` and 5 curated `i686` / `x86_64` profiles under
-    `profiles/reactos/`, supporting hybrid upstream ISO repacking (`unattend.inf` + `GuiRunOnce`
-    `firstboot.cmd`) and full RosBE CMake/Ninja source compilation (`modules/optional/`).
-  - Standalone Tier 1 `_lib/package-managers/rapps/` (guest `rapps.exe` wrapper + host `rapps-db`
-    INI parser & offline prefetcher) and `_lib/toolchains/rosbe/` (`i686-w64-mingw32` and
+- **Built-in ReactOS Modular Distribution Synthesis (`synthesis/distro/reactos/`, `rapps`,
+  `rosbe`)**:
+  - Declarative `synthesis/schemas/execution-plan.reactos.schema.json` and 5 curated `i686` /
+    `x86_64` profiles under `synthesis/profiles/reactos/`, supporting hybrid upstream ISO repacking
+    (`unattend.inf` + `GuiRunOnce` `firstboot.cmd`) and full RosBE CMake/Ninja source compilation
+    (`modules/optional/`).
+  - Standalone `T1` `_lib/package-managers/rapps/` (guest `rapps.exe` wrapper + host `rapps-db` INI
+    parser & offline prefetcher) and `_lib/toolchains/rosbe/` (`i686-w64-mingw32` and
     `x86_64-w64-mingw32` cross-toolchains), plus PowerShell-free `.cmd` fallbacks in
-    `_lib/_common/`.
+    `engine/common/`.
   - Strict PE header architecture enforcement (`0x014c` vs. `0x8664`, no WoW64 assumptions),
     multi-format exporters (`iso`, `raw`, `qcow2`, `vhd`, `vmdk`, `box`), `--target reactos` live
     installer media, GRUB2 -> FreeLoader multiboot co-installation, and 5-platform verification
     matrix (`tests/run_reactos_distro_matrix.{sh,cmd}`).
-- **Tiered Architecture & Universal OS Synthesis Framework**:
-  - **Tier 1: Leaf Recipes, Cross-Toolchains & Native Version Management (`_lib/`)**:
+- **Six-Tier (`T0`–`T5`) Universal OS Synthesis & Multicloud Substrate**:
+  - **`T0`: Engine, DAG Solver, Hooks & Consensus (`engine/`)**:
+    - Zero-dependency stdlib (`engine/common/`), Tarjan SCC constraint solver
+      (`engine/solver/resolve_stack.jq`), target triplet normalizer
+      (`engine/target/triplets.{sh,cmd}`), decoupled integration hooks (`engine/hooks/`), and
+      distributed lease/fencing state machines (`engine/consensus/{lock,fence}.{sh,cmd}`).
+  - **`T1` & `T2`: Atomic Userland, Daemon & OS Plumbing Recipes (`_lib/`)**:
     - Codified the Standard Context Contract (`LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,
       `LIBSCRIPT_OFFLINE`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_TARGET_ARCH`, `LIBSCRIPT_TARGET_LIBC`,
       `LIBSCRIPT_TARGET_OS`, `LIBSCRIPT_TARGET_TRIPLET`).
-    - Multi-stage cross-toolchain bootstrapping: Stage 0 host-driven cross-compiler coordinator
-      (`_lib/toolchains/bootstrap/stage0.sh` / `.cmd`) building Binutils Pass 1, standalone GCC Pass
-      1, Linux API headers, Target LibC, and cross-GCC Pass 2 into `/tools`.
-    - Stage 1 minimal standalone POSIX userland bootstrap (`_lib/toolchains/bootstrap/stage1.sh` /
-      `.cmd`) linked strictly to `/tools/lib/libc.so`.
-    - Standard architecture triplet resolver (`_lib/toolchains/triplets.sh` / `.cmd`) for `x86_64`,
-      `aarch64`, `riscv64`, and `i686` with `glibc`, `musl`, or `bsd-libc`.
-    - Complete base-system catalog: Glibc (with `localedef` and dynamic linker), Musl, BusyBox,
-      Toybox, Coreutils, `e2fsprogs`, `btrfs-progs`, `xfsprogs`, `eudev`, PAM, and Shadow.
-    - Graphics, display servers, and desktops: `libdrm`, Mesa Gallium/Vulkan, `vulkan-loader`,
-      Wayland, `wayland-protocols`, `wlroots`, `seatd`, `xorg-server`, `xwayland`, Sway, Hyprland,
-      KDE Plasma 6, XFCE4, LXQt, Weston, and display greeters (`greetd`, `sddm`, `gdm`, `lightdm`).
-    - Audio & networking subsystems: PipeWire multimedia graph router, WirePlumber, ALSA,
-      NetworkManager, `systemd-networkd`, `iwd`, `wpa_supplicant`, `dhcpcd`, `nftables`, `iptables`,
-      and OpenSSH.
-    - Unified toolchain version management (`ls-remote`, `install`, `ls`, `use`, `uninstall`) for
-      Node.js, Python, Rust, Ruby, Go, Java, PHP, and databases with per-shell PATH isolation.
-  - **Tier 2: Synthesizers, Assemblers & Image Builders**:
-    - Formalized declarative OS configuration schema (`os-config.schema.json`) and execution plan
-      schema (`execution-plan.schema.json`).
-    - Interactive terminal configurator and TUI engine (`cli/commands/config/config.sh` / `.cmd`,
-      `tui_engine.sh` / `.cmd`) with ANSI VT100 / dialog / whiptail support.
-    - Curated profile templates in `profiles/`: minimal headless Musl, standard Glibc server,
-      Wayland Sway/Hyprland desktops, KDE Plasma 6, FreeBSD ZFS server/desktop, Firecracker microVM,
-      and Unikraft/OSv unikernels.
-    - Isolated rootfs staging (`_lib/orchestration/create_fhs_layout.sh` / `.cmd`, `rootfs.sh` /
-      `.cmd`) with merged and split `/usr` support.
-    - Virtual kernel filesystem lifecycle (`_lib/orchestration/vfs/mount_target_vfs.sh` /
-      `umount_target_vfs.sh`) with idempotent mounting and automated signal traps.
-    - Storage and partition provisioning (`_lib/storage/provision_disk.sh` / `.cmd`) supporting GPT,
-      MBR, ESP, and LUKS2 `argon2id` encryption.
-    - Multi-filesystem formatting engine (`_lib/storage/format_fs.sh` / `.cmd`) for Ext4, Btrfs
-      subvolumes (`@`, `@home`, `@snapshots`), XFS, VFAT, and ZFS.
-    - Linux kernel compilation and modular configuration fragment merger
-      (`_lib/kernel/linux/setup.sh` / `.cmd`), CPIO initramfs builder
-      (`_lib/kernel/initramfs/gen_initramfs.sh` / `.cmd`), and Unified Kernel Image (UKI)
-      generation.
-    - FreeBSD Kernel & World synthesis (`_lib/freebsd/setup.sh` / `.cmd`) with isolated
-      `MAKEOBJDIRPREFIX` boundaries and ZFS-on-root loader configuration.
-    - Bootloader installation (`_lib/bootloaders/setup.sh` / `.cmd`) for GRUB2 (UEFI/BIOS),
-      `systemd-boot`, and Limine.
-    - Universal media packaging via `package-as`: `raw-img`, `qcow2`, `vmdk`, `vdi`, `hyperv-vhd`,
-      `proxmox-template`, `aws-ami`, `azure-vhd`, `gcp-image`, hybrid live `iso` (SquashFS +
-      OverlayFS), `rootfs-tar`, `docker`, `bsd-img`, `illumos-distro`, direct-kernel `unikernel`,
-      Windows `.msi` / `innosetup` / `nsis`, macOS `.pkg` / `.dmg`, Debian `.deb`, Red Hat `.rpm`,
-      Alpine `.apk`, and FreeBSD `.txz`.
-  - **Tier 3: Operators & Multicloud Deployers (`_lib/cloud-providers/`)**:
-    - Multicloud VM and resource lifecycle management for AWS EC2, GCP Compute Engine, Azure
-      Compute, Proxmox VE, Hetzner Cloud, and Vagrant.
-    - MicroVM and unikernel execution drivers for Firecracker, Cloud-Hypervisor, and Solo5.
-    - AI and hardware acceleration infrastructure: TPU VM multi-worker lockstep training
-      (`_lib/ml-training/tpu-trainer`) with 4-role regional GCS ML buckets
-      (`traits/storage/gcs_ml.{sh,cmd}`), GCS FUSE, and TensorBoard, distributed TPU training via
-      GKE + XPK, and unified LLM inference routing (`_lib/ai-serving/inference-router`: `vLLM`,
-      `JetStream`, MaxEngine, Triton, `Ollama`).
-    - Built-in PaaS & universal reverse proxying via `netctl` for Nginx, Caddy, Apache, and Windows
-      IIS with automated Let's Encrypt TLS and OS init supervision (`systemd`, `launchd`, Windows
-      Services).
-    - Programmatic C11 REST API (`c-rest-framework`) and OpenAPI 3.2.0 control plane via
-      `libscript-rest-api`.
-  - **Tier 3.5: High-Availability Topologies & Consensus Choreography (`topologies/`)**:
-    - DAG state machine (`topologies/engine.{sh,cmd}`) managing `.topology_state.json` with atomic
-      write-then-rename checkpointing, distributed lease locking (`topologies/lock.{sh,cmd}`), and
-      automated split-brain fencing (`topologies/fence.{sh,cmd}`).
-    - Turnkey HA cluster blueprints: `postgres-ha` (Patroni + etcd Raft + PgBouncer),
-      `redis-cluster`, `valkey-cluster`, `openedx-ha`, `mesos-marathon-ha` (ZooKeeper + Mesos +
-      Marathon), `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, and `gke-tpu-cluster`.
-  - **Tier 4: Declarative Payloads & Multi-Node Cluster Schedulers (`payloads/`)**:
-    - Universal workload schema (`payloads/payload.schema.json`) and dispatcher
-      (`payloads/engine.{sh,cmd}`) supporting stateless services, stateful sets, batch ETL/search
-      reindexing jobs, distributed AI training (`xpk` / `slurm_ray`), and unikernels.
-    - Pluggable scheduler drivers (`payloads/schedulers/`) and standalone Tier 1/3 orchestrator
-      recipes for **Kubernetes** (`kubernetes`, `kubernetes-k0s`, `kubernetes-thw`, `k8s-marathon`),
-      **Apache Mesos & Marathon** (`mesos`, `marathon`), **HashiCorp Nomad** (`nomad`),
-      **Slurm/Ray** (`slurm_ray`), **Google Cloud XPK** (`xpk`), **MicroVMs** (`microvm`), and **8+
-      Native Init Systems** (`native`).
-  - **Unified Cross-Cutting Traits (`traits/`) & Dual-Layer Lifecycle Hooks (`hooks/`)**:
-    - Deterministic trait engine (`traits/engine.{sh,cmd}`) supporting both Tier 2 offline sysroot
-      baking and Tier 3 live runtime execution across `storage`, `secrets` (zero-env-leak FIFO
-      injection), `mesh` (WireGuard/Tailscale), `firewall` (`nftables`/`iptables`/`pf`/`netsh` with
-      anti-lockout safeguards), `discovery`, `tls`, `ingress`, `logging`, `metrics`, `backup`
-      (ZFS/Btrfs CoW snapshots + S3/GCS/Azure/Rclone/Restic/Borg shipping), and `maintenance`.
-    - Dual-layer component lifecycle hook dispatcher (`_lib/_common/hooks.{sh,cmd}`) implementing
-      physical hooks (`configure`, `probe`, `announce`, `log_stream`, `metrics`, `backup`,
-      `restore`, `upgrade`, `rollback`, `maintenance`) and multi-tenant logical hooks
-      (`provision_tenant`, `deprovision_tenant`, `backup_tenant`, `restore_tenant`).
-  - **Declarative Constraint Solver & Tarjan SCC Cycle Breaking**:
-    - Extended manifest schema (`manifest.schema.json`) with USE flag variants (`configure_args`,
-      `meson_args`, `cmake_args`, `cflags`, `ldflags`) and dependency classifications (`host_tools`,
-      `build_deps`, `runtime_deps`, `tier`).
-    - Deterministic dependency resolution and circular dependency cycle-breaking using Tarjan's
-      Strongly Connected Components (SCC) algorithm in `_lib/orchestration/resolve_stack.jq`.
+    - Multi-stage cross-toolchain bootstrapping (`_lib/toolchains/bootstrap/stage{0,1}.{sh,cmd}`)
+      and complete base-system, kernel (`linux`, `initramfs`, `zephyr`, `freertos`), bootloader
+      (`grub`, `systemd-boot`, `limine`, `u-boot`, `mcuboot`), graphics/Wayland/desktop, audio, and
+      networking catalogs.
+    - Unified `O(1)` toolchain version management (`ls-remote`, `install`, `ls`, `use`, `uninstall`)
+      for Node.js, Python, Rust, Ruby, Go, Java, PHP, C/C++ compilers, and databases.
+  - **`T3`: Image, OS & Artifact Synthesis (`synthesis/`)**:
+    - Declarative OS configuration (`synthesis/schemas/os-config.schema.json`), execution plans
+      (`synthesis/schemas/execution-plan*.schema.json`), interactive TUI configurator
+      (`cli/commands/config/`), and curated profiles (`synthesis/profiles/`).
+    - Isolated sysroot FHS & VFS lifecycle (`synthesis/vfs/`), GPT/MBR/LUKS2 disk provisioning
+      (`synthesis/disk/`), Linux/FreeBSD/illumos/ReactOS/Bento distro builders
+      (`synthesis/distro/`), offline cache/repo generators (`synthesis/repogen/`), and universal
+      `package-as` drivers (`synthesis/formats/` & `synthesis/msi/`).
+  - **`T4`: Infrastructure Providers, Resources & Cluster Substrates (`infrastructure/`)**:
+    - Multicloud VM, resource, image-import, and Marketplace publishing
+      (`infrastructure/providers/`, `infrastructure/resources/`, `infrastructure/marketplace/`),
+      plus HA cluster substrates (`infrastructure/clusters/`).
+  - **`T5`: Workloads, Application Stacks, Schedulers & Constellations (`workloads/`)**:
+    - Declarative workload schema (`workloads/schemas/payload.schema.json`), scheduler drivers
+      (`workloads/schedulers/`: `kubernetes`, `nomad`, `mesos`, `native`, `microvm`,
+      `rtos_firmware`, `slurm_ray`, `tpu_vm`, `xpk`), multi-service application stacks
+      (`workloads/apps/`), AI/TPU workloads (`workloads/ai/` & `workloads/payloads/ai/`), and
+      stateful HA constellations (`workloads/constellations/`).
+  - **`Plane A`: Cross-Cutting Node Traits (`traits/`)**:
+    - Dual-mode (`T3` offline sysroot bake and `T4`/`T5` live runtime) traits across `storage`,
+      `secrets`, `mesh`, `firewall`, `discovery`, `tls`, `ingress`, `logging`, `metrics`, `backup`,
+      and `maintenance`.
   - **Cross-Platform Standards & Quality Invariants**:
-    - Strict POSIX `/bin/sh` compliance and 100% Windows Batch (`.cmd`) parity with canonical
-      `THIS_FILE=` path resolution and re-entrant `STACK` recursion guards.
-    - Option A Win32 Hard-Fail Boundary Proforma (exit code `86` / `EX_UNAVAILABLE` / `ENOSYS`) on
-      Windows for Linux kernel primitives, delegating to VM/Docker builders.
-    - Static audit validation toolchain (`devtools/audit/audit_standards.sh` / `.ps1`).
-    - Comprehensive verification matrix: headless QEMU boot tests (`tests/os_boot_test.sh` / `.cmd`,
-      `freebsd_boot_test.sh`, `illumos_boot_test.sh`), graphical Wayland/PipeWire smoke tests
-      (`tests/os_gui_smoke_test.sh` / `.cmd`), air-gapped boot tests (`tests/test_airgap_boot.sh` /
-      `.cmd`), live installer matrix (`tests/test_live_installer_matrix.sh`), and 2x consecutive
-      execution idempotency tests (`tests/test_idempotency_matrix.sh` / `.cmd`).
-    - Continuous test result aggregation and automated `README.md` compatibility table
-      synchronization via `tests/update_results.sh` / `.cmd` / `.ps1`.
-    - Repository safety invariant: automated test suites and CI workflows strictly ban `git push`.
-- Added support for `pkgx` and `vfox` as valid universal version manager fallbacks.
-- Re-architected component method resolution with a smart fallback priority chain:
-  `libscript_native` -> `mise` -> `asdf` -> `pkgx` -> `vfox` -> `system`.
+    - Strict POSIX `/bin/sh` compliance and 100% Windows Batch (`.cmd`) parity, Option A Win32
+      Hard-Fail Boundary Proforma (exit code `86`), static audits (`audit_standards`, `audit_tiers`,
+      `doc_coverage`), headless QEMU boot/GUI/airgap/idempotency matrices, and strict ban on
+      `git push` in automation.
 
 ### Completed Initiatives
 

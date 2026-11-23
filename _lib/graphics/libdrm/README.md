@@ -1,5 +1,7 @@
 # Direct Rendering Manager
 
+**Tier**: `T2` (`_lib/graphics/libdrm/`) | **Capabilities**: `sysroot-package`, `sysroot-library`
+
 Low-level userspace interface to kernel DRM
 
 ## Usage

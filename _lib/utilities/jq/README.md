@@ -1,60 +1,46 @@
-# jq
+# jq (`_lib/utilities/jq/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `jq` component (part of
-`_toolchain`) within the LibScript ecolibscript_native. LibScript is a modular, zero-dependency
-shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS,
-and Windows.
+Lightweight command-line JSON processor with native Windows (MSVC) and MS-DOS (dos32) builds via
+SamuelMarks/jq-windows.
+
+- **Tier**: `T1` (`_lib/utilities/jq/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `jq`, `jq-windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **jq**, a lightweight,
-flexible, and command-line JSON processor. It is akin to `sed` but specifically designed for parsing
-and manipulating JSON data streams. It is designed to be executed via the global `libscript.sh`
-router or directly via `cli.sh`.
-
-Crucially, this component works both as a **local version manager** (similar to tools like `rvm`,
-`nvm`, `pyenv`, or `uv`), allowing you to isolate and manage specific versions of jq per project,
-and it can be seamlessly invoked from the **global version manager**, `libscript`.
-
-Furthermore, jq can be utilized by LibScript as a foundational dependency to **build bigger, complex
-application stacks** (such as WordPress, Open edX, Nextcloud, and more) that rely on dynamic JSON
-configuration.
-
-### Lifecycle & Usage
-
-You can easily install, uninstall, start, stop, and package jq directly using LibScript:
-
-**Install / Uninstall:**
-
 ```sh
-libscript install jq
-libscript uninstall jq
+# Native version management (isolated under ${LIBSCRIPT_HOME}/jq/<version>)
+./libscript.sh ls-remote jq
+./libscript.sh install jq latest
+./libscript.sh use jq latest
+./libscript.sh which jq
+./_lib/utilities/jq/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start jq
-libscript stop jq
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote jq
+.\libscript.cmd install jq latest
+.\libscript.cmd use jq latest
+.\libscript.cmd which jq
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker jq
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install jq`. On Windows, use `libscript.cmd`
-or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/jq/<version>`
+  (default `~/.libscript/jq/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `JQ_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -68,18 +54,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

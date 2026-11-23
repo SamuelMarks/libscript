@@ -1,74 +1,45 @@
-# Python
+# Python Runtime (`_lib/languages/python/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `python` component (part
-of `_toolchain`) within the LibScript ecosystem. Python is a high-level, interpreted programming
-language known for its readability, dynamic typing, and comprehensive standard library, widely used
-in web development, data science, and scripting. LibScript is a modular, zero-dependency
-shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS,
-and Windows.
+A versatile programming language that lets you work quickly and integrate systems more effectively.
+
+- **Tier**: `T1` (`_lib/languages/python/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `runtime`, `python`, `pip`
 
 ## Usage
 
-This directory contains the installation and configuration scripts for `python`. It works both as a
-local version manager (similar to rvm, nvm, pyenv, uv) for Python and can be invoked from the global
-version manager `libscript`. Furthermore, it can be used by libscript as a building block to
-assemble bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
-
-You can install, start, stop, package, and uninstall python using the global `libscript` command or
-the local CLI.
-
-**Unix (Linux/macOS):**
-
 ```sh
-
-./libscript.sh install python
-
-./cli.sh install python
-
-./libscript.sh start python
-./cli.sh start python
-
-./libscript.sh stop python
-./cli.sh stop python
-
-./libscript.sh package-as docker python
-./cli.sh package-as docker python
-
-./libscript.sh uninstall python
-./cli.sh uninstall python
+# Native version management (isolated under ${LIBSCRIPT_HOME}/python/<version>)
+./libscript.sh ls-remote python
+./libscript.sh install python latest
+./libscript.sh use python latest
+./libscript.sh which python
+./_lib/languages/python/cli.sh test
 ```
-
-**Windows:**
 
 ```cmd
-:: Global Orchestrator
-libscript.cmd install python
-
-:: Local CLI
-cli.cmd install python
-
-:: Start and Stop
-libscript.cmd start python
-cli.cmd start python
-
-libscript.cmd stop python
-cli.cmd stop python
-
-:: Package (e.g., as MSI installer)
-libscript.cmd package-as msi python
-cli.cmd package-as msi python
-
-:: Uninstall
-libscript.cmd uninstall python
-cli.cmd uninstall python
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote python
+.\libscript.cmd install python latest
+.\libscript.cmd use python latest
+.\libscript.cmd which python
 ```
+
+## Installation & Isolation
+
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/python/<version>`
+  (default `~/.libscript/python/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `PYTHON_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -87,7 +58,7 @@ running the setup script.
 | `PYTHON_VENV`                   | Path to a Python virtualenv (will create if nonexistent)                                                                                                                                                                                                            | `none`             |                  |
 | `PYTHON_CUSTOM_EXECUTABLE_PATH` | Path to existing host python3.exe executable. If specified, skips downloading or bootstrapping a new Python runtime.                                                                                                                                                | `none`             |                  |
 | `PYTHON_USE_SYSTEM`             | Reuse host or existing Python runtime located at PYTHON_CUSTOM_EXECUTABLE_PATH rather than installing bundled Python.                                                                                                                                               | `none`             |                  |
-| `PYTHON_INSTALL_METHOD`         | How to install PYTHON. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.                                                                                              | `libscript_native` |                  |
+| `PYTHON_INSTALL_METHOD`         | Installation strategy for python: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.                                                                                                            | `libscript_native` |                  |
 | `PIP_FIND_LINKS`                | Directory or URL containing pre-downloaded Python wheels for offline installation.                                                                                                                                                                                  | `none`             |                  |
 | `PIP_NO_INDEX`                  | When set to 1 or true, pip completely disables querying remote PyPI indexes.                                                                                                                                                                                        | `0`                |                  |
 | `PIP_WHEEL_DIR`                 | Directory location of pre-downloaded .whl packages for offline pip installs.                                                                                                                                                                                        | `none`             |                  |
@@ -98,18 +69,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic using the package manager mapper.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

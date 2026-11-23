@@ -1,5 +1,7 @@
 # LibVDPAU
 
+**Tier**: `T2` (`_lib/graphics/libvdpau/`) | **Capabilities**: `sysroot-package`, `sysroot-library`
+
 Video Decode and Presentation API for Unix
 
 ## Usage

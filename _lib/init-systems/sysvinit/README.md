@@ -1,5 +1,8 @@
 # SysVinit
 
+**Tier**: `T2` (`_lib/init-systems/sysvinit/`) | **Capabilities**: `sysroot-package`,
+`service-daemon`
+
 ## Purpose & Overview
 
 Provides the classical System V Init (SysVinit) PID 1 supervisor, `/etc/inittab` runlevel

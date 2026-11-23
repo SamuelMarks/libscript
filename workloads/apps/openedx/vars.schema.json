@@ -467,11 +467,11 @@
     },
     "OPENEDX_DATABASE_PASSWORD": {
       "type": "string",
-      "description": "Configuration variable OPENEDX_DATABASE_PASSWORD for openedx."
+      "description": "Relational database (MySQL/MariaDB) password provisioned for the Open edX LMS and CMS services."
     },
     "OPENEDX_EDX_PLATFORM_REPOSITORY": {
       "type": "string",
-      "description": "Configuration variable OPENEDX_EDX_PLATFORM_REPOSITORY for openedx."
+      "description": "Git repository URL from which the Open edX edx-platform source tree is cloned."
     },
     "OPENEDX_INSTALL_DIR": {
       "type": "string",
@@ -499,7 +499,7 @@
     },
     "OPENEDX_OFFLINE": {
       "type": "string",
-      "description": "Configuration variable OPENEDX_OFFLINE for openedx."
+      "description": "Flag (0 or 1) enforcing air-gapped offline installation of Open edX strictly from pre-hydrated local caches."
     },
     "OPENEDX_VERSION": {
       "type": "string",

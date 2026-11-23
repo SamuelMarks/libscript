@@ -1,5 +1,7 @@
 # Apache Mesos (`_lib/schedulers/mesos`)
 
+**Tier**: `T1` (`_lib/schedulers/mesos/`) | **Capabilities**: `userland-package`, `service-daemon`
+
 ## Overview
 
 Standalone Version Manager for **Apache Mesos** (`mesos`, `mesos-master`, `mesos-agent`,
@@ -61,7 +63,7 @@ running the setup script.
 | `MESOS_WORK_DIR`       | Filesystem directory path for Mesos master replicated log and agent task sandboxes.                              | `/var/lib/mesos`            |                  |
 | `MESOS_CONTAINERIZERS` | Comma-separated list of enabled Mesos containerizers (e.g. 'docker,mesos').                                      | `docker,mesos`              |                  |
 | `MESOS_HOME`           | Filesystem directory or path configuration for mesos (MESOS_HOME).                                               | `none`                      |                  |
-| `MESOS_MASTER`         | Configuration variable MESOS_MASTER for mesos.                                                                   | `none`                      |                  |
+| `MESOS_MASTER`         | Host:port or ZooKeeper URI of the leading Apache Mesos Master endpoint (e.g., 127.0.0.1:5050).                   | `none`                      |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

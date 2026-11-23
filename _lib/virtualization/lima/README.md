@@ -1,48 +1,48 @@
-# lima
+# Lima Linux Virtual Machines (`_lib/virtualization/lima/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `lima` component (part of
-`_virtualization`) within the LibScript ecosystem. Lima (limactl) Linux virtual machines with
-automatic file sharing, port forwarding, and containerd/Docker support on macOS and Linux.
+Lima (limactl) Linux virtual machines with automatic file sharing, port forwarding, and
+containerd/Docker support on macOS and Linux.
+
+- **Tier**: `T1` (`_lib/virtualization/lima/`)
+- **Capabilities**: `userland-package`
+- **Provides Virtual Capabilities**: `lima`, `limactl`, `nerdctl.lima`
+- **Target OS Whitelist (`manifest.json`)**: `macos`, `linux`, `freebsd`, `netbsd`
+- **Target OS Exclusions (`manifest.json`)**: `windows`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **Lima Linux Virtual
-Machines**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install lima
-libscript uninstall lima
+# Native version management (isolated under ${LIBSCRIPT_HOME}/lima/<version>)
+./libscript.sh ls-remote lima
+./libscript.sh install lima latest
+./libscript.sh use lima latest
+./libscript.sh which lima
+./_lib/virtualization/lima/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start lima
-libscript stop lima
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote lima
+.\libscript.cmd install lima latest
+.\libscript.cmd use lima latest
+.\libscript.cmd which lima
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker lima
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install lima`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/lima/<version>`
+  (default `~/.libscript/lima/<version>`) and synchronizes `O(1)` shims in `${LIBSCRIPT_HOME}/bin`
+  without polluting system paths.
+- **Override Strategy**: Control installation via `LIMA_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +56,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

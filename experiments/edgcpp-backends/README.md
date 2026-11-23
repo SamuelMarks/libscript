@@ -170,7 +170,7 @@ On a prepared benchmark host with the `edgcpp-compiler-multibackend` repository 
 checked out:
 
 ```sh
-# 1. Provision required Tier 1 toolchains (edgcpp, gcc, llvm, clang, sqlite)
+# 1. Provision required T1 toolchains (edgcpp, gcc, llvm, clang, sqlite)
 ./libscript.sh experiment provision edgcpp-backends
 
 # 2. Execute all 8 sub-suites (11 trials/cell) + QEMU cross-ISA psABI fuzzing + LaTeX PDF audit

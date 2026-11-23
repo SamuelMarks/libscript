@@ -1,5 +1,7 @@
 # S6 / S6-rc
 
+**Tier**: `T2` (`_lib/init-systems/s6/`) | **Capabilities**: `sysroot-package`, `service-daemon`
+
 ## Purpose & Overview
 
 Provides the Skarnet S6 process supervision suite and S6-rc dependency manager, compiling service

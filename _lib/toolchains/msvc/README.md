@@ -1,5 +1,7 @@
 # MSVC Build Tools
 
+**Tier**: `T1` (`_lib/toolchains/msvc/`) | **Capabilities**: `userland-package`
+
 Microsoft Visual C++ (MSVC) Build Tools and Windows SDK compiler toolchain (`cl.exe`, `link.exe`,
 `nmake.exe`).
 

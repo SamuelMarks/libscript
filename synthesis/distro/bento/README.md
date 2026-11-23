@@ -56,24 +56,25 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                             | Description                                                                                                                                     | Default                                    | Aliases/Examples |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------- |
-| `BENTO_DIR`                          | Path to the local bento repository (default: auto-detected from ../bento)                                                                       | ``                                         |                  |
-| `BENTO_REPO_URL`                     | Git repository URL for the Bento fork (default: https://github.com/SamuelMarks/bento.git)                                                       | `https://github.com/SamuelMarks/bento.git` |                  |
-| `BENTO_BRANCH`                       | Git branch to checkout in the Bento repository (default: multi-os-qemu-aarch64)                                                                 | `multi-os-qemu-aarch64`                    |                  |
-| `BENTO_BUILDER_REPO_URL`             | Component-prefixed Git repository URL for the Bento fork (default: https://github.com/SamuelMarks/bento.git)                                    | `https://github.com/SamuelMarks/bento.git` |                  |
-| `BENTO_BUILDER_BRANCH`               | Component-prefixed Git branch to checkout in the Bento repository (default: multi-os-qemu-aarch64)                                              | `multi-os-qemu-aarch64`                    |                  |
-| `BENTO_BUILDER_INSTALL_MSDOS_PLUGIN` | Flag (1 or 0) to provision and verify Bento::VagrantMsdos and Bento::VagrantFreedos plugins for MS-DOS 1.25/2.0/4.0 and FreeDOS 1.3/1.4 guests. | `1`                                        |                  |
-| `BENTO_BUILDER_TARGET_OS`            | Target OS or DOS box identifier to build or register (e.g., msdos-1.25, msdos-2.0, msdos-4.0, freedos-1.3, freedos-1.4, debian-13).             | ``                                         |                  |
-| `BENTO_BUILDER_FORCE_REBUILD`        | Flag (1 or 0) to force rebuilding Bento .box images even when build_complete artifacts already exist.                                           | `0`                                        |                  |
-| `INSTALL_QEMU`                       | Install QEMU/KVM virtualization (1 or 0)                                                                                                        | `1`                                        |                  |
-| `INSTALL_VIRTUALBOX`                 | Install VirtualBox 7.0 and Extension Pack (1 or 0)                                                                                              | `1`                                        |                  |
-| `INSTALL_PACKER`                     | Install HashiCorp Packer (1 or 0)                                                                                                               | `1`                                        |                  |
-| `INSTALL_VAGRANT`                    | Install HashiCorp Vagrant and plugins (1 or 0)                                                                                                  | `1`                                        |                  |
-| `INSTALL_IMAGE_TOOLS`                | Install ISO/WIM tools like wimtools, xorriso, 7zip (1 or 0)                                                                                     | `1`                                        |                  |
+| Variable                             | Description                                                                                                                                     | Default                                    |
+| :----------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------- |
+| `BENTO_DIR`                          | Path to the local bento repository (default: auto-detected from ../bento)                                                                       | `""`                                       |
+| `BENTO_REPO_URL`                     | Git repository URL for the Bento fork (default: https://github.com/SamuelMarks/bento.git)                                                       | `https://github.com/SamuelMarks/bento.git` |
+| `BENTO_BRANCH`                       | Git branch to checkout in the Bento repository (default: multi-os-qemu-aarch64)                                                                 | `multi-os-qemu-aarch64`                    |
+| `BENTO_BUILDER_REPO_URL`             | Component-prefixed Git repository URL for the Bento fork (default: https://github.com/SamuelMarks/bento.git)                                    | `https://github.com/SamuelMarks/bento.git` |
+| `BENTO_BUILDER_BRANCH`               | Component-prefixed Git branch to checkout in the Bento repository (default: multi-os-qemu-aarch64)                                              | `multi-os-qemu-aarch64`                    |
+| `BENTO_BUILDER_INSTALL_MSDOS_PLUGIN` | Flag (1 or 0) to provision and verify Bento::VagrantMsdos and Bento::VagrantFreedos plugins for MS-DOS 1.25/2.0/4.0 and FreeDOS 1.3/1.4 guests. | `1`                                        |
+| `BENTO_BUILDER_TARGET_OS`            | Target OS or DOS box identifier to build or register (e.g., msdos-1.25, msdos-2.0, msdos-4.0, freedos-1.3, freedos-1.4, debian-13).             | `""`                                       |
+| `BENTO_BUILDER_FORCE_REBUILD`        | Flag (1 or 0) to force rebuilding Bento .box images even when build_complete artifacts already exist.                                           | `0`                                        |
+| `INSTALL_QEMU`                       | Install QEMU/KVM virtualization (1 or 0)                                                                                                        | `1`                                        |
+| `INSTALL_VIRTUALBOX`                 | Install VirtualBox 7.0 and Extension Pack (1 or 0)                                                                                              | `1`                                        |
+| `INSTALL_PACKER`                     | Install HashiCorp Packer (1 or 0)                                                                                                               | `1`                                        |
+| `INSTALL_VAGRANT`                    | Install HashiCorp Vagrant and plugins (1 or 0)                                                                                                  | `1`                                        |
+| `INSTALL_IMAGE_TOOLS`                | Install ISO/WIM tools like wimtools, xorriso, 7zip (1 or 0)                                                                                     | `1`                                        |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

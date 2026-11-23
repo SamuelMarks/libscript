@@ -1,5 +1,7 @@
 # Helm
 
+**Tier**: `T1` (`_lib/package-managers/helm/`) | **Capabilities**: `userland-package`
+
 Bootstrap module for the `helm` Kubernetes package manager.
 
 ## Usage
@@ -13,12 +15,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default            | Aliases/Examples |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
-| `HELM_INSTALL_METHOD` | How to install HELM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |                  |
-| `HELM_VERSION`        | Specific version of helm to install.                                                                                                                                 | `latest`           |                  |
-| `HELM_DOWNLOAD_URL`   | Override URL for downloading helm binary or archive artifacts.                                                                                                       | `none`             |                  |
-| `HELM_RELEASES_URL`   | Override URL for querying helm available remote releases.                                                                                                            | `none`             |                  |
+| Variable              | Description                                                                                                                                            | Default            | Aliases/Examples |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ---------------- |
+| `HELM_INSTALL_METHOD` | Installation strategy for helm: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `libscript_native` |                  |
+| `HELM_VERSION`        | Specific version of helm to install.                                                                                                                   | `latest`           |                  |
+| `HELM_DOWNLOAD_URL`   | Override URL for downloading helm binary or archive artifacts.                                                                                         | `none`             |                  |
+| `HELM_RELEASES_URL`   | Override URL for querying helm available remote releases.                                                                                              | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

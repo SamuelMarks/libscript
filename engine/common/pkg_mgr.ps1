@@ -121,8 +121,21 @@ function libscript_download {
                 $client.DownloadFile($Url, $cacheFile)
                 $downloadSuccess = $true
             } catch {
-                log_error "Download failed for ${Url}: $($_.Exception.Message)"
-                return
+                if ($Url -match '^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/([^?]+)') {
+                    $ghCmd = Get-Command gh -ErrorAction SilentlyContinue
+                    if ($null -ne $ghCmd) {
+                        $ghOwner = $Matches[1]; $ghRepo = $Matches[2]; $ghTag = $Matches[3]; $ghAsset = $Matches[4]
+                        if ($env:GITHUB_TOKEN -and -not $env:GH_TOKEN) { $env:GH_TOKEN = $env:GITHUB_TOKEN }
+                        & gh release download $ghTag -R "$ghOwner/$ghRepo" -p $ghAsset -D $dlDir --clobber *> $null
+                        if ($LASTEXITCODE -eq 0 -and (Test-Path $cacheFile)) {
+                            $downloadSuccess = $true
+                        }
+                    }
+                }
+                if (-not $downloadSuccess) {
+                    log_error "Download failed for ${Url}: $($_.Exception.Message)"
+                    return
+                }
             }
         }
 
@@ -146,7 +159,7 @@ function libscript_download {
             Remove-Item $cacheFile -Force
             return
         }
-    } elseif ((Test-Path $cacheFile) -and ($env:LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB -ne "1")) {
+    } elseif ((Test-Path $cacheFile) -and ($env:LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB -ne "1") -and ($env:LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE -ne "1")) {
         $actualChecksum = (Get-FileHash -Path $cacheFile -Algorithm SHA256).Hash.ToLower()
         $checksumEntry = "$Url $actualChecksum"
         $shouldAppend = $true

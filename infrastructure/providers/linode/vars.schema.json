@@ -12,14 +12,14 @@
       "version_aliases": ["latest", "stable"]
     },
     "LINODE_INSTALL_METHOD": {
-      "description": "How to install LINODE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "Installation strategy for linode: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager.",
       "type": "string",
       "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "LINODE_REGION": {
       "type": "string",
-      "description": "Configuration variable LINODE_REGION for linode."
+      "description": "Akamai/Linode region identifier (e.g., us-east, eu-central) where compute instances are deployed."
     }
   }
 }

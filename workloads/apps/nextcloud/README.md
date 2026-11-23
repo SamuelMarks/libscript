@@ -25,21 +25,22 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                   | Description                                                                        | Default | Aliases/Examples |
-| -------------------------- | ---------------------------------------------------------------------------------- | ------- | ---------------- |
-| `NEXTCLOUD_VERSION`        | Target Nextcloud server release version or alias (e.g., latest) to deploy.         | `none`  |                  |
-| `NEXTCLOUD_PHP_FPM_LISTEN` | PHP-FPM FastCGI socket path or host:port endpoint executing Nextcloud PHP workers. | `none`  |                  |
-| `NEXTCLOUD_SERVER_NAME`    | Trusted domain and virtual host server_name configured for Nextcloud.              | `none`  |                  |
-| `NEXTCLOUD_DB_PASS`        | Password authenticating the Nextcloud database user.                               | `none`  |                  |
-| `NEXTCLOUD_DB_USER`        | Database username used by Nextcloud to connect to its backing store.               | `none`  |                  |
-| `NEXTCLOUD_WWWROOT`        | Filesystem webroot directory containing the Nextcloud server installation.         | `none`  |                  |
-| `NEXTCLOUD_DB_NAME`        | Database schema name storing Nextcloud metadata, shares, and user accounts.        | `none`  |                  |
-| `NEXTCLOUD_DB_TYPE`        | Database driver backend for Nextcloud (e.g., pgsql, mysql, sqlite).                | `none`  |                  |
-| `NEXTCLOUD_WEBSERVER`      | Frontend web server component fronting Nextcloud (e.g., nginx, caddy, httpd).      | `none`  |                  |
-| `NEXTCLOUD_LISTEN`         | HTTP bind address:port or UNIX socket exposed by the Nextcloud web server.         | `none`  |                  |
+| Variable                   | Description                                                                        | Default |
+| :------------------------- | :--------------------------------------------------------------------------------- | :------ |
+| `NEXTCLOUD_VERSION`        | Target Nextcloud server release version or alias (e.g., latest) to deploy.         | `-`     |
+| `NEXTCLOUD_PHP_FPM_LISTEN` | PHP-FPM FastCGI socket path or host:port endpoint executing Nextcloud PHP workers. | `-`     |
+| `NEXTCLOUD_SERVER_NAME`    | Trusted domain and virtual host server_name configured for Nextcloud.              | `-`     |
+| `NEXTCLOUD_DB_PASS`        | Password authenticating the Nextcloud database user.                               | `-`     |
+| `NEXTCLOUD_DB_USER`        | Database username used by Nextcloud to connect to its backing store.               | `-`     |
+| `NEXTCLOUD_WWWROOT`        | Filesystem webroot directory containing the Nextcloud server installation.         | `-`     |
+| `NEXTCLOUD_DB_NAME`        | Database schema name storing Nextcloud metadata, shares, and user accounts.        | `-`     |
+| `NEXTCLOUD_DB_TYPE`        | Database driver backend for Nextcloud (e.g., pgsql, mysql, sqlite).                | `-`     |
+| `NEXTCLOUD_WEBSERVER`      | Frontend web server component fronting Nextcloud (e.g., nginx, caddy, httpd).      | `-`     |
+| `NEXTCLOUD_LISTEN`         | HTTP bind address:port or UNIX socket exposed by the Nextcloud web server.         | `-`     |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support
@@ -51,14 +52,6 @@ and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.
 - Windows
 
 <!-- END_PLATFORMS -->
-
-## Configuration Options
-
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
-<!-- BEGIN_VARS -->
-<!-- END_VARS -->
 
 ## Orchestrated Components
 

@@ -1,5 +1,7 @@
 # Porg
 
+**Tier**: `T1` (`_lib/package-managers/porg/`) | **Capabilities**: `userland-package`
+
 Package organizer with LD_PRELOAD logging for LFS
 
 ## Usage

@@ -1,38 +1,44 @@
-# Cloud Image Import (`infrastructure/resources/image-import`)
+# Tier 4 (`T4`) Infrastructure Resource: Multicloud UEFI Appliance & Unikernel Image Importer (`infrastructure/resources/image-import/`)
 
-Idempotently uploads synthesized UEFI/GPT OS and unikernel disk images to cloud object storage and
-registers cloud VM images across AWS EC2, Microsoft Azure Compute Gallery, and Google Cloud Compute
-Engine.
+## Overview
+
+Idempotent cloud object-storage upload and private/marketplace VM image registration across AWS EC2
+AMI, Azure Compute Gallery Gen2 VHD, and GCP Shielded Compute Engine.
+
+This `T4` resource module provides uniform cross-cloud operations across AWS, Azure, and GCP,
+dispatched through `./libscript.sh infrastructure image-import`
+(`infrastructure/resources/image-import/cli.{sh,cmd}`).
+
+## Scripts
+
+- `aws_import.{sh,cmd}`
+- `azure_import.{sh,cmd}`
+- `cli.{sh,cmd}`
+- `gcp_import.{sh,cmd}`
+- `test.{sh,cmd}`
 
 ## Usage
 
 ```sh
-./libscript.sh image-import aws --disk=disk.raw --bucket=my-bucket --name=openedx-lms-22-1-0 [--dry-run]
-./libscript.sh image-import azure --disk=disk.vhd --account=mystorage --gallery=my_sig --name=openedx-lms [--dry-run]
-./libscript.sh image-import gcp --disk=disk.raw.tar.gz --bucket=my-gcs --project=my-proj --name=openedx-lms [--dry-run]
+./libscript.sh infrastructure image-import --help
 ```
 
-## Configuration
-
-| Variable               | Default  | Description                                                             |
-| ---------------------- | -------- | ----------------------------------------------------------------------- |
-| `IMAGE_IMPORT_DRY_RUN` | `0`      | Emit cloud registration receipts without mutating cloud accounts.       |
-| `IMAGE_IMPORT_ARCH`    | `x86_64` | Architecture registered on imported cloud images (`x86_64` or `arm64`). |
+```cmd
+.\libscript.cmd infrastructure image-import --help
+```
 
 ## Configuration Options
 
-The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
-
 <!-- BEGIN_VARS -->
 
-| Variable               | Description                                                                       | Default  | Aliases/Examples |
-| ---------------------- | --------------------------------------------------------------------------------- | -------- | ---------------- |
-| `IMAGE_IMPORT_DRY_RUN` | Flag (0 or 1) emitting cloud import descriptors without invoking live cloud APIs. | `0`      |                  |
-| `IMAGE_IMPORT_ARCH`    | Target CPU architecture registered on the imported cloud VM image.                | `x86_64` |                  |
+| Variable               | Description                                                                       | Default  |
+| :--------------------- | :-------------------------------------------------------------------------------- | :------- |
+| `IMAGE_IMPORT_DRY_RUN` | Flag (0 or 1) emitting cloud import descriptors without invoking live cloud APIs. | `0`      |
+| `IMAGE_IMPORT_ARCH`    | Target CPU architecture registered on the imported cloud VM image.                | `x86_64` |
 
-Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
-and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
+> **Global Framework Variables**: Core paths, offline cache controls, and target triplet variables
+> are documented in [`engine/common/README.md`](../../../engine/common/README.md).
+
 <!-- END_VARS -->
 
 ## Platform Support

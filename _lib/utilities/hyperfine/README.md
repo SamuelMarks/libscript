@@ -1,48 +1,45 @@
-# hyperfine
+# hyperfine CLI Benchmarker (`_lib/utilities/hyperfine/`)
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `hyperfine` component
-(part of `_utilities`) within the LibScript ecosystem. Command-line statistical benchmarking tool
-supporting warmup runs, prepare hooks, and JSON sample export.
+Command-line statistical benchmarking tool supporting warmup runs, prepare hooks, and JSON sample
+export.
+
+- **Tier**: `T1` (`_lib/utilities/hyperfine/`)
+- **Capabilities**: `userland-package`
 
 ## Usage
 
-_Note: libscript manages versions natively for this component._
-
-This directory contains the installation and configuration scripts for **hyperfine CLI
-Benchmarker**. It is designed to be executed via the global `libscript.sh` router or directly via
-`cli.sh`.
-
-### Lifecycle & Usage
-
-**Install / Uninstall:**
-
 ```sh
-libscript install hyperfine
-libscript uninstall hyperfine
+# Native version management (isolated under ${LIBSCRIPT_HOME}/hyperfine/<version>)
+./libscript.sh ls-remote hyperfine
+./libscript.sh install hyperfine latest
+./libscript.sh use hyperfine latest
+./libscript.sh which hyperfine
+./_lib/utilities/hyperfine/cli.sh test
 ```
 
-**Start / Stop (if configured as a background service):**
-
-```sh
-libscript start hyperfine
-libscript stop hyperfine
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd ls-remote hyperfine
+.\libscript.cmd install hyperfine latest
+.\libscript.cmd use hyperfine latest
+.\libscript.cmd which hyperfine
 ```
 
-**Package (e.g., as a Docker container):**
+## Installation & Isolation
 
-```sh
-libscript package-as docker hyperfine
-```
-
-_Note: On Unix environments, you can also use `./cli.sh install hyperfine`. On Windows, use
-`libscript.cmd` or `cli.cmd`._
+- **Default Isolation**: Installs versioned artifacts under `${LIBSCRIPT_HOME}/hyperfine/<version>`
+  (default `~/.libscript/hyperfine/<version>`) and synchronizes `O(1)` shims in
+  `${LIBSCRIPT_HOME}/bin` without polluting system paths.
+- **Override Strategy**: Control installation via `HYPERFINE_INSTALL_METHOD` (or global
+  `LIBSCRIPT_DEFAULT_INSTALL_METHOD`): `libscript_native`, `from-source` (via
+  `engine/common/source_builder.*`), or `system` (via `engine/common/pkg_mgr.*`).
 
 ## Configuration Options
 
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
-running the setup script.
+running setup.
 
 <!-- BEGIN_VARS -->
 
@@ -56,18 +53,6 @@ running the setup script.
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.
 <!-- END_VARS -->
-
-## Architecture
-
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
-- `setup_generic.sh`: Fallback installation logic and native version manager operations.
-- `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
-  correctly.
-- `vars.schema.json`: The schema definition for the CLI arguments.
-
-## Variables
-
-See `vars.schema.json` for details on available variables.
 
 ## Platform Support
 

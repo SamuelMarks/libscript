@@ -1,6 +1,6 @@
 # Tiny C Compiler (`tcc`)
 
-Standalone Tier 1 LibScript recipe for Fabrice Bellard's Tiny C Compiler (`tcc`).
+Standalone T1 LibScript recipe for Fabrice Bellard's Tiny C Compiler (`tcc`).
 
 ## Installation Modes
 

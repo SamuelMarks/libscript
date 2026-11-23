@@ -1,5 +1,7 @@
 # 7-Zip
 
+**Tier**: `T1` (`_lib/utilities/7zip/`) | **Capabilities**: `userland-package`
+
 ## Usage
 
 _Note: libscript manages versions natively for this component._
@@ -23,11 +25,7 @@ the local CLI.
 
 ./cli.sh install 7zip
 
-./libscript.sh start 7zip
-./cli.sh start 7zip
 
-./libscript.sh stop 7zip
-./cli.sh stop 7zip
 
 ./libscript.sh package-as docker 7zip
 ./cli.sh package-as docker 7zip
@@ -46,11 +44,7 @@ libscript.cmd install 7zip
 cli.cmd install 7zip
 
 :: Start and Stop
-libscript.cmd start 7zip
-cli.cmd start 7zip
 
-libscript.cmd stop 7zip
-cli.cmd stop 7zip
 
 :: Package (e.g., as MSI installer)
 libscript.cmd package-as msi 7zip
@@ -68,12 +62,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                  | Description                                                                                                                                                              | Default  | Aliases/Examples |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------- |
-| `SEVENZIP_VERSION`        | Specific version of 7zip to install.                                                                                                                                     | `latest` |                  |
-| `SEVENZIP_INSTALL_METHOD` | How to install SEVENZIP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |                  |
-| `SEVENZIP_DOWNLOAD_URL`   | Override URL for downloading 7zip binary or archive artifacts.                                                                                                           | `none`   |                  |
-| `SEVENZIP_RELEASES_URL`   | Override URL for querying 7zip available remote releases.                                                                                                                | `none`   |                  |
+| Variable                  | Description                                                                                                                                            | Default  | Aliases/Examples |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------- |
+| `SEVENZIP_VERSION`        | Specific version of 7zip to install.                                                                                                                   | `latest` |                  |
+| `SEVENZIP_INSTALL_METHOD` | Installation strategy for 7zip: 'libscript_native' installs into isolated versioned directories and 'system' delegates to the host OS package manager. | `system` |                  |
+| `SEVENZIP_DOWNLOAD_URL`   | Override URL for downloading 7zip binary or archive artifacts.                                                                                         | `none`   |                  |
+| `SEVENZIP_RELEASES_URL`   | Override URL for querying 7zip available remote releases.                                                                                              | `none`   |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

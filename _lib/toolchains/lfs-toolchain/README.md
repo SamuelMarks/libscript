@@ -1,5 +1,7 @@
 # LFS Cross-Toolchain
 
+**Tier**: `T1` (`_lib/toolchains/lfs-toolchain/`) | **Capabilities**: `userland-package`
+
 ## Purpose & Overview
 
 Provides the Stage 1 and Stage 2 cross-compilation toolchain bootstrap for synthesizing Linux From
