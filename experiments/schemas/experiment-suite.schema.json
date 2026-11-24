@@ -15,6 +15,10 @@
       "type": "string",
       "description": "Human-readable title describing the empirical evaluation campaign."
     },
+    "description": {
+      "type": "string",
+      "description": "Detailed abstract or summary specifying the evaluated frameworks, backends, models, and benchmark scope."
+    },
     "protocol_version": {
       "type": "string",
       "description": "Semantic version or conference protocol tag for the evaluation specification."

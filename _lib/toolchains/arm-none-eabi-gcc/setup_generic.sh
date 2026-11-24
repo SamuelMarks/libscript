@@ -147,6 +147,10 @@ case "$ACTION" in
       libscript_symlink_alias 'arm-none-eabi-gcc' "${VERSION}" "${EXACT_VERSION}"
       exit 0
     elif [ "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" = "system" ]; then
+      if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ "${LIBSCRIPT_ALLOW_STUB:-0}" = "1" ] && ! command -v arm-none-eabi-gcc >/dev/null 2>&1; then
+        printf '[OFFLINE] Skipping system arm-none-eabi-gcc install; falling back to clang/ld.lld.\n'
+        exit 0
+      fi
       libscript_depends 'arm-none-eabi-gcc'
     elif [ "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" = "nix" ] || [ "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" = "guix" ] || [ "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" = "spack" ] || [ "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" = "brew" ] || [ "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" = "winget" ] || [ "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" = "choco" ] || [ "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" = "scoop" ]; then
       libscript_depends_via "${ARM_NONE_EABI_GCC_INSTALL_METHOD}" 'arm-none-eabi-gcc'

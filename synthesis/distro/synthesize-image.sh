@@ -31,6 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 KERNEL='linux-glibc'
 OS_FLAVOR=''
 TARGET_ARCH=''
+ARCH_EXPLICIT='0'
 RTOS_BOARD="${LIBSCRIPT_RTOS_BOARD:-}"
 HYBRID_POD="${LIBSCRIPT_RTOS_HYBRID_POD:-0}"
 MCUBOOT_ENABLED="${LIBSCRIPT_RTOS_MCUBOOT:-0}"
@@ -38,6 +39,7 @@ FORMAT=''
 COMPONENTS_CSV=''
 PROFILE_JSON=''
 OUT_PATH=''
+INITRAMFS_COMPRESS="${LIBSCRIPT_INITRAMFS_COMPRESS:-}"
 DRY_RUN="${LIBSCRIPT_DRY_RUN:-0}"
 STRICT_BUILD="${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}"
 ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
@@ -79,8 +81,10 @@ while [ $# -gt 0 ]; do
     --board) RTOS_BOARD="$2"; shift 2 ;;
     --os-flavor=*) OS_FLAVOR="${1#*=}"; shift ;;
     --os-flavor) OS_FLAVOR="$2"; shift 2 ;;
-    --arch=*) TARGET_ARCH="${1#*=}"; shift ;;
-    --arch) TARGET_ARCH="$2"; shift 2 ;;
+    --arch=*) TARGET_ARCH="${1#*=}"; ARCH_EXPLICIT='1'; shift ;;
+    --arch) TARGET_ARCH="$2"; ARCH_EXPLICIT='1'; shift 2 ;;
+    --initramfs-compress=*) INITRAMFS_COMPRESS="${1#*=}"; shift ;;
+    --initramfs-compress) INITRAMFS_COMPRESS="$2"; shift 2 ;;
     --format=*) FORMAT="${1#*=}"; shift ;;
     --format) FORMAT="$2"; shift 2 ;;
     --components=*)
@@ -101,8 +105,8 @@ while [ $# -gt 0 ]; do
       ;;
     --profile=*) PROFILE_JSON="${1#*=}"; shift ;;
     --profile) PROFILE_JSON="$2"; shift 2 ;;
-    --out=*) OUT_PATH="${1#*=}"; shift ;;
-    --out) OUT_PATH="$2"; shift 2 ;;
+    --out=*|--output=*) OUT_PATH="${1#*=}"; shift ;;
+    --out|--output|-o) OUT_PATH="$2"; shift 2 ;;
     --hybrid-pod) HYBRID_POD=1; shift ;;
     --mcuboot) MCUBOOT_ENABLED=1; shift ;;
     --offline) OFFLINE_MODE=1; shift ;;
@@ -115,6 +119,13 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+if [ -n "$PROFILE_JSON" ] && [ -f "$PROFILE_JSON" ] && command -v jq >/dev/null 2>&1; then
+  _prof_os_fam=$(jq -r '.target.os_family // ""' "$PROFILE_JSON" 2>/dev/null || true)
+  if [ "$KERNEL" = 'linux-glibc' ] && [ -n "$_prof_os_fam" ]; then
+    KERNEL="$_prof_os_fam"
+  fi
+fi
 
 case "$KERNEL" in
   linux|linux-glibc)
@@ -252,6 +263,7 @@ if [ -z "$OUT_PATH" ]; then
     zfs-stream) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.zfs.zst" ;;
     rootfs-tar|oci-image) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.rootfs.tar.gz" ;;
     direct-kernel) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-direct" ;;
+    uki) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${TARGET_ARCH}.efi" ;;
     unikernel) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.unikernel.elf" ;;
     firmware-elf) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${RTOS_BOARD:-default}.elf" ;;
     firmware-bin) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${RTOS_BOARD:-default}.bin" ;;
@@ -300,6 +312,7 @@ esac
 if [ -n "$PROFILE_JSON" ] && [ -f "$PROFILE_JSON" ]; then
   jq --arg os_fam "$OS_FAMILY" \
      --arg arch "$TARGET_ARCH" \
+     --arg arch_exp "$ARCH_EXPLICIT" \
      --arg libc "$LIBC" \
      --arg flavor "$OS_FLAVOR" \
      --arg kprov "$KPROVIDER" \
@@ -311,7 +324,7 @@ if [ -n "$PROFILE_JSON" ] && [ -f "$PROFILE_JSON" ]; then
      --arg mcub "$MCUBOOT_ENABLED" \
      --argjson comps "$COMP_JSON" '
     .target.os_family = (.target.os_family // $os_fam)
-    | .target.arch = (.target.arch // $arch)
+    | .target.arch = (if $arch_exp == "1" then $arch else (.target.arch // $arch) end)
     | .target.libc = (.target.libc // $libc)
     | (if $flavor != "" then .target.flavor = $flavor else . end)
     | .kernel = ((.kernel // {"config_method": "defconfig"}) | .provider = (.provider // $kprov))
@@ -321,6 +334,7 @@ if [ -n "$PROFILE_JSON" ] && [ -f "$PROFILE_JSON" ]; then
     | .output_formats = [$fmt]
     | .components = (((.components // []) + $comps) | unique)
   ' "$PROFILE_JSON" > "$GEN_OS_CONFIG"
+  TARGET_ARCH=$(jq -r '.target.arch // "x86_64"' "$GEN_OS_CONFIG")
 else
   jq -n --arg os_fam "$OS_FAMILY" \
         --arg arch "$TARGET_ARCH" \
@@ -376,6 +390,10 @@ if [ "$DRY_RUN" = "1" ]; then
     STACK='' "${LIBSCRIPT_ROOT_DIR}/engine/solver/execute_plan.sh" "$GEN_PLAN" --dry-run
   printf '[DRYRUN] Synthesized plan verified for kernel=%s format=%s out=%s\n' "$OS_FAMILY" "$FORMAT" "$OUT_PATH"
   exit 0
+fi
+
+if [ -n "$INITRAMFS_COMPRESS" ]; then
+  export LIBSCRIPT_INITRAMFS_COMPRESS="$INITRAMFS_COMPRESS"
 fi
 
 LIBSCRIPT_TARGET_SYSROOT="$SYSROOT_DIR" \
@@ -462,7 +480,10 @@ case "$FORMAT" in
     STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/rootfs_tar.sh" "$SYSROOT_DIR" "$OUT_PATH"
     ;;
   direct-kernel)
-    STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/direct_kernel.sh" --kernel="$RESOLVE_OS" "$SYSROOT_DIR" "$OUT_PATH"
+    STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/direct_kernel.sh" --kernel="$RESOLVE_OS" --arch="$TARGET_ARCH" "$SYSROOT_DIR" "$OUT_PATH"
+    ;;
+  uki)
+    STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/uki.sh" --arch="$TARGET_ARCH" "$SYSROOT_DIR" "$OUT_PATH"
     ;;
   unikernel)
     STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/unikernel_img.sh" "$SYSROOT_DIR" "$OUT_PATH"

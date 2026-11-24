@@ -86,7 +86,7 @@ case "$target" in
     "$SCRIPT_DIR/tests/test_edgcpp_backends_experiments.sh"
     "$SCRIPT_DIR/tests/test_tfrc_guard.sh"
     "$SCRIPT_DIR/tests/test_gcp_tpu_vm_qr_multihost.sh"
-    "$SCRIPT_DIR/tests/test_gemma_tpu_matrix.sh"
+    "$SCRIPT_DIR/tests/test_gemma_4_sql_matrix.sh"
     "$SCRIPT_DIR/tests/test_tier1_languages_and_package_managers.sh"
     "$SCRIPT_DIR/tests/test_tier1_data_and_server_components.sh"
     "$SCRIPT_DIR/tests/test_tier1_utilities_security_logging_storage.sh"

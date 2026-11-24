@@ -2,7 +2,7 @@
 :: # test.cmd
 ::
 :: ## Overview
-:: Smoke test for `infrastructure\resources\image-import` on Windows.
+:: Smoke and 2x-idempotency test for `infrastructure\resources\image-import` on Windows.
 ::
 :: ## Usage
 :: test.cmd
@@ -51,5 +51,36 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "_TMP=!LIBSCRIPT_ROOT_DIR!\tests_tmp\img_import_%RANDOM%"
+if not exist "!_TMP!" mkdir "!_TMP!"
+set "LIBSCRIPT_BUILD_DIR=!_TMP!\build"
+set "LIBSCRIPT_OFFLINE=1"
+set "LIBSCRIPT_ALLOW_STUB=1"
+
 call "!SCRIPT_DIR!\cli.cmd" --help >nul
-exit /b !errorlevel!
+if errorlevel 1 goto :fail_test
+
+for %%D in (linux-distro freebsd-distro illumos-distro reactos-distro unikernel-distro) do (
+    set "_ART=!_TMP!\%%D.raw"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as %%D --format raw --output "!_ART!" --allow-stub >nul
+    if errorlevel 1 goto :fail_test
+    set "STACK="
+    call "!SCRIPT_DIR!\cli.cmd" distro "--disk=!_ART!" --clouds=aws,gcp,azure --dry-run >nul
+    if errorlevel 1 goto :fail_test
+    set "STACK="
+    call "!SCRIPT_DIR!\cli.cmd" distro "--disk=!_ART!" --clouds=aws,gcp,azure --dry-run >nul
+    if errorlevel 1 goto :fail_test
+    if not exist "!_ART!.multicloud-receipt.json" goto :fail_test
+)
+
+rmdir /s /q "!_TMP!" 2>nul
+echo [PASS] Windows image-import multicloud distro artifact tests passed.
+exit /b 0
+
+:: ## fail_test
+:: Cleans temporary directory and exits with failure status.
+:fail_test
+if exist "!_TMP!" rmdir /s /q "!_TMP!" 2>nul
+echo [FAIL] Windows image-import test failed. >&2
+exit /b 1

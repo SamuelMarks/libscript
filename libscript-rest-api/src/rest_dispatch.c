@@ -145,9 +145,72 @@ int rest_is_valid_artifact_format(const char *fmt) {
             strcmp(fmt, "docker") == 0 ||
             strcmp(fmt, "deb") == 0 ||
             strcmp(fmt, "rpm") == 0 ||
+            strcmp(fmt, "raw-img") == 0 ||
+            strcmp(fmt, "vdi") == 0 ||
+            strcmp(fmt, "box") == 0 ||
+            strcmp(fmt, "uki") == 0 ||
+            strcmp(fmt, "elf") == 0 ||
+            strcmp(fmt, "uefi-gpt") == 0 ||
+            strcmp(fmt, "azure-vhd") == 0 ||
+            strcmp(fmt, "dmg") == 0 ||
             strcmp(fmt, "apk") == 0 ||
             strcmp(fmt, "pkg") == 0 ||
             strcmp(fmt, "msi") == 0);
+}
+
+/**
+ * @brief Validates a package-as driver target against the OpenAPI 3.2.0 enum.
+ */
+int rest_is_valid_package_as_target(const char *target) {
+    if (target == NULL) {
+        return 0;
+    }
+    return (strcmp(target, "linux-distro") == 0 ||
+            strcmp(target, "linux-kernel") == 0 ||
+            strcmp(target, "freebsd-distro") == 0 ||
+            strcmp(target, "illumos-distro") == 0 ||
+            strcmp(target, "reactos-distro") == 0 ||
+            strcmp(target, "unikernel-distro") == 0 ||
+            strcmp(target, "unikernel") == 0 ||
+            strcmp(target, "rtos-distro") == 0 ||
+            strcmp(target, "zephyr-distro") == 0 ||
+            strcmp(target, "freertos-distro") == 0 ||
+            strcmp(target, "firmware-bin") == 0 ||
+            strcmp(target, "firmware-elf") == 0 ||
+            strcmp(target, "firmware-hex") == 0 ||
+            strcmp(target, "firmware-uf2") == 0 ||
+            strcmp(target, "mcuboot-signed") == 0 ||
+            strcmp(target, "renode-resc") == 0 ||
+            strcmp(target, "qcow2") == 0 ||
+            strcmp(target, "raw") == 0 ||
+            strcmp(target, "iso") == 0 ||
+            strcmp(target, "vhd") == 0 ||
+            strcmp(target, "vmdk") == 0 ||
+            strcmp(target, "vdi") == 0 ||
+            strcmp(target, "box") == 0 ||
+            strcmp(target, "uki") == 0 ||
+            strcmp(target, "direct-kernel") == 0 ||
+            strcmp(target, "docker") == 0 ||
+            strcmp(target, "msi") == 0 ||
+            strcmp(target, "deb") == 0 ||
+            strcmp(target, "rpm") == 0 ||
+            strcmp(target, "apk") == 0 ||
+            strcmp(target, "pkg") == 0 ||
+            strcmp(target, "dmg") == 0);
+}
+
+/**
+ * @brief Serializes the catalog of supported /v1/package-as targets as RFC 8259 JSON.
+ */
+int rest_list_package_as_targets(char *json_out, size_t json_cap) {
+    snprintf(json_out, json_cap,
+             "{\"endpoint\":\"/v1/package-as\",\"targets\":["
+             "\"linux-distro\",\"linux-kernel\",\"freebsd-distro\",\"illumos-distro\","
+             "\"reactos-distro\",\"unikernel-distro\",\"unikernel\",\"rtos-distro\","
+             "\"zephyr-distro\",\"freertos-distro\",\"firmware-bin\",\"firmware-elf\","
+             "\"firmware-hex\",\"firmware-uf2\",\"mcuboot-signed\",\"renode-resc\","
+             "\"qcow2\",\"raw\",\"iso\",\"vhd\",\"vmdk\",\"vdi\",\"box\",\"uki\",\"direct-kernel\"]}");
+    return 0;
 }
 
 /**
@@ -519,6 +582,76 @@ int rest_dispatch_artifact(const char *root_dir, const char *kernel, const char 
                  "{\"job_id\":\"%s\",\"endpoint\":\"/api/v1/artifacts/generate\",\"kernel\":\"%s\",\"format\":\"%s\",\"components\":\"%s\",\"status_url\":\"/api/v1/jobs/%s\"}",
                  job_id, kernel, fmt, esc_comps, job_id);
     }
+    return exit_code;
+}
+
+/**
+ * @brief Dispatches a /v1/package-as profile-driven synthesis job.
+ */
+int rest_dispatch_package_as(const char *root_dir, const char *target, const char *profile,
+                             const char *fmt, const char *output_path, int wait_sync,
+                             char *json_out, size_t json_cap) {
+    char prof_arg[280];
+    char fmt_arg[80];
+    char out_arg[540];
+    char job_id[37];
+    char esc_prof[280];
+    char esc_fmt[80];
+    char esc_out[540];
+    int exit_code = 0;
+    size_t ai = 0;
+    char *argv_exec[8];
+
+    if (!rest_is_valid_package_as_target(target)) {
+        snprintf(json_out, json_cap,
+                 "{\"error\":\"invalid_package_as_request\",\"message\":\"Invalid package-as target\"}");
+        return 1;
+    }
+    if (profile != NULL && profile[0] != '\0' && !rest_is_safe_token(profile)) {
+        snprintf(json_out, json_cap,
+                 "{\"error\":\"invalid_package_as_request\",\"message\":\"Invalid profile token\"}");
+        return 1;
+    }
+    if (fmt != NULL && fmt[0] != '\0' && !rest_is_valid_artifact_format(fmt)) {
+        snprintf(json_out, json_cap,
+                 "{\"error\":\"invalid_package_as_request\",\"message\":\"Invalid package-as format\"}");
+        return 1;
+    }
+    if (output_path != NULL && output_path[0] != '\0' && !rest_is_safe_token(output_path)) {
+        snprintf(json_out, json_cap,
+                 "{\"error\":\"invalid_package_as_request\",\"message\":\"Invalid output path token\"}");
+        return 1;
+    }
+
+    argv_exec[ai++] = "libscript.sh";
+    argv_exec[ai++] = "package-as";
+    argv_exec[ai++] = (char *)target;
+    if (profile != NULL && profile[0] != '\0') {
+        snprintf(prof_arg, sizeof(prof_arg), "--profile=%s", profile);
+        argv_exec[ai++] = prof_arg;
+    }
+    if (fmt != NULL && fmt[0] != '\0') {
+        snprintf(fmt_arg, sizeof(fmt_arg), "--format=%s", fmt);
+        argv_exec[ai++] = fmt_arg;
+    }
+    if (output_path != NULL && output_path[0] != '\0') {
+        snprintf(out_arg, sizeof(out_arg), "--output=%s", output_path);
+        argv_exec[ai++] = out_arg;
+    }
+    argv_exec[ai] = NULL;
+
+    if (spawn_or_queue_job(root_dir, "/v1/package-as", argv_exec, wait_sync, job_id, &exit_code) != 0) {
+        snprintf(json_out, json_cap,
+                 "{\"error\":\"dispatch_failed\",\"message\":\"Unable to allocate or spawn package-as job\"}");
+        return 1;
+    }
+
+    rest_json_escape((profile != NULL) ? profile : "", esc_prof, sizeof(esc_prof));
+    rest_json_escape((fmt != NULL) ? fmt : "", esc_fmt, sizeof(esc_fmt));
+    rest_json_escape((output_path != NULL) ? output_path : "", esc_out, sizeof(esc_out));
+    snprintf(json_out, json_cap,
+             "{\"job_id\":\"%s\",\"endpoint\":\"/v1/package-as\",\"target\":\"%s\",\"profile\":\"%s\",\"format\":\"%s\",\"output\":\"%s\",\"status_url\":\"/api/v1/jobs/%s\"}",
+             job_id, target, esc_prof, esc_fmt, esc_out, job_id);
     return exit_code;
 }
 

@@ -1,9 +1,9 @@
 @echo off
 :: # iso.cmd
 :: ## Overview
-:: Packages target sysroot into a live bootable ISO 9660 hybrid media image on Windows by delegating to the vm_builder worker.
+:: Packages target sysroot or declarative `--profile` into a live bootable ISO 9660 hybrid media image on Windows.
 :: ## Usage
-:: iso.cmd [target_sysroot] [output_iso] [volume_id]
+:: iso.cmd [--profile <path|preset>] [target_sysroot] [output_iso] [volume_id]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,19 +49,22 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
 
-if "%~1"=="--help" (
-    echo Usage: %~nx0 [target_sysroot] [output_iso] [volume_id]
-    echo Synthesizes live bootable ISO image.
-    exit /b 0
-)
-if "%~1"=="-h" (
-    echo Usage: %~nx0 [target_sysroot] [output_iso] [volume_id]
-    echo Synthesizes live bootable ISO image.
-    exit /b 0
+echo %* | findstr /I /C:"--profile" /C:"-p " >nul 2>&1
+if not errorlevel 1 (
+    set "STACK="
+    call "!SCRIPT_DIR!\_profile_dispatch.cmd" "iso" %*
+    exit /b !ERRORLEVEL!
 )
 
-for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\vm_builder.cmd" "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\iso.sh" %*
+exit /b !ERRORLEVEL!
 
-call "%REPO_ROOT%\engine\common\vm_builder.cmd" "%REPO_ROOT%\synthesis\formats\iso.sh" %*
-exit /b %ERRORLEVEL%
+:: ## show_help
+:: Displays usage instructions for iso.cmd.
+:show_help
+echo Usage: %~nx0 [--profile ^<path^|preset^>] [target_sysroot] [output_iso] [volume_id]
+echo Synthesizes live bootable ISO image.
+exit /b 0

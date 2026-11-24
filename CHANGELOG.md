@@ -110,7 +110,7 @@ All notable changes to the LibScript framework are documented here.
 - **Open/Closed `experiments/` Plugin Architecture**:
   - Relocated the shared empirical benchmark harness and C11 `libscript_bench_probe.c` probe to
     `_lib/_common/experiment/` and added `experiments/engine.{sh,cmd}` covering `edgcpp-backends`,
-    `gemma-tpu`, `libtpu-pjrt`, `os-component-matrix`, and `win-port`.
+    `gemma-4-sql`, `libtpu-pjrt`, `os-component-matrix`, and `win-port`.
 - **UEFI Cloud-Boot Unikernels, Open edX 8-Appliance Constellation & `publish-marketplace`**:
   - Extended `package-as unikernel` with `--cloud-boot=uefi-gpt|efi-stub|azure-vhd` (hybrid GPT +
     FAT32 ESP raw disks and 1 MiB-aligned Hyper-V Gen2 `.vhd` trailers) and added

@@ -32,7 +32,7 @@ flowchart LR
 
     subgraph Suites["Self-Contained Suite Plugins (experiments/<suite-id>/)"]
         S1["edgcpp-backends (local-native)"]
-        S2["gemma-tpu (tpu-slice)"]
+        S2["gemma-4-sql (tpu-slice)"]
         S3["libtpu-pjrt (tpu-slice)"]
         S4["openedx (installer-e2e)"]
         S5["os-component-matrix (vagrant-os-matrix)"]
@@ -77,7 +77,7 @@ flowchart LR
 | Suite ID                                                 | Substrate           | Protocol                | Sub-Suites                | Primary Research & Verification Target                                                                                                                                                                                                                                                                      | Documentation                                                      |
 | :------------------------------------------------------- | :------------------ | :---------------------- | :------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------- |
 | [`edgcpp-backends`](./edgcpp-backends/README.md)         | `local-native`      | `PLDI-2027-v1`          | `E0`–`E7`                 | EDG C/C++ v7.0.1 LLVM, GCC/`libgccjit`, and legacy C/C++ backends vs. native Clang/GCC across compile latency, SQLite ablations, EH, C++20 coroutines, psABI/Csmith/YARPGen fuzzing, 10-project/Linux kernel builds, and 60 LaTeX macros.                                                                   | [`edgcpp-backends/README.md`](./edgcpp-backends/README.md)         |
-| [`gemma-tpu`](./gemma-tpu/README.md)                     | `tpu-slice`         | `1.0.0`                 | `E0`–`E4`                 | Zero-cost TFRC Cloud TPU evaluation of `google/gemma-4-E4B` across 7 ML backends (`hf_transformers`, `pytorch_native`, `keras_jax`, `keras_tensorflow`, `keras_pytorch`, `maxtext`, `jax_native`) covering prefill/decode, Text-to-SQL, SFT/LoRA/DPO, `/dev/shm` eviction, and Stage B CPU-fallback guards. | [`gemma-tpu/README.md`](./gemma-tpu/README.md)                     |
+| [`gemma-4-sql`](./gemma-4-sql/README.md)                 | `tpu-slice`         | `1.0.0`                 | `E0`–`E4`                 | `gemma-4-sql: TPU performance comparisons betwixt JAX, Keras, and PyTorch on Google's Gemma 4` across Hugging Face Transformers, native PyTorch, Keras (JAX/TF/PyTorch), MaxText, and native JAX covering prefill/decode, SQLite/DuckDB Text-to-SQL, SFT/LoRA/DPO, `/dev/shm` eviction, and Stage B guards. | [`gemma-4-sql/README.md`](./gemma-4-sql/README.md)                 |
 | [`libtpu-pjrt`](./libtpu-pjrt/README.md)                 | `tpu-slice`         | `PLDI-2027-v1`          | `E0`–`E8`                 | Clean-room Rust PJRT TPU runtime & compiler (`libtpu-rs`) vs. `libtpu.so`: binary forensics, cold/warm C11 startup, stock `jax` single-chip/SPMD drop-in, 5-stage AOT compilation, 2D VMEM packing, VLIW modulo scheduling, 29-dtype SparseCore numerics, and 18-artifact LaTeX synthesis.                  | [`libtpu-pjrt/README.md`](./libtpu-pjrt/README.md)                 |
 | [`openedx`](./openedx/README.md)                         | `installer-e2e`     | `1.0.0`                 | `E0`–`E3` (Steps `0`–`5`) | Multi-OS Bento Vagrant verification of native Open edX installers (`.msi`, `.exe`, `.deb`, `.rpm`, `.pkg`, `.dmg`) across isolated `headless`, `quick`, and `custom` clean-snapshot runs plus guest desktop icon, LMS (`:8000`), and Studio CMS (`:8001`) CDP login screenshots.                            | [`openedx/README.md`](./openedx/README.md)                         |
 | [`os-component-matrix`](./os-component-matrix/README.md) | `vagrant-os-matrix` | `1.0.0`                 | `M0`                      | Aggregates 7-OS (`apk`, `deb`, `rpm`, `windows`, `sunos`, `freebsd`, `macos`) component smoke & 2x-rerun idempotency markers into provenance-stamped `matrix_results.json` and regenerates the 5-tier Supported Components tables in root `README.md`.                                                      | [`os-component-matrix/README.md`](./os-component-matrix/README.md) |
@@ -168,7 +168,7 @@ When passing `--key=value` to `./libscript.sh experiment <verb> <suite-id>`:
 ./libscript.sh experiment list
 
 # Validate every built-in suite manifest and flag schema
-for suite in edgcpp-backends gemma-tpu libtpu-pjrt openedx os-component-matrix win-port; do
+for suite in edgcpp-backends gemma-4-sql libtpu-pjrt openedx os-component-matrix win-port; do
   ./libscript.sh experiment validate "$suite"
 done
 ```
@@ -180,7 +180,7 @@ done
 call .\libscript.cmd experiment list
 
 :: Validate every built-in suite manifest and flag schema
-for %%S in (edgcpp-backends gemma-tpu libtpu-pjrt openedx os-component-matrix win-port) do (
+for %%S in (edgcpp-backends gemma-4-sql libtpu-pjrt openedx os-component-matrix win-port) do (
     call .\libscript.cmd experiment validate %%S
 )
 ```
@@ -218,7 +218,7 @@ licensed compiler checkouts, or heavy hypervisor downloads:
 ./libscript.sh experiment run win-port --synthetic-fixtures --results-dir=./build/smoke/win_port
 
 # Cloud TPU suite dry-run plan verification
-./libscript.sh experiment run gemma-tpu --dry-run --results-dir=./build/smoke/gemma
+./libscript.sh experiment run gemma-4-sql --dry-run --results-dir=./build/smoke/gemma-4-sql
 
 # Open edX installer-e2e dry-run plan emission
 ./libscript.sh experiment run openedx \
@@ -271,7 +271,7 @@ cp README.md ./build/smoke/README.staging.md
 [CONTINUE] processing "./experiments/cli/cli.sh"
 [CONTINUE] processing "./experiments/engine.sh"
 edgcpp-backends	local-native	EDG C/C++ v7.0.1 Multi-Backend Empirical Evaluation & Zero-Hallucination Benchmarking Protocol (E0-E7)
-gemma-tpu	tpu-slice	Gemma 4 7-Backend Cloud TPU & TFRC Zero-Cost Evaluation Suite
+gemma-4-sql	tpu-slice	gemma-4-sql: TPU performance comparisons betwixt JAX, Keras, and PyTorch on Google's Gemma 4
 libtpu-pjrt	tpu-slice	libtpu-rs Empirical Evaluation Protocol (SIGPLAN E0-E8)
 openedx	installer-e2e	Open edX Multi-OS Vagrant, Native Installer & Guest-UI Verification Suite
 os-component-matrix	vagrant-os-matrix	7-OS Component Compatibility & 2x-Idempotency Matrix
@@ -302,7 +302,7 @@ $ ./libscript.sh experiment scaffold my-compiler-study --substrate=local-native
 | :-------- | :---------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
 | `0`       | Suite command succeeded and all provenance/telemetry gates passed.                                          | `[PASS] Experiment suite "<id>" validated cleanly.`                             |
 | `1`       | Missing `<suite-id>`, invalid `suite.json`, missing `packaging_manifest`, or undeclared `--key=value` flag. | `[ERROR] Unknown suite flag --foo (not declared in .../vars.schema.json)`       |
-| `65`      | Stage B TPU HBM telemetry guard detected silent CPU fallback (`peak_tpu_hbm_bytes == 0`) in `gemma-tpu`.    | `[ERROR] Stage B CPU-fallback detected ...` (`"status": "failed_cpu_fallback"`) |
+| `65`      | Stage B TPU HBM telemetry guard detected silent CPU fallback (`peak_tpu_hbm_bytes == 0`) in `gemma-4-sql`.  | `[ERROR] Stage B CPU-fallback detected ...` (`"status": "failed_cpu_fallback"`) |
 
 ### 4. Standardized Output Artifact Hierarchy
 
@@ -313,9 +313,9 @@ Depending on the suite class, artifacts are written under `--results-dir=<dir>` 
 <results-dir>/
 ├── campaign_summary.json       # Suite-level status, host ISA, trial policy & executed sub-suites
 ├── generated_metrics.tex       # Mechanically synthesized \newcommand / \providecommand LaTeX macros
-├── comparison_summary.json     # Cross-backend speedup & accuracy synthesis (gemma-tpu)
-├── comparison_summary.csv      # RFC 4180 CSV export of cross-backend metrics (gemma-tpu)
-├── comparison_summary.md       # GitHub-flavored Markdown comparison table (gemma-tpu)
+├── comparison_summary.json     # Cross-backend speedup & accuracy synthesis (gemma-4-sql)
+├── comparison_summary.csv      # RFC 4180 CSV export of cross-backend metrics (gemma-4-sql)
+├── comparison_summary.md       # GitHub-flavored Markdown comparison table (gemma-4-sql)
 ├── execution_plan.json         # Resolved Bento VM, artifact & verification plan (installer-e2e dry-run)
 ├── metrics.json                # Per-mode installer timing, probe & UI verification status (installer-e2e)
 ├── matrix_results.json         # Provenance-stamped 7-OS component compatibility JSON (os-component-matrix)

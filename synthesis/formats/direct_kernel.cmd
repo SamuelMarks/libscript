@@ -1,9 +1,9 @@
 @echo off
 :: # direct_kernel.cmd
 :: ## Overview
-:: Packages a target sysroot into a direct-boot kernel + initrd bundle on Windows.
+:: Packages a target sysroot or declarative `--profile` into a direct-boot kernel + initrd bundle on Windows.
 :: ## Usage
-:: direct_kernel.cmd [--kernel=<os>] [--allow-stub] [target_sysroot] [output_dir]
+:: direct_kernel.cmd [--profile <path|preset>] [--kernel=<os>] [--allow-stub] [target_sysroot] [output_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -52,17 +52,43 @@ goto :find_root
 if /I "%~1"=="--help" goto :show_help
 if /I "%~1"=="-h" goto :show_help
 
+echo %* | findstr /I /C:"--profile" /C:"-p " >nul 2>&1
+if not errorlevel 1 (
+    set "STACK="
+    call "!SCRIPT_DIR!\_profile_dispatch.cmd" "direct-kernel" %*
+    exit /b !ERRORLEVEL!
+)
+
 set "KERNEL_KIND=linux"
 if not "%LIBSCRIPT_TARGET_OS%"=="" set "KERNEL_KIND=%LIBSCRIPT_TARGET_OS%"
+set "TARGET_ARCH=x86_64"
+if not "%LIBSCRIPT_TARGET_ARCH%"=="" set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
 goto :parse_dk_opts
 
 :: ## parse_dk_opts
-:: Parses optional --kernel and --allow-stub flags.
+:: Parses optional --kernel, --arch, and --allow-stub flags.
 :parse_dk_opts
 set "_ARG=%~1"
 if "!_ARG!"=="" goto :dk_opts_done
 if "!_ARG:~0,9!"=="--kernel=" (
     set "KERNEL_KIND=!_ARG:~9!"
+    shift
+    goto :parse_dk_opts
+)
+if /I "!_ARG!"=="--kernel" (
+    set "KERNEL_KIND=%~2"
+    shift
+    shift
+    goto :parse_dk_opts
+)
+if "!_ARG:~0,7!"=="--arch=" (
+    set "TARGET_ARCH=!_ARG:~7!"
+    shift
+    goto :parse_dk_opts
+)
+if /I "!_ARG!"=="--arch" (
+    set "TARGET_ARCH=%~2"
+    shift
     shift
     goto :parse_dk_opts
 )
@@ -109,14 +135,22 @@ if "%LIBSCRIPT_ALLOW_STUB%"=="1" (
     set "OUT_DIR=%~2"
     if "!OUT_DIR!"=="" set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\build\images\direct-kernel"
     if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
-    if exist "!OUT_DIR!\.stamp.direct_kernel" if exist "!OUT_DIR!\boot-manifest.json" (
-        echo [SKIP] Direct-boot kernel bundle already synthesized: !OUT_DIR!
-        exit /b 0
+    if exist "!OUT_DIR!\.stamp.direct_kernel" (
+        if exist "!OUT_DIR!\boot-manifest.json" (
+            findstr /I /C:"arch=!TARGET_ARCH!" "!OUT_DIR!\.stamp.direct_kernel" >nul 2>&1
+            if not errorlevel 1 (
+                echo [SKIP] Direct-boot kernel bundle already synthesized: !OUT_DIR!
+                exit /b 0
+            )
+        )
     )
-    echo LibScript Direct-Boot Kernel Stub> "!OUT_DIR!\kernel.bin"
-    echo LibScript Direct-Boot Initrd Stub> "!OUT_DIR!\initrd.img"
-    echo {"kernel_family":"!KERNEL_KIND!","kernel_image":"kernel.bin","initrd_image":"initrd.img","mode":"stub"}> "!OUT_DIR!\boot-manifest.json"
-    echo mode=stub> "!OUT_DIR!\.stamp.direct_kernel"
+    echo LibScript Direct-Boot Kernel Stub ^(!TARGET_ARCH!^)> "!OUT_DIR!\kernel.bin"
+    echo LibScript Direct-Boot Initrd Stub ^(!TARGET_ARCH!^)> "!OUT_DIR!\initrd.img"
+    echo {"kernel_family":"!KERNEL_KIND!","arch":"!TARGET_ARCH!","kernel_image":"kernel.bin","initrd_image":"initrd.img","mode":"stub"}> "!OUT_DIR!\boot-manifest.json"
+    (
+        echo mode=stub
+        echo arch=!TARGET_ARCH!
+    ) > "!OUT_DIR!\.stamp.direct_kernel"
     exit /b 0
 )
 
@@ -126,5 +160,5 @@ exit /b !ERRORLEVEL!
 :: ## show_help
 :: Displays usage instructions for direct_kernel.cmd.
 :show_help
-echo Usage: %~nx0 [--kernel=^<os^>] [--allow-stub] [target_sysroot] [output_dir]
+echo Usage: %~nx0 [--profile ^<path^|preset^>] [--kernel=^<os^>] [--allow-stub] [target_sysroot] [output_dir]
 exit /b 0

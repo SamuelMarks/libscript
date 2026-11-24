@@ -14,6 +14,28 @@
       "type": "string",
       "description": "How to install INITRAMFS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
       "default": "system"
+    },
+    "LIBSCRIPT_INITRAMFS_COMPRESS": {
+      "type": "string",
+      "enum": ["zstd", "lz4", "gzip"],
+      "default": "zstd",
+      "description": "Compression algorithm used when packing cpio newc initramfs archives."
+    },
+    "LIBSCRIPT_LUKS_CMDLINE": {
+      "type": "string",
+      "default": "",
+      "description": "Optional cryptdevice/root kernel command-line override injected into early-userspace init."
+    },
+    "LIBSCRIPT_INIT_SMOKE_ROOT": {
+      "type": "string",
+      "default": "",
+      "description": "Optional staging root path used when running early-userspace init smoke tests."
+    },
+    "LIBSCRIPT_INIT_SMOKE_EXIT": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) causing synthesized /init to exit cleanly after LUKS2/mount verification in smoke tests."
     }
   }
 }

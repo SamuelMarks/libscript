@@ -591,7 +591,7 @@ matrix across all `492` atomic `T1`/`T2` recipes and `T3`–`T5` subsystems.
 ./libscript.sh experiment scaffold my-new-study
 ./libscript.sh experiment scaffold wordpress --template=installer-e2e
 
-# Run or test self-contained plugins (edgcpp-backends, gemma-tpu, libtpu-pjrt, openedx, os-component-matrix, win-port)
+# Run or test self-contained plugins (edgcpp-backends, gemma-4-sql, libtpu-pjrt, openedx, os-component-matrix, win-port)
 ./libscript.sh experiment test libtpu-pjrt
 ./libscript.sh experiment run os-component-matrix --update-readme
 ./libscript.sh experiment run openedx --target-os=windows-11 --pkg-format=msi --pkg-source=github-release

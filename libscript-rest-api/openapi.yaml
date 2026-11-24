@@ -1829,12 +1829,16 @@ paths:
               properties:
                 kernel:
                   type: string
+                  description: Target kernel family identifier
                 format:
                   type: string
+                  description: Target output artifact format
                 components:
                   type: string
+                  description: Comma-separated component list
                 board:
                   type: string
+                  description: Optional RTOS microcontroller board identifier
       responses:
         "202":
           description: Synthesis job dispatched
@@ -1842,6 +1846,74 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JobReference"
+
+  /v1/package-as:
+    get:
+      tags:
+        - Artifacts
+      summary: List supported package-as kernel, distro, unikernel, and RTOS targets
+      operationId: listPackageAsTargets
+      responses:
+        "200":
+          description: Supported package-as targets and formats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackageAsTargetCatalog"
+    post:
+      tags:
+        - Artifacts
+      summary: Dispatch a profile-driven package-as OS/kernel/unikernel/RTOS synthesis job
+      operationId: dispatchPackageAs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackageAsRequest"
+      responses:
+        "202":
+          description: Profile-driven package-as synthesis job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/package-as:
+    get:
+      tags:
+        - Artifacts
+      summary: List supported package-as targets (versioned /api/v1 alias)
+      operationId: listApiV1PackageAsTargets
+      responses:
+        "200":
+          description: Supported package-as targets and formats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackageAsTargetCatalog"
+    post:
+      tags:
+        - Artifacts
+      summary: Dispatch a profile-driven package-as synthesis job (versioned /api/v1 alias)
+      operationId: dispatchApiV1PackageAs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackageAsRequest"
+      responses:
+        "202":
+          description: Profile-driven package-as synthesis job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /v1/infrastructure:
     post:
@@ -2391,7 +2463,8 @@ components:
           default: all
           description:
             Named lifecycle step or campaign alias (e.g., libtpu_campaign, win_port_campaign,
-            edgcpp_backends_campaign, gemma_tpu_campaign, tpu_matrix, bento_matrix, run_experiments)
+            edgcpp_backends_campaign, gemma_4_sql_campaign, tpu_matrix, bento_matrix,
+            run_experiments)
         subsuites:
           type: string
           default: E0,E1,E2,E3,E4,E5,E6,E7,E8
@@ -2431,3 +2504,74 @@ components:
         ecosystem_dir:
           type: string
           description: Optional parent directory containing multi-repository ecosystem checkouts
+
+    PackageAsRequest:
+      type: object
+      description: Request payload for profile-driven ./libscript.sh package-as synthesis jobs
+      required:
+        - target
+      properties:
+        target:
+          type: string
+          description:
+            Canonical package-as driver target across Linux, FreeBSD, illumos, ReactOS, Unikernels,
+            and RTOS
+          enum:
+            - linux-distro
+            - linux-kernel
+            - freebsd-distro
+            - illumos-distro
+            - reactos-distro
+            - unikernel-distro
+            - unikernel
+            - rtos-distro
+            - zephyr-distro
+            - freertos-distro
+            - firmware-bin
+            - firmware-elf
+            - firmware-hex
+            - firmware-uf2
+            - mcuboot-signed
+            - renode-resc
+            - qcow2
+            - raw
+            - iso
+            - vhd
+            - vmdk
+            - vdi
+            - box
+            - uki
+            - direct-kernel
+            - docker
+            - msi
+            - deb
+            - rpm
+            - apk
+            - pkg
+            - dmg
+        profile:
+          type: string
+          description: Profile preset name or relative JSON path under synthesis/profiles/
+        format:
+          type: string
+          description: Output disk, live media, direct-boot kernel, or firmware binary format
+        output:
+          type: string
+          description: Optional relative output artifact path
+
+    PackageAsTargetCatalog:
+      type: object
+      description: Catalog of supported package-as kernel, OS distro, unikernel, and RTOS drivers
+      required:
+        - endpoint
+        - targets
+      properties:
+        endpoint:
+          type: string
+          description: Canonical API endpoint path
+        targets:
+          type: array
+          description: Registered package-as synthesis targets
+          items:
+            type: string
+            description: Supported package-as target identifier

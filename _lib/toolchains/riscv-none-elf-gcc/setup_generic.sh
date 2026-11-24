@@ -147,6 +147,10 @@ case "$ACTION" in
       libscript_symlink_alias 'riscv-none-elf-gcc' "${VERSION}" "${EXACT_VERSION}"
       exit 0
     elif [ "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" = "system" ]; then
+      if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ "${LIBSCRIPT_ALLOW_STUB:-0}" = "1" ] && ! command -v riscv64-unknown-elf-gcc >/dev/null 2>&1; then
+        printf '[OFFLINE] Skipping system riscv-none-elf-gcc install; falling back to clang/ld.lld.\n'
+        exit 0
+      fi
       libscript_depends 'riscv-none-elf-gcc'
     elif [ "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" = "nix" ] || [ "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" = "guix" ] || [ "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" = "spack" ] || [ "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" = "brew" ] || [ "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" = "winget" ] || [ "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" = "choco" ] || [ "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" = "scoop" ]; then
       libscript_depends_via "${RISCV_NONE_ELF_GCC_INSTALL_METHOD}" 'riscv-none-elf-gcc'

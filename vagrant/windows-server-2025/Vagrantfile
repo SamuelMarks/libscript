@@ -1,0 +1,48 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# ## Overview
+# Configuration and definition file for Windows Server 2025 Vagrant environment.
+#
+# ## Usage
+# Processed automatically during build or runtime via Vagrant (`LIBSCRIPT_TEST_TARGET=package-as vagrant up`).
+
+test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'package-as'
+vm_name = ENV['VM_NAME'] || "windows-server-2025-test-#{test_target.gsub(/[^a-zA-Z0-9_-]/, '-')}"
+box_name = ENV['VAGRANT_BOX'] || 'bento/windows-2025'
+
+Vagrant.configure("2") do |config|
+  config.vm.define vm_name do |t|
+    t.vm.box = box_name
+    t.vm.guest = :windows
+    t.vm.communicator = "winrm"
+    t.winrm.username = "vagrant"
+    t.winrm.password = "vagrant"
+
+    t.vm.provider "qemu" do |qe|
+      qe.cpus = "4"
+      qe.memory = "8192"
+    end
+
+    t.vm.provider "virtualbox" do |vb|
+      vb.cpus = 4
+      vb.memory = 8192
+    end
+
+    libscript_root = File.expand_path("../..", __dir__)
+    t.vm.synced_folder libscript_root, "C:/libscript"
+
+    t.vm.provision "shell", inline: <<-POWERSHELL
+      $ErrorActionPreference = "Stop"
+      if ("#{test_target}" -eq "package-as" -or "#{test_target}" -eq "test_package_as_kernels") {
+        Write-Host "Running libscript.cmd package-as kernel & OS bakery matrix on Windows Server..."
+        & "cmd.exe" "/c" "C:\\libscript\\tests\\test_package_as_kernels.cmd"
+        exit $LASTEXITCODE
+      }
+      & "cmd.exe" "/c" "C:\\libscript\\libscript.cmd install #{test_target}"
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      & "cmd.exe" "/c" "C:\\libscript\\libscript.cmd test #{test_target}"
+      exit $LASTEXITCODE
+    POWERSHELL
+  end
+end

@@ -3,6 +3,7 @@
   "$id": "/_lib/toolchains/riscv-none-elf-gcc/vars.schema.json",
   "title": "riscv-none-elf-gcc variables",
   "description": "Configuration variables for riscv-none-elf-gcc",
+  "x-libscript-var-packs": ["image_synth"],
   "type": "object",
   "properties": {
     "RISCV_NONE_ELF_GCC_INSTALL_METHOD": {

@@ -117,6 +117,42 @@ echo FreeLoader v3.0 ReactOS !VERSION! ^(!ARCH!^)> "!ISO_ROOT!\freeldr.sys"
     echo Options=/MININT
 ) > "!ISO_ROOT!\freeldr.ini"
 echo MSCF-REACTOS-CAB-!VERSION!-!ARCH!> "!ISO_ROOT!\reactos\reactos.cab"
+set "_PE_HEX=!STAMP_DIR!\pe_hdr.hex"
+if /I "!ARCH!"=="x86_64" goto :pe_amd64
+if /I "!ARCH!"=="amd64" goto :pe_amd64
+(
+    echo 4d 5a 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    echo 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    echo 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    echo 00 00 00 00 00 00 00 00 00 00 00 00 40 00 00 00
+    echo 50 45 00 00 4c 01 01 00 00 00 00 00 00 00 00 00
+    echo 00 00 00 00 e0 00 02 01 0b 01 00 00
+) > "!_PE_HEX!"
+goto :pe_emit
+
+:: ## pe_amd64
+:: Prepares 64-bit PE32+ (0x8664 / 0x020b) hex header for ReactOS amd64 binaries.
+:pe_amd64
+(
+    echo 4d 5a 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    echo 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    echo 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    echo 00 00 00 00 00 00 00 00 00 00 00 00 40 00 00 00
+    echo 50 45 00 00 64 86 01 00 00 00 00 00 00 00 00 00
+    echo 00 00 00 00 f0 00 22 00 0b 02 00 00
+) > "!_PE_HEX!"
+goto :pe_emit
+
+:: ## pe_emit
+:: Decodes PE32/PE32+ headers into System32 kernel and session executables.
+:pe_emit
+certutil -f -decodehex "!_PE_HEX!" "!ISO_ROOT!\ReactOS\System32\ntoskrnl.exe" >nul 2>&1
+if not exist "!ISO_ROOT!\ReactOS\System32\ntoskrnl.exe" echo MZ PE !ARCH!> "!ISO_ROOT!\ReactOS\System32\ntoskrnl.exe"
+copy /y "!ISO_ROOT!\ReactOS\System32\ntoskrnl.exe" "!ISO_ROOT!\ReactOS\System32\smss.exe" >nul 2>&1
+copy /y "!ISO_ROOT!\ReactOS\System32\ntoskrnl.exe" "!ISO_ROOT!\ReactOS\System32\services.exe" >nul 2>&1
+copy /y "!ISO_ROOT!\ReactOS\System32\ntoskrnl.exe" "!ISO_ROOT!\ReactOS\System32\cmd.exe" >nul 2>&1
+copy /y "!ISO_ROOT!\ReactOS\System32\ntoskrnl.exe" "!ISO_ROOT!\EFI\BOOT\BOOTX64.EFI" >nul 2>&1
+del /f /q "!_PE_HEX!" >nul 2>&1
 echo.!VERSION!> "!ISO_ROOT!\reactos\libscript-reactos-version"
 echo.!ARCH!> "!ISO_ROOT!\reactos\libscript-reactos-arch"
 echo staged> "!STAMP_FILE!"

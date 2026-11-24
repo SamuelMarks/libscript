@@ -1,9 +1,9 @@
 @echo off
 :: # raw_img.cmd
 :: ## Overview
-:: Packages a target sysroot into a partitioned, bootable raw disk image (.img) on Windows by delegating to the vm_builder worker.
+:: Packages a target sysroot or declarative `--profile` into a partitioned, bootable raw disk image (.img) on Windows.
 :: ## Usage
-:: raw_img.cmd [target_sysroot] [output_image] [size_gib] [boot_mode]
+:: raw_img.cmd [--profile <path|preset>] [target_sysroot] [output_image] [size_gib] [boot_mode]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,19 +49,22 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
 
-if "%~1"=="--help" (
-    echo Usage: %~nx0 [target_sysroot] [output_image] [size_gib] [boot_mode]
-    echo Synthesizes raw disk image.
-    exit /b 0
-)
-if "%~1"=="-h" (
-    echo Usage: %~nx0 [target_sysroot] [output_image] [size_gib] [boot_mode]
-    echo Synthesizes raw disk image.
-    exit /b 0
+echo %* | findstr /I /C:"--profile" /C:"-p " >nul 2>&1
+if not errorlevel 1 (
+    set "STACK="
+    call "!SCRIPT_DIR!\_profile_dispatch.cmd" "raw" %*
+    exit /b !ERRORLEVEL!
 )
 
-for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\vm_builder.cmd" "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\raw_img.sh" %*
+exit /b !ERRORLEVEL!
 
-call "%REPO_ROOT%\engine\common\vm_builder.cmd" "%REPO_ROOT%\synthesis\formats\raw_img.sh" %*
-exit /b %ERRORLEVEL%
+:: ## show_help
+:: Displays usage instructions for raw_img.cmd.
+:show_help
+echo Usage: %~nx0 [--profile ^<path^|preset^>] [target_sysroot] [output_image] [size_gib] [boot_mode]
+echo Synthesizes raw disk image.
+exit /b 0

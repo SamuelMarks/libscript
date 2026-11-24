@@ -27,7 +27,7 @@ The architecture enforces two core invariants:
 flowchart TD
     subgraph PlaneB["Plane B: Verification, Benchmarks & Control Plane (experiments/, tests/, libscript-rest-api/)"]
         REST["Native C11 HTTP Server (OpenAPI 3.2.0): /v1/{recipes,synthesis,infrastructure,workloads,traits,experiments}"]
-        Bench["Open/Closed Empirical Campaign Plugins: edgcpp-backends, gemma-tpu, libtpu-pjrt, openedx, os-component-matrix, win-port"]
+        Bench["Open/Closed Empirical Campaign Plugins: edgcpp-backends, gemma-4-sql, libtpu-pjrt, openedx, os-component-matrix, win-port"]
     end
 
     subgraph T5["T5: Workloads, Application Stacks & Stateful Constellations (workloads/)"]

@@ -1,9 +1,9 @@
 @echo off
 :: # experiment.cmd
 :: ## Overview
-:: CLI command wrapper for the unified rapid cloud, TFRC 7-backend TPU matrix, and Bento multi-OS Vagrant experimentation lifecycle (`a_provision_instance` .. `i_deprovision_instance`, `tpu_matrix`, `gemma_tpu_campaign`, `all`).
+:: CLI command wrapper for the unified rapid cloud, TFRC 7-backend TPU matrix, and Bento multi-OS Vagrant experimentation lifecycle (`a_provision_instance` .. `i_deprovision_instance`, `tpu_matrix`, `gemma_4_sql_campaign`, `all`).
 :: ## Usage
-:: libscript.cmd experiment [tpu_matrix|gemma_tpu_campaign|bento_matrix|all|<step>] ["--tfrc-config=<path>"] ["--backends=<csv|all>"] [flags...]
+:: libscript.cmd experiment [tpu_matrix|gemma_4_sql_campaign|bento_matrix|all|<step>] ["--tfrc-config=<path>"] ["--backends=<csv|all>"] [flags...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -857,6 +857,7 @@
           "rootfs-tar",
           "oci-image",
           "direct-kernel",
+          "uki",
           "firmware-elf",
           "firmware-bin",
           "firmware-hex",

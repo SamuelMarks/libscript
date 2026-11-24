@@ -29,6 +29,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+for _rarg in "$@"; do
+  case "$_rarg" in
+    --profile|-p|--profile=*)
+      STACK='' exec "${SCRIPT_DIR}/_profile_dispatch.sh" 'raw' "$@"
+      ;;
+  esac
+done
+
 EXTRA_FLAGS=''
 while [ $# -gt 0 ]; do
   case "$1" in

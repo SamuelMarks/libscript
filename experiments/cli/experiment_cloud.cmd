@@ -1,9 +1,9 @@
 @echo off
 :: # experiment_cloud.cmd
 :: ## Overview
-:: Unified rapid cloud, TFRC 7-backend Google Cloud TPU (`--suite=gemma_tpu` / `tpu_matrix`), Dual-ISA native benchmark (`--suite=libtpu|edgcpp|manifest`), and Bento multi-OS Vagrant matrix experimentation lifecycle orchestrator for LibScript on Windows.
+:: Unified rapid cloud, TFRC 7-backend Google Cloud TPU (`--suite=gemma-4-sql` / `tpu_matrix`), Dual-ISA native benchmark (`--suite=libtpu|edgcpp|manifest`), and Bento multi-OS Vagrant matrix experimentation lifecycle orchestrator for LibScript on Windows.
 :: ## Usage
-:: experiments\cli\experiment_cloud.cmd [a_provision_instance|sync_research_repos|verify_native_host|run_experiments|g_collect_logs|h_pull_logs|emit_latex_and_verify_pdf|i_deprovision_instance|tpu_matrix|gemma_tpu_campaign|bento_matrix|all] [--suite=gemma_tpu|libtpu|edgcpp|libscript|manifest|all]
+:: experiments\cli\experiment_cloud.cmd [a_provision_instance|sync_research_repos|verify_native_host|run_experiments|g_collect_logs|h_pull_logs|emit_latex_and_verify_pdf|i_deprovision_instance|tpu_matrix|gemma_4_sql_campaign|bento_matrix|all] [--suite=gemma-4-sql|libtpu|edgcpp|libscript|manifest|all]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -89,6 +89,8 @@ if "%CORE_EXPERIMENT_RESUME%"=="" set "CORE_EXPERIMENT_RESUME=1"
 if "%CORE_EXPERIMENT_FRESH_VM_PER_BACKEND%"=="" set "CORE_EXPERIMENT_FRESH_VM_PER_BACKEND=0"
 set "CORE_EXPERIMENT_STEPS="
 set "_SUBSUITES_EXPLICIT=0"
+set "_MODEL_EXPLICIT=0"
+set "POSITIONAL_JSON_MANIFEST="
 set "_TPU_PROV_STARTED=0"
 goto :parse_args
 
@@ -153,8 +155,8 @@ if "!_arg:~0,13!"=="--state-file=" ( set "CORE_EXPERIMENT_STATE_FILE=!_arg:~13!"
 if "!_arg:~0,14!"=="--tfrc-config=" ( set "TFRC_CONFIG=!_arg:~14!" & set "TFRC_STRICT=1" & shift & goto :parse_args )
 if /i "!_arg!"=="--tfrc-config" ( set "TFRC_CONFIG=%~2" & set "TFRC_STRICT=1" & shift & shift & goto :parse_args )
 if /i "!_arg!"=="--tfrc-only" ( set "TFRC_STRICT=1" & shift & goto :parse_args )
-if "!_arg:~0,8!"=="--model=" ( set "CORE_EXPERIMENT_MODEL=!_arg:~8!" & shift & goto :parse_args )
-if /i "!_arg!"=="--model" ( set "CORE_EXPERIMENT_MODEL=%~2" & shift & shift & goto :parse_args )
+if "!_arg:~0,8!"=="--model=" ( set "CORE_EXPERIMENT_MODEL=!_arg:~8!" & set "_MODEL_EXPLICIT=1" & shift & goto :parse_args )
+if /i "!_arg!"=="--model" ( set "CORE_EXPERIMENT_MODEL=%~2" & set "_MODEL_EXPLICIT=1" & shift & shift & goto :parse_args )
 if "!_arg:~0,11!"=="--backends=" ( set "CORE_EXPERIMENT_BACKENDS=!_arg:~11!" & shift & goto :parse_args )
 if /i "!_arg!"=="--backends" ( set "CORE_EXPERIMENT_BACKENDS=%~2" & shift & shift & goto :parse_args )
 if "!_arg:~0,19!"=="--command-template=" ( set "CORE_EXPERIMENT_COMMAND_TEMPLATE=!_arg:~19!" & shift & goto :parse_args )
@@ -168,7 +170,8 @@ if /i "!_arg!"=="--max-ttl-minutes" ( set "TFRC_MAX_TTL_MINUTES=%~2" & shift & s
 if "!_arg:~0,13!"=="--gcs-bucket=" ( set "GCS_BUCKET=!_arg:~13!" & set "TFRC_STORAGE_MODE=same_region_gcs" & set "TFRC_EXPLICIT_GCS_BUCKET=1" & shift & goto :parse_args )
 if /i "!_arg!"=="--gcs-bucket" ( set "GCS_BUCKET=%~2" & set "TFRC_STORAGE_MODE=same_region_gcs" & set "TFRC_EXPLICIT_GCS_BUCKET=1" & shift & shift & goto :parse_args )
 if /i "!_arg!"=="--dry-run" ( set "DRY_RUN=true" & shift & goto :parse_args )
-for %%S in (a_provision_instance sync_research_repos verify_native_host b_use_bento_fork c_install_virtualization_stack d_deploy_vagrant_box e_snapshot_vagrant_box f_test_libscript_components g_collect_logs h_pull_logs emit_latex_and_verify_pdf i_deprovision_instance provision_instance use_bento_fork setup_bento_fork bento_fork install_virtualization_stack install_bento_deps deploy_vagrant_box deploy_target_os snapshot_vagrant_box snapshot test_libscript_components run_libscript_matrix send_logs_to_host run_experiments collect_logs move_to_log_dir pull_logs move_log_dir_to_host deprovision_instance bento_matrix os_matrix full_bento_matrix libtpu_campaign win_port_campaign edgcpp_backends_campaign gemma_tpu_campaign tpu_matrix all a 0 1 2 3 4 5 i) do (
+if /i "!_arg:~-5!"==".json" if exist "!_arg!" if "!POSITIONAL_JSON_MANIFEST!"=="" ( set "POSITIONAL_JSON_MANIFEST=!_arg!" & shift & goto :parse_args )
+for %%S in (a_provision_instance sync_research_repos verify_native_host b_use_bento_fork c_install_virtualization_stack d_deploy_vagrant_box e_snapshot_vagrant_box f_test_libscript_components g_collect_logs h_pull_logs emit_latex_and_verify_pdf i_deprovision_instance provision_instance use_bento_fork setup_bento_fork bento_fork install_virtualization_stack install_bento_deps deploy_vagrant_box deploy_target_os snapshot_vagrant_box snapshot test_libscript_components run_libscript_matrix send_logs_to_host run_experiments collect_logs move_to_log_dir pull_logs move_log_dir_to_host deprovision_instance bento_matrix os_matrix full_bento_matrix libtpu_campaign win_port_campaign edgcpp_backends_campaign gemma_4_sql_campaign tpu_matrix all a 0 1 2 3 4 5 i) do (
     if /i "!_arg!"=="%%S" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! !_arg!"
 )
 shift
@@ -177,20 +180,42 @@ goto :parse_args
 :: ## after_parse_args
 :: Finalizes suite defaults and TFRC zero-cost configuration after argument parsing.
 :after_parse_args
+if not "!POSITIONAL_JSON_MANIFEST!"=="" if exist "!POSITIONAL_JSON_MANIFEST!" (
+    if "!CORE_EXPERIMENT_REPO_DIR!"=="" (
+        for %%P in ("!POSITIONAL_JSON_MANIFEST!") do set "CORE_EXPERIMENT_REPO_DIR=%%~dpP"
+        if "!CORE_EXPERIMENT_REPO_DIR:~-1!"=="\" set "CORE_EXPERIMENT_REPO_DIR=!CORE_EXPERIMENT_REPO_DIR:~0,-1!"
+    )
+    if "!_MODEL_EXPLICIT!"=="0" (
+        for /f "usebackq delims=" %%M in (`jq -r ".ml.model // .ml.model_name // empty" "!POSITIONAL_JSON_MANIFEST!" 2^>nul`) do set "CORE_EXPERIMENT_MODEL=%%M"
+    )
+    if "!CORE_EXPERIMENT_COMMAND_TEMPLATE!"=="" (
+        for /f "usebackq delims=" %%X in (`jq -r "if (.ml.command_matrix | type) == \"string\" then .ml.command_matrix elif (.ml.command_matrix | type) == \"array\" then (.ml.command_matrix[0] // empty) else empty end" "!POSITIONAL_JSON_MANIFEST!" 2^>nul`) do set "CORE_EXPERIMENT_COMMAND_TEMPLATE=%%X"
+    )
+    if "!CORE_EXPERIMENT_SIZE:~0,17!"=="160-vCPU Standard" (
+        for /f "usebackq delims=" %%T in (`jq -r ".ml.tpu_type // .ml.accelerator_type // empty" "!POSITIONAL_JSON_MANIFEST!" 2^>nul`) do set "CORE_EXPERIMENT_SIZE=%%T"
+    )
+    if "!CORE_EXPERIMENT_LOCATION!"=="eastus2" (
+        for /f "usebackq delims=" %%Z in (`jq -r ".ml.tpu_zone // empty" "!POSITIONAL_JSON_MANIFEST!" 2^>nul`) do set "CORE_EXPERIMENT_LOCATION=%%Z"
+    )
+    if "!TFRC_CONFIG!"=="" (
+        for /f "usebackq delims=" %%C in (`jq -r ".ml.tfrc_config // empty" "!POSITIONAL_JSON_MANIFEST!" 2^>nul`) do set "TFRC_CONFIG=%%C"
+    )
+    for /f "usebackq delims=" %%O in (`jq -r "if .ml.tfrc_only == true then \"1\" else empty end" "!POSITIONAL_JSON_MANIFEST!" 2^>nul`) do set "TFRC_STRICT=%%O"
+)
 if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu" set "CORE_EXPERIMENT_PROVIDER=gcp-tpu-vm"
-echo.!CORE_EXPERIMENT_STEPS! | findstr /I "tpu_matrix gemma_tpu_campaign" >nul 2>&1
+echo.!CORE_EXPERIMENT_STEPS! | findstr /I "tpu_matrix gemma_4_sql_campaign" >nul 2>&1
 if not errorlevel 1 (
-    set "CORE_EXPERIMENT_SUITE=gemma_tpu"
+    set "CORE_EXPERIMENT_SUITE=gemma-4-sql"
     if /i "!CORE_EXPERIMENT_PROVIDER!"=="azure" set "CORE_EXPERIMENT_PROVIDER=gcp-tpu-vm"
 )
-if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+if /i "!CORE_EXPERIMENT_SUITE!"=="gemma-4-sql" (
     if /i "!CORE_EXPERIMENT_PROVIDER!"=="azure" set "CORE_EXPERIMENT_PROVIDER=gcp-tpu-vm"
     if "!_SUBSUITES_EXPLICIT!"=="0" set "CORE_EXPERIMENT_SUBSUITES=E0,E1,E2,E3,E4"
     if "!CORE_EXPERIMENT_REPO_DIR!"=="" set "CORE_EXPERIMENT_REPO_DIR=%CD%"
     if "!CORE_EXPERIMENT_NODE!"=="edg-exp-node" set "CORE_EXPERIMENT_NODE=gemma-tfrc-node"
 )
 if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" (
-    if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+    if /i "!CORE_EXPERIMENT_SUITE!"=="gemma-4-sql" (
         call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_require_config "!CORE_EXPERIMENT_REPO_DIR!"
         if errorlevel 1 exit /b !errorlevel!
         call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
@@ -306,7 +331,7 @@ if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" (
         call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_preflight_audit "!GCP_PROJECT_ID!" "!TPU_ZONE!" "!TPU_NAME!"
         if errorlevel 1 exit /b !errorlevel!
     )
-    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="1" (
+    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_4_SQL_LOCAL_EXEC%"=="1" (
         set "_TPU_PROV_STARTED=1"
         call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\gcp-tpu-vm\cli.cmd" create "!TPU_NAME!"
         if errorlevel 1 exit /b !errorlevel!
@@ -316,7 +341,7 @@ if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" (
         if "!_ttl!"=="" set "_ttl=180"
         call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\gcp-tpu-vm\cli.cmd" arm-ttl "!TPU_NAME!" --minutes "!_ttl!"
         if errorlevel 1 exit /b !errorlevel!
-        if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+        if /i "!CORE_EXPERIMENT_SUITE!"=="gemma-4-sql" (
             call "!LIBSCRIPT_ROOT_DIR!\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_bootstrap_remote "!TPU_NAME!" "!CORE_EXPERIMENT_REPO_DIR!"
             if errorlevel 1 exit /b !errorlevel!
         )
@@ -400,14 +425,14 @@ call :write_experiment_state
 exit /b 0
 
 :: ## run_experiments
-:: Executes the requested benchmark suite (`gemma_tpu`, `libscript`, `libtpu`, `win_port`, `edgcpp_backends`, or `edgcpp`) on the target host.
+:: Executes the requested benchmark suite (`gemma-4-sql`, `libscript`, `libtpu`, `win_port`, `edgcpp_backends`, or `edgcpp`) on the target host.
 :run_experiments
-if not "%FORCE_REBUILD%"=="1" if "!RUN_DONE!"=="true" if /i not "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+if not "%FORCE_REBUILD%"=="1" if "!RUN_DONE!"=="true" if /i not "!CORE_EXPERIMENT_SUITE!"=="gemma-4-sql" (
     echo [INFO] [run_experiments] Experiments already completed on '!CORE_EXPERIMENT_NODE!'.
     exit /b 0
 )
-if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
-    echo [INFO] [run_experiments] Running gemma_tpu 7-backend matrix ^(!CORE_EXPERIMENT_BACKENDS! / !CORE_EXPERIMENT_SUBSUITES!^) on '!CORE_EXPERIMENT_NODE!'...
+if /i "!CORE_EXPERIMENT_SUITE!"=="gemma-4-sql" (
+    echo [INFO] [run_experiments] Running gemma-4-sql 7-backend matrix ^(!CORE_EXPERIMENT_BACKENDS! / !CORE_EXPERIMENT_SUBSUITES!^) on '!CORE_EXPERIMENT_NODE!'...
     set "GCP_PROJECT_ID=!CORE_EXPERIMENT_RG!"
     set "TPU_ZONE=!CORE_EXPERIMENT_LOCATION!"
     set "TPU_ACCELERATOR_TYPE=!RESOLVED_VM_SKU!"
@@ -417,7 +442,7 @@ if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
     if "!CORE_EXPERIMENT_FRESH_VM_PER_BACKEND!"=="1" set "_gt_extra=!_gt_extra! --fresh-vm-per-backend"
     if "!CORE_EXPERIMENT_RESUME!"=="0" set "_gt_extra=!_gt_extra! --no-resume"
     if not "!CORE_EXPERIMENT_COMMAND_TEMPLATE!"=="" set "_gt_extra=!_gt_extra! \"--command-template=!CORE_EXPERIMENT_COMMAND_TEMPLATE!\""
-    call "!LIBSCRIPT_ROOT_DIR!\experiments\gemma-tpu\benchmark_experiments.cmd" "--repo-dir=!CORE_EXPERIMENT_REPO_DIR!" "--results-dir=!CORE_EXPERIMENT_LOCAL_DIR!\gemma_tpu" "--model=!CORE_EXPERIMENT_MODEL!" "--backends=!CORE_EXPERIMENT_BACKENDS!" "--subsuites=!CORE_EXPERIMENT_SUBSUITES!" !_gt_extra!
+    call "!LIBSCRIPT_ROOT_DIR!\experiments\gemma-4-sql\benchmark_experiments.cmd" "--repo-dir=!CORE_EXPERIMENT_REPO_DIR!" "--results-dir=!CORE_EXPERIMENT_LOCAL_DIR!\gemma-4-sql" "--model=!CORE_EXPERIMENT_MODEL!" "--backends=!CORE_EXPERIMENT_BACKENDS!" "--subsuites=!CORE_EXPERIMENT_SUBSUITES!" !_gt_extra!
     if errorlevel 1 exit /b !errorlevel!
     set "RUN_DONE=true"
     call :write_experiment_state
@@ -478,12 +503,12 @@ exit /b 0
 :: Step h_pull_logs: Transfers the consolidated experimental and TPU/Vagrant results directory to the current host.
 :pull_logs
 if not exist "!CORE_EXPERIMENT_LOCAL_DIR!\results" mkdir "!CORE_EXPERIMENT_LOCAL_DIR!\results"
-if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
-    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="1" (
-        if not exist "!CORE_EXPERIMENT_LOCAL_DIR!\gemma_tpu" mkdir "!CORE_EXPERIMENT_LOCAL_DIR!\gemma_tpu"
+if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" if /i "!CORE_EXPERIMENT_SUITE!"=="gemma-4-sql" (
+    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_4_SQL_LOCAL_EXEC%"=="1" (
+        if not exist "!CORE_EXPERIMENT_LOCAL_DIR!\gemma-4-sql" mkdir "!CORE_EXPERIMENT_LOCAL_DIR!\gemma-4-sql"
         set "GCP_PROJECT_ID=!CORE_EXPERIMENT_RG!"
         set "TPU_ZONE=!CORE_EXPERIMENT_LOCATION!"
-        call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\gcp-tpu-vm\cli.cmd" scp-from "!CORE_EXPERIMENT_NODE!" "!CORE_EXPERIMENT_NODE!:~/results/*" "!CORE_EXPERIMENT_LOCAL_DIR!\gemma_tpu" --recurse --worker=0 >nul 2>&1 || rem
+        call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\gcp-tpu-vm\cli.cmd" scp-from "!CORE_EXPERIMENT_NODE!" "!CORE_EXPERIMENT_NODE!:~/results/*" "!CORE_EXPERIMENT_LOCAL_DIR!\gemma-4-sql" --recurse --worker=0 >nul 2>&1 || rem
     )
 )
 if exist "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-report.json" copy /y "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-report.json" "!CORE_EXPERIMENT_LOCAL_DIR!" >nul
@@ -571,11 +596,11 @@ if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" (
     set "GCP_PROJECT_ID=!CORE_EXPERIMENT_RG!"
     set "TPU_ZONE=!CORE_EXPERIMENT_LOCATION!"
     set "TPU_NAME=!CORE_EXPERIMENT_NODE!"
-    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="1" (
+    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_4_SQL_LOCAL_EXEC%"=="1" (
         call "!LIBSCRIPT_ROOT_DIR!\infrastructure\providers\gcp-tpu-vm\cli.cmd" delete "!TPU_NAME!"
     )
     call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_is_enabled
-    if not errorlevel 1 if not "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="1" (
+    if not errorlevel 1 if not "%GEMMA_4_SQL_LOCAL_EXEC%"=="1" (
         call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "!GCP_PROJECT_ID!" "!TPU_ZONE!" "!TPU_NAME!"
         if errorlevel 1 set "_dep_rc=!errorlevel!"
     )
@@ -680,7 +705,7 @@ set "_steps=!CORE_EXPERIMENT_STEPS:,= !"
 set "_steps=!_steps:;= !"
 for %%T in (!_steps!) do (
     if /i "%%T"=="all" (
-        if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+        if /i "!CORE_EXPERIMENT_SUITE!"=="gemma-4-sql" (
             call :run_tpu_campaign_with_teardown
             if errorlevel 1 exit /b !errorlevel!
         ) else if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
@@ -729,7 +754,7 @@ for %%T in (!_steps!) do (
     ) else if /i "%%T"=="tpu_matrix" (
         call :run_tpu_campaign_with_teardown
         if errorlevel 1 exit /b !errorlevel!
-    ) else if /i "%%T"=="gemma_tpu_campaign" (
+    ) else if /i "%%T"=="gemma_4_sql_campaign" (
         call :run_tpu_campaign_with_teardown
         if errorlevel 1 exit /b !errorlevel!
     ) else if /i "%%T"=="libtpu_campaign" (

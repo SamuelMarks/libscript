@@ -40,7 +40,7 @@ fail_exp() {
 
 printf '%s\n' '=== 1. Auto-Discovery & Validation of All 5 Built-In Experiment Plugins ==='
 LIST_OUT=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment list)
-for _s in edgcpp-backends win-port libtpu-pjrt gemma-tpu os-component-matrix; do
+for _s in edgcpp-backends win-port libtpu-pjrt gemma-4-sql os-component-matrix; do
   printf '%s\n' "$LIST_OUT" | grep -q "^${_s}	" || fail_exp "Missing experiment suite ${_s} from auto-discovery"
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment validate "$_s" >/dev/null || fail_exp "Validation failed for ${_s}"
 done

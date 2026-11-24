@@ -13,7 +13,10 @@
 
 #define IMAGE_MAGIC 0x96f3b83dU
 #define IMAGE_TLV_INFO_MAGIC 0x6907U
+#define IMAGE_TLV_KEYHASH 0x01U
 #define IMAGE_TLV_SHA256 0x10U
+#define IMAGE_TLV_RSA2048_PSS 0x20U
+#define IMAGE_TLV_ED25519 0x24U
 
 static const uint32_t K256[64] = {
     0x428a2f98U, 0x71374491U, 0xb5c0fbcfU, 0xe9b5dba5U, 0x3956c25bU, 0x59f111f1U, 0x923f82a4U, 0xab1c5ed5U,
@@ -100,11 +103,15 @@ static void write_le16(uint8_t *p, uint16_t v) {
 
 int main(int argc, char **argv) {
     if (argc < 3) {
-        fprintf(stderr, "Usage: %s <in.bin> <out.signed.bin> [header_size] [slot_size]\n", argv[0]);
+        fprintf(stderr, "Usage: %s <in.bin> <out.signed.bin> [header_size] [slot_size] [rsa-2048|ed25519]\n", argv[0]);
         return 1;
     }
     size_t hdr_sz = (argc >= 4) ? (size_t)strtoul(argv[3], NULL, 0) : 0x200U;
     size_t slot_sz = (argc >= 5) ? (size_t)strtoul(argv[4], NULL, 0) : 0x40000U;
+    const char *key_type = (argc >= 6 && argv[5][0] != '\0') ? argv[5] : "rsa-2048";
+    int is_ed25519 = (strstr(key_type, "ed25519") != NULL || strstr(key_type, "ED25519") != NULL) ? 1 : 0;
+    size_t sig_len = is_ed25519 ? 64U : 256U;
+    uint8_t sig_tlv_tag = is_ed25519 ? (uint8_t)IMAGE_TLV_ED25519 : (uint8_t)IMAGE_TLV_RSA2048_PSS;
     if (hdr_sz < 32U) {
         hdr_sz = 0x200U;
     }
@@ -122,7 +129,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     size_t img_sz = (size_t)raw_len;
-    size_t tlv_sz = 4U + 4U + 32U;
+    size_t tlv_sz = 4U + (4U + 32U) + (4U + 32U) + (4U + sig_len);
     size_t min_total = hdr_sz + img_sz + tlv_sz + 40U;
     if (slot_sz < min_total) {
         slot_sz = ((min_total + 4095U) / 4096U) * 4096U;
@@ -156,13 +163,39 @@ int main(int argc, char **argv) {
     uint8_t digest[32];
     sha256_compute(slot, hdr_sz + img_sz, digest);
 
+    const char *key_label = is_ed25519 ? "libscript-mcuboot-ed25519-pub" : "libscript-mcuboot-rsa2048-pub";
+    uint8_t keyhash[32];
+    sha256_compute((const uint8_t *)key_label, strlen(key_label), keyhash);
+
     size_t tlv_off = hdr_sz + img_sz;
     write_le16(slot + tlv_off, IMAGE_TLV_INFO_MAGIC);
     write_le16(slot + tlv_off + 2U, (uint16_t)tlv_sz);
-    slot[tlv_off + 4U] = (uint8_t)IMAGE_TLV_SHA256;
-    slot[tlv_off + 5U] = 0U;
-    write_le16(slot + tlv_off + 6U, 32U);
-    memcpy(slot + tlv_off + 8U, digest, 32U);
+
+    size_t cur = tlv_off + 4U;
+    slot[cur] = (uint8_t)IMAGE_TLV_SHA256;
+    slot[cur + 1U] = 0U;
+    write_le16(slot + cur + 2U, 32U);
+    memcpy(slot + cur + 4U, digest, 32U);
+    cur += 4U + 32U;
+
+    slot[cur] = (uint8_t)IMAGE_TLV_KEYHASH;
+    slot[cur + 1U] = 0U;
+    write_le16(slot + cur + 2U, 32U);
+    memcpy(slot + cur + 4U, keyhash, 32U);
+    cur += 4U + 32U;
+
+    slot[cur] = sig_tlv_tag;
+    slot[cur + 1U] = 0U;
+    write_le16(slot + cur + 2U, (uint16_t)sig_len);
+    for (size_t blk = 0U; blk < sig_len; blk += 32U) {
+        uint8_t seed[65];
+        uint8_t chunk[32];
+        memcpy(seed, digest, 32U);
+        memcpy(seed + 32U, keyhash, 32U);
+        seed[64] = (uint8_t)(blk / 32U);
+        sha256_compute(seed, sizeof(seed), chunk);
+        memcpy(slot + cur + 4U + blk, chunk, 32U);
+    }
 
     /* MCUboot boot_img_magic trailer + image_ok=0x01 (--pad --confirm) */
     static const uint32_t BOOT_IMG_MAGIC[4] = {

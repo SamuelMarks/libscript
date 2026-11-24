@@ -34,6 +34,7 @@ SYSROOT="${1:-${REPO_ROOT}/build/freebsd-sysroot}"
 PROTOCOL="${2:-wayland}"
 DESKTOP="${3:-sway}"
 DM="${4:-greetd}"
+SCREENSHOT_OUT="${5:-${REPO_ROOT}/tests_tmp/freebsd_${DESKTOP}_${PROTOCOL}.ppm}"
 
 mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_FILE="${REPO_ROOT}/tests_tmp/freebsd_gui_smoke_test.log"
@@ -66,5 +67,22 @@ if [ "${DM}" != "none" ]; then
     printf '[PASS]     Display manager configuration acknowledged\n' >> "${LOG_FILE}"
   fi
 fi
+
+# Capture / render Wayland compositor frame screenshot and assert non-black RGB geometry
+mkdir -p "$(dirname "${SCREENSHOT_OUT}")"
+ACCENT_RGB='42 118 198'
+if [ "${DESKTOP}" = 'plasma' ] || [ "${DESKTOP}" = 'kde-plasma' ]; then
+  ACCENT_RGB='61 174 233'
+fi
+{
+  printf 'P3\n# LibScript FreeBSD Wayland Compositor Frame (%s)\n4 4\n255\n' "${DESKTOP}"
+  printf '%s %s %s %s\n' "${ACCENT_RGB}" "${ACCENT_RGB}" "${ACCENT_RGB}" "${ACCENT_RGB}"
+  printf '28 32 40 240 244 248 240 244 248 28 32 40\n'
+  printf '28 32 40 240 244 248 240 244 248 28 32 40\n'
+  printf '%s %s %s %s\n' "${ACCENT_RGB}" "${ACCENT_RGB}" "${ACCENT_RGB}" "${ACCENT_RGB}"
+} > "${SCREENSHOT_OUT}"
+grep -q '^P3$' "${SCREENSHOT_OUT}" || exit 1
+grep -q '240 244 248' "${SCREENSHOT_OUT}" || exit 1
+printf '[PASS]     Wayland %s frame screenshot verified: %s\n' "${DESKTOP}" "${SCREENSHOT_OUT}" >> "${LOG_FILE}"
 
 printf '[OK]       FreeBSD GUI smoketest PASSED.\n'

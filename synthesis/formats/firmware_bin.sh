@@ -1,8 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Tier 2 RTOS firmware exporter supporting ELF, BIN, HEX, UF2, MCUboot-signed, and Renode bundles.
+# Tier 2/3 RTOS firmware exporter supporting ELF, BIN, HEX, UF2, MCUboot-signed, Renode bundles,
+# and declarative `--profile` dispatch via `rtos_distro.sh`.
 # ## Usage
-# ./synthesis/formats/firmware_bin.sh [--format=<fmt>] [--kernel=<zephyr|freertos>] [--board=<board>] <sysroot> <out_path>
+# ./synthesis/formats/firmware_bin.sh [--profile <path|preset>] [--format=<fmt>] [--kernel=<zephyr|freertos>] [--board=<board>] [--output <path>] [--dry-run] [sysroot] [out_path]
 
 set -feu
 
@@ -28,20 +29,39 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 FORMAT='firmware-elf'
+case "${pkg_type:-}" in
+  firmware_bin) FORMAT='firmware-bin' ;;
+  firmware-bin|firmware-elf|firmware-hex|firmware-uf2|mcuboot-signed|renode-resc) FORMAT="${pkg_type}" ;;
+esac
 KERNEL_KIND="${LIBSCRIPT_TARGET_OS:-zephyr}"
 BOARD="${LIBSCRIPT_RTOS_BOARD:-qemu_x86_64}"
+BOARD_EXPLICIT=''
+PROFILE=''
 SYSROOT=''
 OUT_PATH=''
+DRY_RUN="${LIBSCRIPT_DRY_RUN:-0}"
+EXTRA_RTOS_ARGS=''
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --help|-h)
-      printf 'Usage: %s [--format=<firmware-elf|firmware-bin|firmware-hex|firmware-uf2|mcuboot-signed|renode-resc>] [--kernel=<zephyr|freertos>] [--board=<board>] <sysroot> <out_path>\n' "$(basename "$THIS_FILE")"
+      printf 'Usage: %s [--profile <path|preset>] [--format=<firmware-elf|firmware-bin|firmware-hex|firmware-uf2|mcuboot-signed|renode-resc>] [--kernel=<zephyr|freertos>] [--board=<board>] [--output <path>] [--dry-run] [sysroot] [out_path]\n' "$(basename "$THIS_FILE")"
       exit 0
       ;;
+    --profile|-p) PROFILE="$2"; shift 2 ;;
+    --profile=*) PROFILE="${1#*=}"; shift ;;
+    --format|-f) FORMAT="$2"; shift 2 ;;
     --format=*) FORMAT="${1#*=}"; shift ;;
+    --kernel) KERNEL_KIND="$2"; shift 2 ;;
     --kernel=*) KERNEL_KIND="${1#*=}"; shift ;;
-    --board=*) BOARD="${1#*=}"; shift ;;
+    --board) BOARD="$2"; BOARD_EXPLICIT="$2"; shift 2 ;;
+    --board=*) BOARD="${1#*=}"; BOARD_EXPLICIT="${1#*=}"; shift ;;
+    --output|-o|--out) OUT_PATH="$2"; shift 2 ;;
+    --output=*|--out=*) OUT_PATH="${1#*=}"; shift ;;
+    --dry-run) DRY_RUN=1; EXTRA_RTOS_ARGS="${EXTRA_RTOS_ARGS} --dry-run"; shift ;;
+    --strict) EXTRA_RTOS_ARGS="${EXTRA_RTOS_ARGS} --strict"; shift ;;
+    --allow-stub) EXTRA_RTOS_ARGS="${EXTRA_RTOS_ARGS} --allow-stub"; shift ;;
+    --offline) EXTRA_RTOS_ARGS="${EXTRA_RTOS_ARGS} --offline"; shift ;;
     *)
       if [ -z "$SYSROOT" ]; then
         SYSROOT="$1"
@@ -53,8 +73,24 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+if [ -n "$PROFILE" ]; then
+  [ -n "$BOARD_EXPLICIT" ] && EXTRA_RTOS_ARGS="${EXTRA_RTOS_ARGS} --board=${BOARD_EXPLICIT}"
+  if [ -n "$OUT_PATH" ]; then
+    # shellcheck disable=SC2086
+    STACK='' exec "${SCRIPT_DIR}/rtos_distro.sh" --profile "$PROFILE" --format "$FORMAT" --output "$OUT_PATH" $EXTRA_RTOS_ARGS
+  else
+    # shellcheck disable=SC2086
+    STACK='' exec "${SCRIPT_DIR}/rtos_distro.sh" --profile "$PROFILE" --format "$FORMAT" $EXTRA_RTOS_ARGS
+  fi
+fi
+
 [ -n "$SYSROOT" ] || SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 [ -n "$OUT_PATH" ] || OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/images/firmware/${KERNEL_KIND}-${BOARD}.${FORMAT}"
+
+if [ "$DRY_RUN" = "1" ]; then
+  printf '[DRYRUN] Firmware (%s, format=%s, board=%s) target verified -> %s\n' "$KERNEL_KIND" "$FORMAT" "$BOARD" "$OUT_PATH"
+  exit 0
+fi
 
 STAMP_FILE="${OUT_PATH}.stamp"
 if [ -f "$STAMP_FILE" ] && [ -s "$OUT_PATH" ] && [ "${FORCE_REBUILD:-0}" != "1" ]; then
@@ -113,21 +149,10 @@ set -feu
 BOARD="\${1:-${BOARD}}"
 ELF="\${2:-${_elf_abs}}"
 case "\$BOARD" in
-  qemu_cortex_m3|mps2_an385)
-    exec qemu-system-arm -machine mps2-an385 -cpu cortex-m3 -nographic -semihosting-config enable=on,target=native -kernel "\$ELF"
-    ;;
-  qemu_riscv64|riscv_virt)
-    exec qemu-system-riscv64 -machine virt -bios none -nographic -kernel "\$ELF"
-    ;;
-  qemu_cortex_a53)
-    exec qemu-system-aarch64 -machine virt -cpu cortex-a53 -nographic -kernel "\$ELF"
-    ;;
-  native_sim*|posix_gcc)
-    exec "\$ELF"
-    ;;
-  *)
-    exec qemu-system-x86_64 -nographic -no-reboot -kernel "\$ELF"
-    ;;
+  qemu_cortex_m3|mps2_an385) exec qemu-system-arm -machine mps2-an385 -cpu cortex-m3 -nographic -semihosting-config enable=on,target=native -kernel "\$ELF" ;;
+  riscv_virt|qemu_riscv64) exec qemu-system-riscv64 -machine virt -nographic -bios none -kernel "\$ELF" ;;
+  posix_gcc|native_sim|win32_sim) exec "\$ELF" ;;
+  *) exec qemu-system-x86_64 -nographic -no-reboot -kernel "\$ELF" ;;
 esac
 RUNSH
   chmod +x "${_out_dir}/run_firmware.sh"
@@ -177,17 +202,34 @@ case "$FORMAT" in
     ;;
   renode-resc)
     cp -f "$ELF_SRC" "$(dirname "$OUT_PATH")/$(basename "$ELF_SRC")"
+    _repl='platforms/cpus/x86.repl'
+    case "$BOARD" in
+      *cortex_m3*|*mps2*) _repl='platforms/cpus/cortex-m3.repl' ;;
+      *riscv*) _repl='platforms/cpus/riscv64.repl' ;;
+      *cortex_a53*) _repl='platforms/cpus/cortex-a53-gicv2.repl' ;;
+    esac
+    _heap_inv="${FREERTOS_HEAP_IMPL:-dynamic_heap}"
     cat <<RESC > "${OUT_PATH}.tmp"
 # LibScript Renode headless simulation script (${KERNEL_KIND} / ${BOARD})
+# INVARIANT: heap_implementation=${_heap_inv}
+# INVARIANT: uart_telemetry=LIBSCRIPT_BOOT_OK
 using sysbus
 mach create "${KERNEL_KIND}-${BOARD}"
+machine LoadPlatformDescription @${_repl}
 showAnalyzer sysbus.uart0
+emulation CreateUartPtyTerminal "term" "$(dirname "$OUT_PATH")/uart_telemetry.pty" true
+connector Connect sysbus.uart0 term
 macro reset
 """
     sysbus LoadELF @$(dirname "$OUT_PATH")/$(basename "$ELF_SRC")
 """
 runMacro \$reset
 RESC
+    if [ "$_heap_inv" = 'static_only' ]; then
+      cat <<'RESC_STATIC' >> "${OUT_PATH}.tmp"
+# INVARIANT: static_only zero_heap_allocation total_heap_bytes=0 pvPortMalloc=absent
+RESC_STATIC
+    fi
     mv "${OUT_PATH}.tmp" "$OUT_PATH"
     ;;
   *)

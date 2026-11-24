@@ -93,7 +93,10 @@ if command -v jq >/dev/null 2>&1; then
     case "$_c" in
       pkg:/*) continue ;;
     esac
-    if find "${LIBSCRIPT_ROOT_DIR}/_lib" -mindepth 2 -maxdepth 2 -type d -name "$_c" | grep -q .; then
+    if [ "${LIBSCRIPT_ALLOW_STUB:-0}" = '1' ] || [ "${LIBSCRIPT_OFFLINE:-0}" = '1' ]; then
+      mkdir -p "${SYSROOT}/var/lib/libscript/staged"
+      printf 'staged-stub\n' > "${SYSROOT}/var/lib/libscript/staged/${_c}.stamp"
+    elif find "${LIBSCRIPT_ROOT_DIR}/_lib" -mindepth 2 -maxdepth 2 -type d -name "$_c" | grep -q .; then
       LIBSCRIPT_TARGET_SYSROOT="${SYSROOT}" LIBSCRIPT_TARGET_OS='sunos' LIBSCRIPT_IMAGE_BUILD='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$_c" latest || true
     fi
   done

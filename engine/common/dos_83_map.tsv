@@ -18,7 +18,7 @@ postgres	POSTGRES
 mongodb	MONGODB
 rabbitmq	RABBITMQ
 edgcpp-backends-suite	EDGBKSTE
-gemma-tpu-suite	GEMTPSTE
+gemma-4-sql	GEM4SQL
 win-port-suite	WINPTSTE
 libtpu-rs	LIBTPURS
 7zip	7ZIP

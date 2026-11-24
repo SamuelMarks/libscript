@@ -56,3 +56,25 @@ add_test(
     COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-artifact invalid-kernel firmware-elf sqlite
 )
 set_tests_properties(reject_invalid_kernel PROPERTIES WILL_FAIL TRUE)
+add_test(
+    NAME dispatch_package_as_linux
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-package-as linux-distro linux-minimal-headless-musl qcow2
+)
+add_test(
+    NAME dispatch_package_as_freebsd
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-package-as freebsd-distro minimal-server raw
+)
+add_test(
+    NAME dispatch_package_as_unikernel
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-package-as unikernel-distro unikernel-unikraft-redis uefi-gpt
+)
+add_test(
+    NAME dispatch_package_as_rtos
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-package-as rtos-distro zephyr-cortex-m3-mcuboot-signed mcuboot-signed
+)
+add_test(
+    NAME reject_invalid_package_as
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-package-as invalid-distro minimal-server raw
+)
+set_tests_properties(reject_invalid_package_as PROPERTIES WILL_FAIL TRUE)
+

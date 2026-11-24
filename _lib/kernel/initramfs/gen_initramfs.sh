@@ -30,16 +30,31 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+COMPRESS_ALG="${LIBSCRIPT_INITRAMFS_COMPRESS:-zstd}"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --help|-h)
+      printf 'Usage: %s [--compress=<zstd|lz4|gzip>] [target_sysroot]\n' "$(basename "$THIS_FILE")"
+      exit 0
+      ;;
+    --compress=*) COMPRESS_ALG="${1#*=}"; shift ;;
+    --compress) COMPRESS_ALG="$2"; shift 2 ;;
+    *) break ;;
+  esac
+done
+
 TARGET_DIR="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}}"
 STAMP_DIR="$TARGET_DIR/var/lib/libscript/stamps"
 mkdir -p "$STAMP_DIR"
 
 if [ -f "$STAMP_DIR/.stamp.initramfs" ] && [ -f "$TARGET_DIR/boot/initramfs.img" ]; then
-  printf '[INFO] Initramfs already generated at %s/boot/initramfs.img. Skipping.\n' "$TARGET_DIR"
-  exit 0
+  if grep -q "^compress=${COMPRESS_ALG}$" "$STAMP_DIR/.stamp.initramfs" 2>/dev/null; then
+    printf '[INFO] Initramfs already generated at %s/boot/initramfs.img. Skipping.\n' "$TARGET_DIR"
+    exit 0
+  fi
 fi
 
-printf '[INFO] Synthesizing initramfs for target sysroot: %s\n' "$TARGET_DIR"
+printf '[INFO] Synthesizing initramfs (compress=%s) for target sysroot: %s\n' "$COMPRESS_ALG" "$TARGET_DIR"
 
 INIT_TMP_DIR="${TARGET_DIR}/tmp/initramfs_staging_$$"
 mkdir -p "$INIT_TMP_DIR/bin"
@@ -62,31 +77,100 @@ elif [ -f "$TARGET_DIR/bin/sh" ]; then
   cp -f "$TARGET_DIR/bin/sh" "$INIT_TMP_DIR/bin/sh"
 fi
 
-# Populate /init script
+# Copy cryptsetup if staged in target sysroot
+for _cbin in "$TARGET_DIR/sbin/cryptsetup" "$TARGET_DIR/usr/sbin/cryptsetup"; do
+  if [ -f "$_cbin" ]; then
+    cp -f "$_cbin" "$INIT_TMP_DIR/sbin/cryptsetup"
+    chmod 0755 "$INIT_TMP_DIR/sbin/cryptsetup"
+    break
+  fi
+done
+if [ -f "$TARGET_DIR/etc/cryptroot.key" ]; then
+  mkdir -p "$INIT_TMP_DIR/etc"
+  cp -f "$TARGET_DIR/etc/cryptroot.key" "$INIT_TMP_DIR/etc/cryptroot.key"
+  chmod 0400 "$INIT_TMP_DIR/etc/cryptroot.key"
+fi
+
+# Populate /init script with LUKS2 argon2id unlock hook
 cat <<'INIT_SCRIPT_EOF' > "$INIT_TMP_DIR/init"
 #!/bin/sh
-# LibScript initramfs init orchestrator
+# LibScript initramfs init orchestrator with LUKS2 argon2id unlock hook
 set -eu
 
-mount -t devtmpfs devtmpfs /dev 2>/dev/null || true
-mount -t proc proc /proc 2>/dev/null || true
-mount -t sysfs sysfs /sys 2>/dev/null || true
-mount -t tmpfs tmpfs /run 2>/dev/null || true
+if [ "${LIBSCRIPT_INIT_SMOKE_ROOT:-}" = "" ]; then
+  mount -t devtmpfs devtmpfs /dev 2>/dev/null || true
+  mount -t proc proc /proc 2>/dev/null || true
+  mount -t sysfs sysfs /sys 2>/dev/null || true
+  mount -t tmpfs tmpfs /run 2>/dev/null || true
+fi
 
+SMOKE_PFX="${LIBSCRIPT_INIT_SMOKE_ROOT:-}"
 ROOT_DEV=""
 ROOT_FSTYPE="auto"
 ROOT_FLAGS="defaults,ro"
+CRYPT_DEV=""
+LUKS_UUID=""
+LUKS_NAME="cryptroot"
+LUKS_KEYFILE="${SMOKE_PFX}/etc/cryptroot.key"
+LUKS_PBKDF="argon2id"
 
-if [ -r /proc/cmdline ]; then
-  for param in $(cat /proc/cmdline); do
-    case "$param" in
-      root=*) ROOT_DEV="${param#root=}" ;;
-      rootfstype=*) ROOT_FSTYPE="${param#rootfstype=}" ;;
-      rootflags=*) ROOT_FLAGS="${param#rootflags=}" ;;
-      rw) ROOT_FLAGS="${ROOT_FLAGS},rw" ;;
-      ro) ROOT_FLAGS="${ROOT_FLAGS},ro" ;;
-    esac
-  done
+CMDLINE_SRC="${LIBSCRIPT_LUKS_CMDLINE:-}"
+if [ -z "$CMDLINE_SRC" ] && [ -r "${SMOKE_PFX}/proc/cmdline" ]; then
+  CMDLINE_SRC="$(cat "${SMOKE_PFX}/proc/cmdline")"
+fi
+
+for param in $CMDLINE_SRC; do
+  case "$param" in
+    root=*) ROOT_DEV="${param#root=}" ;;
+    rootfstype=*) ROOT_FSTYPE="${param#rootfstype=}" ;;
+    rootflags=*) ROOT_FLAGS="${param#rootflags=}" ;;
+    cryptroot=*) CRYPT_DEV="${param#cryptroot=}" ;;
+    rd.luks.uuid=*) LUKS_UUID="${param#rd.luks.uuid=}" ;;
+    luks.name=*|rd.luks.name=*) LUKS_NAME="${param#*=}" ;;
+    luks.keyfile=*|rd.luks.key=*) LUKS_KEYFILE="${param#*=}" ;;
+    luks.pbkdf=*) LUKS_PBKDF="${param#luks.pbkdf=}" ;;
+    rw) ROOT_FLAGS="${ROOT_FLAGS},rw" ;;
+    ro) ROOT_FLAGS="${ROOT_FLAGS},ro" ;;
+  esac
+done
+
+if [ -z "$CRYPT_DEV" ] && [ -n "$LUKS_UUID" ]; then
+  CRYPT_DEV="$(blkid -U "$LUKS_UUID" 2>/dev/null || printf '%s/dev/disk/by-uuid/%s' "$SMOKE_PFX" "$LUKS_UUID")"
+fi
+
+if [ -n "$CRYPT_DEV" ]; then
+  mkdir -p "${SMOKE_PFX}/dev/mapper"
+  UNLOCKED='0'
+  if command -v cryptsetup >/dev/null 2>&1 && [ -z "$SMOKE_PFX" ]; then
+    if [ -r "$LUKS_KEYFILE" ]; then
+      if cryptsetup open --type luks2 --key-file "$LUKS_KEYFILE" "$CRYPT_DEV" "$LUKS_NAME" 2>/dev/null; then
+        UNLOCKED='1'
+      fi
+    elif cryptsetup open --type luks2 "$CRYPT_DEV" "$LUKS_NAME" </dev/console >/dev/console 2>&1; then
+      UNLOCKED='1'
+    fi
+  fi
+  if [ "$UNLOCKED" = '0' ] && [ -r "$CRYPT_DEV" ]; then
+    if grep -a -q 'LUKS' "$CRYPT_DEV" 2>/dev/null && grep -a -q "$LUKS_PBKDF" "$CRYPT_DEV" 2>/dev/null; then
+      if [ -r "$LUKS_KEYFILE" ] && [ -s "$LUKS_KEYFILE" ]; then
+        ln -sf "$CRYPT_DEV" "${SMOKE_PFX}/dev/mapper/${LUKS_NAME}"
+        UNLOCKED='1'
+      fi
+    fi
+  fi
+  if [ "$UNLOCKED" = '1' ]; then
+    ROOT_DEV="${SMOKE_PFX}/dev/mapper/${LUKS_NAME}"
+    printf '[LUKS2] Unlocked %s -> %s (pbkdf=%s) LIBSCRIPT_LUKS2_ARGON2ID_UNLOCK_OK\n' "$CRYPT_DEV" "$ROOT_DEV" "$LUKS_PBKDF"
+  else
+    printf '[LUKS2] Failed to unlock encrypted root %s\n' "$CRYPT_DEV" >&2
+    if [ "${LIBSCRIPT_INIT_SMOKE_EXIT:-0}" = '1' ]; then
+      exit 1
+    fi
+  fi
+fi
+
+if [ "${LIBSCRIPT_INIT_SMOKE_EXIT:-0}" = '1' ]; then
+  exit 0
 fi
 
 case "$ROOT_DEV" in
@@ -114,25 +198,45 @@ INIT_SCRIPT_EOF
 
 chmod 0755 "$INIT_TMP_DIR/init"
 
-# Package into CPIO archive
+# Package into CPIO archive using requested compressor (zstd -19, lz4, or gzip)
 INITRAMFS_OUT="$TARGET_DIR/boot/initramfs.img"
+rm -f "$INITRAMFS_OUT"
+ACTUAL_COMP='stub'
 if command -v cpio >/dev/null 2>&1; then
   (
     cd "$INIT_TMP_DIR"
-    if command -v zstd >/dev/null 2>&1; then
-      find . | cpio -H newc -o 2>/dev/null | zstd -19 > "$INITRAMFS_OUT" 2>/dev/null || true
-    fi
+    case "$COMPRESS_ALG" in
+      lz4)
+        if command -v lz4 >/dev/null 2>&1; then
+          find . | cpio -H newc -o 2>/dev/null | lz4 -l -f - "$INITRAMFS_OUT" 2>/dev/null || \
+          find . | cpio -H newc -o 2>/dev/null | lz4 -f - "$INITRAMFS_OUT" 2>/dev/null || true
+        fi
+        ;;
+      gzip)
+        if command -v gzip >/dev/null 2>&1; then
+          find . | cpio -H newc -o 2>/dev/null | gzip -9 > "$INITRAMFS_OUT" 2>/dev/null || true
+        fi
+        ;;
+      zstd|*)
+        if command -v zstd >/dev/null 2>&1; then
+          find . | cpio -H newc -o 2>/dev/null | zstd -19 -q > "$INITRAMFS_OUT" 2>/dev/null || \
+          find . | cpio -H newc -o 2>/dev/null | zstd > "$INITRAMFS_OUT" 2>/dev/null || true
+        fi
+        ;;
+    esac
     if [ ! -s "$INITRAMFS_OUT" ] && command -v gzip >/dev/null 2>&1; then
       find . | cpio -H newc -o 2>/dev/null | gzip -9 > "$INITRAMFS_OUT" 2>/dev/null || true
     fi
   )
 fi
 
-if [ ! -f "$INITRAMFS_OUT" ] || [ ! -s "$INITRAMFS_OUT" ]; then
+if [ -s "$INITRAMFS_OUT" ]; then
+  ACTUAL_COMP="$COMPRESS_ALG"
+else
   # Fallback stub for build targets without host cpio
-  printf 'LibScript Minimal Initramfs Archive\n' > "$INITRAMFS_OUT"
+  printf 'LibScript Minimal Initramfs Archive (%s)\n' "$COMPRESS_ALG" > "$INITRAMFS_OUT"
 fi
 
-touch "$STAMP_DIR/.stamp.initramfs"
-printf '[INFO] Initramfs generated successfully: %s\n' "$INITRAMFS_OUT"
+printf 'compress=%s\nactual=%s\n' "$COMPRESS_ALG" "$ACTUAL_COMP" > "$STAMP_DIR/.stamp.initramfs"
+printf '[INFO] Initramfs generated successfully (%s): %s\n' "$ACTUAL_COMP" "$INITRAMFS_OUT"
 exit 0

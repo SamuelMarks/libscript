@@ -172,7 +172,7 @@ if [ "${ACTION}" = 'benchmark-ml' ] || [ -n "${BACKENDS_MATRIX}" ]; then
   STACK="${STACK%"${THIS_FILE}":}"
   export STACK
   if [ "${ML_TARGET}" = 'local' ] && ! libscript_tfrc_is_enabled; then
-    exec "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run gemma-tpu "$@"
+    exec "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment run gemma-4-sql "$@"
   fi
   exec "${LIBSCRIPT_ROOT_DIR}/libscript.sh" rapid-experiment "$@"
 fi

@@ -52,6 +52,11 @@ Vagrant.configure("2") do |config|
       Set-Location "C:\\libscript"
 
       Write-Host "Installing #{test_target} using libscript..."
+      if ("#{test_target}" -eq "package-as" -or "#{test_target}" -eq "test_package_as_kernels") {
+        Write-Host "Running libscript.cmd package-as kernel & OS bakery matrix on Windows 11..."
+        & "cmd.exe" "/c" "C:\\libscript\\tests\\test_package_as_kernels.cmd"
+        exit $LASTEXITCODE
+      }
       & "C:\\libscript\\libscript.cmd" install #{test_target}
       $installExit = $LASTEXITCODE
 

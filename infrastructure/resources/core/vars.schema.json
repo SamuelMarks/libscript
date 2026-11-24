@@ -187,17 +187,17 @@
     "CORE_EXPERIMENT_SUITE": {
       "type": "string",
       "default": "all",
-      "description": "Experiment runner suite abstraction to execute ('libscript', 'edgcpp', 'edgcpp_backends', 'libtpu', 'win_port', 'gemma_tpu', 'manifest', or 'all')."
+      "description": "Experiment runner suite abstraction to execute ('libscript', 'edgcpp', 'edgcpp_backends', 'libtpu', 'win_port', 'gemma-4-sql', 'manifest', or 'all')."
     },
     "CORE_EXPERIMENT_MODEL": {
       "type": "string",
       "default": "google/gemma-4-E4B",
-      "description": "Target model identifier evaluated during gemma_tpu / tpu_matrix experiment runs."
+      "description": "Target model identifier evaluated during gemma-4-sql / tpu_matrix experiment runs."
     },
     "CORE_EXPERIMENT_BACKENDS": {
       "type": "string",
       "default": "hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native",
-      "description": "Comma-separated list of ML backends evaluated in the gemma_tpu / tpu_matrix campaign."
+      "description": "Comma-separated list of ML backends evaluated in the gemma-4-sql / tpu_matrix campaign."
     },
     "CORE_EXPERIMENT_COMMAND_TEMPLATE": {
       "type": "string",

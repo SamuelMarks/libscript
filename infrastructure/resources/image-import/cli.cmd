@@ -2,10 +2,10 @@
 :: # cli.cmd
 ::
 :: ## Overview
-:: CLI router for idempotent multicloud VM/unikernel image import on Windows across AWS, Azure, and GCP.
+:: CLI router for idempotent multicloud VM/distro/unikernel image import on Windows across AWS, Azure, and GCP.
 ::
 :: ## Usage
-:: cli.cmd <aws|azure|gcp|test> [options...]
+:: cli.cmd <aws|azure|gcp|distro|register|test> [options...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -59,6 +59,9 @@ if /i "!SUB!"=="-h" goto :show_help
 if /i "!SUB!"=="aws" ( shift & call "!SCRIPT_DIR!\aws_import.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 if /i "!SUB!"=="azure" ( shift & call "!SCRIPT_DIR!\azure_import.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 if /i "!SUB!"=="gcp" ( shift & call "!SCRIPT_DIR!\gcp_import.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "!SUB!"=="distro" ( shift & call "!SCRIPT_DIR!\distro_import.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "!SUB!"=="register" ( shift & call "!SCRIPT_DIR!\distro_import.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "!SUB!"=="multicloud" ( shift & call "!SCRIPT_DIR!\distro_import.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 if /i "!SUB!"=="test" ( shift & call "!SCRIPT_DIR!\test.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 echo [ERROR] Unsupported image-import action: !SUB! >&2
 exit /b 1
@@ -66,5 +69,5 @@ exit /b 1
 :: ## show_help
 :: Displays CLI help for image-import.
 :show_help
-echo Usage: cli.cmd ^<aws^|azure^|gcp^|test^> [--disk=^<path^>] [--name=^<image_name^>] [--dry-run]
+echo Usage: cli.cmd ^<aws^|azure^|gcp^|distro^|register^|test^> [--disk=^<path^> ^| --distro=^<target^> --profile=^<preset^>] [--name=^<image_name^>] [--dry-run]
 exit /b 0

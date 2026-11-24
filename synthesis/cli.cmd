@@ -96,15 +96,27 @@ if /i "!PKG_TYPE!"=="rootfs-tar" goto :fmt_rootfs_tar
 if /i "!PKG_TYPE!"=="rootfs_tar" goto :fmt_rootfs_tar
 if /i "!PKG_TYPE!"=="bsd-img" goto :fmt_bsd_img
 if /i "!PKG_TYPE!"=="bsd_img" goto :fmt_bsd_img
+if /i "!PKG_TYPE!"=="linux-distro" goto :fmt_linux_distro
+if /i "!PKG_TYPE!"=="linux_distro" goto :fmt_linux_distro
+if /i "!PKG_TYPE!"=="linux-kernel" goto :fmt_linux_kernel
+if /i "!PKG_TYPE!"=="linux_kernel" goto :fmt_linux_kernel
 if /i "!PKG_TYPE!"=="illumos-distro" goto :fmt_illumos_distro
 if /i "!PKG_TYPE!"=="illumos_distro" goto :fmt_illumos_distro
 if /i "!PKG_TYPE!"=="freebsd-distro" goto :fmt_freebsd_distro
 if /i "!PKG_TYPE!"=="freebsd_distro" goto :fmt_freebsd_distro
 if /i "!PKG_TYPE!"=="reactos-distro" goto :fmt_reactos_distro
 if /i "!PKG_TYPE!"=="reactos_distro" goto :fmt_reactos_distro
+if /i "!PKG_TYPE!"=="rtos-distro" goto :fmt_rtos_distro
+if /i "!PKG_TYPE!"=="rtos_distro" goto :fmt_rtos_distro
+if /i "!PKG_TYPE!"=="zephyr-distro" goto :fmt_rtos_distro
+if /i "!PKG_TYPE!"=="zephyr_distro" goto :fmt_rtos_distro
+if /i "!PKG_TYPE!"=="freertos-distro" goto :fmt_rtos_distro
+if /i "!PKG_TYPE!"=="freertos_distro" goto :fmt_rtos_distro
 if /i "!PKG_TYPE!"=="unikernel" goto :fmt_unikernel
 if /i "!PKG_TYPE!"=="unikernel-img" goto :fmt_unikernel
 if /i "!PKG_TYPE!"=="unikernel_img" goto :fmt_unikernel
+if /i "!PKG_TYPE!"=="unikernel-distro" goto :fmt_unikernel
+if /i "!PKG_TYPE!"=="unikernel_distro" goto :fmt_unikernel
 if /i "!PKG_TYPE!"=="docker-image" goto :fmt_container_base
 if /i "!PKG_TYPE!"=="oci-image" goto :fmt_container_base
 if /i "!PKG_TYPE!"=="qemu-qcow2" goto :fmt_qemu_img
@@ -131,6 +143,7 @@ if /i "!PKG_TYPE!"=="zfs-stream" goto :fmt_zfs_stream
 if /i "!PKG_TYPE!"=="zfs_stream" goto :fmt_zfs_stream
 if /i "!PKG_TYPE!"=="direct-kernel" goto :fmt_direct_kernel
 if /i "!PKG_TYPE!"=="direct_kernel" goto :fmt_direct_kernel
+if /i "!PKG_TYPE!"=="uki" goto :fmt_uki
 if /i "!PKG_TYPE!"=="firmware-elf" goto :fmt_firmware
 if /i "!PKG_TYPE!"=="firmware-bin" goto :fmt_firmware
 if /i "!PKG_TYPE!"=="firmware_bin" goto :fmt_firmware
@@ -284,6 +297,20 @@ exit /b !errorlevel!
 call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\bsd_img.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
 exit /b !errorlevel!
 
+:: ## fmt_linux_distro
+:: Dispatches Linux distro synthesis.
+:fmt_linux_distro
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\linux_distro.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+exit /b !errorlevel!
+
+:: ## fmt_linux_kernel
+:: Dispatches standalone Linux kernel direct-boot synthesis.
+:fmt_linux_kernel
+set "LIBSCRIPT_LINUX_DEFAULT_FORMAT=direct-kernel"
+set "LIBSCRIPT_LINUX_DEFAULT_PROFILE=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\linux\linux-kernel-gcc-tiny.json"
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\linux_distro.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+exit /b !errorlevel!
+
 :: ## fmt_illumos_distro
 :: Dispatches illumos distro synthesis.
 :fmt_illumos_distro
@@ -300,6 +327,12 @@ exit /b !errorlevel!
 :: Dispatches ReactOS distro synthesis.
 :fmt_reactos_distro
 call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\reactos_distro.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+exit /b !errorlevel!
+
+:: ## fmt_rtos_distro
+:: Dispatches Zephyr and FreeRTOS firmware synthesis.
+:fmt_rtos_distro
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\rtos_distro.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
 exit /b !errorlevel!
 
 :: ## fmt_unikernel
@@ -402,6 +435,12 @@ exit /b !errorlevel!
 :: Dispatches direct-kernel boot bundle export.
 :fmt_direct_kernel
 call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\direct_kernel.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+exit /b !errorlevel!
+
+:: ## fmt_uki
+:: Dispatches Secure Boot Unified Kernel Image (.efi) export.
+:fmt_uki
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\uki.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
 exit /b !errorlevel!
 
 :: ## fmt_firmware

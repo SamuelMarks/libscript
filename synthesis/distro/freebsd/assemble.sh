@@ -86,7 +86,10 @@ if command -v jq >/dev/null 2>&1; then
   _comps=$(jq -r '((.components // []) + (.packages // []))[]?' "${PROFILE}" 2>/dev/null || true)
   for _c in $_comps; do
     [ -n "$_c" ] || continue
-    if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib" ] && find "${LIBSCRIPT_ROOT_DIR}/_lib" -mindepth 2 -maxdepth 2 -type d -name "$_c" | grep -q .; then
+    if [ "${LIBSCRIPT_ALLOW_STUB:-0}" = '1' ] || [ "${LIBSCRIPT_OFFLINE:-0}" = '1' ]; then
+      mkdir -p "${SYSROOT}/var/lib/libscript/staged"
+      printf 'staged-stub\n' > "${SYSROOT}/var/lib/libscript/staged/${_c}.stamp"
+    elif [ -d "${LIBSCRIPT_ROOT_DIR}/_lib" ] && find "${LIBSCRIPT_ROOT_DIR}/_lib" -mindepth 2 -maxdepth 2 -type d -name "$_c" | grep -q .; then
       LIBSCRIPT_TARGET_SYSROOT="${SYSROOT}" LIBSCRIPT_TARGET_OS='freebsd' LIBSCRIPT_IMAGE_BUILD='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$_c" latest || true
     fi
   done

@@ -86,7 +86,7 @@ mkdir -p "$(dirname "$OUT_BIN")"
 ensure_c_signer() {
   _bin_cache="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mcuboot/bin"
   mkdir -p "$_bin_cache"
-  _signer="${_bin_cache}/mcuboot_c_signer"
+  _signer="${_bin_cache}/mcuboot_c_signer_v2"
   if [ -x "$_signer" ]; then
     printf '%s\n' "$_signer"
     return 0
@@ -130,9 +130,9 @@ fi
 
 _c_signer=$(ensure_c_signer || true)
 if [ -n "$_c_signer" ] && [ -x "$_c_signer" ]; then
-  "$_c_signer" "$IN_BIN" "${OUT_BIN}.tmp" "$HEADER_SIZE" "$SLOT_SIZE"
+  "$_c_signer" "$IN_BIN" "${OUT_BIN}.tmp" "$HEADER_SIZE" "$SLOT_SIZE" "$KEY_TYPE"
   mv "${OUT_BIN}.tmp" "$OUT_BIN"
-  printf '[OK] Signed MCUboot v2 slot image via C11 signer -> %s\n' "$OUT_BIN"
+  printf '[OK] Signed MCUboot v2 slot image via C11 signer (%s) -> %s\n' "$KEY_TYPE" "$OUT_BIN"
   exit 0
 fi
 

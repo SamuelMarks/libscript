@@ -1,9 +1,9 @@
 @echo off
 :: # qcow2.cmd
 :: ## Overview
-:: Packages raw disk images or sysroots into compressed virtual machine disk images (qcow2, vmdk, vdi) on Windows via vm_builder worker or qemu-img.
+:: Packages raw disk images, sysroots, or declarative `--profile` specifications into compressed virtual machine disk images (qcow2, vmdk, vdi) on Windows.
 :: ## Usage
-:: qcow2.cmd [input_image_or_sysroot] [output_image] [target_format]
+:: qcow2.cmd [--profile <path|preset>] [input_image_or_sysroot] [output_image] [target_format]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,19 +49,25 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
 
-if "%~1"=="--help" (
-    echo Usage: %~nx0 [input_image_or_sysroot] [output_image] [target_format]
-    echo Synthesizes compressed VM disk image.
-    exit /b 0
+echo %* | findstr /I /C:"--profile" /C:"-p " >nul 2>&1
+if not errorlevel 1 (
+    set "_QFMT=qcow2"
+    echo %* | findstr /I /C:"vmdk" >nul 2>&1 && set "_QFMT=vmdk"
+    echo %* | findstr /I /C:"vdi" >nul 2>&1 && set "_QFMT=vdi"
+    set "STACK="
+    call "!SCRIPT_DIR!\_profile_dispatch.cmd" "!_QFMT!" %*
+    exit /b !ERRORLEVEL!
 )
-if "%~1"=="-h" (
-    echo Usage: %~nx0 [input_image_or_sysroot] [output_image] [target_format]
-    echo Synthesizes compressed VM disk image.
-    exit /b 0
-)
 
-for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\vm_builder.cmd" "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\qcow2.sh" %*
+exit /b !ERRORLEVEL!
 
-call "%REPO_ROOT%\engine\common\vm_builder.cmd" "%REPO_ROOT%\synthesis\formats\qcow2.sh" %*
-exit /b %ERRORLEVEL%
+:: ## show_help
+:: Displays usage instructions for qcow2.cmd.
+:show_help
+echo Usage: %~nx0 [--profile ^<path^|preset^>] [input_image_or_sysroot] [output_image] [target_format]
+echo Synthesizes compressed VM disk image.
+exit /b 0

@@ -13,11 +13,14 @@ everyday developer toolchain management and full-system operating system enginee
 
 Whether you need a lightweight, universal replacement for `nvm`, `pyenv`, `rustup`, and `rvm` (for
 everything from Node.js to PostgreSQL), an automated pipeline to export native installers (`.msi`,
-`.exe`, `.rpm`, `.deb`, `.pkg`, `.dmg`, `.apk`, `Dockerfile`, `docker-compose.yml`) and disk images
-(`qcow2`, `raw-img`) or bake customized Unikernels (`OSv`, `MirageOS`), Linux, FreeBSD, illumos,
-ReactOS, and RTOS kernels, or a multicloud operator to deploy across Google Cloud, AWS, and Azure,
-run multi-node clusters (Kubernetes, Apache Mesos, HashiCorp Nomad), execute batch jobs (ML
-training, search-engine reindexing), manage stateful lifecycles (backup/restore, zero-downtime
+`.exe`, `.rpm`, `.deb`, `.pkg`, `.dmg`, `.apk`, `.txz`, `Dockerfile`, `docker-compose.yml`) and disk
+images (`qcow2`, `raw-img`), an **OS Bakery** where you can freely choose your target operating
+system substrate—synthesizing custom **illumos** (OmniOS / OpenIndiana), **FreeBSD**, **ReactOS**
+(Win32 NT), **Linux** (`glibc` / `musl` / LFS / UKI), single-address-space **Unikernels** (`OSv`,
+`MirageOS`, `Unikraft`, `Nanos`, `Rumprun`), or embedded **RTOS** (`Zephyr`, `FreeRTOS`) images from
+the same stack—or a multicloud operator to deploy across Google Cloud, AWS, and Azure, run
+multi-node clusters (Kubernetes, Apache Mesos, HashiCorp Nomad), execute batch jobs (ML training,
+search-engine reindexing), manage stateful lifecycles (backup/restore, zero-downtime
 upgrade/downgrade), and orchestrate high-availability topologies (PostgreSQL HA, Redis HA, RabbitMQ
 HA), LibScript handles the entire lifecycle through a single, idempotent interface.
 
@@ -30,17 +33,17 @@ flowchart TD
 
     subgraph S1["1. Native Installers & Container Packages (T3: package-as)"]
         direction LR
-        p1[".msi / .exe"] ~~~ p2[".rpm / .deb / .apk"] ~~~ p3[".pkg / .dmg"] ~~~ p4["Dockerfile"] ~~~ p5["Docker Compose"] ~~~ p6["..."]
+        p1[".msi / .exe"] ~~~ p2[".rpm / .deb / .apk / .txz"] ~~~ p3[".pkg / .dmg"] ~~~ p4["Dockerfile"] ~~~ p5["Docker Compose"] ~~~ p6["..."]
     end
 
     subgraph S2["2. Virtual Machine & Disk Images (T3: package-as)"]
         direction LR
-        v1["qcow2"] ~~~ v2["raw-img"] ~~~ v3["vmdk / vdi"] ~~~ v4["iso / vagrant-box"] ~~~ v5["bsd-img / reactos-distro"] ~~~ v6["..."]
+        v1["qcow2"] ~~~ v2["raw-img"] ~~~ v3["vmdk / vdi / vhd"] ~~~ v4["iso / vagrant-box"] ~~~ v5["aws-ami / azure-vhd / gcp-image"] ~~~ v6["..."]
     end
 
     subgraph S3["3. Kernel, Unikernel & RTOS OS Bakery (T2 + T3)"]
         direction LR
-        k1["Unikernels (OSv, MirageOS, Unikraft)"] ~~~ k2["Linux Kernel & UKI"] ~~~ k3["FreeBSD, illumos & ReactOS"] ~~~ k4["RTOS (Zephyr & FreeRTOS)"]
+        k1["Linux (glibc / musl / LFS / UKI)"] ~~~ k2["FreeBSD (World, Kernel & ZFS)"] ~~~ k3["illumos (OmniOS / OpenIndiana / ZFS)"] ~~~ k4["ReactOS (Win32 NT i686 / x86_64)"] ~~~ k5["Unikernels (OSv, MirageOS, Unikraft, Nanos, Rumprun)"] ~~~ k6["RTOS (Zephyr & FreeRTOS)"]
     end
 
     subgraph S4["4. Multicloud & Hardware Accelerator Deployment (T4: infrastructure/)"]
@@ -202,13 +205,17 @@ flowchart TD
     subgraph T0_T2["T0 Engine & T1/T2 Atomic Recipes (engine/, _lib/)"]
         T0_Core["T0 Core Engine & Solver<br/>(POSIX/Batch Stdlib, Tarjan SCC Solver, Consensus Locks & Fencing)"]
         T1_VM["T1 Userland & Daemon Recipes<br/>(Node.js, Python, Rust, Go, PostgreSQL, Redis, Nginx, kubectl)"]
-        T2_Base["T2 OS, Kernel & System Plumbing<br/>(Glibc, Musl, Linux/Zephyr, systemd/OpenRC, Wayland, Sway, PipeWire)"]
+        T2_Base["T2 OS, Kernel & System Plumbing<br/>(Glibc/Musl, Linux/Zephyr/FreeRTOS, Unikernels, systemd/OpenRC/SMF, Wayland/X11, PipeWire)"]
     end
 
-    subgraph T3["T3: Image, OS & Artifact Synthesis (synthesis/)"]
-        T3_Pkg["1. Installer & Container Exporters<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, Dockerfile, Docker Compose)"]
-        T3_Disk["2. VM & Disk Image Factory<br/>(qcow2, raw-img, vmdk, vdi, iso, vagrantfile, bsd-img)"]
-        T3_Kernel["3. Kernel, Unikernel & RTOS Bakery<br/>(OSv, MirageOS, Unikraft, Linux UKI, FreeBSD, illumos, ReactOS)"]
+    subgraph T3_Bakery["3. Kernel, Unikernel & RTOS OS Bakery (T2 + T3: _lib/ + synthesis/distro/)"]
+        direction LR
+        T3_Linux["Linux<br/>(glibc / musl / LFS / UKI)"] ~~~ T3_FreeBSD["FreeBSD<br/>(World, Kernel & ZFS/UFS)"] ~~~ T3_Illumos["illumos<br/>(OmniOS / OpenIndiana / SMF)"] ~~~ T3_ReactOS["ReactOS<br/>(Win32 NT i686 / x86_64)"] ~~~ T3_Uni["Unikernels<br/>(OSv, MirageOS, Unikraft, Nanos, Rumprun)"] ~~~ T3_RTOS["RTOS & MCU<br/>(Zephyr, FreeRTOS, MCUboot)"]
+    end
+
+    subgraph T3["T3: Package, VM & Cloud Artifact Synthesis (synthesis/formats/)"]
+        T3_Pkg["1. Installer & Container Exporters<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, .txz, Dockerfile, Docker Compose)"]
+        T3_Disk["2. VM, Cloud & Firmware Image Factory<br/>(qcow2, raw-img, vmdk, vdi, vhd, iso, vagrant-box, aws-ami, gcp-image, firmware-bin)"]
     end
 
     subgraph T4["T4: Infrastructure Providers & Cluster Substrates (infrastructure/ + Plane A traits/)"]
@@ -222,7 +229,9 @@ flowchart TD
         T5_HA["9. Stateful HA Service Constellations<br/>(postgres-ha, redis-cluster, valkey-cluster, minio-distributed, openedx-ha)"]
     end
 
-    T0_T2 -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| T3
+    T0_T2 -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| T3_Bakery
+    T0_T2 -->|Stages Portable Payloads| T3
+    T3_Bakery -->|Bakes Bootable OS / Kernel Roots Into| T3
     T3 -->|Deploys Baked Images Onto| T4
     T4 -->|Schedules & Converges Onto| T5
 ```
@@ -241,37 +250,57 @@ to a strict **Context Contract**:
     kernel API headers, and Target LibC into an isolated `/tools` tree.
   - `_lib/toolchains/bootstrap/stage1.sh`: Bootstraps foundational POSIX userland utilities (`dash`,
     `coreutils`, `make`, `patch`, `tar`, `sed`, `grep`, `xz`).
-- **Standardized Multi-Arch Triplets**: Supports `x86_64`, `aarch64`, `riscv64`, and `i686` with
-  `glibc`, `musl`, or `bsd-libc`.
+- **Standardized Multi-Arch & Multi-OS Triplets**: Supports `x86_64`, `aarch64`, `riscv64`, `i686`,
+  and embedded MCU ISAs (`armv7m`, `armv8m`, `riscv32`, `xtensa`) paired with `glibc`, `musl`,
+  `bsd-libc`, `illumos-libc`, `msvcrt` (ReactOS / Win32), `rump-libc`, `mirage-ocaml`, `picolibc`,
+  or `newlib`.
 - **Comprehensive Ecosystem Catalogs**:
-  - **Base Systems**: Glibc locales, Musl C library, BusyBox, Toybox, `e2fsprogs`, `btrfs-progs`,
-    `xfsprogs`, `eudev`, PAM, and Shadow.
+  - **Base Systems & Init Supervisors**: Glibc locales, Musl C library, BusyBox, Toybox,
+    `e2fsprogs`, `btrfs-progs`, `xfsprogs`, `eudev`, PAM, Shadow, and pluggable init systems
+    (`systemd`, `openrc`, `runit`, `s6`, `dinit`, `sysvinit`, FreeBSD `bsd-rc`, illumos `smf`, macOS
+    `launchd`, and Windows/ReactOS `windows-scm`).
   - **Graphics & Display Protocols**: Direct Rendering (`libdrm`, `mesa` Gallium/Vulkan,
     `vulkan-loader`), Wayland core (`wayland`, `wayland-protocols`, `wlroots`, `seatd`, `xwayland`),
     and X11 stacks.
-  - **Desktops & Compositors**: Sway, Hyprland, KDE Plasma 6, XFCE4, LXQt, Weston, and display
-    greeters (`greetd`, `sddm`, `gdm`, `lightdm`).
+  - **Desktops & Compositors**: Sway, Hyprland, KDE Plasma 6, XFCE4, LXQt, MATE, Openbox, Labwc,
+    GNOME, Weston, and display greeters (`greetd`, `sddm`, `gdm`, `lightdm`, `ly`).
   - **Audio & Multimedia**: PipeWire multimedia graph router, `wireplumber`, compatibility shims
-    (`pipewire-pulse`, `pipewire-alsa`), and ALSA base stacks.
+    (`pipewire-pulse`, `pipewire-alsa`), PulseAudio, JACK, `sndio`, and ALSA / OSS / Boomer stacks.
   - **Networking & Security Services**: NetworkManager, `systemd-networkd`, `iwd`, `wpa_supplicant`,
-    `dhcpcd`, `nftables`, `iptables`, and hardened OpenSSH.
+    `dhcpcd`, `nftables`, `iptables`, `pf`, and hardened OpenSSH.
 
 ---
 
 ### `T3`: Image, OS & Artifact Synthesis (`synthesis/`, Stages 1, 2 & 3)
 
 `T3` elevates LibScript from software provisioning to universal artifact packaging and full
-operating system synthesis. Instead of relying on pre-baked generic cloud images, `T3` exports
-native packages, virtual disk images, and custom kernels or unikernels from the ground up.
+operating system synthesis. Instead of locking your stack into a single vendor base image, `T3` lets
+you **choose your target operating system substrate (`target.os_family`)**—switching cleanly betwixt
+**illumos**, **FreeBSD**, **ReactOS**, **Linux**, **Unikernels**, and **RTOS** firmware while
+exporting native installers and bootable virtual disk images from the ground up.
 
 ```mermaid
 flowchart TD
     Stack["libscript.json / os-config.json"] --> Solver["engine/solver/resolve_stack.jq<br/>(Tarjan SCC Solver)"]
     Solver --> VFS["Isolated VFS Sandbox<br/>(synthesis/vfs/sysroot/mount_target_vfs.sh)"]
 
-    VFS --> Stage1["1. Native Installers & Containers<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, Dockerfile, Compose)"]
-    VFS --> Stage3["3. Kernel, Unikernel & RTOS Bakery<br/>(OSv, MirageOS, Linux vmlinuz+UKI, FreeBSD, illumos, ReactOS)"]
-    Stage3 --> Stage2["2. Bootable Disk Images<br/>(qcow2, raw-img, vmdk, vdi, iso, bsd-img, reactos-distro)"]
+    VFS --> Stage1["1. Native Installers & Containers<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, .txz, Dockerfile, Compose)"]
+
+    subgraph Stage3["3. Kernel, Unikernel & RTOS OS Bakery (T2 + T3)"]
+        Choice{"Choose Target<br/>OS / Kernel"}
+        B_Linux["Linux<br/>(vmlinuz + UKI, glibc / musl / LFS,<br/>Alpine / Debian / RHEL)"]
+        B_FreeBSD["FreeBSD<br/>(buildworld + buildkernel,<br/>ZFS / UFS2, bsd-rc / OpenRC)"]
+        B_Illumos["illumos<br/>(OmniOS / OpenIndiana / Tribblix,<br/>ZFS Boot Envs, SMF / pkgsrc)"]
+        B_ReactOS["ReactOS<br/>(Win32 NT i686 / x86_64,<br/>RosBE / Unattended ISO)"]
+        B_Unikernel["Unikernels<br/>(OSv, MirageOS, Unikraft,<br/>Nanos, Rumprun, Solo5)"]
+        B_RTOS["RTOS & MCU<br/>(Zephyr, FreeRTOS,<br/>MCUboot Firmware)"]
+
+        Choice --> B_Linux & B_FreeBSD & B_Illumos & B_ReactOS & B_Unikernel & B_RTOS
+    end
+
+    VFS --> Choice
+    B_Linux & B_FreeBSD & B_Illumos & B_ReactOS & B_Unikernel --> Stage2["2. Bootable VM, Cloud & Distro Disk Images<br/>(qcow2, raw-img, vmdk, vdi, vhd, iso, vagrant-box, aws-ami, gcp-image)"]
+    B_RTOS --> Stage2_FW["Signed Microcontroller Firmware<br/>(firmware-bin, firmware-hex, firmware-uf2, renode-resc)"]
 ```
 
 #### 1. Export to Native Installers & Container Formats (Stage 1)
@@ -324,54 +353,117 @@ system verification via `SamuelMarks/msi-rs` (`./devtools/capture_msi_vagrant_ma
 ./libscript.sh package-as aws-ami          # Amazon AWS AMI image
 ./libscript.sh package-as azure-vhd        # Microsoft Azure VHD image
 ./libscript.sh package-as gcp-image        # Google Cloud Platform image
+./libscript.sh package-as linux-distro     # Modular Linux (glibc / musl / LFS) distribution image
 ./libscript.sh package-as freebsd-distro   # Modular FreeBSD distribution image
 ./libscript.sh package-as illumos-distro   # Modular illumos / SunOS ZFS distribution image
 ./libscript.sh package-as reactos-distro   # Modular ReactOS (i686 / x86_64) Win32 NT distribution image
+./libscript.sh package-as unikernel-distro # Modular Unikernel (OSv / MirageOS / Unikraft / Nanos / Rumprun) image
+./libscript.sh package-as rtos-distro      # Modular RTOS (Zephyr / FreeRTOS) firmware image
 ```
 
 Automates virtual disk provisioning (`synthesis/disk/`) with UEFI (GPT + ESP) or Hybrid BIOS/UEFI
 partitioning, **LUKS2** full-disk encryption (`argon2id`), and **Ext4**, **Btrfs** (`@`, `@home`,
 `@snapshots`), **XFS**, **FAT32/NTFS**, or **ZFS** filesystems.
 
-#### 3. Embed Into Unikernels, Linux, FreeBSD, illumos & ReactOS Kernels (Stage 3)
+#### 3. Kernel, Unikernel & RTOS OS Bakery (`T2` + `T3`)
 
-LibScript embeds staged applications directly into specialized unikernels and custom-compiled
-operating system kernels:
+A core capability of LibScript is **selectable operating system synthesis**: instead of assuming
+every workload must run on a generic Linux base image, a single declarative profile
+(`os-config.json` / `target.os_family`) lets you **choose betwixt `illumos`, `FreeBSD`, `ReactOS`,
+`Linux`, single-address-space `Unikernels`, and embedded `RTOS` firmware**—matching the exact
+kernel, ABI, filesystem, and supervision model your workload demands:
 
-- **Unikernels (`OSv`, `MirageOS`, `Unikraft`, `Solo5`, `NanoVMs`) & RTOS (`Zephyr`, `FreeRTOS`)**:
-  - Compiles single-address-space unikernel images (`./libscript.sh package-as unikernel`), UEFI/GPT
-    & Hyper-V Gen2 VHD cloud-boot disks (`--cloud-boot=uefi-gpt|azure-vhd`), Solo5 tenders
-    (`_lib/unikernels/solo5/`), and MCUboot-signed microcontroller firmware
-    (`./libscript.sh package-as firmware`).
-  - Ships curated profiles including `synthesis/profiles/unikernel/osv-cloud-runtime.json`,
-    `synthesis/profiles/unikernel/unikraft-nginx-redis.json`,
-    `synthesis/profiles/hypervisor/firecracker-microvm-appliance.json`, the 8-appliance
-    `synthesis/profiles/unikernel/openedx/*.json` constellation, and
-    `synthesis/profiles/rtos/{zephyr,freertos}-*.json`.
-- **Linux Kernel Engine (`_lib/kernel/linux/` & `_lib/kernel/initramfs/`)**:
-  - Cryptographically verifies kernel sources, merges modular `.cfg` fragments (`virtio.cfg`,
-    `wayland_drm.cfg`, `sound.cfg`, `zfs.cfg`), compiles `bzImage` + `dtbs` across selectable
-    compilers (`synthesis/profiles/linux/linux-kernel-{gcc,clang,tcc,edgcpp,custom-cc}-*.json`),
-    packs a `zstd -19` initramfs, and signs single-file `.efi` Unified Kernel Images (UKI) with
-    GRUB2, `systemd-boot`, or Limine.
-- **FreeBSD Kernel & World Engine (`synthesis/distro/freebsd/`)**:
-  - Automates FreeBSD source checkout, isolated `buildworld` and `buildkernel`, and ZFS/UFS image
-    generation (`./libscript.sh package-as bsd-img`).
-- **illumos Kernel & Distro Engine (`synthesis/distro/illumos/`)**:
-  - Synthesizes bootable OpenIndiana and OmniOS kernel/userland images with IPS repositories, ZFS
-    boot environments, and SMF services (`./libscript.sh package-as illumos-distro`).
-- **ReactOS Kernel & Distro Engine (`synthesis/distro/reactos/`, `rapps`, `rosbe`)**:
-  - Synthesizes unattended 32-bit (`i686`) and 64-bit (`x86_64`) Win32 NT images
-    (`synthesis/profiles/reactos/*.json`, `synthesis/schemas/execution-plan.reactos.schema.json`)
-    via upstream ISO repacking or RosBE source compilation with strict PE header bitness
-    verification (`./libscript.sh package-as reactos-distro`).
+| Target Family  | `target.os_family`                                 | LibC / Runtime & Supervision                                                         | Storage, Boot & Security                                                       | Exporters & Profile Catalogs                                                                             |
+| :------------- | :------------------------------------------------- | :----------------------------------------------------------------------------------- | :----------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| **Linux**      | `linux-glibc`, `linux-musl`, `microvm-firecracker` | `glibc` / `musl` / `nolibc`; `systemd`, `openrc`, `runit`, `s6`, `dinit`, `sysvinit` | Ext4, Btrfs, XFS, ZFS, LUKS2; UKI `.efi`, GRUB2, `systemd-boot`, Limine        | `linux-distro`, `linux-kernel`, `qcow2`, `iso`, `direct-kernel`; `synthesis/profiles/{linux,lfs}/`       |
+| **FreeBSD**    | `freebsd`                                          | `bsd-libc`; `bsd-rc`, `openrc`, `runit`, `s6`, `dinit`                               | ZFS-on-root (`zroot`) or UFS2; FreeBSD `loader.efi`                            | `freebsd-distro`, `bsd-img`; `synthesis/profiles/freebsd/`                                               |
+| **illumos**    | `illumos`                                          | `illumos-libc` / `sunos-libc`; SMF (`svc.startd`), `runit`, `s6`, `dinit`            | ZFS root pools (`rpool`) & Boot Environments (`beadm`); IPS / `pkgsrc` / `zap` | `illumos-distro`, `zfs-stream`; `synthesis/profiles/illumos/`                                            |
+| **ReactOS**    | `reactos`                                          | Win32 NT ABI (`msvcrt`); Windows SCM (`services.exe`)                                | FAT32 / Btrfs; Freeldr (`unattend.inf` + `firstboot.cmd`)                      | `reactos-distro`; `synthesis/profiles/reactos/`                                                          |
+| **Unikernels** | `unikernel-{osv,mirageos,unikraft,nanos,rumprun}`  | Single-address-space (`rump-libc`, `mirage-ocaml`, Linux PIE/ELF)                    | ZFS / ROFS / CPIO / Solo5 (`hvt`/`spt`), UEFI/GPT, Hyper-V Gen2 VHD            | `unikernel-distro`, `unikernel`; `synthesis/profiles/unikernel/`                                         |
+| **RTOS & MCU** | `rtos-zephyr`, `rtos-freertos`                     | `picolibc`, `newlib`, `zephyr-minimal`, `freertos-none`, WAMR Wasm                   | LittleFS, static memory safety (`static_only`), MCUboot cryptographic signing  | `rtos-distro`, `firmware-{bin,elf,hex,uf2}`, `mcuboot-signed`, `renode-resc`; `synthesis/profiles/rtos/` |
+
+##### Linux Kernel, UKI & Custom Distro Bakery (`_lib/kernel/linux/`, `synthesis/distro/linux/`)
+
+- Cryptographically verifies upstream kernel sources, merges modular `.cfg` fragments (`virtio.cfg`,
+  `wayland_drm.cfg`, `sound.cfg`, `zfs.cfg`), compiles `bzImage` + `dtbs` across selectable C
+  compilers (`gcc`, `clang`, `tcc`, `edgcpp`, `custom-cc`), packs a `zstd -19` `initramfs`, and
+  signs single-file `.efi` Unified Kernel Images (UKI) with GRUB2, `systemd-boot`, or Limine
+  (`./libscript.sh package-as linux-kernel` and `./libscript.sh package-as linux-distro`).
+- Synthesizes complete custom distributions from scratch (`Alpine`-style `musl` + `apk`,
+  `Debian`-style `dpkg`/`apt`, `Red Hat`-style `rpm`/`dnf`, and multi-stage Linux From Scratch
+  `synthesis/profiles/lfs/` appliances) with headless server or Wayland/X11 desktop stacks (`Sway`,
+  `Hyprland`, `KDE Plasma 6`, `XFCE4`, `GNOME`).
+
+##### FreeBSD Kernel, World & ZFS Distro Bakery (`synthesis/distro/freebsd/`)
+
+- Automates FreeBSD 15.x source checkout, isolated `buildworld` and `buildkernel` compilation, and
+  modular `pkg(8)` release staging (`./libscript.sh package-as freebsd-distro` and `bsd-img`).
+- Supports ZFS-on-root (`zroot`) or UFS2 layouts, pluggable service supervisors (`bsd-rc`, `openrc`,
+  `runit`, `s6`, `dinit`), `doas`/`sudo` RBAC, and headless cloud or graphical workstations (`Sway`,
+  `KDE Plasma 6`, `XFCE4`, `Labwc`, `LXQt`, `GNOME`) with `drm-kmod` and OSS/PipeWire audio.
+
+##### illumos ZFS Boot-Environment & SMF Distro Bakery (`synthesis/distro/illumos/`)
+
+- Synthesizes bootable **OmniOS**, **OpenIndiana**, and **Tribblix** illumos distributions with
+  canonical ZFS root pools (`rpool`), atomic boot environments (`beadm`), Solaris RBAC profiles, and
+  IPS (`pkg`), Joyent `pkgin`/`pkgsrc`, or `zap` package catalogs
+  (`./libscript.sh package-as illumos-distro`).
+- Supports native illumos **SMF** (`svc.startd`) alongside `runit`, `s6`, and `dinit`, plus headless
+  cloud servers (`minimal-server`, `zfs-cloud`), `pkgsrc` developer workstations, and X11 desktops
+  (`MATE`, `XFCE4`, and classic `CDE` via `cde-retro-x11.json`).
+
+##### ReactOS Win32 NT Kernel & Distro Bakery (`synthesis/distro/reactos/`, `rosbe`, `rapps`)
+
+- Synthesizes reproducible, unattended 32-bit (`i686`) and 64-bit (`x86_64`) open-source **Win32
+  NT** operating system images (`synthesis/profiles/reactos/*.json`,
+  `synthesis/schemas/execution-plan.reactos.schema.json`) via either fast upstream BootCD/LiveCD ISO
+  repacking or full **RosBE** (`_lib/toolchains/rosbe/`) CMake/Ninja source compilation with strict
+  PE header bitness verification (`./libscript.sh package-as reactos-distro`).
+- Pre-bakes unattended `unattend.inf` + `firstboot.cmd` provisioning, Btrfs or FAT32 boot volumes,
+  offline **RAPPS** (`_lib/package-managers/rapps/`) catalogs, silent `.msi` packages, and native
+  PowerShell-free LibScript `.cmd` recipes.
+
+##### Single-Address-Space Unikernel Bakery (`_lib/unikernels/`, `synthesis/profiles/unikernel/`)
+
+- Embeds staged applications directly into specialized single-address-space unikernels across
+  **`OSv`**, **`MirageOS`**, **`Unikraft`**, **`Nanos`** (NanoVMs), and **`Rumprun`** (NetBSD rump
+  kernels) with **`Solo5`** (`hvt`/`spt`) hypervisor tenders
+  (`./libscript.sh package-as unikernel-distro` / `unikernel`), UEFI/GPT & Hyper-V Gen2 VHD
+  cloud-boot disks (`--format uefi-gpt|azure-vhd`), and Firecracker microVM appliances.
+- Ships turnkey profiles (`osv-cloud-runtime.json`, `unikraft-nginx-redis.json`,
+  `unikernel-mirageos-https.json`, `unikernel-nanos-postgres.json`, `unikernel-rumprun-redis.json`)
+  plus the 8-appliance `synthesis/profiles/unikernel/openedx/*.json` pod constellation.
+
+##### Real-Time Operating Systems (RTOS) & MCU Firmware Bakery (`_lib/kernel/zephyr/`, `_lib/kernel/freertos/`)
+
+- Synthesizes deterministic **`Zephyr`** (Kconfig + Devicetree + `west`) and **`FreeRTOS`** (C11
+  `FreeRTOSConfig.h` + `freertos-plus-tcp` + `coreMQTT` + `LittleFS`) firmware across ARM Cortex-M
+  (`armv7m`/`armv8m`), RISC-V (`riscv32`/`riscv64`), Xtensa, and QEMU/Renode/POSIX simulators.
+- Supports `picolibc` / `newlib` toolchains, static allocation safety (`static_only`), WAMR
+  WebAssembly edge runtimes (`zephyr-wamr-edge-appliance.json`), and cryptographic **MCUboot** image
+  signing (`./libscript.sh package-as rtos-distro`, `firmware-bin`, `firmware-uf2`,
+  `mcuboot-signed`).
 
 ```sh
-# Configure OS profiles interactively or declaratively
-./libscript.sh config os --profile=osv-cloud-runtime --export=unikernel-os.json
-./libscript.sh config os --profile=linux-minimal-headless-musl --export=linux-os.json
-./libscript.sh config os --profile=freebsd-server-standard --export=freebsd-os.json
-./libscript.sh config os --profile=synthesis/profiles/reactos/desktop-classic-i686.json --export=reactos-os.json
+# Choose betwixt illumos, FreeBSD, ReactOS, Linux, Unikernels, and RTOS profiles
+./libscript.sh config os --profile=illumos/minimal-server --export=illumos-os.json
+./libscript.sh config os --profile=freebsd/freebsd-server-standard --export=freebsd-os.json
+./libscript.sh config os --profile=reactos/desktop-classic-i686 --export=reactos-os.json
+./libscript.sh config os --profile=linux/linux-minimal-headless-musl --export=linux-os.json
+./libscript.sh config os --profile=linux/linux-kernel-gcc-tiny --export=linux-kernel.json
+./libscript.sh config os --profile=unikernel/osv-cloud-runtime --export=unikernel-os.json
+./libscript.sh config os --profile=rtos/zephyr-cortex-m3-mcuboot-signed --export=zephyr-rtos.json
+./libscript.sh config os --profile=rtos/freertos-riscv64-static-safety --export=freertos-rtos.json
+
+# Bake any chosen kernel, OS, unikernel, or RTOS firmware via the uniform `package-as` syntax
+./libscript.sh package-as illumos-distro   --profile illumos-os.json    --format qcow2
+./libscript.sh package-as freebsd-distro   --profile freebsd-os.json    --format qcow2
+./libscript.sh package-as reactos-distro   --profile reactos-os.json    --format qcow2
+./libscript.sh package-as linux-distro     --profile linux-os.json      --format qcow2
+./libscript.sh package-as linux-kernel     --profile linux-kernel.json  --format direct-kernel
+./libscript.sh package-as unikernel-distro --profile unikernel-os.json  --format elf
+./libscript.sh package-as rtos-distro      --profile zephyr-rtos.json   --format firmware-bin
+./libscript.sh package-as rtos-distro      --profile freertos-rtos.json --format firmware-elf
 ```
 
 ---
@@ -606,8 +698,8 @@ Turn raw virtual machines or bare-metal servers into self-healing application pl
   configurations for Nginx, Caddy, Apache, Traefik, or Windows IIS.
 - **Automatic TLS**: Automated certificate acquisition and renewal via Let's Encrypt / Certbot.
 - **Native OS Daemon Supervision**: Automatically generates and registers system services
-  (`systemd`, `openrc`, `runit`, `s6`, `dinit`, `sysvinit` on Linux/BSD, `launchd` on macOS, `smf`
-  on illumos, and Windows Service Manager on Windows).
+  (`systemd`, `openrc`, `runit`, `s6`, `dinit`, `sysvinit`, and `bsd-rc` on Linux/FreeBSD, `launchd`
+  on macOS, `smf` on illumos, and Windows Service Manager on Windows/ReactOS).
 - **HTTP REST API Daemon (`libscript-rest-api/`)**: Native C HTTP server (`c-rest-framework`) for
   programmatic component provisioning, background job tracking, and OpenAPI-governed orchestration.
 
@@ -711,9 +803,9 @@ cd libscript
 ./libscript.sh install postgres 16
 ./libscript.sh start postgres
 
-# 4. Bake a custom minimal bootable OS disk image or unikernel
-./libscript.sh config os --profile=linux-minimal-headless-musl --export=custom.json
-./libscript.sh package-as qcow2
+# 4. Choose your target OS substrate (Linux, FreeBSD, illumos, ReactOS, Unikernel, or RTOS) & bake
+./libscript.sh config os --profile=linux/linux-minimal-headless-musl --export=custom.json
+./libscript.sh package-as linux-distro --profile custom.json --format qcow2
 
 # 5. Deploy workloads across Kubernetes, Mesos, or Nomad and bring up HA topologies
 ./libscript.sh workload submit workloads/payloads/web/openedx/payload.json --scheduler nomad
@@ -736,6 +828,11 @@ cd libscript
   non-interactive JSON specification generator (`./libscript.sh scaffold`) for creating new
   component-package-managers.
 - [USAGE.md](USAGE.md): Full CLI command reference, flags, and execution modes.
+- [synthesis/README.md](synthesis/README.md),
+  [synthesis/distro/README.md](synthesis/distro/README.md) &
+  [synthesis/profiles/README.md](synthesis/profiles/README.md): `T2` + `T3` Kernel, Unikernel & RTOS
+  OS Bakery guides and curated profile catalogs across Linux, FreeBSD, illumos, ReactOS, Unikernels,
+  and RTOS firmware.
 - [infrastructure/README.md](infrastructure/README.md) &
   [workloads/constellations/README.md](workloads/constellations/README.md): `T4` cluster substrates
   and `T5` multi-node stateful HA constellations, lease locking, and split-brain fencing.

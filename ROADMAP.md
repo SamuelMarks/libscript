@@ -61,7 +61,7 @@ or operating system.
       `target-add`/`component-add`).
 - [x] Open/Closed top-level `experiments/<suite-id>/` plugin engine (`experiments/engine.{sh,cmd}`)
       and shared `experiments/_common/` C11/POSIX/Batch benchmark substrate covering
-      `edgcpp-backends`, `gemma-tpu`, `libtpu-pjrt`, `openedx`, `os-component-matrix`, and
+      `edgcpp-backends`, `gemma-4-sql`, `libtpu-pjrt`, `openedx`, `os-component-matrix`, and
       `win-port`.
 - [x] UEFI/GPT (`--cloud-boot=uefi-gpt|efi-stub`) and 1 MiB-aligned Hyper-V Gen2 VHD
       (`--cloud-boot=azure-vhd`) unikernel disk image synthesis,

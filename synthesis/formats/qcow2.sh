@@ -1,10 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Packages raw disk images or sysroots into compressed virtual machine disk
-# images (qcow2, vmdk, vdi) using qemu-img with compression and sparseness.
+# Packages raw disk images, sysroots, or declarative `--profile` specifications into
+# compressed virtual machine disk images (qcow2, vmdk, vdi) using qemu-img.
 #
 # ## Usage
-# Run `qcow2.sh [input_image_or_sysroot] [output_image] [target_format]`
+# Run `qcow2.sh [--profile <path|preset>] [input_image_or_sysroot] [output_image] [target_format]`
 
 set -feu
 
@@ -29,6 +29,23 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
+
+if [ "${1:-}" = '--help' ] || [ "${1:-}" = '-h' ]; then
+  printf 'Usage: %s [--profile <path|preset>] [--output <path>] [--dry-run] [input_image_or_sysroot] [output_image] [target_format]\n' "$(basename "$THIS_FILE")"
+  exit 0
+fi
+
+_has_prof=0
+_def_qfmt="${pkg_type:-qcow2}"
+for _qarg in "$@"; do
+  case "$_qarg" in
+    --profile|-p|--profile=*) _has_prof=1 ;;
+    qcow2|vmdk|vdi) _def_qfmt="$_qarg" ;;
+  esac
+done
+if [ "$_has_prof" -eq 1 ]; then
+  STACK='' exec "${SCRIPT_DIR}/_profile_dispatch.sh" "$_def_qfmt" "$@"
+fi
 
 if [ "${1:-}" = "qcow2" ] || [ "${1:-}" = "vmdk" ] || [ "${1:-}" = "vdi" ]; then
   FMT="$1"

@@ -37,7 +37,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-for %%S in (edgcpp-backends win-port libtpu-pjrt gemma-tpu os-component-matrix) do (
+for %%S in (edgcpp-backends win-port libtpu-pjrt gemma-4-sql os-component-matrix) do (
     set "STACK="
     call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" experiment validate %%S >nul
     if errorlevel 1 exit /b 1

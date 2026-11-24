@@ -28,19 +28,25 @@ specifics.
   - `disk_builder.{sh,cmd}`, `raw_img.{sh,cmd}`, `qcow2.{sh,cmd}`, `vmdk.{sh,cmd}`, `vdi.{sh,cmd}`,
     `hyperv_vhd.{sh,cmd}`, `iso.{sh,cmd}`, `vagrant_box.{sh,cmd}`, `proxmox_tpl.{sh,cmd}`
   - `cloud_img.{sh,cmd}`, `aws_ami.{sh,cmd}`, `azure_vhd.{sh,cmd}`, `gcp_image.{sh,cmd}`
-- **BSD, illumos, ReactOS, Unikernel & RTOS Targets**:
+- **Linux, BSD, illumos, ReactOS, Unikernel & RTOS Targets**:
+  - `linux_distro.{sh,cmd}` (`linux-distro` & `linux-kernel`: glibc/musl/LFS distros & direct-boot
+    Linux `bzImage` + `initramfs` / UKI bundles)
   - `bsd_img.{sh,cmd}`, `freebsd_distro.{sh,cmd}`, `freebsd_iso.{sh,cmd}`, `freebsd_qcow2.{sh,cmd}`,
     `freebsd_raw.{sh,cmd}`, `freebsd_vagrant_box.{sh,cmd}`
   - `illumos_distro.{sh,cmd}`, `reactos_distro.{sh,cmd}`
-  - `unikernel_img.{sh,cmd}` & `direct_kernel.{sh,cmd}` (OSv, Nanos, MirageOS, Unikraft, UEFI-GPT &
-    Azure Gen2 VHD cloud-boot unikernels)
-  - `firmware_bin.{sh,cmd}` (Zephyr & FreeRTOS `.bin`, `.hex`, `.uf2`, MCUboot-signed images)
+  - `unikernel_img.{sh,cmd}` & `direct_kernel.{sh,cmd}` (`unikernel-distro` / `unikernel`: OSv,
+    Nanos, MirageOS, Unikraft, Rumprun, UEFI-GPT & Azure Gen2 VHD cloud-boot unikernels)
+  - `rtos_distro.{sh,cmd}` & `firmware_bin.{sh,cmd}` (`rtos-distro` / `firmware-bin`: Zephyr &
+    FreeRTOS `.bin`, `.elf`, `.hex`, `.uf2`, MCUboot-signed images, Renode `.resc`)
+  - `_profile_dispatch.{sh,cmd}` (automatic `target.os_family` profile router for `qcow2`,
+    `raw-img`, `iso`, and `direct-kernel`)
 
 ## Usage
 
 ```sh
 ./libscript.sh package-as deb --stack workloads/apps/wordpress/packaging.json
-./libscript.sh package-as qcow2 --profile synthesis/profiles/linux/linux-minimal-headless-musl.json
-./libscript.sh package-as unikernel --cloud-boot=uefi-gpt
-./libscript.sh package-as firmware
+./libscript.sh package-as linux-distro --profile synthesis/profiles/linux/linux-minimal-headless-musl.json --format qcow2
+./libscript.sh package-as linux-kernel --profile synthesis/profiles/linux/linux-kernel-gcc-tiny.json --format direct-kernel
+./libscript.sh package-as unikernel-distro --profile synthesis/profiles/unikernel/osv-cloud-runtime.json --format elf
+./libscript.sh package-as rtos-distro --profile synthesis/profiles/rtos/zephyr-cortex-m3-mcuboot-signed.json --format firmware-bin
 ```

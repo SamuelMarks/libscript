@@ -113,7 +113,7 @@ if not errorlevel 1 (
 
 set "SIGNER_DIR=%LIBSCRIPT_HOME%\mcuboot\bin"
 if not exist "!SIGNER_DIR!" mkdir "!SIGNER_DIR!"
-set "SIGNER_EXE=!SIGNER_DIR!\mcuboot_c_signer.exe"
+set "SIGNER_EXE=!SIGNER_DIR!\mcuboot_c_signer_v2.exe"
 if not exist "!SIGNER_EXE!" (
     where gcc >nul 2>&1 && gcc -std=c11 -O2 -o "!SIGNER_EXE!" "!SCRIPT_DIR!\mcuboot_c_signer.c"
     if not exist "!SIGNER_EXE!" (
@@ -124,10 +124,10 @@ if not exist "!SIGNER_EXE!" (
     )
 )
 if exist "!SIGNER_EXE!" (
-    "!SIGNER_EXE!" "!IN_BIN!" "!OUT_BIN!.tmp" "!HEADER_SIZE!" "!SLOT_SIZE!"
+    "!SIGNER_EXE!" "!IN_BIN!" "!OUT_BIN!.tmp" "!HEADER_SIZE!" "!SLOT_SIZE!" "!KEY_TYPE!"
     if not errorlevel 1 (
         move /y "!OUT_BIN!.tmp" "!OUT_BIN!" >nul
-        echo [OK] Signed MCUboot v2 slot image via C11 signer -^> !OUT_BIN!
+        echo [OK] Signed MCUboot v2 slot image via C11 signer ^(!KEY_TYPE!^) -^> !OUT_BIN!
         exit /b 0
     )
 )

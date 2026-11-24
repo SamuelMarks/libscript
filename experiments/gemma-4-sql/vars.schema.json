@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/experiments/gemma-4-sql/vars.schema.json",
+  "title": "gemma-4-sql experiment variables",
+  "description": "Configuration variables for the gemma-4-sql 7-backend Cloud TPU & TFRC performance comparison suite across Hugging Face Transformers, native PyTorch, Keras (JAX, TensorFlow, PyTorch), MaxText, and native JAX.",
+  "type": "object",
+  "properties": {
+    "GEMMA_4_SQL_REPO_DIR": {
+      "type": "string",
+      "description": "Filesystem path to the target gemma-4-sql workspace repository."
+    },
+    "GEMMA_4_SQL_RESULTS_DIR": {
+      "type": "string",
+      "description": "Local directory where per-cell E0-E4 JSON artifacts, comparison summaries, and LaTeX macros are written.",
+      "default": "build/experiment_results/gemma-4-sql"
+    },
+    "GEMMA_4_SQL_MODEL": {
+      "type": "string",
+      "description": "Gemma 4 model identifier passed to benchmark, SQL evaluation, and fine-tuning workloads.",
+      "default": "google/gemma-4-E4B"
+    },
+    "GEMMA_4_SQL_BACKENDS": {
+      "type": "string",
+      "description": "Comma-separated list of Gemma 4 TPU backends to evaluate across the comparison matrix.",
+      "default": "hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native"
+    },
+    "GEMMA_4_SQL_SUBSUITES": {
+      "type": "string",
+      "description": "Comma-separated list of sub-suites (E0,E1,E2,E3,E4) to execute.",
+      "default": "E0,E1,E2,E3,E4"
+    },
+    "GEMMA_4_SQL_BATCH_SIZES": {
+      "type": "string",
+      "description": "Comma-separated list of integer batch sizes swept in Suite E1 prefill and decode benchmarks.",
+      "default": "1,8,32"
+    },
+    "GEMMA_4_SQL_WARMUP": {
+      "type": "string",
+      "description": "Number of untimed XLA compilation warm-up iterations executed before measured trials.",
+      "default": "2"
+    },
+    "GEMMA_4_SQL_TRIALS": {
+      "type": "string",
+      "description": "Number of measured steady-state benchmark runs captured per workload cell.",
+      "default": "5"
+    },
+    "GEMMA_4_SQL_DATASET": {
+      "type": "string",
+      "description": "Dataset identifier or JSONL/DuckDB path passed to Suite E2 SQL evaluation and Suite E3 SFT/PEFT/DPO fine-tuning.",
+      "default": "gemma-4-sql-bench"
+    },
+    "GEMMA_4_SQL_DB_TYPES": {
+      "type": "string",
+      "description": "Comma-separated SQL database engines evaluated in Suite E2 ('sqlite,duckdb').",
+      "default": "sqlite,duckdb"
+    },
+    "GEMMA_4_SQL_COMMAND_TEMPLATE": {
+      "type": "string",
+      "description": "Optional custom templated command executed across every selected backend in Suite E4."
+    },
+    "GEMMA_4_SQL_REQUIRE_HBM": {
+      "type": "string",
+      "description": "Flag (0 or 1) enforcing fail-fast exit 65 when active TPU HBM or /dev/accel* activity is absent.",
+      "default": "1"
+    },
+    "GEMMA_4_SQL_RESUME": {
+      "type": "string",
+      "description": "Flag (0 or 1) skipping already-completed valid cells matching the current workspace tree digest.",
+      "default": "1"
+    },
+    "GEMMA_4_SQL_LOCAL_EXEC": {
+      "type": "string",
+      "description": "Flag (0 or 1) executing suite workloads locally on the current host/worker rather than dispatching over gcloud SSH.",
+      "default": "0"
+    },
+    "GEMMA_4_SQL_SHM_ROOT": {
+      "type": "string",
+      "description": "Root tmpfs directory used for isolated per-backend uv virtualenvs and shared model caches.",
+      "default": "/dev/shm/libscript-tpu"
+    },
+    "GEMMA_4_SQL_PAPER_DIR": {
+      "type": "string",
+      "description": "Optional manuscript directory receiving copied generated_metrics.tex and optional compiled PDF verification."
+    },
+    "GEMMA_4_SQL_RENDER_LATEX": {
+      "type": "string",
+      "description": "Flag (0 or 1) rendering comparison_summary.{json,csv,md} and generated_metrics.tex idempotently without re-running E0-E3.",
+      "default": "0"
+    },
+    "GEMMA_4_SQL_BUILD_PDF": {
+      "type": "string",
+      "description": "Flag (0 or 1) compiling the target LaTeX manuscript PDF in GEMMA_4_SQL_PAPER_DIR after rendering metrics.",
+      "default": "0"
+    },
+    "GEMMA_4_SQL_SYNTHETIC_FIXTURES": {
+      "type": "string",
+      "description": "Internal CI flag (0 or 1) enabling hermetic synthetic probe and telemetry fixtures strictly during offline tests.",
+      "default": "0"
+    },
+    "GEMMA_4_SQL_DRY_RUN": {
+      "type": "string",
+      "description": "Flag (0 or 1) validating configuration and logging planned actions without running TPU workloads.",
+      "default": "0"
+    },
+    "GEMMA_4_SQL_SKIP_CUSTOM_EXEC": {
+      "type": "string",
+      "description": "Internal flag (0 or 1) skipping custom command template execution during pure synthesis passes.",
+      "default": "0"
+    },
+    "GEMMA_4_SQL_ENABLED": {
+      "type": "string",
+      "description": "Flag (0 or 1) indicating whether the gemma-4-sql experiment suite is enabled in an execution plan."
+    }
+  },
+  "x-libscript-var-packs": ["experiment", "tfrc", "tpu"]
+}

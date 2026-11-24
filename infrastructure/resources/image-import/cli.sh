@@ -1,9 +1,9 @@
 #!/bin/sh
 # ## Overview
-# CLI router for idempotent multicloud VM/unikernel image import across AWS, Azure, and GCP.
+# CLI router for idempotent multicloud VM/distro/unikernel image import across AWS, Azure, and GCP.
 #
 # ## Usage
-# ./infrastructure/resources/image-import/cli.sh <aws|azure|gcp|test> [options...]
+# ./infrastructure/resources/image-import/cli.sh <aws|azure|gcp|distro|register|test> [options...]
 
 set -feu
 
@@ -36,12 +36,13 @@ fi
 
 case "$SUB" in
   --help|-h|'')
-    printf '%s\n' 'Usage: cli.sh <aws|azure|gcp|test> [--disk=<path>] [--name=<image_name>] [--dry-run]'
+    printf '%s\n' 'Usage: cli.sh <aws|azure|gcp|distro|register|test> [--disk=<path> | --distro=<target> --profile=<preset>] [--name=<image_name>] [--dry-run]'
     exit 0
     ;;
   aws) shift; exec "${SCRIPT_DIR}/aws_import.sh" "$@" ;;
   azure) shift; exec "${SCRIPT_DIR}/azure_import.sh" "$@" ;;
   gcp) shift; exec "${SCRIPT_DIR}/gcp_import.sh" "$@" ;;
+  distro|register|multicloud) shift; exec "${SCRIPT_DIR}/distro_import.sh" "$@" ;;
   test) shift; exec "${SCRIPT_DIR}/test.sh" "$@" ;;
   *)
     printf '[ERROR] Unsupported image-import action: %s\n' "$SUB" >&2

@@ -59,7 +59,7 @@ REST_BIN="${TEST_TMP}/build/bin/libscript-rest-api"
 
 # 1. Valid RFC 8259 double-quoted JSON and unique CSPRNG UUIDv4s
 J1=$("$REST_BIN" --dispatch-artifact rtos-zephyr firmware-uf2 sqlite qemu_cortex_m3)
-J2=$("$REST_BIN" --dispatch-experiment gemma_tpu tpu_matrix linux-x86_64)
+J2=$("$REST_BIN" --dispatch-experiment gemma-4-sql tpu_matrix linux-x86_64)
 ID1=$(printf '%s\n' "$J1" | jq -er '.job_id')
 ID2=$(printf '%s\n' "$J2" | jq -er '.job_id')
 [ "$ID1" != "$ID2" ] || fail_test "Expected unique CSPRNG UUIDv4s, got identical ${ID1}"
@@ -77,7 +77,7 @@ printf '[PASS] CLI dispatch emits valid RFC 8259 JSON, unique UUIDv4s, and rejec
 # 3. Live HTTP/1.1 socket server + job status polling
 if command -v curl >/dev/null 2>&1; then
   PORT_FILE="${TEST_TMP}/bound.port"
-  "$REST_BIN" --bind 127.0.0.1 --port 0 --max-requests 6 --port-file "$PORT_FILE" >"${TEST_TMP}/srv.log" 2>&1 &
+  "$REST_BIN" --bind 127.0.0.1 --port 0 --max-requests 10 --port-file "$PORT_FILE" >"${TEST_TMP}/srv.log" 2>&1 &
   SRV_PID=$!
   _tries=0
   while [ ! -s "$PORT_FILE" ] && [ "$_tries" -lt 50 ]; do
@@ -110,6 +110,26 @@ if command -v curl >/dev/null 2>&1; then
   # libscript-allow-raw-curl
   POLL_JSON=$(curl -fsS "http://127.0.0.1:${BOUND_PORT}/api/v1/jobs/${HTTP_JOB_ID}")
   [ "$(printf '%s\n' "$POLL_JSON" | jq -r '.status')" = 'succeeded' ] || fail_test "Unexpected job poll state: ${POLL_JSON}"
+
+  # libscript-allow-raw-curl
+  PKG_CAT=$(curl -fsS "http://127.0.0.1:${BOUND_PORT}/v1/package-as")
+  printf '%s\n' "$PKG_CAT" | jq -er '.targets | index("linux-distro")' >/dev/null || fail_test "Missing linux-distro in GET /v1/package-as: ${PKG_CAT}"
+
+  # libscript-allow-raw-curl
+  PKG_JOB=$(curl -fsS -X POST "http://127.0.0.1:${BOUND_PORT}/v1/package-as" \
+    -H 'Content-Type: application/json' \
+    -d '{"target":"linux-distro","profile":"linux-minimal-headless-musl","format":"qcow2"}')
+  PKG_JOB_ID=$(printf '%s\n' "$PKG_JOB" | jq -er '.job_id')
+
+  # libscript-allow-raw-curl
+  PKG_POLL=$(curl -fsS "http://127.0.0.1:${BOUND_PORT}/api/v1/jobs/${PKG_JOB_ID}")
+  [ "$(printf '%s\n' "$PKG_POLL" | jq -r '.status')" = 'succeeded' ] || fail_test "Unexpected /v1/package-as job poll state: ${PKG_POLL}"
+
+  # libscript-allow-raw-curl
+  PKG_BAD=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:${BOUND_PORT}/v1/package-as" \
+    -H 'Content-Type: application/json' \
+    -d '{"target":"linux-distro","profile":"../../etc/passwd","format":"qcow2"}')
+  [ "$PKG_BAD" = '400' ] || fail_test "Expected HTTP 400 on /v1/package-as traversal profile, got ${PKG_BAD}"
 
   # libscript-allow-raw-curl
   BAD_CODE=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:${BOUND_PORT}/api/v1/artifacts/generate" \

@@ -105,15 +105,26 @@ case "${pkg_type:-}" in
   apk) source_format_driver "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/apk.sh" "$@" ;;
   txz) source_format_driver "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/txz.sh" "$@" ;;
   tui) source_format_driver "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/tui.sh" "$@" ;;
+  linux-distro|linux_distro) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/linux_distro.sh" "$@" ;;
+  linux-kernel|linux_kernel)
+    LIBSCRIPT_LINUX_DEFAULT_FORMAT='direct-kernel' \
+    LIBSCRIPT_LINUX_DEFAULT_PROFILE="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/linux/linux-kernel-gcc-tiny.json" \
+      exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/linux_distro.sh" "$@"
+    ;;
   illumos-distro|illumos_distro) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/illumos_distro.sh" "$@" ;;
   freebsd-distro|freebsd_distro) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/freebsd_distro.sh" "$@" ;;
   reactos-distro|reactos_distro) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_distro.sh" "$@" ;;
+  rtos-distro|rtos_distro|zephyr-distro|zephyr_distro|freertos-distro|freertos_distro)
+    exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/rtos_distro.sh" "$@"
+    ;;
   raw-img|raw_img|img) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/raw_img.sh" "$@" ;;
   qcow2|vmdk|vdi) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/qcow2.sh" "$@" "$pkg_type" ;;
   iso) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/iso.sh" "$@" ;;
   rootfs-tar|rootfs_tar) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/rootfs_tar.sh" "$@" ;;
   bsd-img|bsd_img) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/bsd_img.sh" "$@" ;;
-  unikernel|unikernel-img|unikernel_img) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/unikernel_img.sh" "$@" ;;
+  unikernel|unikernel-img|unikernel_img|unikernel-distro|unikernel_distro)
+    exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/unikernel_img.sh" "$@"
+    ;;
   docker-image|oci-image|docker_image) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/container_base.sh" "$@" ;;
   qemu-qcow2) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/qemu_img.sh" "$@" ;;
   vmware-vmdk) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/vmware_img.sh" "$@" ;;
@@ -129,8 +140,9 @@ case "${pkg_type:-}" in
   disk-builder|disk_builder) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/disk_builder.sh" "$@" ;;
   zfs-stream|zfs_stream) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/zfs_stream.sh" "$@" ;;
   direct-kernel|direct_kernel) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/direct_kernel.sh" "$@" ;;
+  uki) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/uki.sh" "$@" ;;
   firmware-elf|firmware-bin|firmware_bin|firmware-hex|firmware-uf2|mcuboot-signed|renode-resc)
-    exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/firmware_bin.sh" --format="$pkg_type" "$@"
+    exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/firmware_bin.sh" "$@"
     ;;
   cloud-img) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/cloud_img.sh" "$@" ;;
   *)

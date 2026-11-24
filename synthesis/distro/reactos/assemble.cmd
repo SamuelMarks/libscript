@@ -107,18 +107,32 @@ if not errorlevel 1 (
     for /f "usebackq delims=" %%V in (`jq -r "((.components // []) + (.packages // [])) | unique | join(\",\")" "!PROFILE!"`) do set "COMP_CSV=%%V"
     for /f "usebackq delims=" %%V in (`jq -r ".desktop.shell // \"explorer-classic\"" "!PROFILE!"`) do set "DESK_SHELL=%%V"
     for /f "usebackq delims=" %%V in (`jq -r ".desktop.theme // \"classic\"" "!PROFILE!"`) do set "DESK_THEME=%%V"
-    for /f "usebackq delims=" %%V in (`jq -r ".desktop.autologin_user // empty" "!PROFILE!"`) do set "AUTOLOGIN=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".desktop.autologin_user // empty" "!PROFILE!"`) do if not "%%V"=="" set "AUTOLOGIN=%%V"
     for /f "usebackq delims=" %%V in (`jq -r ".audio.subsystem // \"none\"" "!PROFILE!"`) do set "AUDIO_SUB=%%V"
-)
-set "STAMP_FILE=!STAMP_DIR!\reactos-assemble-!PROFILE_NAME!.stamp"
-if exist "!STAMP_FILE!" (
+    ) else (
+    findstr /I /C:"x86_64" "!PROFILE!" >nul 2>&1
+    if not errorlevel 1 set "ARCH=x86_64"
+    findstr /I /C:"nightly" "!PROFILE!" >nul 2>&1
+    if not errorlevel 1 set "REACTOS_VER=nightly"
+    )
+    set "STAMP_FILE=!STAMP_DIR!\reactos-assemble-!PROFILE_NAME!.stamp"
+    if exist "!STAMP_FILE!" (
     echo [SKIP]     ReactOS profile ^(!PROFILE_NAME!^) already assembled at !SYSROOT!
     exit /b 0
-)
+    )
 
-echo [ASSEMBLE] Synthesizing ReactOS !REACTOS_VER! ^(!ARCH!^) for profile !PROFILE_NAME!...
-set "STACK=" & call "!SCRIPT_DIR!\base.cmd" --allow-stub "!SYSROOT!" "!REACTOS_VER!" "!ARCH!" "!VARIANT!"
-set "STACK=" & call "!SCRIPT_DIR!\filesystem.cmd" "!SYSROOT!" "!FS_TYPE!" "!SERIAL_DBG!"
+    echo [ASSEMBLE] Synthesizing ReactOS !REACTOS_VER! ^(!ARCH!^) for profile !PROFILE_NAME!...
+    if "%REACTOS_BUILD_FROM_SOURCE%"=="1" (
+    set "LIBSCRIPT_TARGET_SYSROOT=!SYSROOT!"
+    set "LIBSCRIPT_TARGET_ARCH=!ARCH!"
+    set "REACTOS_VERSION=!REACTOS_VER!"
+    set "STACK=" & call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\reactos-base\setup.cmd" --allow-stub --from-source install
+    if errorlevel 1 exit /b 1
+    ) else (
+    set "STACK=" & call "!SCRIPT_DIR!\base.cmd" --allow-stub "!SYSROOT!" "!REACTOS_VER!" "!ARCH!" "!VARIANT!"
+    if errorlevel 1 exit /b 1
+    )
+    set "STACK=" & call "!SCRIPT_DIR!\filesystem.cmd" "!SYSROOT!" "!FS_TYPE!" "!SERIAL_DBG!"
 set "STACK=" & call "!SCRIPT_DIR!\unattend.cmd" "!SYSROOT!" "!HOSTNAME_VAL!" "" "00000409" "85" "!FS_TYPE!"
 set "STACK=" & call "!SCRIPT_DIR!\config.cmd" "!SYSROOT!" "!HOSTNAME_VAL!" "true" "1.1.1.1,8.8.8.8"
 set "STACK=" & call "!SCRIPT_DIR!\pkg.cmd" "!SYSROOT!" "!ARCH!" "!RAPPS_CSV!" "!MSI_CSV!" "!COMP_CSV!"

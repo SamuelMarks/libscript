@@ -88,6 +88,11 @@ Vagrant.configure("2") do |config|
       echo "Configuring libscript..."
       export LIBSCRIPT_ROOT_DIR=/Users/vagrant/libscript
 
+      if [ "#{test_target}" = "package-as" ] || [ "#{test_target}" = "test_package_as_kernels" ]; then
+        /Users/vagrant/libscript/tests/test_package_as_kernels.sh
+        exit $?
+      fi
+
       echo "Installing #{test_target} using libscript..."
       /Users/vagrant/libscript/libscript.sh install #{test_target}
 

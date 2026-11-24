@@ -29,25 +29,42 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 KERNEL_KIND="${LIBSCRIPT_TARGET_OS:-linux}"
+TARGET_ARCH="${LIBSCRIPT_TARGET_ARCH:-x86_64}"
 STRICT_BUILD="${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}"
 ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
+
+for _dkarg in "$@"; do
+  case "$_dkarg" in
+    --profile|-p|--profile=*)
+      STACK='' exec "${SCRIPT_DIR}/_profile_dispatch.sh" 'direct-kernel' "$@"
+      ;;
+  esac
+done
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --help|-h)
-      printf 'Usage: %s [--kernel=<linux|freebsd|illumos|unikraft|nanos|osv|rumprun|mirageos>] [--strict | --allow-stub] [target_sysroot] [output_dir]\n' "$(basename "$THIS_FILE")"
+      printf 'Usage: %s [--kernel=<linux|freebsd|illumos|unikraft|nanos|osv|rumprun|mirageos>] [--arch=<x86_64|aarch64|riscv64|i686>] [--strict | --allow-stub] [target_sysroot] [output_dir]\n' "$(basename "$THIS_FILE")"
       exit 0
       ;;
     --kernel=*)
       KERNEL_KIND="${1#*=}"
       shift
       ;;
+    --arch=*)
+      TARGET_ARCH="${1#*=}"
+      shift
+      ;;
+    --arch)
+      TARGET_ARCH="$2"
+      shift 2
+      ;;
     --strict)
-      STRICT_BUILD=1
+      STRICT_BUILD='1'
       shift
       ;;
     --allow-stub)
-      ALLOW_STUB=1
+      ALLOW_STUB='1'
       shift
       ;;
     *)
@@ -61,11 +78,13 @@ OUT_DIR="${2:-${LIBSCRIPT_ROOT_DIR}/build/images/direct-kernel}"
 STAMP_FILE="${OUT_DIR}/.stamp.direct_kernel"
 
 if [ -f "$STAMP_FILE" ] && [ -f "${OUT_DIR}/boot-manifest.json" ]; then
-  if grep -q '^mode=stub$' "$STAMP_FILE" 2>/dev/null && [ "$STRICT_BUILD" = "1" ]; then
-    rm -f "$STAMP_FILE"
-  else
-    printf '[SKIP] Direct-boot kernel bundle already synthesized: %s\n' "$OUT_DIR"
-    exit 0
+  if grep -q "^arch=${TARGET_ARCH}$" "$STAMP_FILE" 2>/dev/null || ! grep -q '^arch=' "$STAMP_FILE" 2>/dev/null; then
+    if grep -q '^mode=stub$' "$STAMP_FILE" 2>/dev/null && [ "$STRICT_BUILD" = '1' ]; then
+      rm -f "$STAMP_FILE"
+    else
+      printf '[SKIP] Direct-boot kernel bundle already synthesized: %s\n' "$OUT_DIR"
+      exit 0
+    fi
   fi
 fi
 
@@ -162,15 +181,31 @@ case "$KERNEL_KIND" in
     ;;
 esac
 
+QEMU_CMD="qemu-system-x86_64 -m 1024M -nographic -kernel kernel.bin -initrd initrd.img -append '${CMDLINE}'"
+case "$TARGET_ARCH" in
+  aarch64|arm64)
+    CMDLINE='console=ttyAMA0 reboot=k panic=1'
+    QEMU_CMD="qemu-system-aarch64 -M virt -cpu cortex-a57 -m 1024M -nographic -kernel kernel.bin -initrd initrd.img -append '${CMDLINE}'"
+    ;;
+  riscv64)
+    CMDLINE='console=ttyS0 reboot=k panic=1'
+    QEMU_CMD="qemu-system-riscv64 -M virt -m 1024M -nographic -kernel kernel.bin -initrd initrd.img -append '${CMDLINE}'"
+    ;;
+  i686|i386)
+    QEMU_CMD="qemu-system-i386 -m 512M -nographic -kernel kernel.bin -initrd initrd.img -append '${CMDLINE}'"
+    ;;
+esac
+
 cat <<MAN_EOF > "${OUT_DIR}/boot-manifest.json"
 {
   "kernel_family": "${KERNEL_KIND}",
+  "arch": "${TARGET_ARCH}",
   "kernel_image": "kernel.bin",
   "initrd_image": "initrd.img",
   "cmdline": "${CMDLINE}",
   "mode": "${STAMP_MODE}",
   "launchers": {
-    "qemu": "qemu-system-x86_64 -m 1024M -nographic -kernel kernel.bin -initrd initrd.img -append '${CMDLINE}'",
+    "qemu": "${QEMU_CMD}",
     "firecracker": "firecracker --no-api --config-file firecracker.json",
     "bhyve": "bhyve -c 2 -m 1024M -A -H -P -s 0:0,hostbridge -l com1,stdio direct-vm"
   }
@@ -191,7 +226,7 @@ cat <<FC_EOF > "${OUT_DIR}/firecracker.json"
 }
 FC_EOF
 
-printf 'mode=%s\ntimestamp=%s\n' "$STAMP_MODE" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
+printf 'mode=%s\narch=%s\ntimestamp=%s\n' "$STAMP_MODE" "$TARGET_ARCH" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
 printf '[OK] Direct-boot kernel bundle synthesized (%s): %s\n' "$KERNEL_KIND" "$OUT_DIR"
 exit 0

@@ -3,6 +3,7 @@
   "$id": "/_lib/toolchains/arm-none-eabi-gcc/vars.schema.json",
   "title": "arm-none-eabi-gcc variables",
   "description": "Configuration variables for arm-none-eabi-gcc",
+  "x-libscript-var-packs": ["image_synth"],
   "type": "object",
   "properties": {
     "ARM_NONE_EABI_GCC_INSTALL_METHOD": {

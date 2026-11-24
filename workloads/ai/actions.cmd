@@ -172,7 +172,7 @@ if "!RESUME_FLAG!"=="0" set "_mflags=!_mflags! --no-resume"
 if "!DRY_RUN_FLAG!"=="1" set "_mflags=!_mflags! --dry-run"
 call "!LIBSCRIPT_ROOT_DIR!\engine\common\tfrc_guard.cmd" :libscript_tfrc_is_enabled
 if errorlevel 1 if /i "!ML_TARGET!"=="local" (
-    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run gemma-tpu !_mflags!
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run gemma-4-sql !_mflags!
     exit /b !errorlevel!
 )
 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" rapid-experiment tpu_matrix !_mflags!

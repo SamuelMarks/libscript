@@ -1,10 +1,10 @@
 #!/bin/sh
 # ## Overview
 # Unified CLI entrypoint to package an illumos distribution profile into
-# raw, qcow2, vagrant box, vhd, vmdk, or iso target formats.
+# raw, qcow2, vagrant box, vhd, vmdk, iso, zfs-stream, or direct-kernel target formats.
 # ## Usage
 # Package illumos distribution:
-#   synthesis/formats/illumos_distro.sh --format <qcow2|box|raw|vhd|vmdk|iso> --profile <profile_json> [--output <path>]
+#   synthesis/formats/illumos_distro.sh [--format <qcow2|box|raw|vhd|vmdk|iso|zfs-stream|direct-kernel>] [--profile <profile_json>] [--output <path>] [--dry-run] [--allow-stub] [--strict]
 
 set -feu
 
@@ -32,24 +32,59 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 FORMAT='qcow2'
 PROFILE="${REPO_ROOT}/synthesis/profiles/illumos/minimal-server.json"
-OUTPUT=""
+OUTPUT=''
+SYSROOT=''
+DRY_RUN="${LIBSCRIPT_DRY_RUN:-0}"
+STRICT_BUILD="${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}"
+ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
+
+# ## resolve_illumos_profile
+# Resolves an illumos profile path or preset name under synthesis/profiles/.
+resolve_illumos_profile() {
+  _rip="$1"
+  if [ -f "$_rip" ]; then
+    printf '%s\n' "$_rip"
+    return 0
+  fi
+  for _sub in '' 'illumos/'; do
+    if [ -f "${REPO_ROOT}/synthesis/profiles/${_sub}${_rip}.json" ]; then
+      printf '%s\n' "${REPO_ROOT}/synthesis/profiles/${_sub}${_rip}.json"
+      return 0
+    fi
+  done
+  printf '%s\n' "$_rip"
+  return 0
+}
+
+# ## compute_profile_hash
+# Computes a deterministic SHA-256 or byte-length fingerprint for a profile file.
+compute_profile_hash() {
+  _cph="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$_cph" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$_cph" | awk '{print $1}'
+  else
+    wc -c < "$_cph" | tr -d ' '
+  fi
+}
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --format|-f)
-      FORMAT="$2"
-      shift 2
-      ;;
-    --profile|-p)
-      PROFILE="$2"
-      shift 2
-      ;;
-    --output|-o)
-      OUTPUT="$2"
-      shift 2
-      ;;
+    --format|-f) FORMAT="$2"; shift 2 ;;
+    --format=*) FORMAT="${1#*=}"; shift ;;
+    --profile|-p) PROFILE="$2"; shift 2 ;;
+    --profile=*) PROFILE="${1#*=}"; shift ;;
+    --output|-o|--out) OUTPUT="$2"; shift 2 ;;
+    --output=*|--out=*) OUTPUT="${1#*=}"; shift ;;
+    --sysroot) SYSROOT="$2"; shift 2 ;;
+    --sysroot=*) SYSROOT="${1#*=}"; shift ;;
+    --dry-run) DRY_RUN='1'; shift ;;
+    --strict) STRICT_BUILD='1'; ALLOW_STUB='0'; export LIBSCRIPT_STRICT_IMAGE_BUILD='1'; export LIBSCRIPT_ALLOW_STUB='0'; shift ;;
+    --allow-stub) ALLOW_STUB='1'; STRICT_BUILD='0'; export LIBSCRIPT_ALLOW_STUB='1'; export LIBSCRIPT_STRICT_IMAGE_BUILD='0'; shift ;;
+    --offline) export LIBSCRIPT_OFFLINE='1'; shift ;;
     --help|-h)
-      printf 'Usage: %s --format <qcow2|box|raw|vhd|vmdk|iso> --profile <path> [--output <path>]\n' "${THIS_FILE}"
+      printf 'Usage: %s [--format <qcow2|box|raw|vhd|vmdk|iso|zfs-stream|direct-kernel>] [--profile <path|preset>] [--output <path>] [--dry-run] [--allow-stub] [--strict]\n' "${THIS_FILE}"
       exit 0
       ;;
     *)
@@ -59,45 +94,94 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-SYSROOT="${REPO_ROOT}/build/illumos-sysroot"
+PROFILE=$(resolve_illumos_profile "$PROFILE")
+if [ ! -f "$PROFILE" ]; then
+  printf '[ERROR] illumos profile not found: %s\n' "$PROFILE" >&2
+  exit 1
+fi
 
-# Step 1: Assemble sysroot from profile
-printf '[DISTRO]   Synthesizing illumos sysroot from %s...\n' "${PROFILE}"
-"${REPO_ROOT}/synthesis/distro/illumos/assemble.sh" "${PROFILE}" "${SYSROOT}"
-
-# Step 2: Dispatch to requested format exporter
 case "${FORMAT}" in
-  raw)
-    : "${OUTPUT:=${REPO_ROOT}/build/images/raw/illumos.raw}"
-    "${SCRIPT_DIR}/illumos_raw.sh" "${SYSROOT}" "${OUTPUT}" 20
-    ;;
-  qcow2)
-    : "${OUTPUT:=${REPO_ROOT}/build/images/qemu/illumos.qcow2}"
-    "${SCRIPT_DIR}/illumos_qcow2.sh" "${SYSROOT}" "${OUTPUT}" 20
-    ;;
-  box)
-    : "${OUTPUT:=${REPO_ROOT}/build/images/vagrant/illumos.box}"
-    QCOW_TMP="${REPO_ROOT}/build/images/qemu/illumos.qcow2"
-    "${SCRIPT_DIR}/illumos_qcow2.sh" "${SYSROOT}" "${QCOW_TMP}" 20
-    "${SCRIPT_DIR}/illumos_vagrant_box.sh" "${QCOW_TMP}" "${OUTPUT}" "qemu"
-    ;;
-  vhd)
-    : "${OUTPUT:=${REPO_ROOT}/build/images/hyperv/illumos.vhd}"
-    "${SCRIPT_DIR}/illumos_vhd.sh" "${SYSROOT}" "${OUTPUT}" 20
-    ;;
-  vmdk)
-    : "${OUTPUT:=${REPO_ROOT}/build/images/vmware/illumos.vmdk}"
-    "${SCRIPT_DIR}/illumos_vmdk.sh" "${SYSROOT}" "${OUTPUT}" 20
-    ;;
-  iso)
-    : "${OUTPUT:=${REPO_ROOT}/build/images/iso/illumos.iso}"
-    "${SCRIPT_DIR}/illumos_iso.sh" "${SYSROOT}" "${OUTPUT}"
-    ;;
+  raw|raw-img) : "${OUTPUT:=${REPO_ROOT}/build/images/raw/illumos.raw}" ;;
+  qcow2) : "${OUTPUT:=${REPO_ROOT}/build/images/qemu/illumos.qcow2}" ;;
+  box|vagrant-box) : "${OUTPUT:=${REPO_ROOT}/build/images/vagrant/illumos.box}" ;;
+  vhd|vhdx) : "${OUTPUT:=${REPO_ROOT}/build/images/hyperv/illumos.vhd}" ;;
+  vmdk) : "${OUTPUT:=${REPO_ROOT}/build/images/vmware/illumos.vmdk}" ;;
+  iso|live-iso) : "${OUTPUT:=${REPO_ROOT}/build/images/iso/illumos.iso}" ;;
+  zfs-stream) : "${OUTPUT:=${REPO_ROOT}/build/images/zfs/illumos.zfs.zst}" ;;
+  direct-kernel) : "${OUTPUT:=${REPO_ROOT}/build/images/direct-kernel/illumos}" ;;
   *)
     printf '[ERROR] Unsupported packaging format: %s\n' "${FORMAT}" >&2
-    printf 'Supported formats: qcow2, box, raw, vhd, vmdk, iso\n' >&2
+    printf 'Supported formats: qcow2, box, raw, vhd, vmdk, iso, zfs-stream, direct-kernel\n' >&2
     exit 1
     ;;
 esac
+
+if [ "$DRY_RUN" = '1' ]; then
+  STACK='' "${REPO_ROOT}/cli/commands/config/config.sh" os --validate="$PROFILE"
+  printf '[DRYRUN]   illumos distribution plan verified (format=%s) -> %s\n' "$FORMAT" "$OUTPUT"
+  exit 0
+fi
+
+STAMP_FILE="${OUTPUT}.distro.stamp"
+PROF_HASH=$(compute_profile_hash "$PROFILE")
+if [ -f "$STAMP_FILE" ] && { [ -f "$OUTPUT" ] || [ -d "$OUTPUT" ]; }; then
+  if grep -q "^profile_hash=${PROF_HASH}$" "$STAMP_FILE" 2>/dev/null && grep -q "^format=${FORMAT}$" "$STAMP_FILE" 2>/dev/null; then
+    if [ "$STRICT_BUILD" != '1' ] || ! grep -q '^mode=stub$' "$STAMP_FILE" 2>/dev/null; then
+      printf '[SKIP]     illumos distribution artifact already synthesized: %s\n' "$OUTPUT"
+      exit 0
+    fi
+  fi
+fi
+
+PBASE="${PROFILE##*/}"
+PNAME="${PBASE%.json}"
+: "${SYSROOT:=${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot-${PNAME}}}"
+
+# Step 1: Assemble sysroot from profile
+printf '[DISTRO]   Synthesizing illumos sysroot from %s...\n' "${PROFILE}"
+STACK='' "${REPO_ROOT}/synthesis/distro/illumos/assemble.sh" "${PROFILE}" "${SYSROOT}"
+
+# Step 2: Dispatch to requested format exporter
+case "${FORMAT}" in
+  raw|raw-img)
+    STACK='' "${SCRIPT_DIR}/illumos_raw.sh" "${SYSROOT}" "${OUTPUT}" 20
+    ;;
+  qcow2)
+    STACK='' "${SCRIPT_DIR}/illumos_qcow2.sh" "${SYSROOT}" "${OUTPUT}" 20
+    ;;
+  box|vagrant-box)
+    QCOW_TMP="${REPO_ROOT}/build/images/qemu/illumos.qcow2"
+    STACK='' "${SCRIPT_DIR}/illumos_qcow2.sh" "${SYSROOT}" "${QCOW_TMP}" 20
+    STACK='' "${SCRIPT_DIR}/illumos_vagrant_box.sh" "${QCOW_TMP}" "${OUTPUT}" "qemu"
+    ;;
+  vhd|vhdx)
+    STACK='' "${SCRIPT_DIR}/illumos_vhd.sh" "${SYSROOT}" "${OUTPUT}" 20
+    ;;
+  vmdk)
+    STACK='' "${SCRIPT_DIR}/illumos_vmdk.sh" "${SYSROOT}" "${OUTPUT}" 20
+    ;;
+  iso|live-iso)
+    STACK='' "${SCRIPT_DIR}/illumos_iso.sh" "${SYSROOT}" "${OUTPUT}"
+    ;;
+  zfs-stream)
+    STACK='' "${SCRIPT_DIR}/zfs_stream.sh" "${SYSROOT}" "${OUTPUT}"
+    ;;
+  direct-kernel)
+    _dk_flags=''
+    [ "$ALLOW_STUB" = '1' ] && _dk_flags='--allow-stub'
+    [ "$STRICT_BUILD" = '1' ] && _dk_flags='--strict'
+    if [ -n "$_dk_flags" ]; then
+      STACK='' "${SCRIPT_DIR}/direct_kernel.sh" --kernel=illumos "$_dk_flags" "${SYSROOT}" "${OUTPUT}"
+    else
+      STACK='' "${SCRIPT_DIR}/direct_kernel.sh" --kernel=illumos "${SYSROOT}" "${OUTPUT}"
+    fi
+    ;;
+esac
+
+STAMP_MODE='native'
+[ "$ALLOW_STUB" = '1' ] && STAMP_MODE='stub'
+printf 'format=%s\nprofile=%s\nprofile_hash=%s\nmode=%s\ntimestamp=%s\n' \
+  "$FORMAT" "$PROFILE" "$PROF_HASH" "$STAMP_MODE" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
+mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
 
 printf '[OK]       Packaging complete: %s\n' "${OUTPUT}"

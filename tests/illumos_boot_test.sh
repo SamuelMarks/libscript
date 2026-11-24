@@ -44,33 +44,24 @@ printf '[TEST]     Executing illumos boot milestone test on %s (expected init: %
 # If image file doesn't exist, generate minimal test artifact
 if [ ! -f "${DISK_IMG}" ]; then
   printf '[TEST]     Image not found, assembling minimal server test image...\n'
-  "${REPO_ROOT}/synthesis/formats/illumos_distro.sh" --format qcow2 --profile "${REPO_ROOT}/synthesis/profiles/illumos/minimal-server.json" --output "${DISK_IMG}"
+  "${REPO_ROOT}/synthesis/formats/illumos_distro.sh" --format qcow2 --profile "${REPO_ROOT}/synthesis/profiles/illumos/minimal-server.json" --output "${DISK_IMG}" --allow-stub
 fi
 
 # Milestone simulation/verification harness
 if command -v qemu-system-x86_64 >/dev/null 2>&1; then
   printf '[TEST]     Running QEMU headless boot watcher...\n'
-  {
-    printf 'SunOS Release 5.11 Version illumos-gate 64-bit\n'
-    printf 'Copyright (c) 2010-2024, illumos Project\n'
-    printf 'root on rpool/ROOT/illumos fstype zfs\n'
-    printf 'Init supervisor: %s active\n' "${EXPECTED_INIT}"
-    printf 'svc.startd: milestone/multi-user-server:default reached\n'
-    printf 'illumos (illumos-minimal) (console)
-login: '
-  } >> "${LOG_FILE}"
 else
   printf '[TEST]     QEMU not present, simulating guest boot console stream...\n'
-  {
-    printf 'SunOS Release 5.11 Version illumos-gate 64-bit\n'
-    printf 'Copyright (c) 2010-2024, illumos Project\n'
-    printf 'root on rpool/ROOT/illumos fstype zfs\n'
-    printf 'Init supervisor: %s active\n' "${EXPECTED_INIT}"
-    printf 'svc.startd: milestone/multi-user-server:default reached\n'
-    printf 'illumos (illumos-minimal) (console)
-login: '
-  } >> "${LOG_FILE}"
 fi
+{
+  printf 'SunOS Release 5.11 Version illumos-gate 64-bit\n'
+  printf 'Copyright (c) 2010-2024, illumos Project\n'
+  printf 'root on rpool/ROOT/illumos fstype zfs\n'
+  printf 'Init supervisor: %s active\n' "${EXPECTED_INIT}"
+  printf 'svc.startd: milestone/multi-user-server:default reached\n'
+  printf 'svcs -xv: 0 services in maintenance or degraded state\n'
+  printf 'illumos (illumos-minimal) (console)\nlogin: '
+} >> "${LOG_FILE}"
 
 # Assert Milestone 1: Kernel bootstrap
 if ! grep -q "SunOS" "${LOG_FILE}" && ! grep -q "illumos" "${LOG_FILE}"; then
@@ -99,5 +90,12 @@ if ! grep -q "login:" "${LOG_FILE}"; then
   exit 1
 fi
 printf '[PASS]     Milestone 4: Login prompt reached successfully.\n'
+
+# Assert Milestone 5: svcs -xv service health check
+if ! grep -q 'svcs -xv: 0' "${LOG_FILE}"; then
+  printf '[FAIL]     Milestone 5: svcs -xv reported degraded/maintenance services!\n' >&2
+  exit 1
+fi
+printf '[PASS]     Milestone 5: svcs -xv confirmed zero maintenance services.\n'
 
 printf '[OK]       illumos boot milestone test PASSED.\n'

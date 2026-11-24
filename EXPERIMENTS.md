@@ -18,7 +18,7 @@ auto-discovered without modifying core CLI routers:
 ./libscript.sh experiment run os-component-matrix
 ```
 
-Built-in plugins include `edgcpp-backends`, `win-port`, `libtpu-pjrt`, `gemma-tpu`, `openedx`, and
+Built-in plugins include `edgcpp-backends`, `win-port`, `libtpu-pjrt`, `gemma-4-sql`, `openedx`, and
 `os-component-matrix` (emitting provenance-stamped `matrix_results.json` and deterministically
 regenerating the 7-OS Supported Components tables in `README.md`).
 
@@ -318,10 +318,10 @@ LibScript natively orchestrates the zero-hallucination **EDG C/C++ Multi-Backend
 
 ---
 
-## 7. Zero-Cost TFRC 7-Backend Gemma 4 Cloud TPU Matrix (`--suite=gemma_tpu` / `tpu_matrix`)
+## 7. Zero-Cost TFRC 7-Backend Gemma 4 Cloud TPU Matrix (`--suite=gemma-4-sql` / `tpu_matrix`)
 
 LibScript orchestrates reproducible single-host and multi-host Google Cloud TPU benchmarks under
-strict `$0.00` TPU Research Cloud (TFRC) guardrails (`experiments/gemma-tpu/`,
+strict `$0.00` TPU Research Cloud (TFRC) guardrails (`experiments/gemma-4-sql/`,
 `engine/schemas/tfrc-policy.schema.json`, `engine/common/tfrc_guard.{sh,cmd}`, and
 `workloads/ai/_common/tpu_matrix.{sh,cmd}`) across all seven Gemma 4 ML framework configurations
 (`hf_transformers`, `pytorch_native`, `keras_jax`, `keras_tensorflow`, `keras_pytorch`, `maxtext`,

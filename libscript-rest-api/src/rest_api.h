@@ -47,6 +47,13 @@ int rest_is_valid_kernel_target(const char *kernel);
 int rest_is_valid_artifact_format(const char *fmt);
 
 /**
+ * @brief Validates a package-as driver target against the OpenAPI 3.2.0 enum.
+ * @param target Candidate package-as target identifier.
+ * @return 1 if valid, 0 otherwise.
+ */
+int rest_is_valid_package_as_target(const char *target);
+
+/**
  * @brief Generates a lowercase 36-character RFC 4122 UUIDv4 string using OS CSPRNG.
  * @param out Output buffer of at least 37 bytes.
  * @return 0 on success, -1 on CSPRNG failure.
@@ -113,6 +120,30 @@ int rest_dispatch_experiment(const char *root_dir, const char *suite, const char
 int rest_dispatch_artifact(const char *root_dir, const char *kernel, const char *fmt,
                            const char *components_csv, const char *board, int wait_sync,
                            char *json_out, size_t json_cap);
+
+/**
+ * @brief Dispatches a /v1/package-as profile-driven synthesis job.
+ * @param root_dir Resolved LibScript root directory.
+ * @param target Canonical package-as target (e.g. linux-distro, freebsd-distro, unikernel-distro).
+ * @param profile Optional profile preset or relative JSON path (may be NULL).
+ * @param fmt Optional output format override (may be NULL).
+ * @param output_path Optional relative output path (may be NULL).
+ * @param wait_sync If non-zero, waits synchronously when LIBSCRIPT_REST_EXEC_LIVE is set.
+ * @param json_out Output buffer receiving RFC 8259 JSON response.
+ * @param json_cap Capacity of json_out.
+ * @return 0 on accepted/succeeded, non-zero on validation or execution error.
+ */
+int rest_dispatch_package_as(const char *root_dir, const char *target, const char *profile,
+                             const char *fmt, const char *output_path, int wait_sync,
+                             char *json_out, size_t json_cap);
+
+/**
+ * @brief Serializes the catalog of supported /v1/package-as targets as RFC 8259 JSON.
+ * @param json_out Output buffer receiving RFC 8259 JSON response.
+ * @param json_cap Capacity of json_out.
+ * @return 0 on success.
+ */
+int rest_list_package_as_targets(char *json_out, size_t json_cap);
 
 /**
  * @brief Dispatches an /api/v1/marketplace/publish job across AWS, Azure, and GCP Marketplaces.

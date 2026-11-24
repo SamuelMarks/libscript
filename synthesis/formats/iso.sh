@@ -30,6 +30,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+for _iarg in "$@"; do
+  case "$_iarg" in
+    --profile|-p|--profile=*)
+      STACK='' exec "${SCRIPT_DIR}/_profile_dispatch.sh" 'iso' "$@"
+      ;;
+  esac
+done
+
 STRICT_BUILD="${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}"
 ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
 

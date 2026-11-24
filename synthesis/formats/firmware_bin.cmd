@@ -1,12 +1,12 @@
 @echo off
-:: # firmware.cmd
+:: # firmware_bin.cmd
 ::
 :: ## Overview
-:: Tier 2 RTOS firmware & simulation bundle exporter on Windows supporting firmware-elf,
-:: firmware-bin, firmware-hex, firmware-uf2, mcuboot-signed, and renode-resc.
+:: Tier 2/3 RTOS firmware & simulation bundle exporter on Windows supporting firmware-elf,
+:: firmware-bin, firmware-hex, firmware-uf2, mcuboot-signed, renode-resc, and `--profile` dispatch.
 ::
 :: ## Usage
-:: firmware.cmd [--format=<fmt>] [--kernel=<zephyr|freertos>] [--board=<board>] <sysroot> <out_path>
+:: firmware_bin.cmd [--profile <path|preset>] [--format=<fmt>] [--kernel=<zephyr|freertos>] [--board=<board>] [--output <path>] [--dry-run] [sysroot] [out_path]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -58,28 +58,73 @@ set "KERNEL_KIND=%LIBSCRIPT_TARGET_OS%"
 if "!KERNEL_KIND!"=="" set "KERNEL_KIND=zephyr"
 set "BOARD=%LIBSCRIPT_RTOS_BOARD%"
 if "!BOARD!"=="" set "BOARD=qemu_x86_64"
+set "BOARD_EXPLICIT="
+set "PROFILE="
 set "SYSROOT="
 set "OUT_PATH="
+set "DRY_RUN=0"
+set "EXTRA_RTOS="
 goto :parse_fw_args
 
 :: ## parse_fw_args
-:: Parses options and positional arguments for firmware.cmd.
+:: Parses options and positional arguments for firmware_bin.cmd.
 :parse_fw_args
 set "_WA=%~1"
 if "!_WA!"=="" goto :fw_args_done
-if "!_WA:~0,9!"=="--format=" ( set "FORMAT=!_WA:~9!" & shift & goto :parse_fw_args )
-if "!_WA:~0,9!"=="--kernel=" ( set "KERNEL_KIND=!_WA:~9!" & shift & goto :parse_fw_args )
-if "!_WA:~0,8!"=="--board=" ( set "BOARD=!_WA:~8!" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--help" goto :show_help
+if /I "!_WA!"=="-h" goto :show_help
+if /I "!_WA!"=="--profile" ( set "PROFILE=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA!"=="-p" ( set "PROFILE=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA:~0,10!"=="--profile=" ( set "PROFILE=!_WA:~10!" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--format" ( set "FORMAT=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA!"=="-f" ( set "FORMAT=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA:~0,9!"=="--format=" ( set "FORMAT=!_WA:~9!" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--kernel" ( set "KERNEL_KIND=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA:~0,9!"=="--kernel=" ( set "KERNEL_KIND=!_WA:~9!" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--board" ( set "BOARD=%~2" & set "BOARD_EXPLICIT=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA:~0,8!"=="--board=" ( set "BOARD=!_WA:~8!" & set "BOARD_EXPLICIT=!_WA:~8!" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--output" ( set "OUT_PATH=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--out" ( set "OUT_PATH=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA!"=="-o" ( set "OUT_PATH=%~2" & shift & shift & goto :parse_fw_args )
+if /I "!_WA:~0,9!"=="--output=" ( set "OUT_PATH=!_WA:~9!" & shift & goto :parse_fw_args )
+if /I "!_WA:~0,6!"=="--out=" ( set "OUT_PATH=!_WA:~6!" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--dry-run" ( set "DRY_RUN=1" & set "EXTRA_RTOS=!EXTRA_RTOS! --dry-run" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--strict" ( set "EXTRA_RTOS=!EXTRA_RTOS! --strict" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--allow-stub" ( set "EXTRA_RTOS=!EXTRA_RTOS! --allow-stub" & shift & goto :parse_fw_args )
+if /I "!_WA!"=="--offline" ( set "EXTRA_RTOS=!EXTRA_RTOS! --offline" & shift & goto :parse_fw_args )
 if "!SYSROOT!"=="" ( set "SYSROOT=!_WA!" ) else ( set "OUT_PATH=!_WA!" )
 shift
 goto :parse_fw_args
 
+:: ## show_help
+:: Displays usage instructions for firmware_bin.cmd.
+:show_help
+echo Usage: %~nx0 [--profile ^<path^|preset^>] [--format=^<fmt^>] [--kernel=^<zephyr^|freertos^>] [--board=^<board^>] [--output ^<path^>] [--dry-run] [sysroot] [out_path]
+exit /b 0
+
 :: ## fw_args_done
 :: Packages ELF, BIN, HEX, UF2, MCUboot signed image, or Renode .resc script.
 :fw_args_done
+if /I "!FORMAT!"=="firmware_bin" set "FORMAT=firmware-bin"
+if not "!PROFILE!"=="" (
+    if not "!BOARD_EXPLICIT!"=="" set "EXTRA_RTOS=!EXTRA_RTOS! --board=!BOARD_EXPLICIT!"
+    set "STACK="
+    if not "!OUT_PATH!"=="" (
+        call "!SCRIPT_DIR!\rtos_distro.cmd" --profile "!PROFILE!" --format "!FORMAT!" --output "!OUT_PATH!" !EXTRA_RTOS!
+        exit /b !ERRORLEVEL!
+    )
+    call "!SCRIPT_DIR!\rtos_distro.cmd" --profile "!PROFILE!" --format "!FORMAT!" !EXTRA_RTOS!
+    exit /b !ERRORLEVEL!
+)
+
 if "!SYSROOT!"=="" set "SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"
 if "!SYSROOT!"=="" set "SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\target-sysroot"
 if "!OUT_PATH!"=="" set "OUT_PATH=!LIBSCRIPT_ROOT_DIR!\build\images\firmware\!KERNEL_KIND!-!BOARD!.!FORMAT!"
+
+if "!DRY_RUN!"=="1" (
+    echo [DRYRUN] Firmware ^(!KERNEL_KIND!, format=!FORMAT!, board=!BOARD!^) target verified -^> !OUT_PATH!
+    exit /b 0
+)
 
 if exist "!OUT_PATH!.stamp" if exist "!OUT_PATH!" if not "%FORCE_REBUILD%"=="1" (
     echo [SKIP] Firmware artifact already packaged: !OUT_PATH!
@@ -120,17 +165,30 @@ if /I "!FORMAT!"=="mcuboot-signed" (
 if /I "!FORMAT!"=="firmware-uf2" (
     set "UF2_DIR=%LIBSCRIPT_HOME%\firmware-tools\bin"
     if not exist "!UF2_DIR!" mkdir "!UF2_DIR!"
-    set "UF2_EXE=!UF2_DIR!\uf2_c_packer.exe"
-    if not exist "!UF2_EXE!" (
-        where gcc >nul 2>&1 && gcc -std=c11 -O2 -o "!UF2_EXE!" "!SCRIPT_DIR!\uf2_c_packer.c"
-        if not exist "!UF2_EXE!" where clang >nul 2>&1 && clang -std=c11 -O2 -o "!UF2_EXE!" "!SCRIPT_DIR!\uf2_c_packer.c"
-        if not exist "!UF2_EXE!" where cl >nul 2>&1 && cl /nologo /O2 /Fe:"!UF2_EXE!" "!SCRIPT_DIR!\uf2_c_packer.c" >nul 2>&1
+    if not exist "!UF2_DIR!\uf2_c_packer.exe" (
+        where cl >nul 2>&1 && cl /nologo /O2 /Fe:"!UF2_DIR!\uf2_c_packer.exe" "!SCRIPT_DIR!\uf2_c_packer.c" >nul 2>&1
+        if not exist "!UF2_DIR!\uf2_c_packer.exe" where gcc >nul 2>&1 && gcc -std=c11 -O2 -o "!UF2_DIR!\uf2_c_packer.exe" "!SCRIPT_DIR!\uf2_c_packer.c" >nul 2>&1
+        if not exist "!UF2_DIR!\uf2_c_packer.exe" where clang >nul 2>&1 && clang -std=c11 -O2 -o "!UF2_DIR!\uf2_c_packer.exe" "!SCRIPT_DIR!\uf2_c_packer.c" >nul 2>&1
     )
-    "!UF2_EXE!" "!BIN_SRC!" "!OUT_PATH!" || exit /b 1
+    "!UF2_DIR!\uf2_c_packer.exe" "!BIN_SRC!" "!OUT_PATH!" || exit /b 1
 )
 if /I "!FORMAT!"=="renode-resc" (
-    > "!OUT_PATH!" echo mach create "!KERNEL_KIND!-!BOARD!"
-    >> "!OUT_PATH!" echo sysbus LoadELF @!ELF_SRC!
+    for %%E in ("!ELF_SRC!") do set "ELF_BASE=%%~nxE"
+    for %%O in ("!OUT_PATH!") do set "OUT_DIR=%%~dpO"
+    copy /y "!ELF_SRC!" "!OUT_DIR!!ELF_BASE!" >nul
+    set "_HEAP_INV=%FREERTOS_HEAP_IMPL%"
+    if "!_HEAP_INV!"=="" set "_HEAP_INV=dynamic_heap"
+    (
+        echo # LibScript Renode headless simulation script ^(!KERNEL_KIND! / !BOARD!^)
+        echo # INVARIANT: heap_implementation=!_HEAP_INV!
+        echo # INVARIANT: uart_telemetry=LIBSCRIPT_BOOT_OK
+        echo using sysbus
+        echo mach create "!KERNEL_KIND!-!BOARD!"
+        echo showAnalyzer sysbus.uart0
+        echo sysbus LoadELF @!OUT_DIR!!ELF_BASE!
+        echo start
+        if /I "!_HEAP_INV!"=="static_only" echo # INVARIANT: static_only zero_heap_allocation total_heap_bytes=0 pvPortMalloc=absent
+    ) > "!OUT_PATH!"
 )
 
 > "!OUT_PATH!.stamp" echo format=!FORMAT!

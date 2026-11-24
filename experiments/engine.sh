@@ -135,9 +135,12 @@ validate_and_export_suite_vars() {
         _raw_k="${_raw_k#--}"
         _val="${_arg#*=}"
         _env_k=$(printf '%s' "$_raw_k" | tr '[:lower:]-' '[:upper:]_')
+        _suite_pfx=$(printf '%s' "$SUITE_ID" | tr '[:lower:]-' '[:upper:]_')
+        _pref_k="${_suite_pfx}_${_env_k}"
         case "$_raw_k" in
           results-dir|out-dir|paper-dir|repo-dir|repo|ecosystem-dir|subsuites|warmup|trials|host-arch|cargo-profile|tfrc-config|backends|model|output|json|suite-dir|phase)
             export "${_env_k}=${_val}"
+            export "${_pref_k}=${_val}"
             continue
             ;;
         esac
@@ -148,12 +151,13 @@ validate_and_export_suite_vars() {
             ;;
         esac
         if [ -f "$_vars_schema" ]; then
-          if ! jq -e --arg k "$_env_k" '(.properties // {}) | has($k)' "$_vars_schema" >/dev/null 2>&1; then
+          if ! jq -e --arg k "$_env_k" --arg pk "$_pref_k" '(.properties // {}) | (has($k) or has($pk))' "$_vars_schema" >/dev/null 2>&1; then
             printf '[ERROR] Unknown suite flag --%s (not declared in %s)\n' "$_raw_k" "$_vars_schema" >&2
             exit 1
           fi
         fi
         export "${_env_k}=${_val}"
+        export "${_pref_k}=${_val}"
         ;;
     esac
   done

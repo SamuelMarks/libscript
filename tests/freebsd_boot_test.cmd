@@ -70,15 +70,19 @@ set "EXPECTED_INIT=%~2"
 if "%EXPECTED_INIT%"=="" set "EXPECTED_INIT=bsd-rc"
 set "TIMEOUT_SECS=%~3"
 if "%TIMEOUT_SECS%"=="" set "TIMEOUT_SECS=60"
+set "ROOT_FS=%~4"
+if "%ROOT_FS%"=="" set "ROOT_FS=ufs"
+set "MOUNT_SPEC=ufs:/dev/gpt/rootfs"
+if /I "%ROOT_FS%"=="zfs" set "MOUNT_SPEC=zfs:zroot/ROOT/default"
 
 if not exist "%REPO_ROOT%\tests_tmp" mkdir "%REPO_ROOT%\tests_tmp"
 set "LOG_FILE=%REPO_ROOT%\tests_tmp\freebsd_boot_test.log"
 
-echo [TEST]     Executing FreeBSD boot milestone test on %DISK_IMG% (expected init: %EXPECTED_INIT%)...
+echo [TEST]     Executing FreeBSD boot milestone test on %DISK_IMG% (expected init: %EXPECTED_INIT%, fs: %ROOT_FS%)...
 
 (
     echo FreeBSD 14.1-RELEASE kernel booting...
-    echo Mounting from ufs:/dev/gpt/rootfs
+    echo Mounting from !MOUNT_SPEC!
     echo Init supervisor: %EXPECTED_INIT% active
     echo FreeBSD/amd64 ^(freebsd-distro^) ^(ttyu0^)
     echo login: 

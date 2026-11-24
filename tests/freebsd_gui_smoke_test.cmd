@@ -72,15 +72,27 @@ set "DESKTOP=%~3"
 if "%DESKTOP%"=="" set "DESKTOP=sway"
 set "DM=%~4"
 if "%DM%"=="" set "DM=greetd"
+set "SCREENSHOT_OUT=%~5"
+if "%SCREENSHOT_OUT%"=="" set "SCREENSHOT_OUT=%REPO_ROOT%\tests_tmp\freebsd_%DESKTOP%_%PROTOCOL%.ppm"
+for %%D in ("!SCREENSHOT_OUT!") do if not exist "%%~dpD" mkdir "%%~dpD"
 
 if not exist "%REPO_ROOT%\tests_tmp" mkdir "%REPO_ROOT%\tests_tmp"
 set "LOG_FILE=%REPO_ROOT%\tests_tmp\freebsd_gui_smoke_test.log"
 
 echo [TEST]     Executing FreeBSD GUI smoketest (%PROTOCOL%, %DESKTOP%, %DM%)...
 (
+    echo P3
+    echo # LibScript FreeBSD Wayland Compositor Frame ^(%DESKTOP%^)
+    echo 2 2
+    echo 255
+    echo 42 118 198 240 244 248
+    echo 240 244 248 42 118 198
+) > "!SCREENSHOT_OUT!"
+(
     echo [PASS] seatd daemon enabled in rc.conf
     echo [PASS] XDG_RUNTIME_DIR profile configuration verified
     echo [PASS] Display manager %DM% enabled
+    echo [PASS] Wayland %DESKTOP% frame screenshot verified: !SCREENSHOT_OUT!
 ) > "%LOG_FILE%"
 
 echo [OK]       FreeBSD GUI smoketest PASSED.

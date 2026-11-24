@@ -27,8 +27,10 @@ Unikernel, and Bento VM systems.
 ## Usage
 
 ```sh
-./synthesis/distro/synthesize-image.sh --profile synthesis/profiles/linux/linux-minimal-headless-musl.json --output build/disk.qcow2
-./libscript.sh package-as bsd-img --profile synthesis/profiles/freebsd/freebsd-server-standard.json
-./libscript.sh package-as illumos-distro --profile synthesis/profiles/illumos/minimal-server.json
-./libscript.sh package-as reactos-distro --profile synthesis/profiles/reactos/desktop-classic-i686.json
+./libscript.sh package-as linux-distro --profile synthesis/profiles/linux/linux-minimal-headless-musl.json --format qcow2
+./libscript.sh package-as freebsd-distro --profile synthesis/profiles/freebsd/freebsd-server-standard.json --format qcow2
+./libscript.sh package-as illumos-distro --profile synthesis/profiles/illumos/minimal-server.json --format qcow2
+./libscript.sh package-as reactos-distro --profile synthesis/profiles/reactos/desktop-classic-i686.json --format qcow2
+./libscript.sh package-as unikernel-distro --profile synthesis/profiles/unikernel/osv-cloud-runtime.json --format elf
+./libscript.sh package-as rtos-distro --profile synthesis/profiles/rtos/zephyr-cortex-m3-mcuboot-signed.json --format firmware-bin
 ```

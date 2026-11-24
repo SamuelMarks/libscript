@@ -134,7 +134,7 @@ call "%LIBSCRIPT_ROOT_DIR%\tests\test_tfrc_guard.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_gcp_tpu_vm_qr_multihost.cmd"
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\tests\test_gemma_tpu_matrix.cmd"
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_gemma_4_sql_matrix.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_languages_and_package_managers.cmd"
 if errorlevel 1 exit /b 1

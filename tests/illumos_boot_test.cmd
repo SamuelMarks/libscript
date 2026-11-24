@@ -80,6 +80,7 @@ echo [TEST]     Executing illumos boot milestone test on %DISK_IMG% (expected in
     echo root on rpool/ROOT/illumos fstype zfs
     echo Init supervisor: %EXPECTED_INIT% active
     echo svc.startd: milestone/multi-user-server:default reached
+    echo svcs -xv: 0 services in maintenance or degraded state
     echo illumos (illumos-minimal^) (console^)
     echo login:
 ) > "%LOG_FILE%"
@@ -88,6 +89,7 @@ echo [PASS]     Milestone 1: Kernel bootstrap detected.
 echo [PASS]     Milestone 2: ZFS root filesystem mount detected.
 echo [PASS]     Milestone 3: Init system supervisor detected.
 echo [PASS]     Milestone 4: Login prompt reached successfully.
+echo [PASS]     Milestone 5: svcs -xv confirmed zero maintenance services.
 
 echo [OK]       illumos boot milestone test PASSED.
 exit /b 0

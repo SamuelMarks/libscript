@@ -102,6 +102,41 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
     }
 
     if (strcmp(method, "GET") == 0 &&
+        (strcmp(path, "/v1/package-as") == 0 || strcmp(path, "/api/v1/package-as") == 0)) {
+        (void)rest_list_package_as_targets(json_out, sizeof(json_out));
+        send_json_response(client, 200, "OK", json_out);
+        return;
+    }
+
+    if (strcmp(method, "POST") == 0 &&
+        (strcmp(path, "/v1/package-as") == 0 || strcmp(path, "/api/v1/package-as") == 0)) {
+        char target[128], profile[256], fmt[64], output_path[512];
+        const char *prof_ptr = NULL;
+        const char *fmt_ptr = NULL;
+        const char *out_ptr = NULL;
+        if (rest_json_get_string(body, "target", target, sizeof(target)) != 0) {
+            send_json_response(client, 400, "Bad Request",
+                               "{\"error\":\"missing_fields\",\"message\":\"target required\"}");
+            return;
+        }
+        if (rest_json_get_string(body, "profile", profile, sizeof(profile)) == 0 && profile[0] != '\0') {
+            prof_ptr = profile;
+        }
+        if (rest_json_get_string(body, "format", fmt, sizeof(fmt)) == 0 && fmt[0] != '\0') {
+            fmt_ptr = fmt;
+        }
+        if (rest_json_get_string(body, "output", output_path, sizeof(output_path)) == 0 && output_path[0] != '\0') {
+            out_ptr = output_path;
+        }
+        if (rest_dispatch_package_as(root_dir, target, prof_ptr, fmt_ptr, out_ptr, 0, json_out, sizeof(json_out)) == 0) {
+            send_json_response(client, 202, "Accepted", json_out);
+        } else {
+            send_json_response(client, 400, "Bad Request", json_out);
+        }
+        return;
+    }
+
+    if (strcmp(method, "GET") == 0 &&
         (strcmp(path, "/v1/experiments") == 0 || strcmp(path, "/api/v1/experiments") == 0)) {
         (void)rest_list_experiments(root_dir, json_out, sizeof(json_out));
         send_json_response(client, 200, "OK", json_out);
@@ -359,6 +394,15 @@ int main(int argc, char **argv) {
     }
     if (argc >= 5 && strcmp(argv[1], "--dispatch-experiment") == 0) {
         int rc = rest_dispatch_experiment(root_dir, argv[2], argv[3], argv[4], 1, json_out, sizeof(json_out));
+        fprintf(rc == 0 ? stdout : stderr, "%s\n", json_out);
+        return rc;
+    }
+    if (argc >= 3 && strcmp(argv[1], "--dispatch-package-as") == 0) {
+        int rc = rest_dispatch_package_as(root_dir, argv[2],
+                                          (argc >= 4) ? argv[3] : NULL,
+                                          (argc >= 5) ? argv[4] : NULL,
+                                          (argc >= 6) ? argv[5] : NULL,
+                                          1, json_out, sizeof(json_out));
         fprintf(rc == 0 ? stdout : stderr, "%s\n", json_out);
         return rc;
     }

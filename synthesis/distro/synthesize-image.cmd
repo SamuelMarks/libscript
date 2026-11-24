@@ -3,7 +3,7 @@
 :: ## Overview
 :: Unified kernel-abstracted installer and base-image synthesizer for {component0, component1, ...} on Windows.
 :: ## Usage
-:: libscript.cmd build-image --kernel=<kernel> --format=<format> --components=<c0,c1,...> [--out=<path>] [--dry-run]
+:: libscript.cmd build-image --kernel=<kernel> [--profile=<file.json>] --format=<format> [--components=<c0,c1,...>] [--out=<path>] [--dry-run]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -52,6 +52,7 @@ goto :find_root
 set "KERNEL=linux-glibc"
 set "OS_FLAVOR="
 set "TARGET_ARCH="
+set "ARCH_EXPLICIT=0"
 set "RTOS_BOARD=%LIBSCRIPT_RTOS_BOARD%"
 set "HYBRID_POD=0"
 if "%LIBSCRIPT_RTOS_HYBRID_POD%"=="1" set "HYBRID_POD=1"
@@ -80,23 +81,36 @@ if /I "!_A!"=="/?" goto :show_help
 if /I "!_A!"=="--dry-run" ( set "DRY_RUN=1" & shift & goto :parse_args )
 if /I "!_A!"=="--hybrid-pod" ( set "HYBRID_POD=1" & shift & goto :parse_args )
 if /I "!_A!"=="--mcuboot" ( set "MCUBOOT_ENABLED=1" & shift & goto :parse_args )
+if /I "!_A!"=="--strict" ( set "LIBSCRIPT_STRICT_IMAGE_BUILD=1" & set "ALLOW_STUB=0" & shift & goto :parse_args )
 if /I "!_A!"=="--allow-stub" ( set "ALLOW_STUB=1" & set "LIBSCRIPT_ALLOW_STUB=1" & shift & goto :parse_args )
 if /I "!_A!"=="--offline" ( set "LIBSCRIPT_OFFLINE=1" & shift & goto :parse_args )
-if "!_A:~0,9!"=="--kernel=" ( set "KERNEL=!_A:~9!" & shift & goto :parse_args )
-if "!_A:~0,8!"=="--board=" ( set "RTOS_BOARD=!_A:~8!" & shift & goto :parse_args )
-if "!_A:~0,12!"=="--os-flavor=" ( set "OS_FLAVOR=!_A:~12!" & shift & goto :parse_args )
-if "!_A:~0,7!"=="--arch=" ( set "TARGET_ARCH=!_A:~7!" & shift & goto :parse_args )
-if "!_A:~0,9!"=="--format=" ( set "FORMAT=!_A:~9!" & shift & goto :parse_args )
-if "!_A:~0,13!"=="--components=" ( set "COMPONENTS_CSV=!_A:~13!" & shift & goto :parse_args )
-if "!_A:~0,10!"=="--profile=" ( set "PROFILE_JSON=!_A:~10!" & shift & goto :parse_args )
-if "!_A:~0,6!"=="--out=" ( set "OUT_PATH=!_A:~6!" & shift & goto :parse_args )
+if /I "!_A!"=="--kernel" ( set "KERNEL=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,9!"=="--kernel=" ( set "KERNEL=!_A:~9!" & shift & goto :parse_args )
+if /I "!_A!"=="--board" ( set "RTOS_BOARD=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,8!"=="--board=" ( set "RTOS_BOARD=!_A:~8!" & shift & goto :parse_args )
+if /I "!_A!"=="--os-flavor" ( set "OS_FLAVOR=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,12!"=="--os-flavor=" ( set "OS_FLAVOR=!_A:~12!" & shift & goto :parse_args )
+if /I "!_A!"=="--arch" ( set "TARGET_ARCH=%~2" & set "ARCH_EXPLICIT=1" & shift & shift & goto :parse_args )
+if /I "!_A:~0,7!"=="--arch=" ( set "TARGET_ARCH=!_A:~7!" & set "ARCH_EXPLICIT=1" & shift & goto :parse_args )
+if /I "!_A!"=="--initramfs-compress" ( set "LIBSCRIPT_INITRAMFS_COMPRESS=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,21!"=="--initramfs-compress=" ( set "LIBSCRIPT_INITRAMFS_COMPRESS=!_A:~21!" & shift & goto :parse_args )
+if /I "!_A!"=="--format" ( set "FORMAT=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,9!"=="--format=" ( set "FORMAT=!_A:~9!" & shift & goto :parse_args )
+if /I "!_A!"=="--components" ( set "COMPONENTS_CSV=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,13!"=="--components=" ( set "COMPONENTS_CSV=!_A:~13!" & shift & goto :parse_args )
+if /I "!_A!"=="--profile" ( set "PROFILE_JSON=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,10!"=="--profile=" ( set "PROFILE_JSON=!_A:~10!" & shift & goto :parse_args )
+if /I "!_A!"=="--out" ( set "OUT_PATH=%~2" & shift & shift & goto :parse_args )
+if /I "!_A!"=="--output" ( set "OUT_PATH=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,6!"=="--out=" ( set "OUT_PATH=!_A:~6!" & shift & goto :parse_args )
+if /I "!_A:~0,9!"=="--output=" ( set "OUT_PATH=!_A:~9!" & shift & goto :parse_args )
 shift
 goto :parse_args
 
 :: ## show_help
 :: Displays usage instructions for synthesize-image.cmd.
 :show_help
-echo Usage: libscript.cmd build-image ^| build-installer --kernel=^<kernel^> [--board=^<board^>] --format=^<format^> --components=^<c0,c1,...^> [--out=^<path^>] [--dry-run]
+echo Usage: libscript.cmd build-image ^| build-installer --kernel=^<kernel^> [--profile=^<file.json^>] [--board=^<board^>] --format=^<format^> [--components=^<c0,c1,...^>] [--out=^<path^>] [--dry-run]
 exit /b 0
 
 :: ## args_parsed
@@ -131,6 +145,10 @@ if /I "!KERNEL!"=="rtos-freertos" ( set "OS_FAMILY=rtos-freertos" & set "LIBC=ne
 
 if "!TARGET_ARCH!"=="" set "TARGET_ARCH=x86_64"
 if "!FORMAT!"=="" set "FORMAT=qcow2"
+set "NORM_FMT=!FORMAT!"
+if /I "!NORM_FMT!"=="iso" set "NORM_FMT=live-iso"
+if /I "!NORM_FMT!"=="raw-img" set "NORM_FMT=raw"
+if /I "!NORM_FMT!"=="unikernel" set "NORM_FMT=direct-kernel"
 if "!MCUBOOT_ENABLED!"=="1" set "BOOTLOADER=mcuboot"
 if /I "!FORMAT!"=="mcuboot-signed" ( set "BOOTLOADER=mcuboot" & set "MCUBOOT_ENABLED=1" )
 
@@ -144,7 +162,15 @@ call :ensure_jq || exit /b 1
 
 set "GEN_OS_CONFIG=!WORK_BASE!\os-config.generated.json"
 set "GEN_PLAN=!WORK_BASE!\execution-plan.generated.json"
-jq -n --arg os_fam "!OS_FAMILY!" --arg arch "!TARGET_ARCH!" --arg libc "!LIBC!" --arg kprov "!KPROVIDER!" --arg iprov "!INIT_PROV!" --arg bl "!BOOTLOADER!" --arg fmt "!FORMAT!" --arg board "!RTOS_BOARD!" --arg hpod "!HYBRID_POD!" --arg mcub "!MCUBOOT_ENABLED!" --arg csv "!COMPONENTS_CSV!" "{schema_version:\"1.0.0\",profile_name:(\"synthesized-\"+$os_fam),target:{arch:$arch,os_family:$os_fam,libc:$libc},kernel:{provider:$kprov,config_method:\"defconfig\"},init_system:{provider:$iprov},storage:{disk_size_gib:1,partition_table:\"none\",boot_mode:\"direct-kernel\",bootloader:$bl},output_formats:[$fmt],components:($csv|split(\",\")|map(select(length>0)))} + (if $board != \"\" then {rtos:({board:$board}+(if $hpod==\"1\" then {hybrid_pod:true} else {} end)+(if $mcub==\"1\" then {mcuboot:{enabled:true}} else {} end))} else {} end)" > "!GEN_OS_CONFIG!"
+if not "!PROFILE_JSON!"=="" (
+    if exist "!PROFILE_JSON!" (
+        jq --arg os_fam "!OS_FAMILY!" --arg arch "!TARGET_ARCH!" --arg arch_exp "!ARCH_EXPLICIT!" --arg libc "!LIBC!" --arg kprov "!KPROVIDER!" --arg iprov "!INIT_PROV!" --arg bl "!BOOTLOADER!" --arg fmt "!NORM_FMT!" --arg board "!RTOS_BOARD!" --arg hpod "!HYBRID_POD!" --arg mcub "!MCUBOOT_ENABLED!" --arg csv "!COMPONENTS_CSV!" ".target.os_family=(.target.os_family//$os_fam) | .target.arch=(if $arch_exp==\"1\" then $arch else (.target.arch//$arch) end) | .target.libc=(.target.libc//$libc) | .kernel=((.kernel//{config_method:\"defconfig\"}) | .provider=(.provider//$kprov)) | .init_system=((.init_system//{}) | .provider=(.provider//$iprov)) | .storage=((.storage//{disk_size_gib:1,partition_table:\"none\",boot_mode:\"direct-kernel\"}) | .bootloader=(.bootloader//$bl)) | (if $board!=\"\" then .rtos=((.rtos//{}) | .board=(.board//$board) | (if $hpod==\"1\" then .hybrid_pod=true else . end) | (if $mcub==\"1\" then .mcuboot=((.mcuboot//{}) | .enabled=true) else . end)) else . end) | .output_formats=[$fmt] | .components=(((.components//[])+($csv|split(\",\")|map(select(length>0))))|unique)" "!PROFILE_JSON!" > "!GEN_OS_CONFIG!"
+    ) else (
+        jq -n --arg os_fam "!OS_FAMILY!" --arg arch "!TARGET_ARCH!" --arg libc "!LIBC!" --arg kprov "!KPROVIDER!" --arg iprov "!INIT_PROV!" --arg bl "!BOOTLOADER!" --arg fmt "!NORM_FMT!" --arg board "!RTOS_BOARD!" --arg hpod "!HYBRID_POD!" --arg mcub "!MCUBOOT_ENABLED!" --arg csv "!COMPONENTS_CSV!" "{schema_version:\"1.0.0\",profile_name:(\"synthesized-\"+$os_fam),target:{arch:$arch,os_family:$os_fam,libc:$libc},kernel:{provider:$kprov,config_method:\"defconfig\"},init_system:{provider:$iprov},storage:{disk_size_gib:1,partition_table:\"none\",boot_mode:\"direct-kernel\",bootloader:$bl},output_formats:[$fmt],components:($csv|split(\",\")|map(select(length>0)))} + (if $board != \"\" then {rtos:({board:$board}+(if $hpod==\"1\" then {hybrid_pod:true} else {} end)+(if $mcub==\"1\" then {mcuboot:{enabled:true}} else {} end))} else {} end)" > "!GEN_OS_CONFIG!"
+    )
+) else (
+    jq -n --arg os_fam "!OS_FAMILY!" --arg arch "!TARGET_ARCH!" --arg libc "!LIBC!" --arg kprov "!KPROVIDER!" --arg iprov "!INIT_PROV!" --arg bl "!BOOTLOADER!" --arg fmt "!NORM_FMT!" --arg board "!RTOS_BOARD!" --arg hpod "!HYBRID_POD!" --arg mcub "!MCUBOOT_ENABLED!" --arg csv "!COMPONENTS_CSV!" "{schema_version:\"1.0.0\",profile_name:(\"synthesized-\"+$os_fam),target:{arch:$arch,os_family:$os_fam,libc:$libc},kernel:{provider:$kprov,config_method:\"defconfig\"},init_system:{provider:$iprov},storage:{disk_size_gib:1,partition_table:\"none\",boot_mode:\"direct-kernel\",bootloader:$bl},output_formats:[$fmt],components:($csv|split(\",\")|map(select(length>0)))} + (if $board != \"\" then {rtos:({board:$board}+(if $hpod==\"1\" then {hybrid_pod:true} else {} end)+(if $mcub==\"1\" then {mcuboot:{enabled:true}} else {} end))} else {} end)" > "!GEN_OS_CONFIG!"
+)
 
 set "LIBSCRIPT_TARGET_OS=!RESOLVE_OS!"
 set "LIBSCRIPT_TARGET_ARCH=!TARGET_ARCH!"
@@ -167,6 +193,17 @@ set "LIBSCRIPT_IMAGE_BUILD=1"
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\engine\solver\execute_plan.cmd" "!GEN_PLAN!" || exit /b 1
 
+if /I "!FORMAT!"=="uki" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\uki.cmd" "--arch=!TARGET_ARCH!" "!SYSROOT_DIR!" "!OUT_PATH!"
+    exit /b !ERRORLEVEL!
+)
+if /I "!FORMAT!"=="direct-kernel" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\direct_kernel.cmd" "--kernel=!RESOLVE_OS!" "--arch=!TARGET_ARCH!" "!SYSROOT_DIR!" "!OUT_PATH!"
+    exit /b !ERRORLEVEL!
+)
+
 if /I "!FORMAT!"=="firmware-elf" goto :pkg_firmware
 if /I "!FORMAT!"=="firmware-bin" goto :pkg_firmware
 if /I "!FORMAT!"=="firmware-hex" goto :pkg_firmware
@@ -185,7 +222,7 @@ call "!LIBSCRIPT_ROOT_DIR!\synthesis\cli.cmd" "!FORMAT!" "!SYSROOT_DIR!" "!OUT_P
 exit /b !ERRORLEVEL!
 
 :: ## pkg_firmware
-:: Invokes firmware.cmd for Zephyr and FreeRTOS firmware artifact formats.
+:: Invokes firmware_bin.cmd for Zephyr and FreeRTOS firmware artifact formats.
 :pkg_firmware
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\firmware_bin.cmd" "--format=!FORMAT!" "--kernel=!RESOLVE_OS!" "--board=!RTOS_BOARD!" "!SYSROOT_DIR!" "!OUT_PATH!"

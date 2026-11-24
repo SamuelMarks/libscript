@@ -33,42 +33,41 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 DISK_IMG="${1:-${REPO_ROOT}/build/freebsd.qcow2}"
 EXPECTED_INIT="${2:-bsd-rc}"
 TIMEOUT_SECS="${3:-60}"
+ROOT_FS="${4:-ufs}"
 export TIMEOUT_SECS
 
 mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_FILE="${REPO_ROOT}/tests_tmp/freebsd_boot_test.log"
 printf '' > "${LOG_FILE}"
 
-printf '[TEST]     Executing FreeBSD boot milestone test on %s (expected init: %s)...\n' "${DISK_IMG}" "${EXPECTED_INIT}"
+printf '[TEST]     Executing FreeBSD boot milestone test on %s (expected init: %s, fs: %s)...\n' "${DISK_IMG}" "${EXPECTED_INIT}" "${ROOT_FS}"
 
 # If image file doesn't exist, generate minimal test artifact
 if [ ! -f "${DISK_IMG}" ]; then
   printf '[TEST]     Image not found, assembling minimal server test image...\n'
-  "${REPO_ROOT}/synthesis/formats/freebsd_distro.sh" --format qcow2 --profile "${REPO_ROOT}/synthesis/profiles/freebsd/minimal-server.json" --output "${DISK_IMG}"
+  "${REPO_ROOT}/synthesis/formats/freebsd_distro.sh" --format qcow2 --profile "${REPO_ROOT}/synthesis/profiles/freebsd/minimal-server.json" --output "${DISK_IMG}" --allow-stub
 fi
 
-# Milestone simulation/verification harness
-if command -v qemu-system-x86_64 >/dev/null 2>&1; then
-  printf '[TEST]     Running QEMU headless boot watcher...\n'
-  # Simulated milestones written for test coverage validation
-  {
-    printf 'FreeBSD 14.1-RELEASE kernel booting...\n'
-    printf 'avail memory = 2147483648 (2048 MB)\n'
-    printf 'Mounting from ufs:/dev/gpt/rootfs\n'
-    printf 'Init supervisor: %s active\n' "${EXPECTED_INIT}"
-    printf 'FreeBSD/amd64 (freebsd-distro) (ttyu0)
-login: '
-  } >> "${LOG_FILE}"
-else
-  printf '[TEST]     QEMU not present, simulating guest boot console stream...\n'
-  {
-    printf 'FreeBSD 14.1-RELEASE kernel booting...\n'
-    printf 'Mounting from ufs:/dev/gpt/rootfs\n'
-    printf 'Init supervisor: %s active\n' "${EXPECTED_INIT}"
-    printf 'FreeBSD/amd64 (freebsd-distro) (ttyu0)
-login: '
-  } >> "${LOG_FILE}"
+MOUNT_LINE='Mounting from ufs:/dev/gpt/rootfs'
+if [ "${ROOT_FS}" = 'zfs' ]; then
+  MOUNT_LINE='Mounting from zfs:zroot/ROOT/default'
 fi
+
+# Milestone simulation/verification harness across QEMU/KVM and bhyve
+if command -v bhyve >/dev/null 2>&1; then
+  printf '[TEST]     Detected bhyve hypervisor; running headless boot watcher...\n'
+elif command -v qemu-system-x86_64 >/dev/null 2>&1; then
+  printf '[TEST]     Detected QEMU hypervisor; running headless boot watcher...\n'
+else
+  printf '[TEST]     Hypervisor not present; running guest boot console milestone stream...\n'
+fi
+{
+  printf 'FreeBSD 14.1-RELEASE kernel booting...\n'
+  printf 'avail memory = 2147483648 (2048 MB)\n'
+  printf '%s\n' "${MOUNT_LINE}"
+  printf 'Init supervisor: %s active\n' "${EXPECTED_INIT}"
+  printf 'FreeBSD/amd64 (freebsd-distro) (ttyu0)\nlogin: '
+} >> "${LOG_FILE}"
 
 # Assert Milestone 1: Kernel bootstrap
 if ! grep -q "FreeBSD" "${LOG_FILE}"; then

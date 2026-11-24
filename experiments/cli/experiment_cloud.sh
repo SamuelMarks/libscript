@@ -82,6 +82,8 @@ CORE_EXPERIMENT_COMMAND_TEMPLATE="${CORE_EXPERIMENT_COMMAND_TEMPLATE:-}"
 CORE_EXPERIMENT_RESUME="${CORE_EXPERIMENT_RESUME:-1}"
 CORE_EXPERIMENT_FRESH_VM_PER_BACKEND="${CORE_EXPERIMENT_FRESH_VM_PER_BACKEND:-0}"
 _SUBSUITES_EXPLICIT='0'
+_MODEL_EXPLICIT='0'
+POSITIONAL_JSON_MANIFEST=''
 
 DRY_RUN_MODE=0
 if [ "${DRY_RUN:-false}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ]; then
@@ -99,7 +101,7 @@ while [ $# -gt 0 ]; do
       CORE_EXPERIMENT_STEPS="${CORE_EXPERIMENT_STEPS:+${CORE_EXPERIMENT_STEPS},}${2:-}"
       shift 2
       ;;
-    a_provision_instance|b_use_bento_fork|c_install_virtualization_stack|d_deploy_vagrant_box|e_snapshot_vagrant_box|f_test_libscript_components|g_collect_logs|h_pull_logs|i_deprovision_instance|sync_research_repos|verify_native_host|emit_latex_and_verify_pdf|provision_instance|use_bento_fork|setup_bento_fork|bento_fork|install_virtualization_stack|install_bento_deps|deploy_vagrant_box|deploy_target_os|snapshot_vagrant_box|snapshot|test_libscript_components|run_libscript_matrix|send_logs_to_host|run_experiments|collect_logs|move_to_log_dir|pull_logs|move_log_dir_to_host|deprovision_instance|bento_matrix|os_matrix|full_bento_matrix|libtpu_campaign|win_port_campaign|edgcpp_backends_campaign|gemma_tpu_campaign|tpu_matrix|all|provision|run|collect|transfer|pull|deprovision|teardown|a|0|1|2|3|4|5|i)
+    a_provision_instance|b_use_bento_fork|c_install_virtualization_stack|d_deploy_vagrant_box|e_snapshot_vagrant_box|f_test_libscript_components|g_collect_logs|h_pull_logs|i_deprovision_instance|sync_research_repos|verify_native_host|emit_latex_and_verify_pdf|provision_instance|use_bento_fork|setup_bento_fork|bento_fork|install_virtualization_stack|install_bento_deps|deploy_vagrant_box|deploy_target_os|snapshot_vagrant_box|snapshot|test_libscript_components|run_libscript_matrix|send_logs_to_host|run_experiments|collect_logs|move_to_log_dir|pull_logs|move_log_dir_to_host|deprovision_instance|bento_matrix|os_matrix|full_bento_matrix|libtpu_campaign|win_port_campaign|edgcpp_backends_campaign|gemma_4_sql_campaign|tpu_matrix|all|provision|run|collect|transfer|pull|deprovision|teardown|a|0|1|2|3|4|5|i)
       CORE_EXPERIMENT_STEPS="${CORE_EXPERIMENT_STEPS:+${CORE_EXPERIMENT_STEPS},}$1"
       shift
       ;;
@@ -141,8 +143,8 @@ while [ $# -gt 0 ]; do
     --tfrc-config=*) TFRC_CONFIG="${1#*=}"; export TFRC_CONFIG; TFRC_STRICT='1'; export TFRC_STRICT; shift ;;
     --tfrc-config) TFRC_CONFIG="${2:-}"; export TFRC_CONFIG; TFRC_STRICT='1'; export TFRC_STRICT; shift 2 ;;
     --tfrc-only) TFRC_STRICT='1'; export TFRC_STRICT; shift ;;
-    --model=*) CORE_EXPERIMENT_MODEL="${1#*=}"; shift ;;
-    --model) CORE_EXPERIMENT_MODEL="${2:-}"; shift 2 ;;
+    --model=*) CORE_EXPERIMENT_MODEL="${1#*=}"; _MODEL_EXPLICIT='1'; shift ;;
+    --model) CORE_EXPERIMENT_MODEL="${2:-}"; _MODEL_EXPLICIT='1'; shift 2 ;;
     --backends=*) CORE_EXPERIMENT_BACKENDS="${1#*=}"; shift ;;
     --backends) CORE_EXPERIMENT_BACKENDS="${2:-}"; shift 2 ;;
     --command-template=*) CORE_EXPERIMENT_COMMAND_TEMPLATE="${1#*=}"; shift ;;
@@ -184,14 +186,52 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --help|-h)
-      printf '%s\n' 'Usage: experiment_cloud.sh [a_provision_instance|sync_research_repos|verify_native_host|run_experiments|g_collect_logs|h_pull_logs|emit_latex_and_verify_pdf|i_deprovision_instance|bento_matrix|all] [--suite=libtpu|edgcpp|libscript|manifest|all] [--subsuites=E0..E8] [--warmup=10] [--trials=200] [--repo-dir=...] [--paper-dir=...]'
+      printf '%s\n' 'Usage: experiment_cloud.sh [a_provision_instance|sync_research_repos|verify_native_host|run_experiments|g_collect_logs|h_pull_logs|emit_latex_and_verify_pdf|i_deprovision_instance|tpu_matrix|gemma_4_sql_campaign|bento_matrix|all] [--suite=gemma-4-sql|libtpu|edgcpp|libscript|manifest|all] [--subsuites=E0..E8] [--warmup=10] [--trials=200] [--repo-dir=...] [--paper-dir=...]'
       exit 0
+      ;;
+    *.json)
+      if [ -z "${POSITIONAL_JSON_MANIFEST}" ] && [ -f "$1" ]; then
+        POSITIONAL_JSON_MANIFEST="$1"
+      fi
+      shift
       ;;
     *)
       shift
       ;;
   esac
 done
+
+if [ -n "${POSITIONAL_JSON_MANIFEST}" ] && [ -f "${POSITIONAL_JSON_MANIFEST}" ] && command -v jq >/dev/null 2>&1; then
+  if [ -z "${CORE_EXPERIMENT_REPO_DIR}" ]; then
+    CORE_EXPERIMENT_REPO_DIR=$(cd -- "$(dirname -- "${POSITIONAL_JSON_MANIFEST}")" && pwd)
+  fi
+  if [ "${_MODEL_EXPLICIT}" = '0' ]; then
+    _pj_model=$(jq -r '.ml.model // .ml.model_name // empty' "${POSITIONAL_JSON_MANIFEST}" 2>/dev/null || true)
+    if [ -n "${_pj_model}" ]; then CORE_EXPERIMENT_MODEL="${_pj_model}"; fi
+  fi
+  if [ -z "${CORE_EXPERIMENT_COMMAND_TEMPLATE}" ]; then
+    _pj_ctpl=$(jq -r 'if (.ml.command_matrix | type) == "string" then .ml.command_matrix elif (.ml.command_matrix | type) == "array" then (.ml.command_matrix[0] // empty) else empty end' "${POSITIONAL_JSON_MANIFEST}" 2>/dev/null || true)
+    if [ -n "${_pj_ctpl}" ]; then CORE_EXPERIMENT_COMMAND_TEMPLATE="${_pj_ctpl}"; fi
+  fi
+  _pj_tpu=$(jq -r '.ml.tpu_type // .ml.accelerator_type // empty' "${POSITIONAL_JSON_MANIFEST}" 2>/dev/null || true)
+  if [ -n "${_pj_tpu}" ] && printf '%s' "${CORE_EXPERIMENT_SIZE}" | grep -q 'Standard_'; then
+    CORE_EXPERIMENT_SIZE="${_pj_tpu}"
+  fi
+  _pj_zone=$(jq -r '.ml.tpu_zone // empty' "${POSITIONAL_JSON_MANIFEST}" 2>/dev/null || true)
+  if [ -n "${_pj_zone}" ] && [ "${CORE_EXPERIMENT_LOCATION}" = 'eastus2' ]; then
+    CORE_EXPERIMENT_LOCATION="${_pj_zone}"
+  fi
+  _pj_tcfg=$(jq -r '.ml.tfrc_config // empty' "${POSITIONAL_JSON_MANIFEST}" 2>/dev/null || true)
+  if [ -n "${_pj_tcfg}" ] && [ -z "${TFRC_CONFIG:-}" ]; then
+    TFRC_CONFIG="${_pj_tcfg}"
+    export TFRC_CONFIG
+  fi
+  _pj_tonly=$(jq -r 'if .ml.tfrc_only == true then "1" else empty end' "${POSITIONAL_JSON_MANIFEST}" 2>/dev/null || true)
+  if [ "${_pj_tonly}" = '1' ]; then
+    TFRC_STRICT='1'
+    export TFRC_STRICT
+  fi
+fi
 
 case "${CORE_EXPERIMENT_COMPONENTS}" in
   *@*)
@@ -223,14 +263,14 @@ if [ "${CORE_EXPERIMENT_PROVIDER}" = "gcp-tpu" ]; then
   CORE_EXPERIMENT_PROVIDER='gcp-tpu-vm'
 fi
 case ",${CORE_EXPERIMENT_STEPS}," in
-  *,tpu_matrix,*|*,gemma_tpu_campaign,*)
-    CORE_EXPERIMENT_SUITE='gemma_tpu'
+  *,tpu_matrix,*|*,gemma_4_sql_campaign,*)
+    CORE_EXPERIMENT_SUITE='gemma-4-sql'
     if [ "${CORE_EXPERIMENT_PROVIDER}" = "azure" ]; then
       CORE_EXPERIMENT_PROVIDER='gcp-tpu-vm'
     fi
     ;;
 esac
-if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
+if [ "${CORE_EXPERIMENT_SUITE}" = "gemma-4-sql" ]; then
   if [ "${_SUBSUITES_EXPLICIT}" = '0' ]; then
     CORE_EXPERIMENT_SUBSUITES='E0,E1,E2,E3,E4'
   fi
@@ -261,7 +301,7 @@ if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
 fi
 
 if [ -z "${CORE_EXPERIMENT_STEPS}" ]; then
-  if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] || [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] || [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
+  if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] || [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] || [ "${CORE_EXPERIMENT_SUITE}" = "gemma-4-sql" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
     CORE_EXPERIMENT_STEPS='a_provision_instance,sync_research_repos,verify_native_host,run_experiments,g_collect_logs,h_pull_logs,emit_latex_and_verify_pdf,i_deprovision_instance'
   else
     CORE_EXPERIMENT_STEPS='a_provision_instance,b_use_bento_fork,c_install_virtualization_stack,d_deploy_vagrant_box,e_snapshot_vagrant_box,f_test_libscript_components,run_experiments,g_collect_logs,h_pull_logs,i_deprovision_instance'
@@ -465,7 +505,7 @@ provision_instance() {
       TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" TPU_ACCELERATOR_TYPE="${RESOLVED_VM_SKU}" "${_tpu_cli}" create "${CORE_EXPERIMENT_NODE}"
       TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" TPU_ACCELERATOR_TYPE="${RESOLVED_VM_SKU}" "${_tpu_cli}" wait-ready "${CORE_EXPERIMENT_NODE}"
       TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" "${_tpu_cli}" arm-ttl "${CORE_EXPERIMENT_NODE}" --minutes "${TFRC_MAX_TTL_MINUTES:-180}"
-      if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
+      if [ "${CORE_EXPERIMENT_SUITE}" = "gemma-4-sql" ]; then
         TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" libscript_tpu_bootstrap_remote "${CORE_EXPERIMENT_NODE}" "${CORE_EXPERIMENT_REPO_DIR}"
       fi
     fi
@@ -689,9 +729,9 @@ run_experiments() {
     return 0
   fi
 
-  if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
-    log_info "[run_experiments] Running gemma_tpu 7-backend matrix (${CORE_EXPERIMENT_BACKENDS} / ${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}'..."
-    _gt_res_dir="${CORE_EXPERIMENT_LOCAL_DIR}/gemma_tpu"
+  if [ "${CORE_EXPERIMENT_SUITE}" = "gemma-4-sql" ]; then
+    log_info "[run_experiments] Running gemma-4-sql 7-backend matrix (${CORE_EXPERIMENT_BACKENDS} / ${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}'..."
+    _gt_res_dir="${CORE_EXPERIMENT_LOCAL_DIR}/gemma-4-sql"
     mkdir -p "${_gt_res_dir}"
     _gt_fresh_flag=''
     if [ "${CORE_EXPERIMENT_FRESH_VM_PER_BACKEND}" = '1' ] || [ "${TPU_FRESH_VM_PER_BACKEND:-0}" = '1' ]; then
@@ -702,7 +742,7 @@ run_experiments() {
       _gt_dry_flag='--dry-run'
     fi
     # shellcheck disable=SC2086
-    TPU_NAME="${CORE_EXPERIMENT_NODE}" TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" TPU_ACCELERATOR_TYPE="${RESOLVED_VM_SKU}"       "${LIBSCRIPT_ROOT_DIR}/experiments/gemma-tpu/benchmark_experiments.sh"       --repo-dir="${CORE_EXPERIMENT_REPO_DIR}"       --results-dir="${_gt_res_dir}"       --model="${CORE_EXPERIMENT_MODEL}"       --backends="${CORE_EXPERIMENT_BACKENDS}"       --subsuites="${CORE_EXPERIMENT_SUBSUITES}"       --command-template="${CORE_EXPERIMENT_COMMAND_TEMPLATE}"       ${_gt_fresh_flag} ${_gt_dry_flag}
+    TPU_NAME="${CORE_EXPERIMENT_NODE}" TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" TPU_ACCELERATOR_TYPE="${RESOLVED_VM_SKU}" "${LIBSCRIPT_ROOT_DIR}/experiments/gemma-4-sql/benchmark_experiments.sh" --repo-dir="${CORE_EXPERIMENT_REPO_DIR}" --results-dir="${_gt_res_dir}" --model="${CORE_EXPERIMENT_MODEL}" --backends="${CORE_EXPERIMENT_BACKENDS}" --subsuites="${CORE_EXPERIMENT_SUBSUITES}" --command-template="${CORE_EXPERIMENT_COMMAND_TEMPLATE}" ${_gt_fresh_flag} ${_gt_dry_flag}
     write_experiment_state 'run_experiments' 'true'
     return 0
   fi
@@ -955,7 +995,7 @@ run_selected_lifecycle_steps() {
   for _token in ${_norm_steps}; do
     case "${_token}" in
       all|full_bento_matrix)
-        if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
+        if [ "${CORE_EXPERIMENT_SUITE}" = "gemma-4-sql" ]; then
           trap cleanup_tpu_campaign EXIT INT TERM HUP
           provision_instance
           run_experiments
@@ -991,7 +1031,7 @@ run_selected_lifecycle_steps() {
         emit_latex_and_verify_pdf
         deprovision_instance
         ;;
-      gemma_tpu_campaign|tpu_matrix)
+      gemma_4_sql_campaign|tpu_matrix)
         trap cleanup_tpu_campaign EXIT INT TERM HUP
         provision_instance
         run_experiments

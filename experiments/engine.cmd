@@ -162,9 +162,11 @@ for /f "tokens=1* delims==" %%K in ("!_vsv_arg:~2!") do (
     set "_raw_v=%%L"
 )
 for /f "usebackq delims=" %%U in (`jq -rn --arg k "!_raw_k!" "$k | ascii_upcase | gsub(\"-\"; \"_\")"`) do set "_env_k=%%U"
+for /f "usebackq delims=" %%P in (`jq -rn --arg s "!SUITE_ID!" --arg k "!_env_k!" "($s | ascii_upcase | gsub(\"-\"; \"_\")) + \"_\" + $k"`) do set "_pref_k=%%P"
 for %%W in (results-dir out-dir paper-dir repo-dir repo ecosystem-dir subsuites warmup trials host-arch cargo-profile tfrc-config backends model output json suite-dir phase) do (
     if /i "!_raw_k!"=="%%W" (
         set "!_env_k!=!_raw_v!"
+        set "!_pref_k!=!_raw_v!"
         exit /b 0
     )
 )
@@ -175,13 +177,14 @@ for %%C in (target-os bento-prefix bento-dir provider pkg-format pkg-source rele
     )
 )
 if exist "!SUITE_DIR!\vars.schema.json" (
-    jq -e --arg k "!_env_k!" "(.properties // {}) | has($k)" "!SUITE_DIR!\vars.schema.json" >nul 2>&1
+    jq -e --arg k "!_env_k!" --arg pk "!_pref_k!" "(.properties // {}) | (has($k) or has($pk))" "!SUITE_DIR!\vars.schema.json" >nul 2>&1
     if errorlevel 1 (
         echo [ERROR] Unknown suite flag --!_raw_k! ^(not declared in !SUITE_DIR!\vars.schema.json^) >&2
         exit /b 1
     )
 )
 set "!_env_k!=!_raw_v!"
+set "!_pref_k!=!_raw_v!"
 exit /b 0
 
 :: ## dispatch_verb
