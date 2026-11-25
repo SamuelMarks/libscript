@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "name": "kvikdos",
+  "tier": "T1",
+  "title": "Headless 8086 Real-Mode DOS CLI Build Runner",
+  "description": "Zero-dependency headless 8086 real-mode DOS CLI runner (C89 INT 21h emulator + win-cmd-asm vm8086 bridge) for executing 16-bit DOS compilers (MASM, NMAKE, LINK, ASM.COM).",
+  "category": "toolchains",
+  "provides": ["kvikdos", "dos16-runner"],
+  "capabilities": ["userland-package"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/SamuelMarks/win-cmd-asm"
+}

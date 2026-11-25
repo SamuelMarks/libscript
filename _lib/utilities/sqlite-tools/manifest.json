@@ -3,6 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "utilities",
   "description": "Official SQLite command-line bundle providing sqlite3 shell, sqldiff, and sqlite3_analyzer.",
+  "dos_support": ["dos32-watcom", "dos32-djgpp"],
   "name": "sqlite-tools",
   "os_whitelist": ["all"],
   "provides": ["sqlite-tools", "sqldiff", "sqlite3_analyzer"],

@@ -4,8 +4,8 @@
 
 **Tier Scope**: `T2`
 
-Linux kernel source/fragment builder (`linux`), CPIO/UKI `initramfs` generator (`initramfs`), and
-embedded RTOS kernels (`zephyr`, `freertos`).
+Linux kernel source/fragment builder (`linux`), CPIO/UKI `initramfs` generator (`initramfs`),
+classic PC/DOS kernels (`freedos`, `msdos`), and embedded RTOS kernels (`zephyr`, `freertos`).
 
 Each subdirectory in `_lib/kernel/` is an atomic, self-contained LibScript component governed by its
 own `manifest.json` and `vars.schema.json`. Components in `_lib/kernel/` never cross-source sibling
@@ -29,10 +29,13 @@ component's local `cli.sh` / `cli.cmd`:
 .\_lib\kernel\freertos\cli.cmd test
 ```
 
-## Components (4)
+## Components (6)
 
 <!-- BEGIN_COMPONENTS -->
 
+- [`freedos`](./freedos/README.md) (`T2` — `sysroot-package`, `kernel-image`): FreeDOS 1.3/1.4
+  GPL-2.0 kernel (`KERNEL.SYS`), FreeCOM (`COMMAND.COM`), `SYS.COM`, and FAT12/FAT16/FAT32 LBA boot
+  sectors.
 - [`freertos`](./freertos/README.md) (`T2` — `sysroot-package`, `kernel-image`): FreeRTOS C11
   real-time kernel source manager, FreeRTOSConfig.h synthesizer, and multi-architecture
   firmware/simulator builder.
@@ -40,6 +43,9 @@ component's local `cli.sh` / `cli.cmd`:
   ramdisk generation utilities
 - [`linux`](./linux/README.md) (`T2` — `sysroot-package`, `kernel-image`): Monolithic Unix operating
   system kernel
+- [`msdos`](./msdos/README.md) (`T2` — `sysroot-package`, `kernel-image`): Microsoft MIT-licensed
+  MS-DOS (`1.25`, `2.0`, `4.00`) kernel builder with C89 CP437/`scp2nasm` source normalizers and
+  clean-room BIOS/MBR/FAT12/FAT16 boot loaders.
 - [`zephyr`](./zephyr/README.md) (`T2` — `sysroot-package`, `kernel-image`): Zephyr Real-Time
   Operating System kernel source manager, Kconfig/Devicetree synthesizer, and multi-board firmware
   builder.

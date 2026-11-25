@@ -36,6 +36,11 @@
       "default": "0",
       "description": "Flag (0 or 1) indicating offline sysroot/image synthesis mode so service installers stage unit files without starting host daemons."
     },
+    "LIBSCRIPT_DOS_STRATUM": {
+      "type": "string",
+      "enum": ["dos16-fcb", "dos16-handle", "dos32-dpmi"],
+      "description": "Active DOS kernel capability stratum during sysroot staging (dos16-fcb for MS-DOS 1.25, dos16-handle for MS-DOS 2.0, dos32-dpmi for MS-DOS 4.0 and FreeDOS)."
+    },
     "LIBSCRIPT_STRICT_IMAGE_BUILD": {
       "type": "string",
       "enum": ["0", "1"],

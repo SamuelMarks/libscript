@@ -18,6 +18,9 @@ Unikernel, and Bento VM systems.
   and desktop/server appliance synthesis.
 - [`reactos/`](./reactos/README.md) & `reactos-base/`: Hybrid upstream BootCD/LiveCD ISO repacking
   (`unattend.inf` + `firstboot.cmd`) and RosBE CMake/Ninja source synthesis (`i686` & `x86_64`).
+- [`dos/`](./dos/README.md): Rootless FreeDOS (`1.3`/`1.4`) and MIT MS-DOS (`1.25`/`2.0`/`4.00`)
+  FAT12/FAT16/FAT32 distribution synthesizer with `win-cmd-asm`, `win-cmd-rs`, DJGPP/`CWSDPMI`, and
+  `wincheck --dialect dos622` validation.
 - [`bento/`](./bento/README.md): Automated Packer/QEMU multi-OS Vagrant base-box synthesis wrapper.
 - **Composable Stage Scripts (`*_stage.{sh,cmd}`)**: `kernel_stage`, `init_stage`,
   `bootloader_stage`, `networking_stage`, `graphics_stage`, `display_servers_stage`,

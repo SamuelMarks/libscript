@@ -3,6 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "toolchains",
   "description": "Safe Rust Windows cmd.exe interpreter (wincmd) and linear Packrat 50-rule linter / 4-pass CST rewriter (wincheck).",
+  "dos_support": ["dos32-djgpp", "dos32-watcom"],
   "name": "win-cmd-rs",
   "os_whitelist": ["all"],
   "provides": ["win-cmd-rs", "wincmd", "wincheck"],

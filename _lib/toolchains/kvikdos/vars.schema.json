@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/kvikdos/vars.schema.json",
+  "title": "kvikdos variables",
+  "description": "Configuration variables for kvikdos",
+  "type": "object",
+  "properties": {
+    "KVIKDOS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install kvikdos. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "KVIKDOS_VERSION": {
+      "description": "Specific version of kvikdos to install.",
+      "type": "string",
+      "default": "0.1.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "KVIKDOS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading kvikdos binary or archive artifacts."
+    },
+    "KVIKDOS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying kvikdos available remote releases."
+    },
+    "KVIKDOS_BACKEND": {
+      "type": "string",
+      "description": "Execution backend selection: auto, vm8086 (delegating to win-cmd-asm), or c89-emu (portable zero-dependency 8086 CPU + INT 21h emulator).",
+      "default": "auto"
+    },
+    "KVIKDOS_MAX_STEPS": {
+      "type": "string",
+      "description": "Maximum 8086 instruction budget before aborting a runaway 16-bit tool invocation.",
+      "default": "500000000"
+    },
+    "KVIKDOS_MEM_KB": {
+      "type": "string",
+      "description": "Conventional RAM size in KiB exposed to guest 16-bit DOS build utilities.",
+      "default": "640"
+    }
+  }
+}

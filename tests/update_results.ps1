@@ -437,9 +437,10 @@ function Update-SupportedComponents {
         $idempotent = $false
         if (Test-Path -LiteralPath $testsTmpDir) {
             $markerComp = $shortComp
-            if ($comp -eq "freebsd/distro") { $markerComp = "freebsd-distro" }
-            elseif ($comp -eq "illumos/distro") { $markerComp = "illumos-distro" }
-            elseif ($comp -eq "reactos/distro") { $markerComp = "reactos-distro" }
+            if ($comp -eq "freebsd/distro" -or $comp -eq "synthesis/distro/freebsd") { $markerComp = "freebsd-distro" }
+            elseif ($comp -eq "illumos/distro" -or $comp -eq "synthesis/distro/illumos") { $markerComp = "illumos-distro" }
+            elseif ($comp -eq "reactos/distro" -or $comp -eq "synthesis/distro/reactos") { $markerComp = "reactos-distro" }
+            elseif ($comp -eq "dos/distro" -or $comp -eq "synthesis/distro/dos") { $markerComp = "dos-distro" }
             elseif ($comp.StartsWith("bootloaders/")) { $markerComp = "bootloaders-$shortComp" }
             elseif ($comp.StartsWith("workloads/schedulers/")) { $markerComp = "scheduler-$shortComp" }
             elseif ($comp.StartsWith("traits/")) { $markerComp = "trait-$shortComp" }
@@ -629,7 +630,32 @@ function Update-TodoPlan {
         $newLines = @()
         $todoChanged = $false
         foreach ($line in $todoLines) {
-            if ($line.StartsWith("- [ ] `_lib/")) {
+            if ($line -match '^- \[[ x]\] `([^`]+)`:.*OmniOS') {
+                $compRef = $Matches[1].Trim()
+                $compShort = (Split-Path -Leaf $compRef) -replace '[` ]', ''
+                $mc = $compShort
+                if ($compRef -eq "synthesis/distro/dos" -or $compRef -eq "dos/distro") { $mc = "dos-distro" }
+                elseif ($compRef -eq "synthesis/distro/freebsd" -or $compRef -eq "freebsd/distro") { $mc = "freebsd-distro" }
+                elseif ($compRef -eq "synthesis/distro/illumos" -or $compRef -eq "illumos/distro") { $mc = "illumos-distro" }
+                elseif ($compRef -eq "synthesis/distro/reactos" -or $compRef -eq "reactos/distro") { $mc = "reactos-distro" }
+                $nl = $line
+                if (Test-Path -LiteralPath $testsTmpDir) {
+                    if ((Test-AnyFilePattern $testsTmpDir "$mc.linux.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.linux.alpine.success")) { $nl = $nl -replace '\[ \] Alpine', '[x] Alpine' }
+                    if ((Test-AnyFilePattern $testsTmpDir "$mc.linux.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.linux.debian.success")) { $nl = $nl -replace '\[ \] Debian', '[x] Debian' }
+                    if ((Test-AnyFilePattern $testsTmpDir "$mc.linux.rocky*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.linux.rocky*.success")) { $nl = $nl -replace '\[ \] Rocky', '[x] Rocky' }
+                    if ((Test-AnyFilePattern $testsTmpDir "$mc.windows*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.windows*.success")) { $nl = $nl -replace '\[ \] Windows', '[x] Windows' }
+                    if ((Test-AnyFilePattern $testsTmpDir "$mc.sunos*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.sunos*.success")) { $nl = $nl -replace '\[ \] OmniOS', '[x] OmniOS' }
+                    if ((Test-AnyFilePattern $testsTmpDir "$mc.freebsd*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.freebsd*.success")) { $nl = $nl -replace '\[ \] FreeBSD', '[x] FreeBSD' }
+                    if ((Test-AnyFilePattern $testsTmpDir "$mc.darwin*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.darwin*.success")) { $nl = $nl -replace '\[ \] macOS', '[x] macOS' }
+                    if ((Test-AnyFilePattern $testsTmpDir "$mc.idempotent.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.idempotent.success")) { $nl = $nl -replace '\[ \] 2x Idempotent', '[x] 2x Idempotent' }
+                }
+                $rhs = ($nl -split ':', 2)[1]
+                if ($rhs -notmatch '\[ \]') {
+                    $nl = $nl -replace '^- \[ \] ', '- [x] '
+                }
+                if ($nl -ne $line) { $todoChanged = $true }
+                $newLines += $nl
+            } elseif ($line.StartsWith("- [ ] `_lib/")) {
                 $item = $line.Substring(6)
                 $compTarget = (($item -split ':')[0] -split ' \(')[0]
                 $compName = (Split-Path -Leaf $compTarget) -replace '[` ]', ''

@@ -1179,10 +1179,13 @@ cut	libscript	freebsd-usr-bin
 dash	libscript	dash
 dash-windows	libscript	dash
 diff	libscript	freebsd-usr-bin
+djgpp	libscript	djgpp
+dos-pktdrv	libscript	dos-pktdrv
 file	libscript	toybox
 find	libscript	freebsd-usr-bin
 freebsd-usr-bin	libscript	freebsd-usr-bin
 freebsd-usr-bin-windows	libscript	freebsd-usr-bin
+freedos	libscript	freedos
 gawk	libscript	gawk
 gawk-windows	libscript	gawk
 git	libscript	git
@@ -1190,6 +1193,8 @@ grep	libscript	freebsd-usr-bin
 head	libscript	freebsd-usr-bin
 jq	libscript	jq
 jq-windows	libscript	jq
+kvikdos	libscript	kvikdos
+msdos	libscript	msdos
 openssl	libscript	openssl
 patch	libscript	freebsd-usr-bin
 sed	libscript	freebsd-usr-bin
@@ -1208,6 +1213,9 @@ uniq	libscript	freebsd-usr-bin
 unzip	libscript	unzip
 wc	libscript	freebsd-usr-bin
 wget	libscript	wget
+asm-conv	libscript	win-cmd-asm
+vm8086	libscript	win-cmd-asm
+win-cmd-asm	libscript	win-cmd-asm
 win-cmd-rs	libscript	win-cmd-rs
 wincheck	libscript	win-cmd-rs
 wincmd	libscript	win-cmd-rs

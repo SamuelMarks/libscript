@@ -411,9 +411,10 @@ update_supported_components() {
       sc = comp
       sub(/^.*\//, "", sc)
       mc = sc
-      if (comp == "freebsd/distro") mc = "freebsd-distro"
-      else if (comp == "illumos/distro") mc = "illumos-distro"
-      else if (comp == "reactos/distro") mc = "reactos-distro"
+      if (comp == "freebsd/distro" || comp == "synthesis/distro/freebsd") mc = "freebsd-distro"
+      else if (comp == "illumos/distro" || comp == "synthesis/distro/illumos") mc = "illumos-distro"
+      else if (comp == "reactos/distro" || comp == "synthesis/distro/reactos") mc = "reactos-distro"
+      else if (comp == "dos/distro" || comp == "synthesis/distro/dos") mc = "dos-distro"
       else if (comp ~ /^bootloaders\//) mc = "bootloaders-" sc
       else if (comp ~ /^workloads\/schedulers\//) mc = "scheduler-" sc
       else if (comp ~ /^traits\//) mc = "trait-" sc
@@ -885,6 +886,55 @@ update_todo_plan() {
   # shellcheck disable=SC2016
   while IFS= read -r _line || [ -n "${_line}" ]; do
     case "${_line}" in
+      '- ['*'] `'*': ['*'OmniOS'*)
+        _prefix="${_line%%:*}"
+        _prefix="${_prefix%% (*}"
+        _comp_ref="${_prefix#- \[?\] }"
+        _comp_ref=$(printf '%s' "${_comp_ref}" | tr -d '` ')
+        _comp_short="${_comp_ref##*/}"
+        _mc="${_comp_short}"
+        case "${_comp_ref}" in
+          synthesis/distro/dos|dos/distro) _mc="dos-distro" ;;
+          synthesis/distro/freebsd|freebsd/distro) _mc="freebsd-distro" ;;
+          synthesis/distro/illumos|illumos/distro) _mc="illumos-distro" ;;
+          synthesis/distro/reactos|reactos/distro) _mc="reactos-distro" ;;
+          _lib/bootloaders/*) _mc="bootloaders-${_comp_short}" ;;
+          workloads/schedulers/*) _mc="scheduler-${_comp_short}" ;;
+          traits/*) _mc="trait-${_comp_short}" ;;
+        esac
+        _new_line="${_line}"
+        if [ -d "${_tests_tmp_dir}" ]; then
+          if [ -f "${_tests_tmp_dir}/${_mc}.linux.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.linux.alpine.success" ]; then
+            _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Alpine/[x] Alpine/')
+          fi
+          if [ -f "${_tests_tmp_dir}/${_mc}.linux.debian.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.linux.debian.success" ]; then
+            _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Debian/[x] Debian/')
+          fi
+          if [ -f "${_tests_tmp_dir}/${_mc}.linux.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.linux.rocky.success" ]; then
+            _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Rocky/[x] Rocky/')
+          fi
+          if [ -f "${_tests_tmp_dir}/${_mc}.windows.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.windows.success" ]; then
+            _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Windows/[x] Windows/')
+          fi
+          if [ -f "${_tests_tmp_dir}/${_mc}.sunos.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.sunos.success" ]; then
+            _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] OmniOS/[x] OmniOS/')
+          fi
+          if [ -f "${_tests_tmp_dir}/${_mc}.freebsd.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.freebsd.success" ]; then
+            _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] FreeBSD/[x] FreeBSD/')
+          fi
+          if [ -f "${_tests_tmp_dir}/${_mc}.darwin.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.darwin.success" ]; then
+            _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] macOS/[x] macOS/')
+          fi
+          if [ -f "${_tests_tmp_dir}/${_mc}.idempotent.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.idempotent.success" ]; then
+            _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] 2x Idempotent/[x] 2x Idempotent/')
+          fi
+        fi
+        case "${_new_line#*:}" in
+          *"[ ]"*) ;;
+          *) _new_line=$(printf '%s' "${_new_line}" | sed 's/^- \[ \] /- [x] /') ;;
+        esac
+        printf '%s\n' "${_new_line}" >>"${_tmp_todo}"
+        ;;
       '- [ ] `_lib/'*)
         _item="${_line#- \[ \] }"
         _comp_target="${_item%%:*}"

@@ -289,14 +289,17 @@ if exist "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" if exist "!HOOK_REPO
 )
 
 if exist "README.md" (
-    git diff --quiet -- README.md >nul 2>&1
-    if errorlevel 1 (
-        echo Formatting README.md...
-        where npx >nul 2>&1
-        if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
-            call npx --yes prettier --write README.md >nul 2>&1
+    where git >nul 2>&1
+    if not errorlevel 1 (
+        git diff --quiet -- README.md >nul 2>&1
+        if errorlevel 1 (
+            echo Formatting README.md...
+            where npx >nul 2>&1
+            if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
+                call npx --yes prettier --write README.md >nul 2>&1
+            )
+            git add README.md
         )
-        git add README.md
     )
 )
 

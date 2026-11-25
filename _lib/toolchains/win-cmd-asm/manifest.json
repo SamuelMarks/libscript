@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "sysroot-package"],
+  "category": "toolchains",
+  "description": "CRT-free assembly CMD.EXE and COMMAND.COM replacement (WINCMD1.COM for MS-DOS 1.25 FCB, WINCMD.COM for MS-DOS 2.0+ & FreeDOS), 17 DOS utilities, vm8086 runner, and asm-conv lowerer.",
+  "dos_support": ["dos16-fcb", "dos16-handle", "dos32-watcom", "dos32-djgpp"],
+  "name": "win-cmd-asm",
+  "os_whitelist": ["all"],
+  "provides": ["win-cmd-asm", "wincmd-dos16", "wincmd1-dos125", "vm8086", "asm-conv"],
+  "repository": "https://github.com/SamuelMarks/win-cmd-asm",
+  "tier": "T1",
+  "title": "win-cmd-asm Multi-ISA Assembly Shell & DOS Utilities"
+}

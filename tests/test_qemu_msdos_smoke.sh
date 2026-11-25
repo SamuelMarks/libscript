@@ -344,6 +344,28 @@ elif [ -n "${QEMU_BIN}" ]; then
   fi
 
   if [ "$EXECUTED_BENTO_DISK" -eq 0 ]; then
+    for _nat_cand in \
+      "${LIBSCRIPT_ROOT_DIR}/build/synthesis/msdos-4.0.qcow2" \
+      "${LIBSCRIPT_ROOT_DIR}/build/synthesis/msdos-4.0.raw" \
+      "${LIBSCRIPT_ROOT_DIR}/build/synthesis/msdos-4.0.img" \
+      "${LIBSCRIPT_ROOT_DIR}/build/synthesis/freedos.qcow2" \
+      "${LIBSCRIPT_ROOT_DIR}/build/synthesis/freedos.raw" \
+      "${LIBSCRIPT_ROOT_DIR}/build/synthesis/freedos.img" \
+      "${LIBSCRIPT_ROOT_DIR}/build/synthesis/msdos.qcow2"; do
+      if [ -f "${_nat_cand}" ]; then
+        _nat_log="${TEST_WORK}/native_dos_com1.log"
+        _nat_fmt='qcow2'
+        case "${_nat_cand}" in *.img|*.raw) _nat_fmt='raw' ;; esac
+        "${QEMU_BIN}" -M pc -m 32M -display none -no-reboot -snapshot \
+          -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+          -drive "file=${_nat_cand},format=${_nat_fmt},index=0,media=disk" \
+          -serial "file:${_nat_log}" >/dev/null 2>&1 || true
+        if grep -Eq 'FreeDOS Kernel|MS-DOS' "${_nat_log}" 2>/dev/null; then
+          printf '[INFO] Native LibScript synthesized DOS disk (%s) COM1 verified.\n' "${_nat_cand}"
+        fi
+        break
+      fi
+    done
     COM1_LOG="${TEST_WORK}/com1.log"
     if [ -n "${MSDOS_BOOT_IMG:-}" ] && [ -f "${MSDOS_BOOT_IMG}" ]; then
       "${QEMU_BIN}" -M pc -m 16M -display none -no-reboot -snapshot \

@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
+  "category": "networking",
+  "description": "Open-source Crynwr INT 60h Ethernet packet drivers (PCNTPKT, NE2000), SHSUCDX ISO9660 CD-ROM redirector, HIMEMX XMS manager, FDAPM poweroff, and DOSLFN.",
+  "dos_support": ["dos16-handle", "dos32-watcom", "dos32-djgpp"],
+  "name": "dos-pktdrv",
+  "os_whitelist": ["all"],
+  "provides": ["dos-pktdrv", "crynwr-pkt", "shsucdx"],
+  "repository": "https://gitlab.com/FreeDOS/net/crynwr",
+  "tier": "T2",
+  "title": "DOS Packet Drivers, CD-ROM & Power Management Suite"
+}

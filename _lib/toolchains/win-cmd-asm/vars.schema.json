@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/win-cmd-asm/vars.schema.json",
+  "title": "win-cmd-asm variables",
+  "description": "Configuration variables for win-cmd-asm",
+  "type": "object",
+  "x-libscript-var-packs": ["image_synth"],
+  "properties": {
+    "WIN_CMD_ASM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install win-cmd-asm. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "WIN_CMD_ASM_VERSION": {
+      "description": "Specific version of win-cmd-asm to install.",
+      "type": "string",
+      "default": "0.1.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "WIN_CMD_ASM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading win-cmd-asm binary or archive artifacts."
+    },
+    "WIN_CMD_ASM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying win-cmd-asm available remote releases."
+    },
+    "WIN_CMD_ASM_CHECKSUM": {
+      "type": "string",
+      "description": "Optional SHA-256 checksum for verifying downloaded win-cmd-asm release archives."
+    },
+    "WIN_CMD_ASM_REPO_DIR": {
+      "type": "string",
+      "description": "Optional local filesystem checkout of SamuelMarks/win-cmd-asm (e.g. ../win-cmd-asm) used for offline source builds.",
+      "default": ""
+    },
+    "WIN_CMD_ASM_ASSEMBLER": {
+      "type": "string",
+      "description": "Target assembler backend passed to asm-conv (nasm, jwasm, fasm, or llvm-mc).",
+      "default": "nasm"
+    }
+  }
+}

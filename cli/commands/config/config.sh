@@ -129,6 +129,8 @@ if [ -n "$VALIDATE_FILE" ]; then
       active_schema="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.illumos.schema.json"
     elif jq -e '.reactos_version != null or (.target.os_family == "reactos" and .kernel == null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
       active_schema="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.reactos.schema.json"
+    elif jq -e '.dos_flavor != null or .target.os_family == "freedos" or .target.os_family == "msdos"' "$VALIDATE_FILE" >/dev/null 2>&1; then
+      active_schema="${LIBSCRIPT_ROOT_DIR}/synthesis/schemas/execution-plan.dos.schema.json"
     fi
     # Check top-level required fields
     missing_fields=$(jq -r --slurpfile schema "$active_schema" '
@@ -151,7 +153,7 @@ if [ -n "$TARGET_PROFILE" ]; then
     profile_path="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${TARGET_PROFILE}"
   fi
   if [ ! -f "$profile_path" ]; then
-    for _p_sub in linux freebsd illumos reactos rtos hypervisor unikernel containers cloud lfs; do
+    for _p_sub in linux freebsd illumos reactos dos rtos hypervisor unikernel containers cloud lfs; do
       if [ -f "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_p_sub}/${TARGET_PROFILE}.json" ]; then
         profile_path="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_p_sub}/${TARGET_PROFILE}.json"
         break

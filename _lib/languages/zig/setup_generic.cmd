@@ -150,26 +150,41 @@ if "%ZIG_INSTALL_METHOD%"=="system" (
     exit /b !errorlevel!
 )
 
-set "TARGET_DIR=%LIBSCRIPT_HOME%\zig\%ZIG_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
-    echo Installing zig %ZIG_VERSION% natively to %TARGET_DIR%...
-    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-    if exist "%DOWNLOAD_DIR%\zig\zig-%ZIG_VERSION%.zip" (
+set "EXACT_VER=%ZIG_VERSION%"
+if /i "!EXACT_VER!"=="latest" set "EXACT_VER=0.13.0"
+if /i "!EXACT_VER!"=="stable" set "EXACT_VER=0.13.0"
+if /i "!EXACT_VER!"=="lts" set "EXACT_VER=0.13.0"
+set "_ZIG_ARCH=x86_64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_ZIG_ARCH=aarch64"
+if /i "%PROCESSOR_ARCHITEW6432%"=="ARM64" set "_ZIG_ARCH=aarch64"
+set "_EFF_ZIG_URL=%ZIG_DOWNLOAD_URL%"
+if "!_EFF_ZIG_URL!"=="" set "_EFF_ZIG_URL=https://ziglang.org/download/!EXACT_VER!/zig-windows-!_ZIG_ARCH!-!EXACT_VER!.zip"
+
+set "TARGET_DIR=%LIBSCRIPT_HOME%\zig\!EXACT_VER!"
+if not exist "!TARGET_DIR!\zig.exe" (
+    echo Installing zig !EXACT_VER! natively to !TARGET_DIR!...
+    if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
+    if exist "%DOWNLOAD_DIR%\zig\zig-!EXACT_VER!.zip" (
         echo Extracting from cache...
-        tar -xf "%DOWNLOAD_DIR%\zig\zig-%ZIG_VERSION%.zip" -C "%TARGET_DIR%"
-    ) else if exist "%DOWNLOAD_DIR%\zig\zig-%ZIG_VERSION%.tar.gz" (
+        tar -xf "%DOWNLOAD_DIR%\zig\zig-!EXACT_VER!.zip" --strip-components=1 -C "!TARGET_DIR!"
+    ) else if exist "%DOWNLOAD_DIR%\zig\zig-!EXACT_VER!.tar.gz" (
         echo Extracting from cache...
-        tar -xf "%DOWNLOAD_DIR%\zig\zig-%ZIG_VERSION%.tar.gz" -C "%TARGET_DIR%"
-    ) else if not "%ZIG_DOWNLOAD_URL%"=="" (
-        echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%ZIG_DOWNLOAD_URL%" "%TEMP%\zig.zip"
-        tar -xf "%TEMP%\zig.zip" -C "%TARGET_DIR%"
+        tar -xf "%DOWNLOAD_DIR%\zig\zig-!EXACT_VER!.tar.gz" --strip-components=1 -C "!TARGET_DIR!"
     ) else (
-        echo No download URL or cache available for zig.
-        exit /b 1
+        echo Downloading and extracting !_EFF_ZIG_URL!...
+        if not exist "%DOWNLOAD_DIR%\zig" mkdir "%DOWNLOAD_DIR%\zig"
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!_EFF_ZIG_URL!" "%DOWNLOAD_DIR%\zig\zig-!EXACT_VER!.zip"
+        if errorlevel 1 exit /b 1
+        tar -xf "%DOWNLOAD_DIR%\zig\zig-!EXACT_VER!.zip" --strip-components=1 -C "!TARGET_DIR!"
+    )
+    if exist "!TARGET_DIR!\zig.exe" (
+        (
+            echo @echo off
+            echo "%%~dp0..\zig.exe" %%*
+        ) > "!TARGET_DIR!\bin\zig.cmd"
     )
 ) else (
-    echo zig %ZIG_VERSION% is already installed.
+    echo zig !EXACT_VER! is already installed.
 )
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\zig\%ZIG_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (

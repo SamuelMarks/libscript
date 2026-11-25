@@ -401,6 +401,10 @@ if /i "%IS_MSDOS%"=="1" (
     set "_WCR_TARGET=i586-pc-msdosdjgpp"
 ) else if /i "%LIBSCRIPT_TARGET_OS%"=="msdos" (
     set "_WCR_TARGET=i586-pc-msdosdjgpp"
+) else if /i "%LIBSCRIPT_TARGET_OS:~0,7%"=="freedos" (
+    set "_WCR_TARGET=i586-pc-msdosdjgpp"
+) else if /i "%LIBSCRIPT_TARGET_OS:~0,5%"=="msdos" (
+    set "_WCR_TARGET=i586-pc-msdosdjgpp"
 ) else if /i "!_WCR_ARCH!"=="ARM64" (
     set "_WCR_TARGET=aarch64-pc-windows-msvc"
 ) else if /i "!_WCR_ARCH!"=="aarch64" (

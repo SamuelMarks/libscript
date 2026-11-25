@@ -83,6 +83,48 @@ run_single_trait() {
     return 0
   fi
 
+  _eff_dos_os="${LIBSCRIPT_TARGET_OS:-${TARGET_OS:-}}"
+  if [ -z "${_eff_dos_os}" ] && [ "${LIBSCRIPT_INIT_PROVIDER:-}" = 'dos-autoexec' ]; then
+    _eff_dos_os='msdos'
+  fi
+  if [ -z "${_eff_dos_os}" ] && [ -n "${MANIFEST_FILE}" ] && [ -f "${MANIFEST_FILE}" ]; then
+    if grep -Eq '"dos-autoexec"|"os_family"[[:space:]]*:[[:space:]]*"(freedos|msdos)"' "${MANIFEST_FILE}" 2>/dev/null; then
+      _eff_dos_os='msdos'
+    fi
+  fi
+
+  case "${_eff_dos_os}" in
+    freedos*|msdos*)
+      if [ "${LIBSCRIPT_DOS_STRATUM:-}" = 'dos16-fcb' ]; then
+        if [ "${LIBSCRIPT_STRICT_TRAITS:-0}" = '1' ]; then exit 86; fi
+        printf '[SKIP] Trait "%s" skipped on flat-FS MS-DOS 1.25 (dos16-fcb).\n' "$t_name"
+        return 0
+      fi
+      case "$t_name" in
+        logging|maintenance|backup|discovery|secrets)
+          if [ "$t_action" = 'apply' ] && [ "${SYSROOT}" != '/' ]; then
+            mkdir -p "${SYSROOT%/}/ETC/TRAITS"
+            _t_bat=$(printf '%s' "$t_name" | cut -c1-8 | tr '[:lower:]' '[:upper:]')
+            printf '@ECHO OFF\r\nECHO [TRAIT] %s converged\r\n' "$_t_bat" > "${SYSROOT%/}/ETC/TRAITS/${_t_bat}.BAT"
+            STACK='' "${LIBSCRIPT_ROOT_DIR}/engine/common/dos_batch_lint.sh" --mode=lint "${SYSROOT%/}/ETC/TRAITS/${_t_bat}.BAT"
+          elif [ "$t_action" = 'teardown' ] && [ "${SYSROOT}" != '/' ]; then
+            _t_bat=$(printf '%s' "$t_name" | cut -c1-8 | tr '[:lower:]' '[:upper:]')
+            rm -f "${SYSROOT%/}/ETC/TRAITS/${_t_bat}.BAT"
+          fi
+          return 0
+          ;;
+        *)
+          if [ "${LIBSCRIPT_STRICT_TRAITS:-0}" = '1' ]; then
+            printf '[ERROR] Trait "%s" requires POSIX/NT background daemons unsupported on DOS.\n' "$t_name" >&2
+            exit 86
+          fi
+          printf '[SKIP] Trait "%s" skipped on single-tasking DOS target.\n' "$t_name"
+          return 0
+          ;;
+      esac
+      ;;
+  esac
+
   case "$t_name" in
     storage)
       if [ "$t_action" = "apply" ]; then
@@ -151,6 +193,7 @@ TARGET_TRAIT='all'
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --strict) LIBSCRIPT_STRICT_TRAITS='1'; export LIBSCRIPT_STRICT_TRAITS; shift ;;
     --manifest=*) MANIFEST_FILE="${1#*=}"; shift ;;
     --manifest) shift; MANIFEST_FILE="${1:-}"; [ $# -gt 0 ] && shift ;;
     *)

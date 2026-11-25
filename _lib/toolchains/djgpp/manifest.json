@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["userland-package", "cross-toolchain"],
+  "category": "toolchains",
+  "description": "32-bit protected-mode i586-pc-msdosdjgpp GCC/binutils cross-toolchain, djdev205 libc, CWSDPMI.EXE ring-0/3 DPMI host, Watt-32 TCP/IP, and guest GNU bash/coreutils.",
+  "dos_support": ["dos32-djgpp"],
+  "name": "djgpp",
+  "os_whitelist": ["all"],
+  "provides": ["djgpp", "i586-pc-msdosdjgpp-gcc", "cwsdpmi"],
+  "repository": "https://github.com/andrewwutw/build-djgpp",
+  "tier": "T1",
+  "title": "DJGPP 32-bit MS-DOS/FreeDOS Cross-Compiler & DPMI Runtime"
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package"],
+  "category": "base-system",
+  "description": "Tier 3 modular DOS distribution synthesizer assembling FreeDOS (1.3/1.4) and MIT MS-DOS (1.25/2.0/4.00) bootable FAT12/FAT16/FAT32 images.",
+  "name": "dos-distro",
+  "os_whitelist": ["all"],
+  "provides": ["dos-distro", "freedos-distro", "msdos-distro"],
+  "tier": "T3",
+  "title": "DOS Distribution Synthesizer (FreeDOS & MIT MS-DOS)"
+}

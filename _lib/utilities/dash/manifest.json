@@ -3,6 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "utilities",
   "description": "POSIX-compliant /bin/sh shell with native Windows (MSVC) and MS-DOS builds via SamuelMarks/dash-windows.",
+  "dos_support": ["dos32-watcom", "dos32-djgpp"],
   "name": "dash",
   "os_blacklist": ["sunos"],
   "os_whitelist": ["all"],

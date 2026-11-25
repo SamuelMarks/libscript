@@ -1,0 +1,52 @@
+{
+  "$schema": "../../schemas/execution-plan.dos.schema.json",
+  "schema_version": "1.0.0",
+  "profile_name": "msdos-4.0-djgpp-i586",
+  "description": "Microsoft MIT MS-DOS 4.00 FAT16 BIGDOS (strict 8.3, LFN=n) with 32-bit CWSDPMI/DOS32A, DJGPP bash, win-cmd-rs, and win-cmd-asm.",
+  "dos_flavor": "msdos",
+  "dos_version": "4.0",
+  "build_mode": "from-source",
+  "shell_provider": "win-cmd-asm",
+  "dpmi_provider": "cwsdpmi",
+  "djgpp_userland": true,
+  "lfn_enabled": false,
+  "serial_console": "com1",
+  "packet_driver": "pcntpkt",
+  "config_sys": {
+    "files": 40,
+    "buffers": 20,
+    "lastdrive": "Z",
+    "dos_high_umb": true
+  },
+  "target": {
+    "arch": "i586",
+    "os_family": "msdos",
+    "libc": "djgpp-libc",
+    "platform": "qemu"
+  },
+  "kernel": {
+    "provider": "msdos-mit-4.0",
+    "version": "4.0",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "dos-autoexec"
+  },
+  "storage": {
+    "media_type": "hdd-fat16",
+    "disk_size_gib": 1,
+    "partition_table": "mbr",
+    "boot_mode": "bios-legacy",
+    "bootloader": "dos-mbr-vbr",
+    "partitions": [
+      {
+        "name": "MSDOS40",
+        "filesystem": "fat16",
+        "mountpoint": "C:\\",
+        "size_mib": 32
+      }
+    ]
+  },
+  "output_formats": ["qcow2", "raw", "live-iso", "vagrant-box"],
+  "components": ["win-cmd-rs", "win-cmd-asm"]
+}

@@ -73,7 +73,15 @@ case "$SUBCMD" in
     exec "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/hydrate_offline_cache.sh" "$@"
     ;;
   distro)
-    exec "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/linux/cli.sh" "$@"
+    case "${1:-}" in
+      freedos|msdos|dos)
+        shift || true
+        exec "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/dos/cli.sh" "$@"
+        ;;
+      *)
+        exec "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/linux/cli.sh" "$@"
+        ;;
+    esac
     ;;
   repogen)
     exec "${LIBSCRIPT_ROOT_DIR}/synthesis/repogen/cli.sh" "$@"
@@ -114,6 +122,16 @@ case "${pkg_type:-}" in
   illumos-distro|illumos_distro) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/illumos_distro.sh" "$@" ;;
   freebsd-distro|freebsd_distro) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/freebsd_distro.sh" "$@" ;;
   reactos-distro|reactos_distro) exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_distro.sh" "$@" ;;
+  dos-distro|dos_distro|freedos-distro|freedos_distro)
+    exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_distro.sh" "$@"
+    ;;
+  msdos-distro|msdos_distro)
+    LIBSCRIPT_DOS_DEFAULT_PROFILE="${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/dos/msdos-4.0-djgpp-i586.json" \
+      exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_distro.sh" "$@"
+    ;;
+  floppy-img|floppy_img|dos-floppy)
+    exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_floppy.sh" "$@"
+    ;;
   rtos-distro|rtos_distro|zephyr-distro|zephyr_distro|freertos-distro|freertos_distro)
     exec "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/rtos_distro.sh" "$@"
     ;;

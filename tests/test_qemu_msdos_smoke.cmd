@@ -246,6 +246,16 @@ for %%S in (!_STEMS!) do (
         set "%~3=!BENTO_DIR!\builds\%%S.img"
         exit /b 0
     )
+    if exist "!LIBSCRIPT_ROOT_DIR!\build\synthesis\%%S.qcow2" (
+        set "%~2=qcow2"
+        set "%~3=!LIBSCRIPT_ROOT_DIR!\build\synthesis\%%S.qcow2"
+        exit /b 0
+    )
+    if exist "!LIBSCRIPT_ROOT_DIR!\build\synthesis\%%S.img" (
+        set "%~2=raw"
+        set "%~3=!LIBSCRIPT_ROOT_DIR!\build\synthesis\%%S.img"
+        exit /b 0
+    )
     for %%A in (x86_64 aarch64 i386) do (
         if exist "!BENTO_DIR!\builds\build_complete\%%S-%%A.qemu.box" (
             if not exist "!TEST_WORK!\box_extract\%%S" mkdir "!TEST_WORK!\box_extract\%%S"

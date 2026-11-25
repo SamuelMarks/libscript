@@ -141,10 +141,18 @@ bootable operating system images, single-address-space unikernels, signed microc
 and compliance-gated cloud marketplace bundles:
 
 ```sh
-# Modular OS distribution synthesis (FreeBSD, illumos, ReactOS)
+# Modular OS distribution synthesis (FreeBSD, illumos, ReactOS, FreeDOS, MIT MS-DOS)
 ./libscript.sh package-as freebsd-distro
 ./libscript.sh package-as illumos-distro
 ./libscript.sh package-as reactos-distro
+./libscript.sh package-as freedos-distro
+./libscript.sh package-as msdos-distro
+
+# Direct DOS base-kernel synthesis across all 4 strata (--kernel & --shell)
+./synthesis/distro/synthesize-image.sh --kernel=freedos --shell=win-cmd-rs --format=qcow2
+./synthesis/distro/synthesize-image.sh --kernel=msdos-4.0 --shell=win-cmd-asm --format=iso
+./synthesis/distro/synthesize-image.sh --kernel=msdos-2.0 --shell=win-cmd-asm --format=floppy-img
+./synthesis/distro/synthesize-image.sh --kernel=msdos-1.25 --shell=win-cmd-asm --format=floppy-img
 
 # UEFI/GPT & Hyper-V Gen2 VHD cloud-boot unikernels and MCUboot-signed RTOS firmware
 ./libscript.sh package-as unikernel --cloud-boot=uefi-gpt

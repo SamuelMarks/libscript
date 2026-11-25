@@ -3,6 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "utilities",
   "description": "Standalone GNU Awk 5.4+ pattern scanning and processing language with native Windows (MSVC) and MS-DOS (dos32) builds via SamuelMarks/gawk-windows.",
+  "dos_support": ["dos32-watcom", "dos32-djgpp"],
   "name": "gawk",
   "os_whitelist": ["all"],
   "provides": ["gawk", "gawk-windows", "awk"],

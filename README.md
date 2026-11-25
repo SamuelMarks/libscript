@@ -964,6 +964,7 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `deno`                  | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `deno-pm`               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `dhcpcd`                | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `djgpp`                 | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `dnf`                   | `package-managers` | -           | -           | ✅          | -       | -     | -       | -     |
 | `dnsmasq`               | `networking`       | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `docker`                | `containers`       | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
@@ -1054,6 +1055,7 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `kubeadm`               | `schedulers`       | ❓          | ❓          | ❓          | ❓      | -     | -       | -     |
 | `kubectl`               | `schedulers`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `kubernetes-k0s`        | `schedulers`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `kvikdos`               | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `lcov`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `lfs-toolchain`         | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `libarchive`            | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -1260,6 +1262,7 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `west`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `wget`                  | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `wildfly`               | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `win-cmd-asm`           | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `win-cmd-rs`            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `wine`                  | `virtualization`   | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `winget`                | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
@@ -1299,9 +1302,11 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `dbus`               | `base-system`      | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `dinit`              | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `doas`               | `base-system`      | ✅          | ✅          | -           | -       | -     | ✅      | -     |
+| `dos-pktdrv`         | `networking`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `dosfstools`         | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `e2fsprogs`          | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `eudev`              | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `freedos`            | `kernel`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `freertos`           | `kernel`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `gdm`                | `display-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `glibc`              | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
@@ -1337,6 +1342,7 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | `mcuboot`            | `bootloaders`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `mesa`               | `graphics`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `mirage`             | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `msdos`              | `kernel`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `musl`               | `base-system`      | ✅          | ✅          | -           | -       | -     | -       | -     |
 | `nanos`              | `unikernels`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `netctl`             | `networking`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -1393,8 +1399,9 @@ cross-cutting planes (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 | ------------------------------- | --------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
 | `synthesis/disk/provision_disk` | `disk`    | ✅          | ❓          | ❓          | -       | ✅    | ✅      | ✅    |
 | `synthesis/distro/bento`        | `distro`  | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
-| `synthesis/distro/freebsd`      | `distro`  | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
-| `synthesis/distro/illumos`      | `distro`  | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
+| `synthesis/distro/dos`          | `distro`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `synthesis/distro/freebsd`      | `distro`  | ✅          | ❓          | ❓          | -       | -     | ✅      | -     |
+| `synthesis/distro/illumos`      | `distro`  | ✅          | ❓          | ❓          | -       | ✅    | ✅      | -     |
 | `synthesis/distro/linux`        | `distro`  | ✅          | ❓          | ❓          | -       | -     | -       | -     |
 | `synthesis/distro/reactos`      | `distro`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `synthesis/repogen`             | `repogen` | ✅          | ❓          | ❓          | -       | -     | -       | -     |

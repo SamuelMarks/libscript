@@ -424,6 +424,16 @@ if /i "!ACTION!"=="ls-remote" (
 )
 
 if /i "!ACTION!"=="use" (
+    if exist "!MANIFEST_FILE!" (
+        findstr /I /C:"\"tier\": \"T2\"" "!MANIFEST_FILE!" >nul 2>&1
+        if not errorlevel 1 (
+            findstr /I /C:"\"userland-package\"" "!MANIFEST_FILE!" >nul 2>&1
+            if errorlevel 1 (
+                echo [ERROR] !PACKAGE_NAME! is a T2 sysroot-only recipe; 'use' is not supported. 1>&2
+                exit /b 2
+            )
+        )
+    )
     if exist "!INSTALLED_DIR!\bin" (
         set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\engine\common\versioning.cmd" :libscript_symlink_alias "!PACKAGE_NAME!" "default" "!VERSION!"

@@ -1,0 +1,52 @@
+{
+  "$schema": "../../schemas/execution-plan.dos.schema.json",
+  "schema_version": "1.0.0",
+  "profile_name": "freedos-1.4-djgpp-i586",
+  "description": "FreeDOS 1.4 FAT32 appliance with 32-bit CWSDPMI/DOS32A, DJGPP bash/coreutils, win-cmd-rs, win-cmd-asm, and Crynwr/Watt-32 networking.",
+  "dos_flavor": "freedos",
+  "dos_version": "1.4",
+  "build_mode": "from-source",
+  "shell_provider": "win-cmd-rs",
+  "dpmi_provider": "cwsdpmi",
+  "djgpp_userland": true,
+  "lfn_enabled": false,
+  "serial_console": "com1",
+  "packet_driver": "pcntpkt",
+  "config_sys": {
+    "files": 60,
+    "buffers": 32,
+    "lastdrive": "Z",
+    "dos_high_umb": true
+  },
+  "target": {
+    "arch": "i586",
+    "os_family": "freedos",
+    "libc": "djgpp-libc",
+    "platform": "qemu"
+  },
+  "kernel": {
+    "provider": "freedos-kernel",
+    "version": "1.4",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "dos-autoexec"
+  },
+  "storage": {
+    "media_type": "hdd-fat32",
+    "disk_size_gib": 1,
+    "partition_table": "mbr",
+    "boot_mode": "bios-legacy",
+    "bootloader": "freedos-sys",
+    "partitions": [
+      {
+        "name": "FREEDOS",
+        "filesystem": "fat32",
+        "mountpoint": "C:\\",
+        "size_mib": 64
+      }
+    ]
+  },
+  "output_formats": ["qcow2", "raw", "live-iso", "vagrant-box"],
+  "components": ["win-cmd-rs", "win-cmd-asm"]
+}

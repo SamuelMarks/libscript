@@ -227,7 +227,19 @@ if ($args -contains '--staged') {
         }
     }
 } else {
-    $allScripts = @(git ls-files --cached --others --exclude-standard '*.sh' '*.cmd' '*.bat' '.githooks/pre-commit')
+    if ((Get-Command git -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath ".git")) {
+        $allScripts = @(git ls-files --cached --others --exclude-standard '*.sh' '*.cmd' '*.bat' '.githooks/pre-commit')
+    } else {
+        $rootFull = (Get-Location).Path
+        $allScripts = @(Get-ChildItem -Path $rootFull -Include '*.sh', '*.cmd', '*.bat' -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $_.FullName.Substring($rootFull.Length).TrimStart([char]92, [char]47)
+        } | Where-Object {
+            ($_ -replace '\\', '/') -notmatch '^(\.git|build|dist|gen|cache|tmp|tests_tmp|node_modules|vagrant)/'
+        })
+        if (Test-Path -LiteralPath '.githooks/pre-commit' -PathType Leaf) {
+            $allScripts += '.githooks/pre-commit'
+        }
+    }
     $fileSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($s in $allScripts) {
         if ($s) {

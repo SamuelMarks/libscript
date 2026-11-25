@@ -34,6 +34,9 @@
             "riscv64",
             "armv7l",
             "i686",
+            "i586",
+            "i386",
+            "i8086",
             "arm",
             "armv7m",
             "armv8m",
@@ -50,6 +53,8 @@
             "freebsd",
             "illumos",
             "reactos",
+            "freedos",
+            "msdos",
             "unikernel-unikraft",
             "unikernel-nanos",
             "unikernel-osv",
@@ -70,6 +75,10 @@
             "illumos-libc",
             "sunos-libc",
             "msvcrt",
+            "djgpp-libc",
+            "watcom-libc",
+            "dos16-libc",
+            "dos-fcb-none",
             "newlib",
             "picolibc",
             "zephyr-minimal",
@@ -158,6 +167,10 @@
             "zephyr-mainline",
             "freertos-lts",
             "freertos-mainline",
+            "freedos-kernel",
+            "msdos-mit-4.0",
+            "msdos-mit-2.0",
+            "msdos-mit-1.25",
             "none"
           ]
         },
@@ -220,6 +233,7 @@
             "unikernel-entrypoint",
             "zephyr-sys-init",
             "freertos-scheduler",
+            "dos-autoexec",
             "none"
           ]
         },
@@ -305,6 +319,9 @@
             "multiboot2",
             "mcuboot",
             "uf2-rom",
+            "freedos-sys",
+            "dos-mbr-vbr",
+            "dos-vbr-flat",
             "none"
           ]
         },
@@ -333,6 +350,8 @@
                   "cpio",
                   "erofs",
                   "ext4",
+                  "fat12",
+                  "fat16",
                   "fat32",
                   "fatfs",
                   "littlefs",
@@ -847,6 +866,7 @@
         "enum": [
           "live-iso",
           "live-usb",
+          "floppy-img",
           "raw",
           "qcow2",
           "vmdk",

@@ -48,18 +48,18 @@ flowchart TD
     end
 
     subgraph T3["T3: Image, OS & Artifact Synthesis (synthesis/)"]
-        Profiles["Declarative OS & Appliance Profiles (synthesis/profiles/): Linux, LFS, FreeBSD, illumos, ReactOS, Unikernel, RTOS, Cloud"]
-        VFS["Sysroot VFS & Disk Formatting (synthesis/{vfs,disk}/): FHS Layout, Chroot/VFS Runner, Partitioning, LUKS2, Ext4/Btrfs/XFS/ZFS"]
-        Distro["Distro & Repo Builders (synthesis/{distro,repogen}/): Linux, FreeBSD, illumos, ReactOS, Bento, APT/RPM/APK/IPS Repos"]
-        Formats["Unified Exporters (synthesis/{formats,msi}/): .msi, .deb, .rpm, .apk, .dmg, .pkg, qcow2, iso, oci_image, unikernel_img, firmware_bin"]
+        Profiles["Declarative OS & Appliance Profiles (synthesis/profiles/): Linux, LFS, FreeBSD, illumos, ReactOS, FreeDOS/MS-DOS, Unikernel, RTOS, Cloud"]
+        VFS["Sysroot VFS & Disk Formatting (synthesis/{vfs,disk}/): FHS Layout, Chroot/VFS Runner, Partitioning, LUKS2, Ext4/Btrfs/XFS/ZFS, Rootless FAT12/16/32"]
+        Distro["Distro & Repo Builders (synthesis/{distro,repogen}/): Linux, FreeBSD, illumos, ReactOS, DOS (FreeDOS 1.3/1.4 & MIT MS-DOS 1.25/2.0/4.00), Bento, APT/RPM/APK/IPS Repos"]
+        Formats["Unified Exporters (synthesis/{formats,msi}/): .msi, .deb, .rpm, .apk, .dmg, .pkg, qcow2, iso, dos_floppy/dos_iso/dos_vagrant_box, oci_image, unikernel_img, firmware_bin"]
     end
 
     subgraph T2["T2: OS, Kernel & System Plumbing Recipes (_lib/ — tier: T2)"]
-        SysPlumbing["Sysroot & Rootfs Packages: glibc, musl, Linux/FreeRTOS/Zephyr Kernels, GRUB/Limine/MCUboot, systemd/OpenRC/runit/s6, Wayland, Desktops"]
+        SysPlumbing["Sysroot & Rootfs Packages: glibc, musl, Linux/FreeDOS/MS-DOS/FreeRTOS/Zephyr Kernels, dos-pktdrv, GRUB/Limine/MCUboot, systemd/OpenRC/runit/s6, Wayland, Desktops"]
     end
 
     subgraph T1["T1: Atomic Userland & Daemon Recipes (_lib/ — tier: T1)"]
-        Userland["Unprivileged Version Managers & Single-Engine Daemons: Node.js, Python, Rust, GCC/Clang, PostgreSQL, Redis, Nginx, QEMU, kubectl"]
+        Userland["Unprivileged Version Managers & Cross-Toolchains: Node.js, Python, Rust, GCC/Clang, DJGPP, OpenWatcom, win-cmd-asm, win-cmd-rs, kvikdos, PostgreSQL, Redis, Nginx, QEMU"]
     end
 
     subgraph T0["T0: Core Engine, Solver & Consensus Substrate (libscript.{sh,cmd}, cli/, engine/)"]

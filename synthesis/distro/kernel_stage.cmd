@@ -71,6 +71,18 @@ IF /I "%LIBSCRIPT_TARGET_OS%"=="rtos-freertos" (
     call "%LIBSCRIPT_ROOT_DIR%\_lib\kernel\freertos\build_firmware.cmd"
     exit /b !ERRORLEVEL!
 )
+IF /I "%LIBSCRIPT_TARGET_OS%"=="freedos" (
+    set "ACTION=install"
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\kernel\freedos\setup.cmd"
+    exit /b !ERRORLEVEL!
+)
+IF /I "%LIBSCRIPT_TARGET_OS%"=="msdos" (
+    set "ACTION=install"
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\kernel\msdos\setup.cmd"
+    exit /b !ERRORLEVEL!
+)
 
 IF "%~1"=="status" (
     echo === LFS Kernel Status ^(Win32^) ===

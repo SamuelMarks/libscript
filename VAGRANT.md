@@ -257,6 +257,12 @@ sysroots directly into redistributable Vagrant `.box` archives without needing P
 # Package a synthesized disk image into a Vagrant .box
 ./libscript.sh package-as vagrant-box build/output/lfs-disk.qcow2 build/output/lfs-custom.box qemu
 
+# Synthesize Packer-free FreeDOS & MIT MS-DOS Vagrant .box archives directly
+./synthesis/distro/synthesize-image.sh --kernel=freedos --shell=win-cmd-rs --format=vagrant-box --out=build/synthesis/freedos-1.4.box
+./synthesis/distro/synthesize-image.sh --kernel=msdos-4.0 --shell=win-cmd-asm --format=vagrant-box --out=build/synthesis/msdos-4.0.box
+./synthesis/distro/synthesize-image.sh --kernel=msdos-2.0 --shell=win-cmd-asm --format=vagrant-box --out=build/synthesis/msdos-2.0.box
+./synthesis/distro/synthesize-image.sh --kernel=msdos-1.25 --shell=win-cmd-asm --format=vagrant-box --out=build/synthesis/msdos-1.25.box
+
 # Add the generated box directly to Vagrant
 vagrant box add --name custom-lfs --provider qemu build/output/lfs-custom.box
 

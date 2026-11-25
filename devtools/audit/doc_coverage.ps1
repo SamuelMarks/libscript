@@ -85,7 +85,7 @@ $scriptFiles = @()
 Push-Location $repoRoot
 try {
     $trackedScripts = $null
-    if (Test-Path -LiteralPath (Join-Path $repoRoot ".git")) {
+    if ((Get-Command git -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath (Join-Path $repoRoot ".git"))) {
         $trackedScripts = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" 2>$null
     }
     if (-not $trackedScripts) {
@@ -95,7 +95,7 @@ try {
     }
     foreach ($relPath in $trackedScripts) {
         $norm = ([string]$relPath).Replace([char]92, [char]47)
-        if ($norm -match '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/') {
+        if ($norm -match '^(\.git|build|dist|gen|cache|tmp|tests_tmp|node_modules|vagrant)/') {
             continue
         }
         $fullPath = Join-Path $repoRoot $relPath

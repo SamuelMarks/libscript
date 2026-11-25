@@ -100,12 +100,16 @@ if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
     freebsd*) TARGET_OS='freebsd' ;;
     sunos*|illumos*) TARGET_OS='sunos' ;;
     reactos*) TARGET_OS='reactos' ;;
+    freedos*) TARGET_OS='freedos' ;;
+    msdos*|dos32|dos) TARGET_OS='msdos' ;;
     msys*|cygwin*|mingw*) TARGET_OS='windows' ;;
     *) TARGET_OS="$OS_NAME" ;;
   esac
 else
   case "$LIBSCRIPT_TARGET_OS" in
     reactos*) TARGET_OS='reactos' ;;
+    freedos*) TARGET_OS='freedos' ;;
+    msdos*|dos32|dos) TARGET_OS='msdos' ;;
     *) TARGET_OS="$LIBSCRIPT_TARGET_OS" ;;
   esac
 fi

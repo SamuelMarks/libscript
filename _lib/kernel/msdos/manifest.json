@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "kernel-image"],
+  "category": "kernel",
+  "description": "Microsoft MIT-licensed MS-DOS 1.25, 2.0, and 4.00 kernel source builder with CP437 normalizer, 86-DOS/MASM lowerer, clean-room NASM IO.SYS/MBR/VBR shims, and repack support.",
+  "name": "msdos",
+  "os_whitelist": ["all"],
+  "provides": ["msdos", "msdos-mit-4.0", "msdos-mit-2.0", "msdos-mit-1.25"],
+  "repository": "https://github.com/microsoft/MS-DOS",
+  "tier": "T2",
+  "title": "Microsoft MIT MS-DOS Kernel (1.25, 2.0, 4.00)"
+}

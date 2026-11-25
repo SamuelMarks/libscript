@@ -4,6 +4,12 @@ freebsd-usr-bin	FBSDUBIN
 sqlite-tools	SQLITETL
 sqlite	SQLITE
 win-cmd-rs	WINCMDRS
+win-cmd-asm	WINCMASM
+djgpp	DJGPP
+kvikdos	KVIKDOS
+dos-pktdrv	DOSPKT
+freedos	FREEDOS
+msdos	MSDOS
 msi-rs	MSIRS
 auto-win-msvc	AUTOWIN
 openwatcom	OWATCOM

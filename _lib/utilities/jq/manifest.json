@@ -3,6 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "utilities",
   "description": "Lightweight command-line JSON processor with native Windows (MSVC) and MS-DOS (dos32) builds via SamuelMarks/jq-windows.",
+  "dos_support": ["dos32-watcom", "dos32-djgpp"],
   "name": "jq",
   "os_whitelist": ["all"],
   "provides": ["jq", "jq-windows"],

@@ -31,7 +31,7 @@ component's local `cli.sh` / `cli.cmd`:
 .\_lib\networking\bind9\cli.cmd test
 ```
 
-## Components (21)
+## Components (22)
 
 <!-- BEGIN_COMPONENTS -->
 
@@ -43,6 +43,9 @@ component's local `cli.sh` / `cli.cmd`:
 - [`dhcpcd`](./dhcpcd/README.md) (`T1` — `userland-package`): RFC-compliant DHCP client daemon
 - [`dnsmasq`](./dnsmasq/README.md) (`T1` — `userland-package`, `service-daemon`): Lightweight DNS
   forwarder, DHCPv4/v6 server, router advertisement, and PXE/TFTP network boot server.
+- [`dos-pktdrv`](./dos-pktdrv/README.md) (`T2` — `sysroot-package`): Crynwr DOS packet drivers
+  (`PCNTPKT.COM`, `NE2000.COM`), `SHSUCDX.COM`, `UDVD2.SYS`, `HIMEMX.EXE`, `FDAPM.COM`, and
+  `DOSLFN.COM`.
 - [`firewalld`](./firewalld/README.md) (`T1` — `userland-package`): Dynamically managed Linux
   firewall daemon (firewalld and firewall-cmd) supporting network/firewall zones over nftables and
   iptables.

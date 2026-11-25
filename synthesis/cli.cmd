@@ -106,6 +106,15 @@ if /i "!PKG_TYPE!"=="freebsd-distro" goto :fmt_freebsd_distro
 if /i "!PKG_TYPE!"=="freebsd_distro" goto :fmt_freebsd_distro
 if /i "!PKG_TYPE!"=="reactos-distro" goto :fmt_reactos_distro
 if /i "!PKG_TYPE!"=="reactos_distro" goto :fmt_reactos_distro
+if /i "!PKG_TYPE!"=="dos-distro" goto :fmt_dos_distro
+if /i "!PKG_TYPE!"=="dos_distro" goto :fmt_dos_distro
+if /i "!PKG_TYPE!"=="freedos-distro" goto :fmt_dos_distro
+if /i "!PKG_TYPE!"=="freedos_distro" goto :fmt_dos_distro
+if /i "!PKG_TYPE!"=="msdos-distro" goto :fmt_msdos_distro
+if /i "!PKG_TYPE!"=="msdos_distro" goto :fmt_msdos_distro
+if /i "!PKG_TYPE!"=="floppy-img" goto :fmt_dos_floppy
+if /i "!PKG_TYPE!"=="floppy_img" goto :fmt_dos_floppy
+if /i "!PKG_TYPE!"=="dos-floppy" goto :fmt_dos_floppy
 if /i "!PKG_TYPE!"=="rtos-distro" goto :fmt_rtos_distro
 if /i "!PKG_TYPE!"=="rtos_distro" goto :fmt_rtos_distro
 if /i "!PKG_TYPE!"=="zephyr-distro" goto :fmt_rtos_distro
@@ -180,8 +189,11 @@ call "!LIBSCRIPT_ROOT_DIR!\synthesis\msi\hydrate_offline_cache.cmd" %2 %3 %4 %5 
 exit /b !errorlevel!
 
 :: ## do_distro
-:: Dispatches Linux distribution rootfs assembly to synthesis\distro\linux\cli.cmd.
+:: Dispatches Linux or DOS distribution rootfs assembly.
 :do_distro
+if /i "%~2"=="freedos" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\dos\cli.cmd" %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%~2"=="msdos" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\dos\cli.cmd" %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%~2"=="dos" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\dos\cli.cmd" %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 call "!LIBSCRIPT_ROOT_DIR!\synthesis\distro\linux\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9
 exit /b !errorlevel!
 
@@ -327,6 +339,25 @@ exit /b !errorlevel!
 :: Dispatches ReactOS distro synthesis.
 :fmt_reactos_distro
 call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\reactos_distro.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+exit /b !errorlevel!
+
+:: ## fmt_dos_distro
+:: Dispatches FreeDOS and DOS distro synthesis.
+:fmt_dos_distro
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_distro.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+exit /b !errorlevel!
+
+:: ## fmt_msdos_distro
+:: Dispatches MIT MS-DOS distro synthesis.
+:fmt_msdos_distro
+set "LIBSCRIPT_DOS_DEFAULT_PROFILE=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\dos\msdos-4.0-djgpp-i586.json"
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_distro.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+exit /b !errorlevel!
+
+:: ## fmt_dos_floppy
+:: Dispatches FAT12 floppy image export.
+:fmt_dos_floppy
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_floppy.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
 exit /b !errorlevel!
 
 :: ## fmt_rtos_distro

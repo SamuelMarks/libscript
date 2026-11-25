@@ -53,6 +53,11 @@ goto :parse_trait_args
 :parse_trait_args
 if "%~1"=="" goto :done_trait_args
 set "_ta=%~1"
+if /i "!_ta!"=="--strict" (
+    set "LIBSCRIPT_STRICT_TRAITS=1"
+    shift
+    goto :parse_trait_args
+)
 if /i "!_ta:~0,11!"=="--manifest=" (
     set "MANIFEST_FILE=!_ta:~11!"
     shift
@@ -107,9 +112,13 @@ exit /b 0
 :: Applies, verifies, or tears down traits in deterministic priority order.
 :exec_trait
 if "%TARGET_TRAIT%"=="all" (
-    for %%T in (%ORDERED_TRAITS%) do call :run_single_trait "%%T" "%ACTION%"
+    for %%T in (%ORDERED_TRAITS%) do (
+        call :run_single_trait "%%T" "%ACTION%"
+        if errorlevel 1 exit /b !errorlevel!
+    )
 ) else (
     call :run_single_trait "%TARGET_TRAIT%" "%ACTION%"
+    if errorlevel 1 exit /b !errorlevel!
 )
 exit /b 0
 
@@ -122,6 +131,50 @@ echo [INFO] Trait "!_T_NAME!": action="!_T_ACT!"
 if /i "%DRY_RUN%"=="true" exit /b 0
 if "%DRY_RUN%"=="1" exit /b 0
 if /i "!_T_ACT!"=="verify" exit /b 0
+
+set "_IS_DOS_T=0"
+if /i "%LIBSCRIPT_TARGET_OS:~0,7%"=="freedos" set "_IS_DOS_T=1"
+if /i "%LIBSCRIPT_TARGET_OS:~0,5%"=="msdos" set "_IS_DOS_T=1"
+if /i "%TARGET_OS:~0,7%"=="freedos" set "_IS_DOS_T=1"
+if /i "%TARGET_OS:~0,5%"=="msdos" set "_IS_DOS_T=1"
+if /i "%LIBSCRIPT_INIT_PROVIDER%"=="dos-autoexec" set "_IS_DOS_T=1"
+if "!_IS_DOS_T!"=="0" if not "!MANIFEST_FILE!"=="" if exist "!MANIFEST_FILE!" (
+    findstr /I /C:"dos-autoexec" "!MANIFEST_FILE!" >nul 2>&1
+    if not errorlevel 1 set "_IS_DOS_T=1"
+)
+if "!_IS_DOS_T!"=="1" (
+    if /i "%LIBSCRIPT_DOS_STRATUM%"=="dos16-fcb" (
+        if "%LIBSCRIPT_STRICT_TRAITS%"=="1" exit /b 86
+        echo [SKIP] Trait "!_T_NAME!" skipped on flat-FS MS-DOS 1.25.
+        exit /b 0
+    )
+    set "_DOS_OK=0"
+    set "_TB8="
+    if /i "!_T_NAME!"=="logging" ( set "_DOS_OK=1" & set "_TB8=LOGGING" )
+    if /i "!_T_NAME!"=="maintenance" ( set "_DOS_OK=1" & set "_TB8=MAINTENA" )
+    if /i "!_T_NAME!"=="backup" ( set "_DOS_OK=1" & set "_TB8=BACKUP" )
+    if /i "!_T_NAME!"=="discovery" ( set "_DOS_OK=1" & set "_TB8=DISCOVER" )
+    if /i "!_T_NAME!"=="secrets" ( set "_DOS_OK=1" & set "_TB8=SECRETS" )
+    if "!_DOS_OK!"=="0" (
+        if "%LIBSCRIPT_STRICT_TRAITS%"=="1" exit /b 86
+        echo [SKIP] Trait "!_T_NAME!" skipped on single-tasking DOS target.
+        exit /b 0
+    )
+    if /i "!_T_ACT!"=="apply" if not "%LIBSCRIPT_TARGET_SYSROOT%"=="" (
+        if not exist "%LIBSCRIPT_TARGET_SYSROOT%\ETC\TRAITS" mkdir "%LIBSCRIPT_TARGET_SYSROOT%\ETC\TRAITS"
+        (
+            echo @ECHO OFF
+            echo ECHO [TRAIT] !_TB8! converged
+        ) > "%LIBSCRIPT_TARGET_SYSROOT%\ETC\TRAITS\!_TB8!.BAT"
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\engine\common\dos_batch_lint.cmd" "--mode=lint" "%LIBSCRIPT_TARGET_SYSROOT%\ETC\TRAITS\!_TB8!.BAT"
+        exit /b !errorlevel!
+    )
+    if /i "!_T_ACT!"=="teardown" if not "%LIBSCRIPT_TARGET_SYSROOT%"=="" (
+        if exist "%LIBSCRIPT_TARGET_SYSROOT%\ETC\TRAITS\!_TB8!.BAT" del /f /q "%LIBSCRIPT_TARGET_SYSROOT%\ETC\TRAITS\!_TB8!.BAT" >nul 2>&1
+    )
+    exit /b 0
+)
 
 if /i "!_T_NAME!"=="storage" (
     if /i "!_T_ACT!"=="apply" if not "!MANIFEST_FILE!"=="" if exist "!MANIFEST_FILE!" (

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../engine/schemas/manifest.schema.json",
+  "capabilities": ["sysroot-package", "kernel-image"],
+  "category": "kernel",
+  "description": "FreeDOS GPL-2.0 16/32-bit FAT12/FAT16/FAT32 kernel (KERNEL.SYS), boot sectors, and FreeCOM (COMMAND.COM) cross-builder via OpenWatcom and NASM.",
+  "name": "freedos",
+  "os_whitelist": ["all"],
+  "provides": ["freedos", "freedos-kernel"],
+  "repository": "https://github.com/FDOS/kernel",
+  "tier": "T2",
+  "title": "FreeDOS Kernel & FreeCOM Command Interpreter"
+}

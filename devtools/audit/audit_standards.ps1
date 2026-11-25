@@ -679,6 +679,9 @@ function Audit-File {
 # ## Test-GitAttributesEol
 # Verifies via git check-attr and git ls-files --eol that tracked scripts resolve to expected line endings without index/worktree CR corruption.
 function Test-GitAttributesEol {
+    if (-not (Get-Command git -ErrorAction SilentlyContinue) -or -not (Test-Path -LiteralPath ".git")) {
+        return
+    }
     $insideGit = git rev-parse --is-inside-work-tree 2>$null
     if ($LASTEXITCODE -ne 0 -or $insideGit -ne "true") {
         return
@@ -730,7 +733,19 @@ $targetFiles = @()
 $isExplicitMode = $false
 if ($args -contains "--all") {
     Test-GitAttributesEol
-    $targetFiles = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" ".githooks/pre-commit"
+    if ((Get-Command git -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath ".git")) {
+        $targetFiles = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" ".githooks/pre-commit"
+    } else {
+        $rootFull = (Get-Location).Path
+        $targetFiles = Get-ChildItem -Path $rootFull -Include "*.sh", "*.cmd", "*.bat", "*.ps1" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $_.FullName.Substring($rootFull.Length).TrimStart([char]92, [char]47)
+        } | Where-Object {
+            ($_ -replace '\\', '/') -notmatch '^(\.git|build|dist|gen|cache|tmp|tests_tmp|node_modules|vagrant)/'
+        }
+        if (Test-Path -LiteralPath ".githooks/pre-commit" -PathType Leaf) {
+            $targetFiles += ".githooks/pre-commit"
+        }
+    }
 } elseif ($args -contains "--staged" -or $args.Count -eq 0) {
     $targetFiles = git diff --no-ext-diff --cached --name-only --diff-filter=ACM
     if ($targetFiles | Where-Object { $_ -match '(\.gitattributes|\.githooks/pre-commit)$' }) {

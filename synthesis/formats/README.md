@@ -34,6 +34,10 @@ specifics.
   - `bsd_img.{sh,cmd}`, `freebsd_distro.{sh,cmd}`, `freebsd_iso.{sh,cmd}`, `freebsd_qcow2.{sh,cmd}`,
     `freebsd_raw.{sh,cmd}`, `freebsd_vagrant_box.{sh,cmd}`
   - `illumos_distro.{sh,cmd}`, `reactos_distro.{sh,cmd}`
+  - `dos_distro.{sh,cmd}`, `dos_floppy.{sh,cmd}`, `dos_raw.{sh,cmd}`, `dos_iso.{sh,cmd}`,
+    `dos_qcow2.{sh,cmd}`, `dos_vmdk.{sh,cmd}`, `dos_vhd.{sh,cmd}`, `dos_vagrant_box.{sh,cmd}`
+    (`dos-distro`, `freedos-distro`, `msdos-distro`: bootable FAT12/FAT16/FAT32 FreeDOS & MS-DOS
+    images)
   - `unikernel_img.{sh,cmd}` & `direct_kernel.{sh,cmd}` (`unikernel-distro` / `unikernel`: OSv,
     Nanos, MirageOS, Unikraft, Rumprun, UEFI-GPT & Azure Gen2 VHD cloud-boot unikernels)
   - `rtos_distro.{sh,cmd}` & `firmware_bin.{sh,cmd}` (`rtos-distro` / `firmware-bin`: Zephyr &

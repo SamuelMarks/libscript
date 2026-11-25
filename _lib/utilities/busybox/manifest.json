@@ -3,6 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "utilities",
   "description": "Multi-call UNIX command suite combining common POSIX utilities with native Windows (MSVC) builds via SamuelMarks/busybox-windows.",
+  "dos_support": ["dos32-watcom"],
   "name": "busybox",
   "os_blacklist": ["sunos"],
   "os_whitelist": ["all"],

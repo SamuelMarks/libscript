@@ -280,3 +280,22 @@ resolves target-specific binaries automatically via `engine/common/os_info.{sh,c
 (`TARGET_OS=msdos`, `IS_MSDOS=1`), `depends jq` stages the `dos32` `jq.exe` (co-staging `DOS32A.EXE`
 / `DOS4GW.EXE` when bundled), while on Windows (`TARGET_OS=windows`) it stages the native PE
 executable (`jq-{VER}-{X64|X86|ARM64}.exe`).
+
+### Native FreeDOS & MIT MS-DOS (`1.25`, `2.0`, `4.00`) Image Synthesis
+
+Both POSIX and Windows hosts can synthesize bootable FreeDOS (`1.3`, `1.4`) and MIT MS-DOS (`1.25`,
+`2.0`, `4.00`) disk, floppy, ISO, and Vagrant `.box` images directly via
+`synthesize-image.{sh,cmd}`, selecting either `_lib/toolchains/win-cmd-asm` (`WINCMD.COM` /
+`WINCMD1.COM` + 17 CRT-free 8086 utilities including `FINDSTR.COM` and `WHERE.COM`),
+`_lib/toolchains/win-cmd-rs` (`WINCMD.EXE` + `CWSDPMI.EXE`), `FreeCOM`, or stock `COMMAND.COM`:
+
+```sh
+./synthesis/distro/synthesize-image.sh --kernel=freedos --shell=win-cmd-rs --format=qcow2 --out=build/synthesis/freedos.qcow2
+./synthesis/distro/synthesize-image.sh --kernel=msdos-4.0 --shell=win-cmd-asm --format=raw --out=build/synthesis/msdos-4.0.raw
+./synthesis/distro/synthesize-image.sh --kernel=msdos-2.0 --shell=win-cmd-asm --format=floppy-img --out=build/synthesis/msdos-2.0.img
+./synthesis/distro/synthesize-image.sh --kernel=msdos-1.25 --shell=win-cmd-asm --format=floppy-img --out=build/synthesis/msdos-1.25.img
+```
+
+```cmd
+synthesis\distro\synthesize-image.cmd --kernel=msdos-4.0 --shell=win-cmd-asm --format=qcow2 --out=build\synthesis\msdos-4.0.qcow2
+```

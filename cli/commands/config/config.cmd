@@ -110,7 +110,7 @@ if "!TARGET_PROFILE!"=="" call :select_profile_menu
 set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!TARGET_PROFILE!.json"
 if not exist "!PROFILE_PATH!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!TARGET_PROFILE!"
 if not exist "!PROFILE_PATH!" (
-    for %%S in (linux freebsd illumos reactos rtos hypervisor unikernel containers cloud lfs) do (
+    for %%S in (linux freebsd illumos reactos dos rtos hypervisor unikernel containers cloud lfs) do (
         if not exist "!PROFILE_PATH!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!.json" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!.json"
         if not exist "!PROFILE_PATH!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!"
     )
@@ -192,6 +192,8 @@ jq -e ".illumos_version != null or ((.target.os_family == \"illumos\" or .target
 if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.illumos.schema.json"
 jq -e ".reactos_version != null or (.target.os_family == \"reactos\" and .kernel == null)" "!VALIDATE_FILE!" >nul 2>&1
 if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.reactos.schema.json"
+jq -e "has(\"dos_flavor\") or .target.os_family == \"freedos\" or .target.os_family == \"msdos\"" "!VALIDATE_FILE!" >nul 2>&1
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.dos.schema.json"
 
 set "_MISSING_FIELDS="
 for /f "usebackq delims=" %%M in (`jq -r --slurpfile schema "!ACTIVE_SCHEMA!" "$schema[0].required - keys | .[]" "!VALIDATE_FILE!" 2^>nul`) do (

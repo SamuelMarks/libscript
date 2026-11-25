@@ -485,6 +485,15 @@
         "description": "Supported RTOS kernel identifier."
       }
     },
+    "dos_support": {
+      "type": "array",
+      "description": "List of MS-DOS and FreeDOS execution strata supported by this component (32-bit DJGPP/CWSDPMI, 32-bit OpenWatcom/DOS32A, 16-bit DOS 2.0+ file-handle real mode, or 16-bit MS-DOS 1.25 flat FCB mode).",
+      "items": {
+        "type": "string",
+        "enum": ["dos32-djgpp", "dos32-watcom", "dos16-handle", "dos16-fcb"],
+        "description": "Supported DOS runtime capability stratum identifier."
+      }
+    },
     "memory_footprint_class": {
       "type": "string",
       "enum": ["mcu-sram-64k", "mcu-sram-512k", "mmu-less-mb", "mmu-posix"],

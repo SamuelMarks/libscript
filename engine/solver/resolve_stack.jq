@@ -30,6 +30,17 @@ def is_os_supported(m; os):
         (m.os_whitelist == null or (m.os_whitelist | length == 0) or (m.os_whitelist | index("all") != null) or (m.os_whitelist | index("windows") != null))
       )
     )
+  elif os == "freedos" or os == "msdos" then
+    ((m.os_blacklist // []) | index(os) == null) and
+    ((m.os_blacklist // []) | index("msdos") == null) and
+    (
+      ((m.dos_support // []) | length > 0) or
+      (m.os_whitelist == null) or
+      ((m.os_whitelist | length) == 0) or
+      ((m.os_whitelist | index("all")) != null) or
+      ((m.os_whitelist | index(os)) != null) or
+      ((m.os_whitelist | index("msdos")) != null)
+    )
   else
     effective_check_os(os) as $chk |
     (m.os_blacklist // [] | index($chk) == null) and
@@ -37,7 +48,8 @@ def is_os_supported(m; os):
   end;
 
 def normalize_arch_token(a):
-  if a == "i386" or a == "x86" or a == "386" then "i686"
+  if a == "8086" or a == "ia16" then "i8086"
+  elif a == "i386" or a == "x86" or a == "386" or a == "i586" or a == "pentium" then "i686"
   elif a == "amd64" then "x86_64"
   elif a == "arm64" then "aarch64"
   else a
@@ -57,6 +69,8 @@ def map_os_family_to_target(os_fam; fallback_os):
   elif (os_fam | startswith("freebsd")) then "freebsd"
   elif (os_fam == "illumos" or os_fam == "sunos") then "sunos"
   elif (os_fam == "reactos" or (os_fam | startswith("reactos"))) then "reactos"
+  elif (os_fam == "freedos" or (os_fam | startswith("freedos"))) then "freedos"
+  elif (os_fam == "msdos" or (os_fam | startswith("msdos"))) then "msdos"
   elif (os_fam == "rtos-zephyr" or (os_fam | startswith("zephyr"))) then "zephyr"
   elif (os_fam == "rtos-freertos" or (os_fam | startswith("freertos"))) then "freertos"
   elif (os_fam == "unikernel-unikraft" or (os_fam | startswith("unikraft"))) then "unikraft"
@@ -76,6 +90,20 @@ def is_unikernel_os(os):
 
 def is_rtos_os(os):
   os == "zephyr" or os == "freertos";
+
+def is_dos_os(os):
+  os == "freedos" or os == "msdos";
+
+def resolve_dos_stratum(cfg; resolved_os; kversion):
+  ((cfg.dos_version // kversion // "") | tostring) as $dv |
+  (cfg.kernel?.provider // "") as $kp |
+  if resolved_os == "msdos" and ($kp == "msdos-mit-1.25" or ($dv | startswith("1."))) then
+    "dos16-fcb"
+  elif resolved_os == "msdos" and ($kp == "msdos-mit-2.0" or ($dv | startswith("2."))) then
+    "dos16-handle"
+  else
+    "dos32-dpmi"
+  end;
 
 def normalize_os_pkg_alias(name; os; libc):
   (name | tostring) as $raw |
@@ -191,11 +219,29 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   # ----------------------------------------------------
   ($cfg.target.os_family // "linux-glibc") as $os_fam |
   map_os_family_to_target($os_fam; ($target_os // "linux")) as $resolved_os |
-  ($cfg.target.arch // (if $resolved_os == "reactos" then "i686" else "x86_64" end)) as $arch |
+  ($cfg.kernel.version // (
+    if $resolved_os == "zephyr" then "3.7.0"
+    elif $resolved_os == "freertos" then "11.1.0"
+    elif $resolved_os == "reactos" then ($cfg.reactos_version // "0.4.16")
+    elif $resolved_os == "freedos" then ($cfg.dos_version // "1.4")
+    elif $resolved_os == "msdos" then ($cfg.dos_version // "4.0")
+    else "6.6.52" end
+  )) as $kversion |
+  (if is_dos_os($resolved_os) then resolve_dos_stratum($cfg; $resolved_os; $kversion) else "" end) as $dos_stratum |
+  ($cfg.target.arch // (
+    if $resolved_os == "reactos" then "i686"
+    elif is_dos_os($resolved_os) then (if $dos_stratum == "dos32-dpmi" then "i586" else "i8086" end)
+    else "x86_64" end
+  )) as $arch |
   ($cfg.target.libc // (
     if $resolved_os == "freebsd" then "bsd-libc"
     elif $resolved_os == "sunos" then "illumos-libc"
     elif $resolved_os == "reactos" then "msvcrt"
+    elif is_dos_os($resolved_os) then (
+      if $dos_stratum == "dos16-fcb" then "dos-fcb-none"
+      elif $dos_stratum == "dos16-handle" then "dos16-libc"
+      else "djgpp-libc" end
+    )
     elif $resolved_os == "zephyr" then "picolibc"
     elif $resolved_os == "freertos" then "newlib"
     elif $resolved_os == "rumprun" then "rump-libc"
@@ -205,14 +251,26 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   )) as $libc |
   ($cfg.profile_name // "custom") as $profile |
   ($cfg.kernel.compiler // "default") as $kcompiler |
-  ($cfg.kernel.version // (if $resolved_os == "zephyr" then "3.7.0" elif $resolved_os == "freertos" then "11.1.0" elif $resolved_os == "reactos" then ($cfg.reactos_version // "0.4.16") else "6.6.52" end)) as $kversion |
   ($cfg.kernel.config_method // "defconfig") as $kconfig |
   ($cfg.kernel.kcflags // "-O2") as $kkcflags |
   ($cfg.kernel.custom_cc_bin // "") as $kcustom_bin |
+  ($cfg.build_mode // "from-source") as $dos_build_mode |
+  ($cfg.shell_provider // "default") as $dos_shell_provider |
+  ($cfg.packet_driver // (if $dos_stratum == "dos16-fcb" then "none" else "pcntpkt" end)) as $dos_pkt_drv |
   ($cfg.rtos?.board // (if $resolved_os == "zephyr" then "qemu_x86_64" elif $resolved_os == "freertos" then "mps2_an385" else "" end)) as $rtos_board |
   ($cfg.rtos?.hybrid_pod == true) as $rtos_hybrid_pod |
   ($cfg.rtos?.mcuboot?.enabled == true or $cfg.storage?.bootloader == "mcuboot") as $rtos_mcuboot |
   ($root.manifests // []) as $manifests |
+
+  (
+    if is_dos_os($resolved_os) and $dos_shell_provider == "win-cmd-rs" and $dos_stratum != "dos32-dpmi" then
+      if $dos_stratum == "dos16-fcb" then
+        error("DOS1_FLAT_FCB_ONLY: shell_provider 'win-cmd-rs' requires 32-bit DPMI (CWSDPMI) and DOS file handles unsupported on flat FCB-only MS-DOS 1.25. Use shell_provider 'win-cmd-asm' (WINCMD1.COM) or 'msdos-command'.")
+      else
+        error("DOS2_NO_DPMI32: shell_provider 'win-cmd-rs' requires 32-bit DPMI and DOS 3.0+ INT 21h APIs unsupported on 16-bit MS-DOS 2.0. Use shell_provider 'win-cmd-asm' (WINCMD.COM) or upgrade to msdos-4.0/freedos.")
+      end
+    else null end
+  ) as $_dos_shell_validated |
 
   [
     (if $cfg.display?.server == "wayland" or ($cfg.display?.compositor != null and $cfg.display?.compositor != "none") then "wayland" else empty end),
@@ -227,7 +285,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   (($cfg.packages // []) + ($cfg.components // [])) as $raw_user_pkgs |
   ([ $raw_user_pkgs[] | normalize_os_pkg_alias(.; $resolved_os; $libc) ]) as $user_pkgs |
 
-  # Validate OS blacklist, unikernel process_model, & RTOS bare-metal compatibility on explicitly requested components
+  # Validate OS blacklist, unikernel process_model, RTOS bare-metal, & DOS stratum compatibility on explicitly requested components
   (
     reduce $user_pkgs[] as $upkg (
       [];
@@ -235,6 +293,24 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
       if $um != null then
         if ($resolved_os == "freebsd" or $resolved_os == "sunos" or $resolved_os == "linux" or $resolved_os == "reactos") and (is_os_supported($um; $resolved_os) | not) then
           error("OS_UNSUPPORTED: Component '" + $upkg + "' is not supported on target OS '" + $resolved_os + "'.")
+        elif is_dos_os($resolved_os) and (
+          ($um.process_model == "multiprocess-fork") or
+          ($um.process_model == "multi-service-stack") or
+          (
+            (($um.dos_support // []) | length == 0) and
+            (["web-servers", "app-servers", "web-apps", "desktops", "display-servers", "display-managers", "git-servers", "search", "message-brokers", "caches", "init-systems", "containers"] | index($um.category // "") != null)
+          ) or
+          (
+            ($um.category == "databases") and ($um.name != "sqlite") and ($um.name != "sqlite-tools") and ((($um.dos_support // []) | length) == 0)
+          )
+        ) then
+          error("DOS_INCOMPATIBLE_FORK: Component '" + $upkg + "' requires POSIX multiprocess fork() or background daemons unsupported on single-tasking DOS '" + $resolved_os + "'.")
+        elif is_dos_os($resolved_os) and ($dos_stratum == "dos16-fcb") and ((($um.dos_support // []) | index("dos16-fcb")) == null) then
+          error("DOS1_FLAT_FCB_ONLY: Component '" + $upkg + "' requires hierarchical subdirectories, DOS 2.0+ file handles, or 32-bit DPMI unsupported on flat FCB-only MS-DOS 1.25. Use win-cmd-asm (WINCMD1.COM) or upgrade to msdos-2.0/msdos-4.0/freedos.")
+        elif is_dos_os($resolved_os) and ($dos_stratum == "dos16-handle") and ($cfg.dos3_shim != true) and (((($um.dos_support // []) | index("dos16-handle")) == null) and ((($um.dos_support // []) | index("dos16-fcb")) == null)) then
+          error("DOS2_NO_DPMI32: Component '" + $upkg + "' requires 32-bit DPMI (CWSDPMI/DOS32A) and DOS 3.0+ INT 21h APIs unsupported on 16-bit MS-DOS 2.0. Choose 16-bit components (e.g. win-cmd-asm) or upgrade to msdos-4.0/freedos.")
+        elif is_dos_os($resolved_os) and (is_os_supported($um; $resolved_os) | not) then
+          error("OS_UNSUPPORTED: Component '" + $upkg + "' is not supported on target DOS '" + $resolved_os + "'.")
         elif $resolved_os == "reactos" and (is_arch_supported($um; $arch) | not) then
           error("ARCH_UNSUPPORTED: Component '" + $upkg + "' does not support strict ReactOS PE architecture '" + $arch + "' (no WoW64 layer).")
         elif is_unikernel_os($resolved_os) and ($um.process_model == "multiprocess-fork") and (($um.unikernel_support // ["osv", "nanos"]) | index($resolved_os) == null) then
@@ -260,11 +336,13 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   ([
     (if $resolved_os == "linux" then (if $libc == "musl" then "musl" else "glibc" end) else empty end),
     (if $resolved_os == "linux" and $cfg.kernel?.provider and $cfg.kernel.provider != "none" then $cfg.kernel.provider else empty end),
-    (if ($resolved_os == "linux" or $resolved_os == "freebsd" or $resolved_os == "sunos") and $cfg.init_system?.provider and $cfg.init_system.provider != "none" and $cfg.init_system.provider != "unikernel-entrypoint" and $cfg.init_system.provider != "zephyr-sys-init" and $cfg.init_system.provider != "freertos-scheduler" then $cfg.init_system.provider else empty end),
+    (if ($resolved_os == "linux" or $resolved_os == "freebsd" or $resolved_os == "sunos") and $cfg.init_system?.provider and $cfg.init_system.provider != "none" and $cfg.init_system.provider != "unikernel-entrypoint" and $cfg.init_system.provider != "zephyr-sys-init" and $cfg.init_system.provider != "freertos-scheduler" and $cfg.init_system.provider != "dos-autoexec" then $cfg.init_system.provider else empty end),
     (if $resolved_os == "linux" and $cfg.storage?.bootloader and $cfg.storage.bootloader != "none" then $cfg.storage.bootloader else empty end),
-    (if (is_rtos_os($resolved_os) | not) and $cfg.display?.compositor and $cfg.display.compositor != "none" then $cfg.display.compositor else empty end),
-    (if (is_rtos_os($resolved_os) | not) and ($resolved_os != "reactos") and $cfg.desktop?.desktop_suite and $cfg.desktop.desktop_suite != "none" and $cfg.desktop.desktop_suite != "explorer-classic" then $cfg.desktop.desktop_suite else empty end),
-    (if (is_rtos_os($resolved_os) | not) and $cfg.desktop?.greeter and $cfg.desktop.greeter != "none" then $cfg.desktop.greeter else empty end)
+    (if (is_rtos_os($resolved_os) | not) and (is_dos_os($resolved_os) | not) and $cfg.display?.compositor and $cfg.display.compositor != "none" then $cfg.display.compositor else empty end),
+    (if (is_rtos_os($resolved_os) | not) and (is_dos_os($resolved_os) | not) and ($resolved_os != "reactos") and $cfg.desktop?.desktop_suite and $cfg.desktop.desktop_suite != "none" and $cfg.desktop.desktop_suite != "explorer-classic" then $cfg.desktop.desktop_suite else empty end),
+    (if (is_rtos_os($resolved_os) | not) and (is_dos_os($resolved_os) | not) and $cfg.desktop?.greeter and $cfg.desktop.greeter != "none" then $cfg.desktop.greeter else empty end),
+    (if is_dos_os($resolved_os) and $dos_shell_provider == "win-cmd-asm" then "win-cmd-asm" else empty end),
+    (if is_dos_os($resolved_os) and $dos_shell_provider == "win-cmd-rs" then "win-cmd-rs" else empty end)
   ] + $user_pkgs) | unique as $seed_components |
 
   (if is_rtos_os($resolved_os) then
@@ -277,6 +355,20 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
           | . as $dn
           | (lookup_manifest($manifests; $dn; $resolved_os; $libc)) as $dm
           | select($dm != null and ((($dm.rtos_support // []) | index($resolved_os) != null) or ($dm.category == "toolchains")))
+          | $dm.name
+        ] | unique
+      else [] end
+    )}))
+  elif is_dos_os($resolved_os) then
+    # On DOS targets, only expand transitive deps compatible with the active DOS capability stratum
+    (reduce $seed_components[] as $sc ({}; . + { ($sc): (
+      (lookup_manifest($manifests; $sc; $resolved_os; $libc)) as $sm |
+      if $sm != null then
+        [ (($sm.dependencies?.build_deps // []) + ($sm.dependencies?.runtime_deps // []))[]?
+          | normalize_os_pkg_alias(.; $resolved_os; $libc)
+          | . as $dn
+          | (lookup_manifest($manifests; $dn; $resolved_os; $libc)) as $dm
+          | select($dm != null and (($dm.dos_support // []) | length > 0))
           | $dm.name
         ] | unique
       else [] end
@@ -541,6 +633,131 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
             ]
           }
         ]
+      elif is_dos_os($resolved_os) then
+        [
+          {
+            "stage": "stage0-dos-toolchain",
+            "description": ("Host 16/32-bit DOS cross-compiler and assembler bootstrap for " + $resolved_os + " (" + $dos_stratum + ")"),
+            "tasks": (
+              [
+                {
+                  "name": "openwatcom-toolchain",
+                  "component": "_lib/toolchains/openwatcom",
+                  "action": "bootstrap",
+                  "stamp": ".stamp.stage0_openwatcom",
+                  "variants": [],
+                  "env": {
+                    "LIBSCRIPT_STAGE": "stage0",
+                    "LIBSCRIPT_TARGET_OS": $resolved_os,
+                    "LIBSCRIPT_TARGET_ARCH": $arch
+                  }
+                },
+                {
+                  "name": "nasm-assembler",
+                  "component": "_lib/toolchains/nasm",
+                  "action": "bootstrap",
+                  "stamp": ".stamp.stage0_nasm",
+                  "variants": [],
+                  "env": {
+                    "LIBSCRIPT_STAGE": "stage0"
+                  }
+                }
+              ]
+              + (if $dos_stratum == "dos32-dpmi" then
+                  [
+                    {
+                      "name": "djgpp-toolchain",
+                      "component": "_lib/toolchains/djgpp",
+                      "action": "bootstrap",
+                      "stamp": ".stamp.stage0_djgpp",
+                      "variants": [],
+                      "env": {
+                        "LIBSCRIPT_STAGE": "stage0",
+                        "LIBSCRIPT_TARGET_OS": $resolved_os
+                      }
+                    }
+                  ]
+                else [] end)
+              + (if $resolved_os == "msdos" and $dos_build_mode == "from-source" then
+                  [
+                    {
+                      "name": "kvikdos-dos16-runner",
+                      "component": "_lib/toolchains/kvikdos",
+                      "action": "bootstrap",
+                      "stamp": ".stamp.stage0_kvikdos",
+                      "variants": [],
+                      "env": {
+                        "LIBSCRIPT_STAGE": "stage0"
+                      }
+                    },
+                    {
+                      "name": "win-cmd-asm-tools",
+                      "component": "_lib/toolchains/win-cmd-asm",
+                      "action": "bootstrap",
+                      "stamp": ".stamp.stage0_win_cmd_asm",
+                      "variants": [],
+                      "env": {
+                        "LIBSCRIPT_STAGE": "stage0"
+                      }
+                    }
+                  ]
+                else [] end)
+            )
+          },
+          {
+            "stage": "stage1-dos-base",
+            "description": ("DOS kernel (" + $resolved_os + " " + $kversion + ") and base driver staging"),
+            "tasks": (
+              [
+                if $resolved_os == "freedos" then
+                  {
+                    "name": "freedos-kernel",
+                    "component": "_lib/kernel/freedos",
+                    "action": "compile",
+                    "stamp": (".stamp.stage1_freedos_" + $kversion + "_" + $dos_build_mode),
+                    "variants": [],
+                    "env": {
+                      "LIBSCRIPT_STAGE": "stage1",
+                      "FREEDOS_VERSION": $kversion,
+                      "FREEDOS_BUILD_MODE": $dos_build_mode,
+                      "FREEDOS_CPU_TARGET": (if $arch == "i8086" then "86" else "386" end),
+                      "FREEDOS_FAT_SUPPORT": (if ($cfg.storage?.partitions?[0]?.filesystem // "fat32") == "fat16" then "fat16" else "fat32" end)
+                    }
+                  }
+                else
+                  {
+                    "name": "msdos-kernel",
+                    "component": "_lib/kernel/msdos",
+                    "action": "compile",
+                    "stamp": (".stamp.stage1_msdos_" + $kversion + "_" + $dos_build_mode),
+                    "variants": [],
+                    "env": {
+                      "LIBSCRIPT_STAGE": "stage1",
+                      "MSDOS_VERSION": $kversion,
+                      "MSDOS_BUILD_MODE": $dos_build_mode,
+                      "MSDOS_CPU_FLAVOR": (if $dos_stratum == "dos32-dpmi" then "386" else "8086" end)
+                    }
+                  }
+                end
+              ]
+              + (if $dos_stratum != "dos16-fcb" and $dos_pkt_drv != "none" then
+                  [
+                    {
+                      "name": "dos-pktdrv",
+                      "component": "_lib/networking/dos-pktdrv",
+                      "action": "compile",
+                      "stamp": (".stamp.stage1_dos_pktdrv_" + $dos_pkt_drv),
+                      "variants": [],
+                      "env": {
+                        "LIBSCRIPT_STAGE": "stage1",
+                        "DOS_NIC_MODEL": $dos_pkt_drv
+                      }
+                    }
+                  ]
+                else [] end)
+            )
+          }
+        ]
       else
         [
           {
@@ -590,6 +807,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
                   "LIBSCRIPT_IMAGE_BUILD": "1"
                 }
                 + (if is_rtos_os($resolved_os) then { "LIBSCRIPT_RTOS_BOARD": $rtos_board } else {} end)
+                + (if is_dos_os($resolved_os) then { "LIBSCRIPT_DOS_83": "1", "LIBSCRIPT_DOS_STRATUM": $dos_stratum } else {} end)
               )
             }
           ]
@@ -687,6 +905,31 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
                     "LIBSCRIPT_STAGE": "stage3",
                     "LIBSCRIPT_TARGET_OS": "reactos",
                     "LIBSCRIPT_TARGET_ARCH": $arch
+                  }
+                }
+              ]
+            }
+          elif is_dos_os($resolved_os) then
+            {
+              "stage": "stage3-media-packaging",
+              "description": ("Rootless FAT12/FAT16/FAT32 disk synthesis, CONFIG.SYS/AUTOEXEC.BAT generation, and DPMI staging for " + $resolved_os + " " + $kversion),
+              "tasks": [
+                {
+                  "name": "dos-distro-assembly",
+                  "component": "synthesis/distro/dos",
+                  "action": "assemble",
+                  "stamp": (".stamp.stage3_dos_" + $resolved_os + "_" + $kversion),
+                  "variants": [],
+                  "env": {
+                    "LIBSCRIPT_STAGE": "stage3",
+                    "LIBSCRIPT_TARGET_OS": $resolved_os,
+                    "LIBSCRIPT_TARGET_ARCH": $arch,
+                    "LIBSCRIPT_TARGET_LIBC": $libc,
+                    "LIBSCRIPT_DOS_VERSION": $kversion,
+                    "LIBSCRIPT_DOS_STRATUM": $dos_stratum,
+                    "LIBSCRIPT_DOS_BUILD_MODE": $dos_build_mode,
+                    "LIBSCRIPT_DOS_SHELL_PROVIDER": $dos_shell_provider,
+                    "LIBSCRIPT_DOS_83": "1"
                   }
                 }
               ]

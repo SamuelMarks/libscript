@@ -39,7 +39,7 @@ resolve_any_profile() {
     printf '%s\n' "$_rap"
     return 0
   fi
-  for _sub in '' 'linux/' 'lfs/' 'freebsd/' 'illumos/' 'reactos/' 'unikernel/' 'rtos/' 'cloud/' 'hypervisor/'; do
+  for _sub in '' 'linux/' 'lfs/' 'freebsd/' 'illumos/' 'reactos/' 'dos/' 'unikernel/' 'rtos/' 'cloud/' 'hypervisor/'; do
     if [ -f "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_sub}${_rap}.json" ]; then
       printf '%s\n' "${LIBSCRIPT_ROOT_DIR}/synthesis/profiles/${_sub}${_rap}.json"
       return 0
@@ -109,6 +109,7 @@ case "$OS_FAM" in
   freebsd*) TARGET_DRIVER="${SCRIPT_DIR}/freebsd_distro.sh" ;;
   illumos*|sunos*) TARGET_DRIVER="${SCRIPT_DIR}/illumos_distro.sh" ;;
   reactos*) TARGET_DRIVER="${SCRIPT_DIR}/reactos_distro.sh" ;;
+  freedos*|msdos*) TARGET_DRIVER="${SCRIPT_DIR}/dos_distro.sh" ;;
   unikernel-*|osv|mirage*|unikraft|nanos|rumprun) TARGET_DRIVER="${SCRIPT_DIR}/unikernel_img.sh" ;;
   rtos-*|zephyr|freertos) TARGET_DRIVER="${SCRIPT_DIR}/rtos_distro.sh" ;;
   *) TARGET_DRIVER="${SCRIPT_DIR}/linux_distro.sh" ;;

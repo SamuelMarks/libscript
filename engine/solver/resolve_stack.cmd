@@ -75,9 +75,14 @@ if errorlevel 1 (
 
 set "TARGET_OS=windows"
 if "%IS_REACTOS%"=="1" set "TARGET_OS=reactos"
+if "%IS_MSDOS%"=="1" set "TARGET_OS=msdos"
 if not "%LIBSCRIPT_TARGET_OS%"=="" (
     set "TARGET_OS=%LIBSCRIPT_TARGET_OS%"
     if /I "!TARGET_OS:~0,7!"=="reactos" set "TARGET_OS=reactos"
+    if /I "!TARGET_OS:~0,7!"=="freedos" set "TARGET_OS=freedos"
+    if /I "!TARGET_OS:~0,5!"=="msdos" set "TARGET_OS=msdos"
+    if /I "!TARGET_OS!"=="dos32" set "TARGET_OS=msdos"
+    if /I "!TARGET_OS!"=="dos" set "TARGET_OS=msdos"
 )
 
 jq -e "." "!CONFIG_FILE!" >nul 2>nul

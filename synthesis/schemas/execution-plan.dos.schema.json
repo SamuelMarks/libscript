@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/synthesis/schemas/execution-plan.dos.schema.json",
+  "title": "LibScript DOS (FreeDOS & MIT MS-DOS 1.25/2.0/4.00) Synthesis Execution Plan",
+  "description": "Declarative configuration schema for synthesizing bootable FreeDOS (1.3, 1.4) and MIT MS-DOS (1.25, 2.0, 4.00) floppies, partitioned FAT16/FAT32 hard disks, El Torito ISOs, QCOW2 images, and Vagrant boxes.",
+  "type": "object",
+  "required": ["schema_version", "target", "kernel", "init_system", "storage"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema URI reference for validation."
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Semantic version of the declarative DOS profile format."
+    },
+    "profile_name": {
+      "type": "string",
+      "description": "Unique lowercase slug identifying this DOS synthesis profile."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of the target DOS kernel, shell, and DPMI runtime."
+    },
+    "dos_flavor": {
+      "type": "string",
+      "enum": ["freedos", "msdos"],
+      "description": "Primary DOS kernel family (GPL-2.0 FreeDOS or MIT Microsoft MS-DOS)."
+    },
+    "dos_version": {
+      "type": "string",
+      "enum": ["1.4", "1.3", "4.0", "2.0", "1.25"],
+      "description": "Target DOS release version (FreeDOS 1.3/1.4 or MIT MS-DOS 1.25/2.0/4.0)."
+    },
+    "build_mode": {
+      "type": "string",
+      "enum": ["from-source", "repack"],
+      "default": "from-source",
+      "description": "Synthesis mode: compile/assemble kernels from source or repack verified release archives."
+    },
+    "shell_provider": {
+      "type": "string",
+      "enum": ["default", "msdos-command", "freecom", "win-cmd-asm", "win-cmd-rs"],
+      "default": "default",
+      "description": "Primary SHELL= command interpreter staged into CONFIG.SYS/FDCONFIG.SYS (stock COMMAND.COM, FreeCOM, 16-bit win-cmd-asm WINCMD.COM/WINCMD1.COM, or 32-bit DJGPP win-cmd-rs WINCMD.EXE)."
+    },
+    "dpmi_provider": {
+      "type": "string",
+      "enum": ["cwsdpmi", "dos32a", "hdpmi32", "none"],
+      "default": "cwsdpmi",
+      "description": "32-bit protected-mode DPMI or linear-executable extender staged for i386+ targets."
+    },
+    "djgpp_userland": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to stage 32-bit DJGPP GNU bash, coreutils, and DJGPP.ENV on dos32-dpmi strata."
+    },
+    "lfn_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to load DOSLFN.COM and export LFN=y (supported on FreeDOS; forced false on strict 8.3 MS-DOS)."
+    },
+    "serial_console": {
+      "type": "string",
+      "enum": ["com1", "none"],
+      "default": "com1",
+      "description": "Serial UART telemetry routing for headless QEMU/Vagrant COM1 automation."
+    },
+    "packet_driver": {
+      "type": "string",
+      "enum": ["pcntpkt", "ne2000", "none"],
+      "default": "pcntpkt",
+      "description": "Crynwr INT 60h Ethernet packet driver initialized in AUTOEXEC.BAT for Watt-32 and mTCP."
+    },
+    "config_sys": {
+      "type": "object",
+      "description": "Declarative CONFIG.SYS / FDCONFIG.SYS tuning parameters (omitted on MS-DOS 1.25).",
+      "properties": {
+        "files": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 255,
+          "default": 40,
+          "description": "Maximum concurrent open file handles configured via FILES=."
+        },
+        "buffers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "default": 20,
+          "description": "Number of sector cache buffers allocated via BUFFERS=."
+        },
+        "lastdrive": {
+          "type": "string",
+          "default": "Z",
+          "description": "Highest drive letter reserved in the CDS array via LASTDRIVE=."
+        },
+        "dos_high_umb": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to load HIMEMX/HIMEM.SYS and relocate DOS into HMA/UMB when targeting 386+."
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "description": "CPU architecture, OS family, and C runtime specification.",
+      "required": ["arch", "os_family", "libc"],
+      "properties": {
+        "arch": {
+          "type": "string",
+          "enum": ["i8086", "i386", "i586", "i686"],
+          "description": "Target x86 ISA level (i8086 real mode or i386/i586/i686 DPMI protected mode)."
+        },
+        "os_family": {
+          "type": "string",
+          "enum": ["freedos", "msdos"],
+          "description": "Canonical OS family identifier."
+        },
+        "libc": {
+          "type": "string",
+          "enum": ["djgpp-libc", "watcom-libc", "dos16-libc", "dos-fcb-none"],
+          "description": "Target C runtime or freestanding FCB ABI."
+        },
+        "platform": {
+          "type": "string",
+          "description": "Target hypervisor or PC hardware platform (e.g. qemu, virtualbox, bare-metal)."
+        }
+      }
+    },
+    "kernel": {
+      "type": "object",
+      "description": "DOS kernel source provider and version configuration.",
+      "required": ["provider", "config_method"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["freedos-kernel", "msdos-mit-4.0", "msdos-mit-2.0", "msdos-mit-1.25"],
+          "description": "Selected DOS kernel provider."
+        },
+        "version": {
+          "type": "string",
+          "description": "Concrete DOS kernel release string."
+        },
+        "config_method": {
+          "type": "string",
+          "enum": ["defconfig", "tinyconfig", "fragments", "custom_file"],
+          "description": "Kernel build configuration methodology."
+        }
+      }
+    },
+    "init_system": {
+      "type": "object",
+      "description": "DOS boot script orchestration configuration.",
+      "required": ["provider"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["dos-autoexec"],
+          "description": "CONFIG.SYS + AUTOEXEC.BAT single-stage boot initializer."
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Disk or floppy media geometry, partition table, and boot sector specification.",
+      "required": ["disk_size_gib", "partition_table", "boot_mode", "bootloader"],
+      "properties": {
+        "media_type": {
+          "type": "string",
+          "enum": ["floppy-360k", "floppy-720k", "floppy-1440k", "hdd-fat16", "hdd-fat32"],
+          "description": "Physical floppy or partitioned hard-disk layout generated by mkdosfs_img."
+        },
+        "disk_size_gib": {
+          "type": "integer",
+          "description": "Nominal virtual disk capacity in GiB (0 or 1 for floppy/small FAT volumes)."
+        },
+        "partition_table": {
+          "type": "string",
+          "enum": ["mbr", "none"],
+          "description": "Partition scheme (mbr for hard disks, none for superfloppy images)."
+        },
+        "boot_mode": {
+          "type": "string",
+          "enum": ["bios-legacy"],
+          "description": "Legacy IBM PC BIOS INT 19h / INT 13h boot mode."
+        },
+        "bootloader": {
+          "type": "string",
+          "enum": ["freedos-sys", "dos-mbr-vbr", "dos-vbr-flat"],
+          "description": "DOS MBR/VBR boot sector implementation."
+        },
+        "partitions": {
+          "type": "array",
+          "description": "FAT partition specifications.",
+          "items": {
+            "type": "object",
+            "description": "Single FAT partition entry.",
+            "required": ["name", "filesystem", "mountpoint", "size_mib"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "8.3 uppercase FAT volume label."
+              },
+              "filesystem": {
+                "type": "string",
+                "enum": ["fat12", "fat16", "fat32"],
+                "description": "FAT table bit width."
+              },
+              "mountpoint": {
+                "type": "string",
+                "description": "DOS drive root (e.g. C:\\ or A:\\)."
+              },
+              "size_mib": {
+                "type": "integer",
+                "description": "Partition size in MiB."
+              }
+            }
+          }
+        }
+      }
+    },
+    "output_formats": {
+      "type": "array",
+      "description": "Target image formats emitted from this DOS profile.",
+      "items": {
+        "type": "string",
+        "description": "Output image format identifier."
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "List of DOS-compatible LibScript components staged into C:\\LIBSCRIP.",
+      "items": {
+        "type": "string",
+        "description": "Component name or virtual capability alias."
+      }
+    }
+  }
+}

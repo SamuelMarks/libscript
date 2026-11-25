@@ -80,6 +80,28 @@ case "${LIBSCRIPT_TARGET_OS:-linux}" in
     LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/freertos/build_firmware.sh" --sysroot="$ROOTFS"
     exit 0
     ;;
+  freedos|freedos-*)
+    if [ "$ACTION" = "clean" ]; then
+      rm -f "${ROOTFS}/KERNEL.SYS" "${ROOTFS}/COMMAND.COM"
+      exit 0
+    elif [ "$ACTION" = "status" ]; then
+      ls -l "${ROOTFS}/KERNEL.SYS" 2>/dev/null || printf '[INFO] FreeDOS kernel not yet staged in %s\n' "$ROOTFS"
+      exit 0
+    fi
+    LIBSCRIPT_TARGET_SYSROOT="$ROOTFS" ACTION='install' STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/freedos/setup.sh"
+    exit 0
+    ;;
+  msdos|msdos-*)
+    if [ "$ACTION" = "clean" ]; then
+      rm -f "${ROOTFS}/IO.SYS" "${ROOTFS}/MSDOS.SYS" "${ROOTFS}/COMMAND.COM"
+      exit 0
+    elif [ "$ACTION" = "status" ]; then
+      ls -l "${ROOTFS}/IO.SYS" 2>/dev/null || printf '[INFO] MS-DOS kernel not yet staged in %s\n' "$ROOTFS"
+      exit 0
+    fi
+    LIBSCRIPT_TARGET_SYSROOT="$ROOTFS" ACTION='install' STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/msdos/setup.sh"
+    exit 0
+    ;;
 esac
 
 mkdir -p "$STAMPS_DIR"

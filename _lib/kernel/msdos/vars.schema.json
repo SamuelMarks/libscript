@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/kernel/msdos/vars.schema.json",
+  "title": "msdos variables",
+  "description": "Configuration variables for msdos",
+  "type": "object",
+  "properties": {
+    "MSDOS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install msdos. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "MSDOS_VERSION": {
+      "description": "Specific version of msdos to install.",
+      "type": "string",
+      "default": "4.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "MSDOS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading msdos binary or archive artifacts."
+    },
+    "MSDOS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying msdos available remote releases."
+    },
+    "MSDOS_BUILD_MODE": {
+      "type": "string",
+      "description": "Kernel synthesis mode: from-source (NASM clean-room IO.SYS + kvikdos/scp2nasm) or repack.",
+      "default": "from-source"
+    },
+    "MSDOS_CPU_FLAVOR": {
+      "type": "string",
+      "description": "Guest CPU target flavor (8086 for 1.25/2.0 real mode or 386 for 4.00 with DPMI).",
+      "default": "386"
+    },
+    "MSDOS_SERIAL_COM1": {
+      "type": "string",
+      "description": "Configure clean-room IO.SYS AUX/CON hooks and boot scripts for COM1 serial telemetry when set to 1.",
+      "default": "1"
+    },
+    "MSDOS_ASSEMBLER_BACKEND": {
+      "type": "string",
+      "description": "Assembler backend for clean-room BIOS/boot modules and lowered sources (nasm, jwasm, fasm, or kvikdos).",
+      "default": "nasm"
+    }
+  }
+}

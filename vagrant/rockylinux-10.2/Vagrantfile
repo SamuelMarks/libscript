@@ -26,9 +26,11 @@ Vagrant.configure("2") do |config|
     ]
     t.ssh.shell = "/bin/sh"
 
+    t.vm.boot_timeout = 420
+
     t.vm.provider "qemu" do |qe|
       qe.net_mode = :user
-      qe.net_device = "virtio-net-pci"
+      qe.net_device = "virtio-net-pci,addr=0x7"
       qe.firmware_format = nil
       bios_candidates = [
         ENV["QEMU_EDK2_CODE"],
@@ -37,12 +39,16 @@ Vagrant.configure("2") do |config|
         "/usr/share/edk2/aarch64/QEMU_EFI.fd"
       ].compact
       bios_path = bios_candidates.find { |path| File.exist?(path) }
-      base_args = ["-device", "virtio-gpu-pci", "-device", "virtio-keyboard-pci"]
+      base_args = ENV["LIBSCRIPT_GUI"] == "1" ? ["-device", "ramfb", "-device", "qemu-xhci", "-device", "usb-kbd"] : []
       qe.extra_qemu_args = bios_path ? ["-bios", bios_path] + base_args : base_args
+      if RbConfig::CONFIG["host_os"] =~ /darwin/i
+        qe.machine = "virt,accel=tcg,highmem=on"
+        qe.cpu = "neoverse-n1"
+      end
       qe.ssh_auto_correct = true
       qe.ssh_port = 2225
-      qe.memory = "4G"
-      qe.smp = "2"
+      qe.memory = "3G"
+      qe.smp = "4"
     end
     t.vm.usable_port_range = 2210..2260
     t.vm.synced_folder ".", "/vagrant", disabled: true

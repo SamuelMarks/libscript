@@ -30,6 +30,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 KERNEL='linux-glibc'
 OS_FLAVOR=''
+DOS_VER=''
+DOS_SHELL="${LIBSCRIPT_DOS_SHELL_PROVIDER:-default}"
 TARGET_ARCH=''
 ARCH_EXPLICIT='0'
 RTOS_BOARD="${LIBSCRIPT_RTOS_BOARD:-}"
@@ -81,6 +83,8 @@ while [ $# -gt 0 ]; do
     --board) RTOS_BOARD="$2"; shift 2 ;;
     --os-flavor=*) OS_FLAVOR="${1#*=}"; shift ;;
     --os-flavor) OS_FLAVOR="$2"; shift 2 ;;
+    --shell=*) DOS_SHELL="${1#*=}"; shift ;;
+    --shell) DOS_SHELL="$2"; shift 2 ;;
     --arch=*) TARGET_ARCH="${1#*=}"; ARCH_EXPLICIT='1'; shift ;;
     --arch) TARGET_ARCH="$2"; ARCH_EXPLICIT='1'; shift 2 ;;
     --initramfs-compress=*) INITRAMFS_COMPRESS="${1#*=}"; shift ;;
@@ -170,6 +174,51 @@ case "$KERNEL" in
     [ -n "$TARGET_ARCH" ] || TARGET_ARCH='i686'
     [ -n "$FORMAT" ] || FORMAT='iso'
     ;;
+  freedos|freedos-1.4|freedos-1.3)
+    OS_FAMILY='freedos'
+    LIBC='djgpp-libc'
+    KPROVIDER='freedos-kernel'
+    INIT_PROV='dos-autoexec'
+    BOOTLOADER='freedos-sys'
+    RESOLVE_OS='freedos'
+    DOS_VER="${KERNEL#freedos-}"
+    [ "$DOS_VER" = 'freedos' ] && DOS_VER='1.4'
+    [ -n "$TARGET_ARCH" ] || TARGET_ARCH='i586'
+    [ -n "$FORMAT" ] || FORMAT='qcow2'
+    ;;
+  msdos|msdos-4.0|msdos-4.00)
+    OS_FAMILY='msdos'
+    LIBC='djgpp-libc'
+    KPROVIDER='msdos-mit-4.0'
+    INIT_PROV='dos-autoexec'
+    BOOTLOADER='dos-mbr-vbr'
+    RESOLVE_OS='msdos'
+    DOS_VER='4.0'
+    [ -n "$TARGET_ARCH" ] || TARGET_ARCH='i586'
+    [ -n "$FORMAT" ] || FORMAT='qcow2'
+    ;;
+  msdos-2.0|msdos-2.00)
+    OS_FAMILY='msdos'
+    LIBC='dos16-libc'
+    KPROVIDER='msdos-mit-2.0'
+    INIT_PROV='dos-autoexec'
+    BOOTLOADER='dos-mbr-vbr'
+    RESOLVE_OS='msdos'
+    DOS_VER='2.0'
+    [ -n "$TARGET_ARCH" ] || TARGET_ARCH='i8086'
+    [ -n "$FORMAT" ] || FORMAT='floppy-img'
+    ;;
+  msdos-1.25)
+    OS_FAMILY='msdos'
+    LIBC='dos-fcb-none'
+    KPROVIDER='msdos-mit-1.25'
+    INIT_PROV='dos-autoexec'
+    BOOTLOADER='dos-vbr-flat'
+    RESOLVE_OS='msdos'
+    DOS_VER='1.25'
+    [ -n "$TARGET_ARCH" ] || TARGET_ARCH='i8086'
+    [ -n "$FORMAT" ] || FORMAT='floppy-img'
+    ;;
   unikraft|unikernel-unikraft)
     OS_FAMILY='unikernel-unikraft'
     LIBC='musl'
@@ -255,6 +304,7 @@ fi
 if [ -z "$OUT_PATH" ]; then
   case "$FORMAT" in
     live-iso|iso) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.iso" ;;
+    floppy-img|floppy) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}${DOS_VER:+-$DOS_VER}.img" ;;
     live-usb|raw|raw-img) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.raw" ;;
     qcow2) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.qcow2" ;;
     vmdk) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.vmdk" ;;
@@ -303,8 +353,9 @@ if [ -n "$COMPONENTS_CSV" ]; then
 fi
 
 NORM_FMT="$FORMAT"
-case "$FORMAT" in
+case "$NORM_FMT" in
   iso) NORM_FMT='live-iso' ;;
+  floppy) NORM_FMT='floppy-img' ;;
   raw-img) NORM_FMT='raw' ;;
   unikernel) NORM_FMT='direct-kernel' ;;
 esac
@@ -316,6 +367,8 @@ if [ -n "$PROFILE_JSON" ] && [ -f "$PROFILE_JSON" ]; then
      --arg libc "$LIBC" \
      --arg flavor "$OS_FLAVOR" \
      --arg kprov "$KPROVIDER" \
+     --arg dver "$DOS_VER" \
+     --arg dshell "$DOS_SHELL" \
      --arg iprov "$INIT_PROV" \
      --arg bl "$BOOTLOADER" \
      --arg fmt "$NORM_FMT" \
@@ -327,7 +380,8 @@ if [ -n "$PROFILE_JSON" ] && [ -f "$PROFILE_JSON" ]; then
     | .target.arch = (if $arch_exp == "1" then $arch else (.target.arch // $arch) end)
     | .target.libc = (.target.libc // $libc)
     | (if $flavor != "" then .target.flavor = $flavor else . end)
-    | .kernel = ((.kernel // {"config_method": "defconfig"}) | .provider = (.provider // $kprov))
+    | .kernel = ((.kernel // {"config_method": "defconfig"}) | .provider = (.provider // $kprov) | (if $dver != "" then .version = (.version // $dver) else . end))
+    | (if $dshell != "default" then .shell_provider = $dshell else . end)
     | .init_system = ((.init_system // {}) | .provider = (.provider // $iprov))
     | .storage = ((.storage // {"disk_size_gib": 1, "partition_table": "none", "boot_mode": "direct-kernel"}) | .bootloader = (.bootloader // $bl))
     | (if $board != "" then .rtos = ((.rtos // {}) | .board = (.board // $board) | (if $hpod == "1" then .hybrid_pod = true else . end) | (if $mcub == "1" then .mcuboot = ((.mcuboot // {}) | .enabled = true) else . end)) else . end)
@@ -341,6 +395,8 @@ else
         --arg libc "$LIBC" \
         --arg flavor "$OS_FLAVOR" \
         --arg kprov "$KPROVIDER" \
+        --arg dver "$DOS_VER" \
+        --arg dshell "$DOS_SHELL" \
         --arg iprov "$INIT_PROV" \
         --arg bl "$BOOTLOADER" \
         --arg fmt "$NORM_FMT" \
@@ -351,24 +407,29 @@ else
         --argjson comps "$COMP_JSON" '
     {
       schema_version: "1.0.0",
-      profile_name: ("synthesized-" + $os_fam),
+      profile_name: ("synthesized-" + $os_fam + (if $dver != "" then "-" + $dver else "" end)),
       description: ("Synthesized " + $os_fam + " image with selected components"),
       target: (
         { arch: $arch, os_family: $os_fam, libc: $libc }
         + (if $flavor != "" then { flavor: $flavor } else {} end)
       ),
-      kernel: { provider: $kprov, config_method: "defconfig" },
+      kernel: (
+        { provider: $kprov, config_method: "defconfig" }
+        + (if $dver != "" then { version: $dver } else {} end)
+      ),
       init_system: { provider: $iprov },
       storage: {
-        disk_size_gib: (if ($os_fam | startswith("rtos-")) then 1 else 16 end),
-        partition_table: (if ($os_fam | startswith("rtos-")) then "none" else "gpt" end),
-        boot_mode: (if ($bl == "unikernel-direct" or $bl == "mcuboot") then "direct-kernel" else "uefi" end),
+        disk_size_gib: (if (($os_fam | startswith("rtos-")) or $os_fam == "freedos" or $os_fam == "msdos") then 1 else 16 end),
+        partition_table: (if (($os_fam | startswith("rtos-")) or $bl == "dos-vbr-flat") then "none" elif ($os_fam == "freedos" or $os_fam == "msdos") then "mbr" else "gpt" end),
+        boot_mode: (if ($bl == "unikernel-direct" or $bl == "mcuboot") then "direct-kernel" elif ($os_fam == "freedos" or $os_fam == "msdos") then "bios-legacy" else "uefi" end),
         bootloader: $bl
       },
       offline: { enabled: ($offline == "1") },
       output_formats: [$fmt],
       components: $comps
     }
+    + (if $dver != "" then { dos_version: $dver } else {} end)
+    + (if $dshell != "default" then { shell_provider: $dshell } else {} end)
     + (if $board != "" then {
         rtos: (
           { board: $board }
@@ -419,6 +480,9 @@ export LIBSCRIPT_STRICT_IMAGE_BUILD="$STRICT_BUILD"
 export LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB"
 
 case "$FORMAT" in
+  floppy-img|floppy)
+    STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_floppy.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    ;;
   live-iso|iso)
     if [ "$RESOLVE_OS" = "freebsd" ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/freebsd_iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
@@ -426,6 +490,8 @@ case "$FORMAT" in
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/illumos_iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
     elif [ "$RESOLVE_OS" = 'reactos' ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    elif [ "$RESOLVE_OS" = 'freedos' ] || [ "$RESOLVE_OS" = 'msdos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
     fi
@@ -437,6 +503,8 @@ case "$FORMAT" in
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/illumos_raw.sh" "$SYSROOT_DIR" "$OUT_PATH" 16
     elif [ "$RESOLVE_OS" = 'reactos' ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_raw.sh" "$SYSROOT_DIR" "$OUT_PATH" 8
+    elif [ "$RESOLVE_OS" = 'freedos' ] || [ "$RESOLVE_OS" = 'msdos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_raw.sh" "$SYSROOT_DIR" "$OUT_PATH"
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/raw_img.sh" "$SYSROOT_DIR" "$OUT_PATH" 16
     fi
@@ -448,6 +516,8 @@ case "$FORMAT" in
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/illumos_qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" 16
     elif [ "$RESOLVE_OS" = 'reactos' ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" 8
+    elif [ "$RESOLVE_OS" = 'freedos' ] || [ "$RESOLVE_OS" = 'msdos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH"
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" qcow2 16
     fi
@@ -455,6 +525,8 @@ case "$FORMAT" in
   vmdk)
     if [ "$RESOLVE_OS" = 'reactos' ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_vmdk.sh" "$SYSROOT_DIR" "$OUT_PATH" 8
+    elif [ "$RESOLVE_OS" = 'freedos' ] || [ "$RESOLVE_OS" = 'msdos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_vmdk.sh" "$SYSROOT_DIR" "$OUT_PATH"
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" vmdk 16
     fi
@@ -462,6 +534,8 @@ case "$FORMAT" in
   vhd|vhdx)
     if [ "$RESOLVE_OS" = 'reactos' ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_vhd.sh" "$SYSROOT_DIR" "$OUT_PATH" 8
+    elif [ "$RESOLVE_OS" = 'freedos' ] || [ "$RESOLVE_OS" = 'msdos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_vhd.sh" "$SYSROOT_DIR" "$OUT_PATH"
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/hyperv_img.sh" "$SYSROOT_DIR" "$OUT_PATH"
     fi
@@ -469,6 +543,8 @@ case "$FORMAT" in
   vagrant-box)
     if [ "$RESOLVE_OS" = 'reactos' ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/reactos_vagrant_box.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    elif [ "$RESOLVE_OS" = 'freedos' ] || [ "$RESOLVE_OS" = 'msdos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/dos_vagrant_box.sh" "$SYSROOT_DIR" "$OUT_PATH"
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/vagrantfile.sh" "$SYSROOT_DIR" "$OUT_PATH"
     fi

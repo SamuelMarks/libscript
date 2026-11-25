@@ -101,6 +101,10 @@ if /I "!TARGET_OS!"=="zephyr" goto :zephyr_triplet
 if /I "!TARGET_OS!"=="rtos-zephyr" goto :zephyr_triplet
 if /I "!TARGET_OS!"=="freertos" goto :freertos_triplet
 if /I "!TARGET_OS!"=="rtos-freertos" goto :freertos_triplet
+if /I "!TARGET_OS:~0,7!"=="freedos" goto :dos_triplet
+if /I "!TARGET_OS:~0,5!"=="msdos" goto :dos_triplet
+if /I "!TARGET_OS!"=="dos32" goto :dos_triplet
+if /I "!TARGET_OS!"=="dos" goto :dos_triplet
 
 if /I "!TARGET_OS!"=="freebsd" (
     set "LIBSCRIPT_TARGET_TRIPLET=!TARGET_ARCH!-unknown-freebsd14.0"
@@ -121,6 +125,18 @@ if /I "!TARGET_OS!"=="freebsd" (
         set "LIBSCRIPT_TARGET_TRIPLET=!TARGET_ARCH!-libscript-linux-gnu"
     )
 )
+goto :triplet_done
+
+:: ## dos_triplet
+:: Resolves canonical 16-bit real-mode or 32-bit OpenWatcom/DJGPP DOS target triplet.
+:dos_triplet
+set "LIBSCRIPT_TARGET_TRIPLET=i586-pc-msdosdjgpp"
+if /I "!TARGET_LIBC!"=="watcom-libc" set "LIBSCRIPT_TARGET_TRIPLET=i386-pc-msdoswatcom"
+if /I "!TARGET_ARCH!"=="i8086" set "LIBSCRIPT_TARGET_TRIPLET=ia16-pc-msdos" & set "_IS_FREESTANDING=1"
+if /I "!TARGET_ARCH!"=="8086" set "LIBSCRIPT_TARGET_TRIPLET=ia16-pc-msdos" & set "_IS_FREESTANDING=1"
+if /I "!TARGET_ARCH!"=="ia16" set "LIBSCRIPT_TARGET_TRIPLET=ia16-pc-msdos" & set "_IS_FREESTANDING=1"
+if /I "!TARGET_LIBC!"=="dos16-libc" set "LIBSCRIPT_TARGET_TRIPLET=ia16-pc-msdos" & set "_IS_FREESTANDING=1"
+if /I "!TARGET_LIBC!"=="dos-fcb-none" set "LIBSCRIPT_TARGET_TRIPLET=ia16-pc-msdos" & set "_IS_FREESTANDING=1"
 goto :triplet_done
 
 :: ## sim_triplet
@@ -169,8 +185,19 @@ if /I "!TARGET_LIBC!"=="picolibc" set "_IS_FREESTANDING=1"
 if /I "!TARGET_LIBC!"=="nolibc" set "_IS_FREESTANDING=1"
 if /I "!TARGET_LIBC!"=="zephyr-minimal" set "_IS_FREESTANDING=1"
 if /I "!TARGET_LIBC!"=="freertos-none" set "_IS_FREESTANDING=1"
+if /I "!TARGET_LIBC!"=="dos16-libc" set "_IS_FREESTANDING=1"
+if /I "!TARGET_LIBC!"=="dos-fcb-none" set "_IS_FREESTANDING=1"
 
-if "!_IS_FREESTANDING!"=="1" (
+set "_IS_DOS_TARGET=0"
+if /I "!TARGET_OS:~0,7!"=="freedos" set "_IS_DOS_TARGET=1"
+if /I "!TARGET_OS:~0,5!"=="msdos" set "_IS_DOS_TARGET=1"
+if /I "!TARGET_OS!"=="dos32" set "_IS_DOS_TARGET=1"
+if /I "!TARGET_OS!"=="dos" set "_IS_DOS_TARGET=1"
+
+if "!_IS_DOS_TARGET!"=="1" (
+    set "LIBSCRIPT_SECURITY_CFLAGS=-O2 -fno-common"
+    set "LIBSCRIPT_SECURITY_LDFLAGS="
+) else if "!_IS_FREESTANDING!"=="1" (
     set "LIBSCRIPT_SECURITY_CFLAGS=-fno-common -ffreestanding -fdata-sections -ffunction-sections"
     set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,--gc-sections"
 ) else if /I "!TARGET_OS!"=="reactos" (
@@ -220,6 +247,41 @@ if /i "!_cc_id!"=="custom-cc" (
 )
 if /i "!_cc_id!"=="edgcpp" (
     set "LIBSCRIPT_COMPILER_CFLAGS=-O2"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="openwatcom" (
+    set "LIBSCRIPT_COMPILER_CFLAGS=-O2"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="wcl386" (
+    set "LIBSCRIPT_COMPILER_CFLAGS=-O2"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="wcc" (
+    set "LIBSCRIPT_COMPILER_CFLAGS=-O2"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="djgpp" (
+    set "LIBSCRIPT_COMPILER_CFLAGS=-O2 -fno-common"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="nasm" (
+    set "LIBSCRIPT_COMPILER_CFLAGS="
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="jwasm" (
+    set "LIBSCRIPT_COMPILER_CFLAGS="
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="fasm" (
+    set "LIBSCRIPT_COMPILER_CFLAGS="
     set "LIBSCRIPT_COMPILER_LDFLAGS="
     exit /b 0
 )

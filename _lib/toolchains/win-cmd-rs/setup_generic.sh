@@ -124,7 +124,7 @@ resolve_platform_artifact() {
   _rust_target=''
   _arc_ext='tar.gz'
   case "${_t_os}" in
-    msdos*|dos*)
+    freedos*|msdos*|dos*)
       _rust_target='i586-pc-msdosdjgpp'
       _arc_ext='zip'
       ;;
@@ -182,7 +182,7 @@ is_target_already_installed() {
   _chk_dir="$1"
   _chk_os=$(resolve_effective_os)
   case "${_chk_os}" in
-    msdos*|dos*|windows*|mingw*|msys*|cygwin*)
+    freedos*|msdos*|dos*|windows*|mingw*|msys*|cygwin*)
       if { [ -f "${_chk_dir}/bin/wincheck.exe" ] || [ -f "${_chk_dir}/bin/WINCHECK.EXE" ]; } && { [ -f "${_chk_dir}/bin/wincmd.exe" ] || [ -f "${_chk_dir}/bin/WINCMD.EXE" ]; }; then
         return 0
       fi
@@ -230,7 +230,7 @@ install_binaries_from_stage() {
   mkdir -p "${_ibs_target}/bin"
 
   case "${_ibs_os}" in
-    msdos*|dos*)
+    freedos*|msdos*|dos*)
       _wc_exe=$(locate_staged_file "${_ibs_stage}" 'wincheck.exe' || true)
       _wm_exe=$(locate_staged_file "${_ibs_stage}" 'wincmd.exe' || true)
       if [ -z "${_wc_exe}" ] || [ -z "${_wm_exe}" ]; then
@@ -274,7 +274,7 @@ install_binaries_from_stage() {
   esac
 
   case "${_ibs_os}" in
-    msdos*|dos*) _doc_list='README.md USAGE.md' ;;
+    freedos*|msdos*|dos*) _doc_list='README.md USAGE.md' ;;
     *) _doc_list='README.md USAGE.md LICENSE-MIT LICENSE-APACHE' ;;
   esac
   for _doc in $_doc_list; do

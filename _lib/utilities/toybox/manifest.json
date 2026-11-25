@@ -3,6 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "utilities",
   "description": "All-in-one BSD-licensed POSIX, Windows native (MSVC), and MS-DOS (dos32) command-line utility suite via SamuelMarks/toybox-windows.",
+  "dos_support": ["dos32-watcom"],
   "name": "toybox",
   "os_whitelist": ["all"],
   "provides": ["toybox", "toybox-windows"],

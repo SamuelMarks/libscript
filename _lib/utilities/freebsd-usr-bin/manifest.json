@@ -3,6 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "utilities",
   "description": "FreeBSD usr.bin command-line utilities (~200 POSIX tools including sed, grep, cut, tr, sort, uniq, wc, head, tail, xargs, find, diff, patch, bmake) ported natively to Windows (MSVC) and MS-DOS (dos32).",
+  "dos_support": ["dos32-watcom", "dos32-djgpp"],
   "name": "freebsd-usr-bin",
   "os_whitelist": ["all"],
   "provides": [

@@ -32,7 +32,7 @@ component's local `cli.sh` / `cli.cmd`:
 .\_lib\toolchains\android-sdk\cli.cmd test
 ```
 
-## Components (60)
+## Components (63)
 
 <!-- BEGIN_COMPONENTS -->
 
@@ -72,6 +72,9 @@ component's local `cli.sh` / `cli.cmd`:
 - [`csmith`](./csmith/README.md) (`T1` — `userland-package`): Standalone version manager and source
   builder for Csmith, generating UB-free random C programs and providing runtime checksum headers
   under CSMITH_HOME/include.
+- [`djgpp`](./djgpp/README.md) (`T1` — `userland-package`, `cross-toolchain`): 32-bit protected-mode
+  `i586-pc-msdosdjgpp` cross-compiler, `stubify`, `CWSDPMI.EXE`, `DJGPP.ENV`, and guest GNU `bash` /
+  `coreutils` / `Watt-32` runtime.
 - [`doxygen`](./doxygen/README.md) (`T1` — `userland-package`): Doxygen documentation analyzer and
   XML symbol extractor for auditing C89 docstring coverage.
 - [`dtc`](./dtc/README.md) (`T1` — `userland-package`): Device Tree Compiler (dtc) and libfdt
@@ -93,6 +96,8 @@ component's local `cli.sh` / `cli.cmd`:
   repositories.
 - [`just`](./just/README.md) (`T1` — `userland-package`): A handy way to save and run
   project-specific commands.
+- [`kvikdos`](./kvikdos/README.md) (`T1` — `userland-package`): Headless 16-bit 8086 real-mode DOS
+  `.COM` / relocatable `MZ .EXE` CLI runner (`c89-emu` + `win-cmd-asm` `vm8086` bridge).
 - [`lcov`](./lcov/README.md) (`T1` — `userland-package`): Standalone version manager and installer
   for LCOV (lcov, geninfo, genhtml), extracting function, line, and branch gcov coverage metrics.
 - [`lfs-toolchain`](./lfs-toolchain/README.md) (`T1` — `userland-package`): Linux From Scratch (LFS)
@@ -152,6 +157,9 @@ component's local `cli.sh` / `cli.cmd`:
   toolchain for WebAssembly.
 - [`west`](./west/README.md) (`T1` — `userland-package`): Zephyr RTOS multi-repository manifest,
   build, flash, and debug meta-tool isolated in a component-managed virtual environment.
+- [`win-cmd-asm`](./win-cmd-asm/README.md) (`T1` — `userland-package`, `sysroot-package`): Multi-ISA
+  CRT-free assembly `cmd.exe` shell (`WINCMD1.COM` for MS-DOS 1.25 FCB, `WINCMD.COM` for DOS 2.0+ /
+  FreeDOS), 17 8086 DOS utilities (`FINDSTR`, `WHERE`, `XCOPY`, etc.), `vm8086`, and `asm-conv`.
 - [`win-cmd-rs`](./win-cmd-rs/README.md) (`T1` — `userland-package`): Safe Rust Windows cmd.exe
   interpreter (wincmd) and linear Packrat 50-rule linter / 4-pass CST rewriter (wincheck).
 - [`wix`](./wix/README.md) (`T1` — `userland-package`): Cross-platform .NET 8 WiX v4/v5 CLI and

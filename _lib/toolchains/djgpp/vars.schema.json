@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/djgpp/vars.schema.json",
+  "title": "djgpp variables",
+  "description": "Configuration variables for djgpp",
+  "type": "object",
+  "x-libscript-var-packs": ["image_synth"],
+  "properties": {
+    "DJGPP_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install djgpp. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "DJGPP_VERSION": {
+      "description": "Specific version of djgpp to install.",
+      "type": "string",
+      "default": "3.4",
+      "version_aliases": ["latest", "lts"]
+    },
+    "DJGPP_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading djgpp binary or archive artifacts."
+    },
+    "DJGPP_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying djgpp available remote releases."
+    },
+    "DJGPP_GCC_VERSION": {
+      "type": "string",
+      "description": "GCC release series bundled inside the build-djgpp cross-compiler archive.",
+      "default": "12.2.0"
+    },
+    "DJGPP_WITH_GUEST_BASH": {
+      "type": "string",
+      "description": "Stage 32-bit DJGPP GNU BASH.EXE into target-dos/bin when set to 1.",
+      "default": "1"
+    },
+    "DJGPP_WITH_GUEST_COREUTILS": {
+      "type": "string",
+      "description": "Stage 32-bit DJGPP GNU coreutils into target-dos/bin when set to 1.",
+      "default": "1"
+    },
+    "DJGPP_WITH_WATT32": {
+      "type": "string",
+      "description": "Stage Watt-32 TCP/IP library headers and libwatt.a into the DJGPP sysroot when set to 1.",
+      "default": "1"
+    },
+    "DJGPP_DOWNLOAD_PREBUILT": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Download prebuilt andrewwutw/build-djgpp host cross-compiler archives when set to 1."
+    }
+  }
+}

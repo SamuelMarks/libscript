@@ -80,6 +80,28 @@ case "$RTOS_BOARD" in
           *) LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-w64-mingw32" ;;
         esac
         ;;
+      freedos*|msdos*|dos32|dos)
+        case "$TARGET_ARCH" in
+          i8086|8086|ia16)
+            _IS_FREESTANDING=1
+            LIBSCRIPT_TARGET_TRIPLET='ia16-pc-msdos'
+            ;;
+          *)
+            case "$TARGET_LIBC" in
+              dos16-libc|dos-fcb-none)
+                _IS_FREESTANDING=1
+                LIBSCRIPT_TARGET_TRIPLET='ia16-pc-msdos'
+                ;;
+              watcom-libc)
+                LIBSCRIPT_TARGET_TRIPLET='i386-pc-msdoswatcom'
+                ;;
+              djgpp-libc|*)
+                LIBSCRIPT_TARGET_TRIPLET='i586-pc-msdosdjgpp'
+                ;;
+            esac
+            ;;
+        esac
+        ;;
       unikraft*)
         LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-unikraft-elf"
         ;;
@@ -101,13 +123,21 @@ case "$RTOS_BOARD" in
 esac
 
 case "$TARGET_LIBC" in
-  newlib|picolibc|nolibc|zephyr-minimal|freertos-none)
+  newlib|picolibc|nolibc|zephyr-minimal|freertos-none|dos16-libc|dos-fcb-none)
     _IS_FREESTANDING=1
     ;;
 esac
 
 # Standard reproducible and security compiler flags
-if [ "$_IS_FREESTANDING" = "1" ]; then
+case "$TARGET_OS" in
+  freedos*|msdos*|dos32|dos) _IS_DOS_TARGET=1 ;;
+  *) _IS_DOS_TARGET=0 ;;
+esac
+
+if [ "$_IS_DOS_TARGET" = "1" ]; then
+  LIBSCRIPT_SECURITY_CFLAGS='-O2 -fno-common'
+  LIBSCRIPT_SECURITY_LDFLAGS=''
+elif [ "$_IS_FREESTANDING" = "1" ]; then
   LIBSCRIPT_SECURITY_CFLAGS='-fno-common -ffreestanding -fdata-sections -ffunction-sections'
   LIBSCRIPT_SECURITY_LDFLAGS='-Wl,--gc-sections'
 elif [ "$TARGET_OS" = 'reactos' ]; then
@@ -127,8 +157,16 @@ fi
 resolve_compiler_flags() {
   _cc_id="${1:-${CC_BACKEND:-default}}"
   case "${_cc_id}" in
-    tcc|custom-cc|edgcpp|edgcpp*|msvc)
+    tcc|custom-cc|edgcpp|edgcpp*|msvc|openwatcom|wcl386|wcc)
       LIBSCRIPT_COMPILER_CFLAGS='-O2'
+      LIBSCRIPT_COMPILER_LDFLAGS=""
+      ;;
+    nasm|jwasm|fasm)
+      LIBSCRIPT_COMPILER_CFLAGS=''
+      LIBSCRIPT_COMPILER_LDFLAGS=""
+      ;;
+    djgpp)
+      LIBSCRIPT_COMPILER_CFLAGS='-O2 -fno-common'
       LIBSCRIPT_COMPILER_LDFLAGS=""
       ;;
     clang)

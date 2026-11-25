@@ -61,6 +61,15 @@ The live bootloader provides automated mode selection through kernel command-lin
   over `COM1` and enables GRUB2 Multiboot (`multiboot /freeldr.sys`) or UEFI (`bootx64.efi`)
   quad-boot chainloading via `multiboot_orchestrator.sh --reactos-part <dev>`.
 
+### FreeDOS & MIT MS-DOS (`1.25` / `2.0` / `4.00`) Live Media (`FDCONFIG.SYS` / `CONFIG.SYS`)
+
+- El Torito floppy-emulation live ISOs (`SHSUCDX.COM` + `UDVD2.SYS`) and bootable FAT12/16/32 images
+  stream `COM1` (`0x3F8` `115200 8N1`) telemetry automatically:
+  ```sh
+  ./synthesis/distro/synthesize-image.sh --kernel=freedos --shell=win-cmd-rs --format=iso --out=build/live-freedos.iso
+  ./synthesis/distro/synthesize-image.sh --kernel=msdos-4.0 --shell=win-cmd-asm --format=iso --out=build/live-msdos40.iso
+  ```
+
 ---
 
 ## 3. Operational Interaction Modes

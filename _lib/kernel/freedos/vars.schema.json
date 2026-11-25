@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/kernel/freedos/vars.schema.json",
+  "title": "freedos variables",
+  "description": "Configuration variables for freedos",
+  "type": "object",
+  "properties": {
+    "FREEDOS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install freedos. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "FREEDOS_VERSION": {
+      "description": "Specific version of freedos to install.",
+      "type": "string",
+      "default": "1.4",
+      "version_aliases": ["latest", "lts"]
+    },
+    "FREEDOS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading freedos binary or archive artifacts."
+    },
+    "FREEDOS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying freedos available remote releases."
+    },
+    "FREEDOS_BUILD_MODE": {
+      "type": "string",
+      "description": "Kernel synthesis mode: from-source (OpenWatcom + NASM) or repack (official FreeDOS kernel archive).",
+      "default": "from-source"
+    },
+    "FREEDOS_CPU_TARGET": {
+      "type": "string",
+      "description": "Target x86 CPU generation for KERNEL.SYS (86, 186, or 386).",
+      "default": "386"
+    },
+    "FREEDOS_FAT_SUPPORT": {
+      "type": "string",
+      "description": "Maximum FAT filesystem width compiled into KERNEL.SYS (fat16 or fat32).",
+      "default": "fat32"
+    },
+    "FREEDOS_SERIAL_CONSOLE": {
+      "type": "string",
+      "description": "Enable COM1 serial console telemetry support during boot staging when set to 1.",
+      "default": "1"
+    }
+  }
+}

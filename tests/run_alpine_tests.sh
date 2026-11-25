@@ -213,6 +213,8 @@ for arg in $TARGETS; do
         for dir in "$REPO_ROOT"/traits/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$(basename "$dir")"
         done
+    elif [ "$arg" = "dos/distro" ] || [ "$arg" = "synthesis/distro/dos" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS dos/distro"
     elif [ "$arg" = "freebsd/distro" ] || [ "$arg" = "illumos/distro" ] || [ "$arg" = "storage/provision_disk" ] || [ "$arg" = "runtimes/provision_isolated_runtime" ] || [ "$arg" = "ml-training" ]; then
         EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
     elif [ "${arg#bootloaders/}" != "$arg" ] || [ "${arg#topologies/}" != "$arg" ] || [ "${arg#workloads/schedulers/}" != "$arg" ] || [ "${arg#traits/}" != "$arg" ]; then
@@ -318,6 +320,7 @@ while true; do
         _short_target="${target##*/}"
         _marker_base="$_short_target"
         case "$target" in
+            dos/distro) _marker_base="dos-distro" ;;
             freebsd/distro) _marker_base="freebsd-distro" ;;
             illumos/distro) _marker_base="illumos-distro" ;;
             bootloaders/*) _marker_base="bootloaders-${_short_target}" ;;
@@ -332,7 +335,9 @@ while true; do
 
         # Check manifest for OS support
         MANIFEST_PATH=""
-        if [ "$target" = "freebsd/distro" ] && [ -f "$REPO_ROOT/synthesis/distro/freebsd/manifest.json" ]; then
+        if [ "$target" = "dos/distro" ] && [ -f "$REPO_ROOT/synthesis/distro/dos/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/synthesis/distro/dos/manifest.json"
+        elif [ "$target" = "freebsd/distro" ] && [ -f "$REPO_ROOT/synthesis/distro/freebsd/manifest.json" ]; then
             MANIFEST_PATH="$REPO_ROOT/synthesis/distro/freebsd/manifest.json"
         elif [ "$target" = "illumos/distro" ] && [ -f "$REPO_ROOT/synthesis/distro/illumos/manifest.json" ]; then
             MANIFEST_PATH="$REPO_ROOT/synthesis/distro/illumos/manifest.json"
@@ -442,6 +447,9 @@ while true; do
                 ;;
             ml-training)
                 test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/workloads/ai/tpu-trainer/cli.sh install latest && sh /opt/repos/libscript/workloads/ai/tpu-trainer/cli.sh test && sh /opt/repos/libscript/workloads/ai/tpu-trainer/cli.sh install latest && sh /opt/repos/libscript/workloads/ai/tpu-trainer/cli.sh test"
+                ;;
+            dos/distro)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/synthesis/distro/dos/cli.sh install latest && sh /opt/repos/libscript/synthesis/distro/dos/cli.sh test && sh /opt/repos/libscript/synthesis/distro/dos/cli.sh install latest && sh /opt/repos/libscript/synthesis/distro/dos/cli.sh test"
                 ;;
             freebsd/distro)
                 test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/synthesis/distro/freebsd/cli.sh install latest && sh /opt/repos/libscript/synthesis/distro/freebsd/cli.sh test && sh /opt/repos/libscript/synthesis/distro/freebsd/cli.sh install latest && sh /opt/repos/libscript/synthesis/distro/freebsd/cli.sh test"

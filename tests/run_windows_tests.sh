@@ -234,6 +234,8 @@ for arg in $TARGETS; do
         for dir in "$REPO_ROOT"/traits/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$(basename "$dir")"
         done
+    elif [ "$arg" = "dos/distro" ] || [ "$arg" = "synthesis/distro/dos" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS dos/distro"
     elif [ "$arg" = "freebsd/distro" ] || [ "$arg" = "illumos/distro" ] || [ "$arg" = "storage/provision_disk" ] || [ "$arg" = "runtimes/provision_isolated_runtime" ] || [ "$arg" = "ml-training" ]; then
         EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
     elif [ "$arg" = "orchestration/cloud" ] || [ "$arg" = "cloud" ]; then
@@ -329,6 +331,7 @@ while true; do
         _short_target="${target##*/}"
         _marker_base="$_short_target"
         case "$target" in
+            dos/distro) _marker_base="dos-distro" ;;
             freebsd/distro) _marker_base="freebsd-distro" ;;
             illumos/distro) _marker_base="illumos-distro" ;;
             bootloaders/*) _marker_base="bootloaders-${_short_target}" ;;
@@ -355,7 +358,9 @@ while true; do
 
         # Check manifest for OS and architecture support
         MANIFEST_PATH=""
-        if [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/workloads/ai/tpu-trainer/manifest.json" ]; then
+        if [ "$target" = "dos/distro" ] && [ -f "$REPO_ROOT/synthesis/distro/dos/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/synthesis/distro/dos/manifest.json"
+        elif [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/workloads/ai/tpu-trainer/manifest.json" ]; then
             MANIFEST_PATH="$REPO_ROOT/workloads/ai/tpu-trainer/manifest.json"
         else
             for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$_short_target/topology.json" "$REPO_ROOT/payloads"/*/"$_short_target/payload.json"; do
@@ -436,6 +441,9 @@ while true; do
 
         # Build remote command depending on component type (invoked via PowerShell default SSH shell)
         case "$target" in
+            dos/distro)
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\synthesis\distro\dos\cli.cmd' install latest; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\synthesis\distro\dos\cli.cmd' test; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\synthesis\distro\dos\cli.cmd' install latest; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\synthesis\distro\dos\cli.cmd' test; exit \$LASTEXITCODE"
+                ;;
             runtimes/provision_isolated_runtime)
                 test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\synthesis\vfs\provision_isolated_runtime.cmd' --runtime python --path 'C:\Windows\Temp\test-rt'; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\synthesis\vfs\provision_isolated_runtime.cmd' --runtime python --path 'C:\Windows\Temp\test-rt'; exit \$LASTEXITCODE"
                 ;;

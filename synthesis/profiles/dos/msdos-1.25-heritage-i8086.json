@@ -1,0 +1,46 @@
+{
+  "$schema": "../../schemas/execution-plan.dos.schema.json",
+  "schema_version": "1.0.0",
+  "profile_name": "msdos-1.25-heritage-i8086",
+  "description": "Microsoft MIT MS-DOS 1.25 flat-filesystem FCB-only 8086 floppy image with clean-room IO.SYS and win-cmd-asm WINCMD1.COM.",
+  "dos_flavor": "msdos",
+  "dos_version": "1.25",
+  "build_mode": "from-source",
+  "shell_provider": "win-cmd-asm",
+  "dpmi_provider": "none",
+  "djgpp_userland": false,
+  "lfn_enabled": false,
+  "serial_console": "com1",
+  "packet_driver": "none",
+  "target": {
+    "arch": "i8086",
+    "os_family": "msdos",
+    "libc": "dos-fcb-none",
+    "platform": "qemu"
+  },
+  "kernel": {
+    "provider": "msdos-mit-1.25",
+    "version": "1.25",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "dos-autoexec"
+  },
+  "storage": {
+    "media_type": "floppy-1440k",
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "bios-legacy",
+    "bootloader": "dos-vbr-flat",
+    "partitions": [
+      {
+        "name": "MSDOS125",
+        "filesystem": "fat12",
+        "mountpoint": "A:\\",
+        "size_mib": 1
+      }
+    ]
+  },
+  "output_formats": ["floppy-img", "qcow2", "vagrant-box"],
+  "components": ["win-cmd-asm"]
+}

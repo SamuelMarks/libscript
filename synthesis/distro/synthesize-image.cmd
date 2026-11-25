@@ -90,6 +90,8 @@ if /I "!_A!"=="--board" ( set "RTOS_BOARD=%~2" & shift & shift & goto :parse_arg
 if /I "!_A:~0,8!"=="--board=" ( set "RTOS_BOARD=!_A:~8!" & shift & goto :parse_args )
 if /I "!_A!"=="--os-flavor" ( set "OS_FLAVOR=%~2" & shift & shift & goto :parse_args )
 if /I "!_A:~0,12!"=="--os-flavor=" ( set "OS_FLAVOR=!_A:~12!" & shift & goto :parse_args )
+if /I "!_A!"=="--shell" ( set "LIBSCRIPT_DOS_SHELL_PROVIDER=%~2" & shift & shift & goto :parse_args )
+if /I "!_A:~0,8!"=="--shell=" ( set "LIBSCRIPT_DOS_SHELL_PROVIDER=!_A:~8!" & shift & goto :parse_args )
 if /I "!_A!"=="--arch" ( set "TARGET_ARCH=%~2" & set "ARCH_EXPLICIT=1" & shift & shift & goto :parse_args )
 if /I "!_A:~0,7!"=="--arch=" ( set "TARGET_ARCH=!_A:~7!" & set "ARCH_EXPLICIT=1" & shift & goto :parse_args )
 if /I "!_A!"=="--initramfs-compress" ( set "LIBSCRIPT_INITRAMFS_COMPRESS=%~2" & shift & shift & goto :parse_args )
@@ -128,6 +130,13 @@ if /I "!KERNEL!"=="freebsd" ( set "OS_FAMILY=freebsd" & set "LIBC=bsd-libc" & se
 if /I "!KERNEL!"=="illumos" ( set "OS_FAMILY=illumos" & set "LIBC=illumos-libc" & set "KPROVIDER=illumos-gate" & set "INIT_PROV=smf" & set "BOOTLOADER=illumos-loader" & set "RESOLVE_OS=sunos" )
 if /I "!KERNEL!"=="sunos" ( set "OS_FAMILY=illumos" & set "LIBC=illumos-libc" & set "KPROVIDER=illumos-gate" & set "INIT_PROV=smf" & set "BOOTLOADER=illumos-loader" & set "RESOLVE_OS=sunos" )
 if /I "!KERNEL!"=="reactos" ( set "OS_FAMILY=reactos" & set "LIBC=msvcrt" & set "KPROVIDER=reactos-ntoskrnl" & set "INIT_PROV=nt-scm" & set "BOOTLOADER=freeldr" & set "RESOLVE_OS=reactos" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i686" & if "!FORMAT!"=="" set "FORMAT=iso" )
+if /I "!KERNEL!"=="freedos" ( set "OS_FAMILY=freedos" & set "LIBC=djgpp-libc" & set "KPROVIDER=freedos-kernel" & set "INIT_PROV=dos-autoexec" & set "BOOTLOADER=freedos-sys" & set "RESOLVE_OS=freedos" & set "DOS_VER=1.4" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i586" & if "!FORMAT!"=="" set "FORMAT=qcow2" )
+if /I "!KERNEL!"=="freedos-1.4" ( set "OS_FAMILY=freedos" & set "LIBC=djgpp-libc" & set "KPROVIDER=freedos-kernel" & set "INIT_PROV=dos-autoexec" & set "BOOTLOADER=freedos-sys" & set "RESOLVE_OS=freedos" & set "DOS_VER=1.4" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i586" & if "!FORMAT!"=="" set "FORMAT=qcow2" )
+if /I "!KERNEL!"=="freedos-1.3" ( set "OS_FAMILY=freedos" & set "LIBC=djgpp-libc" & set "KPROVIDER=freedos-kernel" & set "INIT_PROV=dos-autoexec" & set "BOOTLOADER=freedos-sys" & set "RESOLVE_OS=freedos" & set "DOS_VER=1.3" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i586" & if "!FORMAT!"=="" set "FORMAT=qcow2" )
+if /I "!KERNEL!"=="msdos" ( set "OS_FAMILY=msdos" & set "LIBC=djgpp-libc" & set "KPROVIDER=msdos-mit-4.0" & set "INIT_PROV=dos-autoexec" & set "BOOTLOADER=dos-mbr-vbr" & set "RESOLVE_OS=msdos" & set "DOS_VER=4.0" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i586" & if "!FORMAT!"=="" set "FORMAT=qcow2" )
+if /I "!KERNEL!"=="msdos-4.0" ( set "OS_FAMILY=msdos" & set "LIBC=djgpp-libc" & set "KPROVIDER=msdos-mit-4.0" & set "INIT_PROV=dos-autoexec" & set "BOOTLOADER=dos-mbr-vbr" & set "RESOLVE_OS=msdos" & set "DOS_VER=4.0" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i586" & if "!FORMAT!"=="" set "FORMAT=qcow2" )
+if /I "!KERNEL!"=="msdos-2.0" ( set "OS_FAMILY=msdos" & set "LIBC=dos16-libc" & set "KPROVIDER=msdos-mit-2.0" & set "INIT_PROV=dos-autoexec" & set "BOOTLOADER=dos-mbr-vbr" & set "RESOLVE_OS=msdos" & set "DOS_VER=2.0" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i8086" & if "!FORMAT!"=="" set "FORMAT=floppy-img" )
+if /I "!KERNEL!"=="msdos-1.25" ( set "OS_FAMILY=msdos" & set "LIBC=dos-fcb-none" & set "KPROVIDER=msdos-mit-1.25" & set "INIT_PROV=dos-autoexec" & set "BOOTLOADER=dos-vbr-flat" & set "RESOLVE_OS=msdos" & set "DOS_VER=1.25" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i8086" & if "!FORMAT!"=="" set "FORMAT=floppy-img" )
 if /I "!KERNEL!"=="unikraft" ( set "OS_FAMILY=unikernel-unikraft" & set "LIBC=musl" & set "KPROVIDER=unikraft-core" & set "INIT_PROV=unikernel-entrypoint" & set "BOOTLOADER=unikernel-direct" & set "RESOLVE_OS=unikraft" )
 if /I "!KERNEL!"=="unikernel-unikraft" ( set "OS_FAMILY=unikernel-unikraft" & set "LIBC=musl" & set "KPROVIDER=unikraft-core" & set "INIT_PROV=unikernel-entrypoint" & set "BOOTLOADER=unikernel-direct" & set "RESOLVE_OS=unikraft" )
 if /I "!KERNEL!"=="nanos" ( set "OS_FAMILY=unikernel-nanos" & set "LIBC=glibc" & set "KPROVIDER=nanos-kernel" & set "INIT_PROV=unikernel-entrypoint" & set "BOOTLOADER=unikernel-direct" & set "RESOLVE_OS=nanos" )
@@ -216,9 +225,27 @@ if /I "!RESOLVE_OS!"=="reactos" (
     if /I "!FORMAT!"=="raw" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\reactos_raw.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" 8 & exit /b !ERRORLEVEL! )
     if /I "!FORMAT!"=="qcow2" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\reactos_qcow2.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" 8 & exit /b !ERRORLEVEL! )
 )
+if /I "!RESOLVE_OS!"=="freedos" goto :pkg_dos_fmt
+if /I "!RESOLVE_OS!"=="msdos" goto :pkg_dos_fmt
 
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\synthesis\cli.cmd" "!FORMAT!" "!SYSROOT_DIR!" "!OUT_PATH!"
+exit /b !ERRORLEVEL!
+
+:: ## pkg_dos_fmt
+:: Dispatches FreeDOS and MIT MS-DOS format exporters.
+:pkg_dos_fmt
+set "STACK="
+if /I "!FORMAT!"=="floppy-img" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_floppy.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+if /I "!FORMAT!"=="floppy" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_floppy.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+if /I "!FORMAT!"=="raw" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_raw.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+if /I "!FORMAT!"=="iso" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_iso.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+if /I "!FORMAT!"=="live-iso" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_iso.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+if /I "!FORMAT!"=="qcow2" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_qcow2.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+if /I "!FORMAT!"=="vmdk" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_vmdk.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+if /I "!FORMAT!"=="vhd" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_vhd.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+if /I "!FORMAT!"=="vagrant-box" ( call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_vagrant_box.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+call "!LIBSCRIPT_ROOT_DIR!\synthesis\formats\dos_raw.cmd" "!SYSROOT_DIR!" "!OUT_PATH!"
 exit /b !ERRORLEVEL!
 
 :: ## pkg_firmware

@@ -229,6 +229,24 @@ Standard triplets are calculated dynamically:
 - `riscv64` + `glibc` + `linux` $\rightarrow$ `riscv64-libscript-linux-gnu`
 - `x86_64` + `bsd-libc` + `freebsd` $\rightarrow$ `x86_64-unknown-freebsd14.0`
 - `x86_64` + `illumos-libc` + `sunos` $\rightarrow$ `x86_64-pc-solaris2.11`
+- `i8086` + `dos16-libc` / `dos-fcb-none` + `msdos` / `freedos` $\rightarrow$ `ia16-pc-msdos`
+- `i386` + `watcom-libc` + `msdos` / `freedos` $\rightarrow$ `i386-pc-msdoswatcom`
+- `i586` + `djgpp-libc` + `msdos` / `freedos` $\rightarrow$ `i586-pc-msdosdjgpp`
+
+### DOS Capability-Cliff Solver Guards (`engine/solver/resolve_stack.jq`)
+
+When targeting `freedos` (`1.3`, `1.4`) or MIT `msdos` (`1.25`, `2.0`, `4.00`), `resolve_stack.jq`
+enforces three deterministic stratum guards:
+
+- **`DOS1_FLAT_FCB_ONLY`** (`msdos-1.25` / `dos16-fcb`): Permits flat 8086 `.COM` packages such as
+  `win-cmd-asm` (`WINCMD1.COM` with FCB `wRecSize=1` and `red_125` redirection) while rejecting
+  hierarchical/handle or 32-bit DPMI packages (`jq`, `win-cmd-rs`).
+- **`DOS2_NO_DPMI32`** (`msdos-2.0` / `dos16-handle`): Permits 16-bit handle-based packages
+  (`win-cmd-asm` `WINCMD.COM` + 17 CRT-free 8086 utilities including `FINDSTR.COM` and `WHERE.COM`)
+  while rejecting 32-bit `dos32-djgpp` / `dos32-watcom` packages (`jq`, `win-cmd-rs`).
+- **`DOS_INCOMPATIBLE_FORK`** (all DOS strata): Rejects `multiprocess-fork` and
+  `multi-service-stack` daemons (`postgres`, `nginx`, `systemd`, `dbus`) unless explicitly
+  whitelisted in `dos_support`.
 
 ### Execution Plan Schema Suite
 
@@ -241,6 +259,9 @@ schemas:
   userland execution plan.
 - **`synthesis/schemas/execution-plan.illumos.schema.json`**: illumos/SunOS kernel, SMF init, ZFS
   `rpool`, and desktop plan.
+- **`synthesis/schemas/execution-plan.dos.schema.json`**: FreeDOS (`1.3`/`1.4`) and MIT MS-DOS
+  (`1.25`/`2.0`/`4.00`) kernel, shell (`win-cmd-asm` / `win-cmd-rs` / `FreeCOM` / `COMMAND.COM`),
+  DPMI (`CWSDPMI` / `DOS32A`), `CONFIG.SYS`/`AUTOEXEC.BAT`, and rootless FAT12/16/32 execution plan.
 - **`synthesis/schemas/execution-plan.live.schema.json`**: Live multiboot ISO/USB installer
   execution graph.
 - **`synthesis/schemas/execution-plan.rtos.schema.json`**: Zephyr RTOS, FreeRTOS, MCUboot slot
