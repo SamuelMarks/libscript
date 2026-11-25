@@ -42,7 +42,7 @@ BENTO_DIR="${BENTO_DIR:-${LIBSCRIPT_ROOT_DIR}/../bento}"
 # ## show_dos_ctest_usage
 # Prints CLI options for run_dos_ctest.sh.
 show_dos_ctest_usage() {
-  printf 'Usage: %s [--suite=<name>] [--le-bin=<path>] [--out=<json>] [--bento-dir=<path>] [--bento-prefix=<prefix>] [--dry-run] [--require-live]\n' "${_dcc_caller_this:-$0}"
+  printf 'Usage: %s [--suite=<name>] [--le-bin=<path>] [--out=<json>] [--bento-dir=<path>] [--bento-prefix=<prefix>] [--dry-run] [--require-live]\n' "${_dcc_caller_this:-${THIS_FILE}}"
 }
 
 # ## parse_dos_ctest_args

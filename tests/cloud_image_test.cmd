@@ -51,7 +51,6 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%i in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 echo [TEST-CLOUD] Starting Cloud Image Geometry Verification on Windows...

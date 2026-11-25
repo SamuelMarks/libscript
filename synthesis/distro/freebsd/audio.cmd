@@ -61,8 +61,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=!SCRIPT_DIR!\..\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 set "SYSROOT=%~1"
 if "%SYSROOT%"=="" set "SYSROOT=%REPO_ROOT%\build\freebsd-sysroot"

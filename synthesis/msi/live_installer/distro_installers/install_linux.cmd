@@ -72,8 +72,7 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 set "TARGET_DEV=%~1"
 set "FLAVOR=%~2"

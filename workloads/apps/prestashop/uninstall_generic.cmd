@@ -51,7 +51,6 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
 
 call "!LIBSCRIPT_ROOT_DIR!\engine\common\uninstall_generic.cmd" %*

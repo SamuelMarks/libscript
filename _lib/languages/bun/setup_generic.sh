@@ -130,27 +130,43 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_info "No download URL provided for bun ${VERSION}. Using official installer..."
+            log_info "Downloading official bun ${VERSION} release archive..."
             if [ "${TARGET_OS:-}" = "alpine" ]; then
-              libscript_depends "bash" "curl" "unzip" "libstdc++"
+              libscript_depends "unzip" "libstdc++"
             else
-              libscript_depends 'bash' 'curl' 'unzip'
+              libscript_depends 'unzip'
             fi
-            _installer_sh='sh'
-            if command -v bash >/dev/null 2>&1; then
-              _installer_sh='bash'
+            _bun_os='linux'
+            case "${UNAME_LOWER:-linux}" in
+              darwin*) _bun_os='darwin' ;;
+              linux*) _bun_os='linux' ;;
+            esac
+            _bun_arch='x64'
+            case "${ARCH_ALT:-${ARCH:-x86_64}}" in
+              aarch64|arm64) _bun_arch='aarch64' ;;
+              *) _bun_arch='x64' ;;
+            esac
+            _bun_musl=''
+            if [ "${TARGET_OS:-}" = "alpine" ]; then
+              _bun_musl='-musl'
             fi
-            _bun_inst=$(mktemp)
-            libscript_download "https://bun.sh/install" "${_bun_inst}"
-            if [ "${VERSION}" = "latest" ]; then
-              "$_installer_sh" "${_bun_inst}" || true
+            _bun_plat="bun-${_bun_os}-${_bun_arch}${_bun_musl}"
+            if [ "${VERSION}" = "latest" ] || [ "${EXACT_VERSION}" = "latest" ]; then
+              _bun_url="https://github.com/oven-sh/bun/releases/latest/download/${_bun_plat}.zip"
             else
-              "$_installer_sh" "${_bun_inst}" "bun-v${VERSION}" || true
+              _bun_url="https://github.com/oven-sh/bun/releases/download/bun-v${EXACT_VERSION}/${_bun_plat}.zip"
             fi
-            rm -f "${_bun_inst}"
-            if [ -f "${HOME:-/root}/.bun/bin/bun" ]; then
-              cp "${HOME:-/root}/.bun/bin/bun" "${TARGET_DIR}/bin/bun" || true
+            _bun_zip=$(mktemp)
+            if libscript_download "${_bun_url}" "${_bun_zip}"; then
+              _bun_ext=$(mktemp -d)
+              unzip -q -o "${_bun_zip}" -d "${_bun_ext}" || true
+              if [ -f "${_bun_ext}/${_bun_plat}/bun" ]; then
+                cp "${_bun_ext}/${_bun_plat}/bun" "${TARGET_DIR}/bin/bun"
+                chmod +x "${TARGET_DIR}/bin/bun"
+              fi
+              rm -rf "${_bun_ext}"
             fi
+            rm -f "${_bun_zip}"
           fi
         fi
       fi

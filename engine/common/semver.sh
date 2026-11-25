@@ -6,7 +6,7 @@
 # Refer to the internal functions of semver.sh for implementation details.
 
 
-set -feu
+set -feu; _sv_caller_this="${THIS_FILE:-}"; _sv_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -34,6 +34,16 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/log.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
+if (return 0 2>/dev/null); then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_sv_caller_dir:-}" ] && SCRIPT_DIR="${_sv_caller_dir}"
+  [ -n "${_sv_caller_this:-}" ] && THIS_FILE="${_sv_caller_this}"
+  unset _sv_caller_this _sv_caller_dir || true
+  return 0
+fi
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   log_info "Usage: ${THIS_FILE} [OPTIONS]"

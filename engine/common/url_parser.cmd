@@ -134,7 +134,11 @@ exit /b 0
 :: Converts a repository URL and optional branch into repo and branch variables.
 :git_args_from_url
 call :libscript_url_parser "%~1"
-set "repo=!protocol!!host!"
+if not "!path!"=="" (
+    set "repo=!protocol!!host!/!path!"
+) else (
+    set "repo=!protocol!!host!"
+)
 set "branch=%~2"
 echo.!repo!
 exit /b 0

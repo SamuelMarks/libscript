@@ -74,12 +74,12 @@ mounts_add() {
     _base=$(basename "${_host_path}")
     if [ -L "${MOUNTS_DIR}/${_base}" ] || [ ! -e "${MOUNTS_DIR}/${_base}" ]; then
       rm -f "${MOUNTS_DIR}/${_base}"
-      ln -sf "${_host_path}" "${MOUNTS_DIR}/${_base}"
+      ln -sfn "${_host_path}" "${MOUNTS_DIR}/${_base}" 2>/dev/null || ln -sf "${_host_path}" "${MOUNTS_DIR}/${_base}"
     fi
     if [ "${_base}" = "openedx-platform" ] || [ "${_base}" = "edx-platform" ] || [ -f "${_host_path}/manage.py" ]; then
       if [ -L "${OPENEDX_INSTALL_DIR}/codebase_mount" ] || [ ! -e "${OPENEDX_INSTALL_DIR}/codebase_mount" ]; then
         rm -f "${OPENEDX_INSTALL_DIR}/codebase_mount"
-        ln -sf "${_host_path}" "${OPENEDX_INSTALL_DIR}/codebase_mount"
+        ln -sfn "${_host_path}" "${OPENEDX_INSTALL_DIR}/codebase_mount" 2>/dev/null || ln -sf "${_host_path}" "${OPENEDX_INSTALL_DIR}/codebase_mount"
       fi
     fi
   fi

@@ -70,7 +70,7 @@ if /i "%~1"=="install" (
     exit /b !ERRORLEVEL!
 )
 
-for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 call "%REPO_ROOT%\engine\common\vm_builder.cmd" "%REPO_ROOT%\infrastructure\providers\hetzner\setup.sh" %*
 exit /b %ERRORLEVEL%

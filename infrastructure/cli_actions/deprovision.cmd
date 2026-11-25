@@ -61,7 +61,6 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-for %%I in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 call "!LIBSCRIPT_ROOT_DIR!\infrastructure\resources\core\teardown_cloud.cmd" %*
 exit /b %ERRORLEVEL%

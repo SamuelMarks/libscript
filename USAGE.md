@@ -11,7 +11,7 @@ maintain strict functional parity across `./libscript.sh` (POSIX `/bin/sh`) and 
 
 LibScript natively replaces external version managers like `nvm`, `fnm`, `volta`, `pyenv`, `uv`,
 `rustup`, `rvm`, and `sdkman`. It provides universal capability-typed lifecycle operations across
-all `492` atomic `T1`/`T2` recipes and `T3`–`T5` synthesis, infrastructure, and workload subsystems.
+all `498` atomic `T1`/`T2` recipes and `T3`–`T5` synthesis, infrastructure, and workload subsystems.
 
 ### The Universal Lifecycle Verbs
 
@@ -194,6 +194,8 @@ Available curated profiles include:
 - **ReactOS Win32 NT Syntheses (`synthesis/profiles/reactos/`)**: `minimal-headless-i686.json`,
   `desktop-classic-i686.json`, `developer-win32-i686.json`, `btrfs-appliance-i686.json`,
   `nightly-x86_64.json`
+- **FreeDOS & MIT MS-DOS Syntheses (`synthesis/profiles/dos/`)**: `freedos-1.4-djgpp-i586.json`,
+  `msdos-4.0-djgpp-i586.json`, `msdos-2.0-realmode-i8086.json`, `msdos-1.25-heritage-i8086.json`
 - **Cloud, MicroVM & Open edX Unikernel Constellation Appliances
   (`synthesis/profiles/{cloud,hypervisor,unikernel}/`)**: `cloud-aws-ami-base.json`,
   `cloud-azure-vhd-base.json`, `cloud-gcp-gce-base.json`, `hypervisor-vmware-esxi.json`,
@@ -240,18 +242,20 @@ into deployable media:
 # 4. Hybrid live bootable ISO (UEFI + BIOS) with SquashFS and OverlayFS
 ./libscript.sh package-as iso
 
-# 5. Bootable FreeBSD, illumos, and ReactOS distribution images
+# 5. Bootable FreeBSD, illumos, ReactOS, and FreeDOS / MIT MS-DOS distribution images
 ./libscript.sh package-as bsd-img          # FreeBSD UFS/ZFS disk image (or freebsd-distro)
 ./libscript.sh package-as illumos-distro   # illumos / SunOS ZFS root pool image
-./libscript.sh package-as reactos-distro   # ReactOS i686 / x86_64 ISO & disk image (or reactos-iso / reactos-vhd / reactos-vmdk)
+./libscript.sh package-as reactos-distro   # ReactOS i686 / x86_64 image (--format iso|raw|qcow2|vhd|vmdk|box)
+./libscript.sh package-as dos-distro       # FreeDOS 1.3/1.4 & MIT MS-DOS 1.25/2.0/4.00 image (or msdos-distro / dos-floppy)
 
 # 6. Unikernel images (direct ELF for Firecracker/QEMU or UEFI/GPT & Azure VHD cloud-boot disks)
 ./libscript.sh package-as unikernel
 ./libscript.sh package-as unikernel --cloud-boot=uefi-gpt
 ./libscript.sh package-as unikernel --cloud-boot=azure-vhd
 
-# 7. Signed MCUboot Zephyr / FreeRTOS microcontroller firmware (bin, hex, uf2)
-./libscript.sh package-as firmware
+# 7. Signed MCUboot Zephyr / FreeRTOS microcontroller firmware (rtos-distro, firmware-bin, firmware-elf, firmware-hex, firmware-uf2, mcuboot-signed)
+./libscript.sh package-as rtos-distro --format firmware-bin
+./libscript.sh package-as mcuboot-signed
 
 # 8. Clean rootfs archives for OCI containers, LXC, or FreeBSD Jails
 ./libscript.sh package-as rootfs-tar
@@ -488,10 +492,10 @@ split-brain fencing (`engine/consensus/`):
 # Inspect quorum and node state (.topology_state.json)
 ./libscript.sh constellation status workloads/constellations/postgres-ha/topology.json
 
-# Scale worker/replica pools, drain nodes, or trigger fenced leader failover
+# Scale worker/replica pools, drain nodes, or fence a failed leader to promote a replica
 ./libscript.sh constellation scale workloads/constellations/postgres-ha/topology.json pg-replicas=4
 ./libscript.sh constellation drain workloads/constellations/postgres-ha/topology.json pg-replicas-2
-./libscript.sh constellation failover workloads/constellations/postgres-ha/topology.json pg-replicas-1
+./libscript.sh constellation failover workloads/constellations/postgres-ha/topology.json pg-primary-0
 
 # Perform a zero-downtime rolling upgrade across the constellation
 ./libscript.sh constellation upgrade workloads/constellations/postgres-ha/topology.json 16.4
@@ -555,11 +559,13 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 # 2. Execute the 2x consecutive execution idempotency matrix
 ./tests/test_idempotency_matrix.sh
 
-# 3. Headless QEMU boot verification tests for Linux, FreeBSD, illumos, ReactOS, and RTOS
+# 3. Headless QEMU & kvikdos boot verification tests for Linux, FreeBSD, illumos, ReactOS, DOS, and RTOS
 ./tests/os_boot_test.sh build/disk.qcow2 60
 ./tests/freebsd_boot_test.sh build/freebsd.qcow2 60
 ./tests/illumos_boot_test.sh build/illumos.qcow2 60
 ./tests/reactos_boot_test.sh build/reactos.iso 90
+./tests/test_dos_kernel_synthesis.sh
+./tests/test_qemu_msdos_smoke.sh
 ./tests/zephyr_boot_test.sh build/zephyr.elf 30
 ./tests/freertos_boot_test.sh build/freertos.elf 30
 
@@ -580,7 +586,7 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 The unified `experiment` runner (`./libscript.sh experiment` / `libscript.cmd experiment`) combines
 the Open/Closed `experiments/<suite-id>/` plugin engine (`experiments/engine.{sh,cmd}`) with cloud
 instance provisioning and the Bento (`SamuelMarks/bento` @ `multi-os-qemu-aarch64`) Vagrant test
-matrix across all `492` atomic `T1`/`T2` recipes and `T3`–`T5` subsystems.
+matrix across all `498` atomic `T1`/`T2` recipes and `T3`–`T5` subsystems.
 
 ### Open/Closed Experiment Plugin Verbs (`experiments/<suite-id>/`)
 

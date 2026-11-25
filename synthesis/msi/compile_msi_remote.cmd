@@ -51,8 +51,6 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\.."
-    for %%I in ("!LIBSCRIPT_ROOT_DIR!") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 )
 
 set "OUT_FILE=%~nx1"

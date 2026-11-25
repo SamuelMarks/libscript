@@ -128,7 +128,6 @@ emit_bin_and_hex() {
 }
 
 BSP_DIR="${SCRIPT_DIR}/bsp"
-Z_BSP_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/kernel/zephyr/bsp"
 LLD_BIN=$(resolve_lld_bin || true)
 CROSS_CLANG=$(resolve_llvm_clang || true)
 HOST_CC='cc'
@@ -152,13 +151,13 @@ case "$PORT" in
     if command -v arm-none-eabi-gcc >/dev/null 2>&1; then
       arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -ffreestanding -nostdlib -O2 \
         -DFREERTOS_ARCH_ARM_CM3=1 -DFREERTOS_VER_STR="\"${FREERTOS_VER}\"" -I"$BUILD_DIR" \
-        -Wl,-T,"${Z_BSP_DIR}/cortex_m3.ld" -o "${BOOT_DIR}/freertos.elf" "${BSP_DIR}/freertos_boot_main.c"
+        -Wl,-T,"${BSP_DIR}/cortex_m3.ld" -o "${BOOT_DIR}/freertos.elf" "${BSP_DIR}/freertos_boot_main.c"
       BUILT_OK=1
     elif [ -n "$CROSS_CLANG" ] && [ -n "$LLD_BIN" ]; then
       "$CROSS_CLANG" --target=thumbv7m-none-eabi -mcpu=cortex-m3 -mthumb -ffreestanding -nostdlib -O2 \
         -DFREERTOS_ARCH_ARM_CM3=1 -DFREERTOS_VER_STR="\"${FREERTOS_VER}\"" -I"$BUILD_DIR" \
         -c "${BSP_DIR}/freertos_boot_main.c" -o "${BUILD_DIR}/freertos_boot_main.o"
-      "$LLD_BIN" -T "${Z_BSP_DIR}/cortex_m3.ld" -o "${BOOT_DIR}/freertos.elf" "${BUILD_DIR}/freertos_boot_main.o"
+      "$LLD_BIN" -T "${BSP_DIR}/cortex_m3.ld" -o "${BOOT_DIR}/freertos.elf" "${BUILD_DIR}/freertos_boot_main.o"
       BUILT_OK=1
     fi
     ;;
@@ -166,13 +165,13 @@ case "$PORT" in
     if command -v riscv64-unknown-elf-gcc >/dev/null 2>&1; then
       riscv64-unknown-elf-gcc -march=rv64imac -mabi=lp64 -mcmodel=medany -ffreestanding -nostdlib -O2 \
         -DFREERTOS_ARCH_RISCV=1 -DFREERTOS_VER_STR="\"${FREERTOS_VER}\"" -I"$BUILD_DIR" \
-        -Wl,-T,"${Z_BSP_DIR}/riscv.ld" -o "${BOOT_DIR}/freertos.elf" "${BSP_DIR}/freertos_boot_main.c"
+        -Wl,-T,"${BSP_DIR}/riscv.ld" -o "${BOOT_DIR}/freertos.elf" "${BSP_DIR}/freertos_boot_main.c"
       BUILT_OK=1
     elif [ -n "$CROSS_CLANG" ] && [ -n "$LLD_BIN" ]; then
       "$CROSS_CLANG" --target=riscv64-unknown-elf -march=rv64imac -mabi=lp64 -mcmodel=medany -ffreestanding -nostdlib -O2 \
         -DFREERTOS_ARCH_RISCV=1 -DFREERTOS_VER_STR="\"${FREERTOS_VER}\"" -I"$BUILD_DIR" \
         -c "${BSP_DIR}/freertos_boot_main.c" -o "${BUILD_DIR}/freertos_boot_main.o"
-      "$LLD_BIN" -m elf64lriscv -T "${Z_BSP_DIR}/riscv.ld" -o "${BOOT_DIR}/freertos.elf" "${BUILD_DIR}/freertos_boot_main.o"
+      "$LLD_BIN" -m elf64lriscv -T "${BSP_DIR}/riscv.ld" -o "${BOOT_DIR}/freertos.elf" "${BUILD_DIR}/freertos_boot_main.o"
       BUILT_OK=1
     fi
     ;;
@@ -181,7 +180,7 @@ case "$PORT" in
       "$CROSS_CLANG" --target=aarch64-unknown-none-elf -mgeneral-regs-only -mstrict-align -fno-builtin -ffreestanding -nostdlib -O2 \
         -DFREERTOS_ARCH_AARCH64=1 -DFREERTOS_VER_STR="\"${FREERTOS_VER}\"" -I"$BUILD_DIR" \
         -c "${BSP_DIR}/freertos_boot_main.c" -o "${BUILD_DIR}/freertos_boot_main.o"
-      "$LLD_BIN" -T "${Z_BSP_DIR}/aarch64.ld" -o "${BOOT_DIR}/freertos.elf" "${BUILD_DIR}/freertos_boot_main.o"
+      "$LLD_BIN" -T "${BSP_DIR}/aarch64.ld" -o "${BOOT_DIR}/freertos.elf" "${BUILD_DIR}/freertos_boot_main.o"
       BUILT_OK=1
     fi
     ;;

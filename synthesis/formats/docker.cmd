@@ -61,7 +61,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 set "IS_COMPOSE=0"
 for %%A in (%*) do (

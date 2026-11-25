@@ -38,11 +38,10 @@ STACK='' "${SCRIPT_DIR}/cli.sh" install latest >/dev/null
 STACK='' "${SCRIPT_DIR}/cli.sh" install latest >/dev/null
 STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install kvikdos latest >/dev/null
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/kvikdos/env.sh"
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-unset SCRIPT_NAME || true
+for _kvd_b in "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/kvikdos/default/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/kvikdos/latest/bin"; do
+  [ -d "$_kvd_b" ] && PATH="${_kvd_b}:${PATH}"
+done
+export PATH
 
 _pkt_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/dos-pktdrv/default/dos"
 [ -f "${_pkt_dir}/FDAPM.COM" ]

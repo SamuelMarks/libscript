@@ -3,7 +3,7 @@
   "capabilities": ["userland-package"],
   "category": "languages",
   "conflicts": [],
-  "description": "Standalone version manager, multi-flavor binary installer (edgcpp+llvm+gcc, edgcpp+llvm, edgcpp+gcc), source builder, and CC/CXX driver wrapper for the Edison Design Group C/C++ Front End (v7.0.1).",
+  "description": "Standalone version manager, multi-flavor binary installer (edgcpp+llvm+gcc, edgcpp+llvm, edgcpp+gcc), source builder, and CC/CXX driver wrapper for the Edison Design Group C/C++ Front End (v7.0.2).",
   "name": "edgcpp",
   "os_blacklist": ["sunos", "freebsd"],
   "os_whitelist": ["all"],

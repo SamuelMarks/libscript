@@ -73,7 +73,7 @@ goto :main
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=%SCRIPT_DIR%\.."
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 where powershell >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" (

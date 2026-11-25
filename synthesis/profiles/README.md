@@ -20,6 +20,9 @@ Profiles are consumed by `./libscript.sh config os --profile=<name>`,
   / retro `cde` desktops.
 - **`reactos/`**: ReactOS `i686` and `x86_64` profiles (`minimal-headless-i686`,
   `desktop-classic-i686`, `developer-win32-i686`, `btrfs-appliance-i686`, `nightly-x86_64`).
+- **`dos/`**: FreeDOS 1.4 and MIT MS-DOS (`1.25`, `2.0`, `4.00`) profiles across `dos32-dpmi`,
+  `dos16-handle`, and `dos16-fcb` strata (`freedos-1.4-djgpp-i586`, `msdos-4.0-djgpp-i586`,
+  `msdos-2.0-realmode-i8086`, `msdos-1.25-heritage-i8086`).
 - **`unikernel/`** (including `unikernel/openedx/`): Single-address-space OSv, Nanos, MirageOS,
   Rumprun, and Unikraft profiles plus the 8-appliance Open edX unikernel pod profiles.
 - **`rtos/`**: Zephyr RTOS and FreeRTOS profiles for ARM Cortex-M, RISC-V 64, QEMU x86_64, WAMR

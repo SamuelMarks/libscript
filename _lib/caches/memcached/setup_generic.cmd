@@ -74,7 +74,12 @@ if "%MEMCACHED_DOWNLOAD_URL%"=="" (
 )
 if "%MEMCACHED_DOWNLOAD_URL%"=="" (
     if "%_tmp_ver%"=="latest" (
-        for /f "usebackq tokens=*" %%I in (`powershell -NoProfile -Command "git ls-remote --tags 'https://github.com/SamuelMarks/memcached-windows' 2^>$null ^| Select-String -Pattern '\d+\.\d+\.\d+' -AllMatches ^| ForEach-Object { $_.Matches.Value } ^| Sort-Object {[version]$_} ^| Select-Object -Last 1"`) do set "_tmp_ver=%%I"
+        where git >nul 2>&1
+        if not errorlevel 1 (
+            for /f "tokens=2" %%I in ('git ls-remote --tags --refs --sort=-v:refname "https://github.com/SamuelMarks/memcached-windows" 2^>nul') do (
+                if "!_tmp_ver!"=="latest" set "_tmp_ver=%%~nxI"
+            )
+        )
     )
 )
 if "%MEMCACHED_DOWNLOAD_URL%"=="" (

@@ -131,8 +131,10 @@ if exist "%alias_path%" (
 if "%IS_MSDOS%"=="1" (
     > "%base_dir%\%alias_name%.ver" echo.%exact_version%
     if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo.%exact_version%
+    rmdir /q "%alias_path%" >nul 2>&1
     mklink /J "%alias_path%" "%exact_path%" >nul 2>&1
-) else if not exist "%alias_path%" (
+) else if not exist "%alias_path%\" (
+    rmdir /q "%alias_path%" >nul 2>&1
     mklink /J "%alias_path%" "%exact_path%" >nul 2>&1
     if errorlevel 1 (
         > "%base_dir%\%alias_name%.ver" echo.%exact_version%

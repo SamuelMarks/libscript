@@ -296,9 +296,8 @@ where cargo >nul 2>&1
 if errorlevel 1 (
     set "STACK="
     call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install rust latest
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\rust\env.cmd" (
-        set "STACK="
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\rust\env.cmd"
+    for %%R in ("%LIBSCRIPT_HOME%\rust\default\bin" "%LIBSCRIPT_HOME%\rust\latest\bin" "%USERPROFILE%\.cargo\bin") do (
+        if exist "%%~R" set "PATH=%%~R;!PATH!"
     )
 )
 set "_SRC_DIR=%WIN_CMD_RS_REPO_DIR%"

@@ -67,8 +67,7 @@ exit /b 0
 :: ## main
 :: Executes primary screenshot rendering routine.
 :main
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 set "CC0_ROOT=%REPO_ROOT%\..\cc0-assets"
 set "CC0_MSI_DIR=%CC0_ROOT%\msi-rs\screenshots"

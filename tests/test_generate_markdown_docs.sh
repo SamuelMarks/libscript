@@ -32,7 +32,7 @@ export LIBSCRIPT_ROOT_DIR
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf 'Usage: %s [--help]
-' "$0"
+' "${THIS_FILE}"
   printf 'Runs regression tests for generate_markdown_docs and inject_markers.
 '
   exit 0

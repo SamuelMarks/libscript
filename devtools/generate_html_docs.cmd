@@ -68,7 +68,7 @@ exit /b 0
 :: ## main
 :: Dispatches HTML documentation generation to the PowerShell implementation.
 :main
-set "REPO_ROOT=%SCRIPT_DIR%\.."
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 set "LIBSCRIPT_EXTENDED_SCHEMAS=workloads/constellations/constellation.schema.json engine/schemas/consensus-state.schema.json workloads/schemas/payload.schema.json traits/trait.schema.json engine/schemas/manifest.schema.json"
 
 where powershell >nul 2>&1

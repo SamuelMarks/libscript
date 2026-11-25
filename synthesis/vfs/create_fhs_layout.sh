@@ -81,7 +81,7 @@ chmod 0700 "$TARGET_DIR/root" 2>/dev/null || true
 # Symlink /run -> var/run or var/run -> run if needed
 if [ ! -e "$TARGET_DIR/run" ]; then
   rm -f "$TARGET_DIR/run" 2>/dev/null || true
-  ln -sf var/run "$TARGET_DIR/run" 2>/dev/null || mkdir -p "$TARGET_DIR/run"
+  ln -sfn var/run "$TARGET_DIR/run" 2>/dev/null || ln -sf var/run "$TARGET_DIR/run" 2>/dev/null || mkdir -p "$TARGET_DIR/run"
 fi
 
 # 2. Skeleton configuration files (idempotent creation)

@@ -1,12 +1,12 @@
 #!/bin/sh
 # ## Overview
-# Provides robust URL parsing capabilities in pure POSIX shell.
-# The `libscript_url_parser` function breaks down a URL into its constituent
-# parts (`protocol`, `host`, `port`, `path`, `user`), exporting them to the environment.
+# Provides URL parsing capabilities in pure POSIX `/bin/sh` without external non-POSIX utilities.
+# Decomposes a URI into `protocol`, `user`, `pass`, `host`, `port`, and `path`, and exports them.
+#
 # ## Usage
-# Source this file and call `libscript_url_parser <url>` to extract URL components.
-set -feu
-_url_parser_caller_this="${THIS_FILE:-}"; _url_parser_caller_dir="${SCRIPT_DIR:-}"
+# SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/url_parser.sh" export SCRIPT_NAME && . "${SCRIPT_NAME}"
+
+set -feu; _url_parser_caller_this="${THIS_FILE:-}"; _url_parser_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,68 +20,107 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
-    [ -n "$_url_parser_caller_this" ] && THIS_FILE="$_url_parser_caller_this"
-    [ -n "$_url_parser_caller_dir" ] && SCRIPT_DIR="$_url_parser_caller_dir"
-    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
+    [ -n "$_url_parser_caller_this" ] && THIS_FILE="$_url_parser_caller_this"; [ -n "$_url_parser_caller_dir" ] && SCRIPT_DIR="$_url_parser_caller_dir"; unset SCRIPT_NAME _url_parser_caller_this _url_parser_caller_dir || true; if (return 0 2>/dev/null); then return 0; else exit 0; fi ;;
+  *)
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-# ## libscript_url_parser
-# Parses a URI string into scheme, authority, host, port, path, and query components.
-libscript_url_parser() {
-  # Inspired by: https://gist.github.com/joshisa/297b0bc1ec0dcdda0d1625029711fa24
-  # Referenced and tweaked from http://stackoverflow.com/questions/6174220/parse-url-in-shell-script#6174447
-  export url="${1}"
 
-  protocol=$(printf '%s' "${1}" | grep "://" | sed -e's,^\(.*://\).*,\1,g')
-  protocol_len=$(( ${#protocol} + 1 ))
-  # Remove the protocol
-  url_no_protocol=$(printf '%s' "${url}" | cut -c"${protocol_len}"-)
-  # Use tr: Make the protocol lower-case for easy string compare
-  protocol=$(printf '%s' "${protocol}" | tr '[:upper:]' '[:lower:]')
+# ## libscript_url_parser
+# Parses a URI string into protocol, user, pass, host, port, and path components using POSIX parameter expansion.
+libscript_url_parser() {
+  url="${1:-}"
+  protocol=""
+  user=""
+  pass=""
+  host=""
+  port=""
+  path=""
+  [ -n "${url}" ] || return 1
+
+  _up_rest="${url}"
+  case "${_up_rest}" in
+    *://*)
+      protocol="${_up_rest%%://*}://"
+      _up_rest="${_up_rest#*://}"
+      ;;
+  esac
+  url_no_protocol="${_up_rest}"
   printf 'url_no_protocol="%s"\n' "${url_no_protocol}"
 
-  # Extract the user and password (if any)
-  # cut 1: Remove the path part to prevent @ in the querystring from breaking the next cut
-  # rev: Reverse string so cut -f1 takes the (reversed) rightmost field, and -f2- is what we want
-  # cut 2: Remove the host:port
-  # rev: Undo the first rev above
-  userpass=$(printf '%s' "${url_no_protocol}" | grep "@" | cut -d"/" -f1 | rev | cut -d"@" -f2- | rev)
-  pass=$(printf '%s' "${userpass}" | grep ":" | cut -d":" -f2)
-  if [ -n "${pass}" ]; then
-    user=$(printf '%s' "${userpass}" | grep ":" | cut -d":" -f1)
-  else
-    user="${userpass}"
-  fi
+  case "${_up_rest}" in
+    */*)
+      _up_auth="${_up_rest%%/*}"
+      path="${_up_rest#*/}"
+      ;;
+    *)
+      _up_auth="${_up_rest}"
+      path=""
+      ;;
+  esac
 
-  # Extract the host
-  hostport=$(printf '%s' "${url_no_protocol}" | grep -Fv "${userpass}"'@' | cut -d"/" -f1)
-  host=$(printf '%s' "${hostport}" | cut -Fd":" -f1)
-  port=$(printf '%s' "${hostport}" | grep -F ":" | cut -d":" -f2)
-  path_=$(printf '%s' "${url_no_protocol}" | grep -F "/" | cut -d"/" -f2-)
+  case "${_up_auth}" in
+    *@*)
+      _up_userpass="${_up_auth%%@*}"
+      _up_hostport="${_up_auth#*@}"
+      case "${_up_userpass}" in
+        *:*)
+          user="${_up_userpass%%:*}"
+          pass="${_up_userpass#*:}"
+          ;;
+        *)
+          user="${_up_userpass}"
+          ;;
+      esac
+      ;;
+    *)
+      _up_hostport="${_up_auth}"
+      ;;
+  esac
 
+  case "${_up_hostport}" in
+    *:*)
+      host="${_up_hostport%%:*}"
+      port="${_up_hostport#*:}"
+      ;;
+    *)
+      host="${_up_hostport}"
+      ;;
+  esac
+
+  export url protocol user pass host port path
   printf 'protocol = "%s"\n' "${protocol}"
   printf 'host = "%s"\n' "${host}"
-  if [ -n "${port}" ]; then printf 'port = %d\n' "${port}"; fi
-  printf 'path = "%s"\n' "${path_}"
+  if [ -n "${port}" ]; then printf 'port = %s\n' "${port}"; fi
+  printf 'path = "%s"\n' "${path}"
   if [ -n "${user}" ]; then printf 'user = "%s"\n' "${user}"; fi
+  unset _up_rest _up_auth _up_userpass _up_hostport || true
+}
 
-  export protocol host port path
+# ## parse_url
+# Alias wrapper around `libscript_url_parser`.
+parse_url() {
+  libscript_url_parser "$@"
 }
 
 # ## git_args_from_url
-# Used to turn an URL into two args: `${repo} ${branch}`
+# Extracts repository base URL and optional branch from a Git URI.
 git_args_from_url() {
-  libscript_url_parser "${1}"
-  printf "%s\n" "${protocol}${host}"
-  repo="${0}"
-  branch="${2:-''}"; export repo branch
+  libscript_url_parser "${1}" >/dev/null
+  if [ -n "${path}" ]; then
+    repo="${protocol}${host}/${path}"
+  else
+    repo="${protocol}${host}"
+  fi
+  branch="${2:-}"
+  export repo branch
+  printf '%s\n' "${repo}"
 }
 
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
-[ -n "${_url_parser_caller_dir:-}" ] && SCRIPT_DIR="$_url_parser_caller_dir"
-[ -n "${_url_parser_caller_this:-}" ] && THIS_FILE="$_url_parser_caller_this"
+[ -n "${_url_parser_caller_dir:-}" ] && SCRIPT_DIR="${_url_parser_caller_dir}"
+[ -n "${_url_parser_caller_this:-}" ] && THIS_FILE="${_url_parser_caller_this}"
 unset SCRIPT_NAME _url_parser_caller_this _url_parser_caller_dir || true

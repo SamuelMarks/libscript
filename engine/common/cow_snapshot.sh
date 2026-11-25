@@ -5,7 +5,7 @@
 # ## Usage
 # ./engine/common/cow_snapshot.sh <create|rollback|send> <dataset_or_subvol> <snapshot_tag>
 
-set -feu
+set -feu; _cow_caller_this="${THIS_FILE:-}"; _cow_caller_dir="${SCRIPT_DIR:-}"
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -44,3 +44,12 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 execute_cow_op "$@"
+
+if (return 0 2>/dev/null); then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_cow_caller_dir:-}" ] && SCRIPT_DIR="${_cow_caller_dir}"
+  [ -n "${_cow_caller_this:-}" ] && THIS_FILE="${_cow_caller_this}"
+  unset SCRIPT_NAME _cow_caller_this _cow_caller_dir || true
+  return 0
+fi

@@ -2,7 +2,7 @@
 # ## Overview
 # Multi-version Linux kernel build, C dialect (gnu89 vs gnu11), dual-backend
 # (llvm_backend vs gcc_backend), idempotency, and boot verification test suite
-# using the latest SamuelMarks/edgcpp-compiler (v7.0.1) release.
+# using the latest SamuelMarks/edgcpp-compiler (v7.0.2) release.
 # ## Usage
 # ./tests/test_edgcpp_kernel_versions.sh
 set -feu
@@ -45,17 +45,17 @@ mkdir -p "${LIBSCRIPT_ROOT_DIR}/build" "${TEST_SYSROOT}"
 rm -f "${EDGCPP_LOG}"
 
 # ## verify_edgcpp_release_upgrade
-# Verifies that edgcpp v7.0.1 is installed, release metadata is stamped, and SHA256SUMS.txt and kernel tarballs are registered in _lib/checksums.txt.
+# Verifies that edgcpp v7.0.2 is installed, release metadata is stamped, and SHA256SUMS.txt and kernel tarballs are registered in _lib/checksums.txt.
 verify_edgcpp_release_upgrade() {
   unset SCRIPT_NAME || true
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install edgcpp 7.0.1
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install edgcpp 7.0.2
 
-  _edg_dir="${TEST_HOME}/edgcpp/7.0.1"
+  _edg_dir="${TEST_HOME}/edgcpp/7.0.2"
   [ -x "${_edg_dir}/bin/edgcpp" ]
   [ -x "${_edg_dir}/bin/cpfe" ]
   [ -f "${_edg_dir}/edgcpp-release-metadata.json" ]
-  grep -q '"version": "7.0.1"' "${_edg_dir}/edgcpp-release-metadata.json"
-  grep -q 'SHA256SUMS.txt' "${LIBSCRIPT_ROOT_DIR}/_lib/checksums.txt"
+  grep -q '"version": "7.0.2"' "${_edg_dir}/edgcpp-release-metadata.json"
+  grep -q 'v7\.0\.2/SHA256SUMS\.txt' "${LIBSCRIPT_ROOT_DIR}/_lib/checksums.txt"
 
   unset SCRIPT_NAME || true
   _kremote="$("${LIBSCRIPT_ROOT_DIR}/_lib/kernel/linux/cli.sh" ls-remote)"
@@ -139,7 +139,7 @@ build_and_verify_kernel_version() {
       "kernel_version": "${_kver}",
       "c_std_dialect": "${_exp_dialect}",
       "compiler": "edgcpp",
-      "edgcpp_version": "7.0.1",
+      "edgcpp_version": "7.0.2",
       "compile_time_ms": ${_compile_ms:-0},
       "binary_size_bytes": ${_bin_size:-0},
       "text_size_bytes": ${_text_size:-0},
@@ -202,8 +202,8 @@ _total_logged_tus="$(wc -l < "${EDGCPP_LOG}" | tr -d ' ')"
 cat <<EOF > "${REPORT_JSON}.tmp"
 {
   "compiler": "edgcpp",
-  "compiler_version": "7.0.1",
-  "repository": "https://github.com/SamuelMarks/edgcpp-compiler/releases/tag/v7.0.1",
+  "compiler_version": "7.0.2",
+  "repository": "https://github.com/SamuelMarks/edgcpp-compiler/releases/tag/v7.0.2",
   "total_kernel_versions_tested": 8,
   "total_kernel_tus_compiled": ${_total_logged_tus},
   "cpfe_failed_tus": 0,
@@ -217,7 +217,7 @@ mv -f "${REPORT_JSON}.tmp" "${REPORT_JSON}"
 printf '
 =========================================================================================================
 '
-printf ' EDGCPP v7.0.1 MULTI-VERSION LINUX KERNEL BUILD & BOOT VERIFICATION MATRIX (8 VERSIONS)
+printf ' EDGCPP v7.0.2 MULTI-VERSION LINUX KERNEL BUILD & BOOT VERIFICATION MATRIX (8 VERSIONS)
 '
 printf '=========================================================================================================
 '
@@ -232,5 +232,5 @@ printf ' Total Kernel TUs Validated by cpfe: %s | Failed TUs: 0 | Report: %s
 ' "${_total_logged_tus}" "${REPORT_JSON}"
 
 rm -f "${KV_TABLE_FILE}" "${KV_JSON_FILE}"
-printf '[PASS] All 8 Linux kernel versions (4.19.322 through 6.12.1) built and verified with edgcpp v7.0.1!
+printf '[PASS] All 8 Linux kernel versions (4.19.322 through 6.12.1) built and verified with edgcpp v7.0.2!
 '

@@ -81,13 +81,13 @@ has_partition() {
   case "$_plat" in
     linux*)
       if command -v sgdisk >/dev/null 2>&1; then
-        sgdisk -p "$_dev" | grep -qE "^[\s]*${_idx}\s"
+        sgdisk -p "$_dev" | grep -qE "^[[:space:]]*${_idx}[[:space:]]"
         return $?
       fi
       ;;
     freebsd*)
       if command -v gpart >/dev/null 2>&1; then
-        gpart show -p "$(basename "$_dev")" | grep -qE "^[\s]*[0-9]+\s+${_idx}\s"
+        gpart show -p "$(basename "$_dev")" | grep -qE "^[[:space:]]*[0-9]+[[:space:]]+${_idx}[[:space:]]"
         return $?
       fi
       ;;

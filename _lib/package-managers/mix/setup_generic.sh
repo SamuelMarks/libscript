@@ -100,7 +100,7 @@ case "$ACTION" in
         
         # mix is part of elixir, so we just install elixir
         unset SCRIPT_NAME || true
-        ACTION="install" ELIXIR_VERSION="$VERSION" sh "${LIBSCRIPT_ROOT_DIR}/_lib/languages/elixir/setup.sh" install "elixir" "" || exit 1
+        STACK="" ELIXIR_VERSION="$VERSION" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install elixir "$VERSION" || exit 1
         
         mkdir -p "${TARGET_DIR}/bin"
         # Link mix from elixir's installation

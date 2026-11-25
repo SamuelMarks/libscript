@@ -79,7 +79,7 @@ exit /b 1
 :: Completes flag parsing and validates batch runner parameters.
 :end_parse_args
 
-cd /d "%SCRIPT_DIR%\.." || exit /b 1
+cd /d "!LIBSCRIPT_ROOT_DIR!" || exit /b 1
 
 if not exist "TODO_PLAN.md" (
     echo TODO_PLAN.md not found. Generating it...

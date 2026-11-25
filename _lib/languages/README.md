@@ -56,7 +56,7 @@ component's local `cli.sh` / `cli.cmd`:
   TypeScript.
 - [`edgcpp`](./edgcpp/README.md) (`T1` — `userland-package`): Standalone version manager,
   multi-flavor binary installer (edgcpp+llvm+gcc, edgcpp+llvm, edgcpp+gcc), source builder, and
-  CC/CXX driver wrapper for the Edison Design Group C/C++ Front End (v7.0.1).
+  CC/CXX driver wrapper for the Edison Design Group C/C++ Front End (v7.0.2).
 - [`elixir`](./elixir/README.md) (`T1` — `userland-package`): A dynamic, functional language for
   building scalable and maintainable applications.
 - [`erlang`](./erlang/README.md) (`T1` — `userland-package`): Concurrent, fault-tolerant functional

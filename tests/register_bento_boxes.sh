@@ -160,12 +160,12 @@ ensure_libvirt_qemu_links() {
   for _vag_arch in arm64 amd64; do
     if [ -d "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/qemu" ] && [ ! -d "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/libvirt" ]; then
       rm -f "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/libvirt" 2>/dev/null || true
-      ln -sf "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/qemu" "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/libvirt"
+      ln -sfn "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/qemu" "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/libvirt" 2>/dev/null || ln -sf "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/qemu" "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/libvirt"
     fi
   done
   if [ -d "${_vag_home}/boxes/${_vslash_name}/0/qemu" ] && [ ! -d "${_vag_home}/boxes/${_vslash_name}/0/libvirt" ]; then
     rm -f "${_vag_home}/boxes/${_vslash_name}/0/libvirt" 2>/dev/null || true
-    ln -sf "${_vag_home}/boxes/${_vslash_name}/0/qemu" "${_vag_home}/boxes/${_vslash_name}/0/libvirt"
+    ln -sfn "${_vag_home}/boxes/${_vslash_name}/0/qemu" "${_vag_home}/boxes/${_vslash_name}/0/libvirt" 2>/dev/null || ln -sf "${_vag_home}/boxes/${_vslash_name}/0/qemu" "${_vag_home}/boxes/${_vslash_name}/0/libvirt"
   fi
 }
 

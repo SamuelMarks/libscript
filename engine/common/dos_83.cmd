@@ -164,7 +164,8 @@ set "_LC_O=%~2"
 set "_LC_M=%~3"
 if "%LIBSCRIPT_DOS_83%"=="1" exit /b 0
 if /i "!_LC_O!"=="!_LC_M!" exit /b 0
-if exist "!_LC_H!\!_LC_M!" if not exist "!_LC_H!\!_LC_O!" (
+if exist "!_LC_H!\!_LC_M!" if not exist "!_LC_H!\!_LC_O!\" (
+    rmdir /q "!_LC_H!\!_LC_O!" >nul 2>&1
     mklink /J "!_LC_H!\!_LC_O!" "!_LC_H!\!_LC_M!" >nul 2>&1
 )
 exit /b 0

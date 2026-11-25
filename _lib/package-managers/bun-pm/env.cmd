@@ -63,17 +63,11 @@ if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "bun-pm" "%BUN_PM_VERSION%"
 
-if exist "!SCRIPT_DIR!\..\..\languages\bun\env.cmd" (
-    call "!SCRIPT_DIR!\..\..\languages\bun\env.cmd"
-) else (
-    set "_CAND_P=%USERPROFILE%\.bun\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "_CAND_P=%LIBSCRIPT_HOME%\bun\latest\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "bun-pm" "%BUN_PM_VERSION%"
+for %%B in ("%LIBSCRIPT_HOME%\bun\default\bin" "%LIBSCRIPT_HOME%\bun\latest\bin" "%USERPROFILE%\.bun\bin") do (
+    if exist "%%~B" (
+        echo ";!PATH!;" | findstr /I /C:";%%~B;" >nul 2>&1
+        if errorlevel 1 set "PATH=%%~B;!PATH!"
+    )
 )
 
 endlocal & (

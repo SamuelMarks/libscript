@@ -297,13 +297,10 @@ install_from_source_cargo() {
       unset SCRIPT_NAME || true
       STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install rust latest
     )
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/env.sh" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/env.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090,SC1091
-      . "${SCRIPT_NAME}"
-      unset SCRIPT_NAME || true
-    fi
+    for _rs_b in "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rust/default/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rust/latest/bin" "${HOME:-/root}/.cargo/bin"; do
+      [ -d "$_rs_b" ] && PATH="${_rs_b}:${PATH}"
+    done
+    export PATH
   fi
 
   _src_dir="${WIN_CMD_RS_REPO_DIR:-}"

@@ -3,22 +3,23 @@
 **Tier**: `T1` (`_lib/languages/edgcpp/`) | **Capabilities**: `userland-package`
 
 Standalone version manager, multi-flavor binary installer, source builder, and `CC`/`CXX` compiler
-driver wrapper for the **Edison Design Group (EDG) C/C++ Front End (`edgcpp` v7.0.1)**
-([`SamuelMarks/edgcpp-compiler`](https://github.com/SamuelMarks/edgcpp-compiler/releases/tag/v7.0.1)).
+driver wrapper for the **Edison Design Group (EDG) C/C++ Front End (`edgcpp` v7.0.2)**
+([`SamuelMarks/edgcpp-compiler`](https://github.com/SamuelMarks/edgcpp-compiler/releases/tag/v7.0.2)).
 
 ## Overview
 
-`_lib/languages/edgcpp/` manages the installation and lifecycle of `edgcpp` (`v7.0.1`) across Linux
-(`x86_64`, `aarch64`), macOS (`aarch64`), and Windows (`x86_64`, `arm64`). It provisions the EDG
-C/C++ front-end binaries (`cpfe`, `cpfe-cp`, `cdisp`, `mk_errinfo`, `edg_decode`), standard library
-headers (`include_c99/`, `include_c++/`), and drop-in compiler driver shims (`edgcpp`, `edg-cc`,
-`edg-c++`) compatible with `make`, `Kbuild`, `autotools`, and `CMake`.
+`_lib/languages/edgcpp/` manages the installation and lifecycle of `edgcpp` (`v7.0.2`, `v7.0.1`)
+across Linux (`x86_64`, `aarch64`), macOS (`aarch64`), and Windows (`x86_64`, `arm64`). It
+provisions the EDG C/C++ front-end binaries (`cpfe`, `cpfe++`, `edg++`, `cpfe-cp`, `cdisp`,
+`mk_errinfo`, `edg_decode`), standard library headers (`include_c99/`, `include_c++/`), and drop-in
+compiler driver shims (`edgcpp`, `edg-cc`, `edg-c++`) compatible with `make`, `Kbuild`, `autotools`,
+and `CMake`.
 
 ## Usage
 
 ```sh
-# Install edgcpp v7.0.1 (default flavor: edgcpp+llvm+gcc)
-./libscript.sh install edgcpp 7.0.1
+# Install edgcpp v7.0.2 (default flavor: edgcpp+llvm+gcc)
+./libscript.sh install edgcpp 7.0.2
 
 # List installed and remote versions
 ./libscript.sh ls edgcpp
@@ -36,7 +37,7 @@ headers (`include_c99/`, `include_c++/`), and drop-in compiler driver shims (`ed
 
 | Variable                | Description                                                                                                      | Default                                         |
 | :---------------------- | :--------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- |
-| `EDGCPP_VERSION`        | Version of `edgcpp` to install (`7.0.1`, `latest`, `stable`).                                                    | `7.0.1`                                         |
+| `EDGCPP_VERSION`        | Version of `edgcpp` to install (`7.0.2`, `7.0.1`, `latest`, `stable`).                                           | `7.0.2`                                         |
 | `EDGCPP_FLAVOR`         | Release backend flavor (`edgcpp+llvm+gcc`, `edgcpp+llvm`, `edgcpp+gcc`).                                         | `edgcpp+llvm+gcc`                               |
 | `EDGCPP_INSTALL_METHOD` | Installation mode (`libscript_native`, `from-source`, `local_binary`, `pkg_mgr`, `system`).                      | `libscript_native`                              |
 | `EDGCPP_BACKEND_CC`     | Underlying C compiler/assembler/linker used after front-end processing.                                          | `cc`                                            |
@@ -63,7 +64,7 @@ running the setup script.
 | `LIBSCRIPT_HW_NVME`             | Detected or overridden NVMe storage presence flag for I/O scheduler and database tuning.                                                                                                                                                                            | `none`                                               |                  |
 | `LIBSCRIPT_HW_SIMD`             | Detected or overridden CPU SIMD instruction set capabilities (e.g., avx2, avx512, neon).                                                                                                                                                                            | `none`                                               |                  |
 | `LIBSCRIPT_JOBS`                | Explicit positive integer worker count overriding auto-detected CPU concurrency for parallel pre-commit hooks, static audits, and sharded batch tasks (set to 1 for sequential execution).                                                                          | `none`                                               |                  |
-| `EDGCPP_VERSION`                | Specific version or semantic alias of edgcpp to install (e.g., '7.0.1', 'v7.0.1', '7.0', 'latest', or 'stable').                                                                                                                                                    | `7.0.1`                                              |                  |
+| `EDGCPP_VERSION`                | Specific version or semantic alias of edgcpp to install (e.g., '7.0.2', 'v7.0.2', '7.0.1', 'v7.0.1', '7.0', 'latest', or 'stable').                                                                                                                                 | `7.0.2`                                              |                  |
 | `EDGCPP_FLAVOR`                 | Release backend flavor of edgcpp to install ('edgcpp+llvm+gcc' for combined LLVM and GCC/C-generating backend support, 'edgcpp+llvm' for LLVM backend, or 'edgcpp+gcc' for GCC/C-generating backend).                                                               | `edgcpp+llvm+gcc`                                    |                  |
 | `EDGCPP_INSTALL_METHOD`         | Provisioning strategy for edgcpp ('libscript_native' downloads official GitHub release archives, 'from-source' compiles from source, 'local_binary' registers an existing cpfe binary, or 'pkg_mgr'/'system').                                                      | `libscript_native`                                   |                  |
 | `EDGCPP_PKG_MGR`                | Explicit package manager override for Mode 1 installation.                                                                                                                                                                                                          | `none`                                               |                  |
@@ -106,7 +107,7 @@ running the setup script.
 | `EDGCPP_SOURCE_DIR`             | Local filesystem checkout path of edgcpp-compiler-multibackend used for Release, 4-mode matrix, coverage, and Bug #4 ablation builds.                                                                                                                               | `none`                                               |                  |
 | `EDGCPP_REQUIRE_CLEAN_GIT`      | When set to '1', requires EDGCPP_SOURCE_DIR to be a clean, non-dirty git worktree before building benchmark binaries.                                                                                                                                               | `none`                                               |                  |
 | `EDGCPP_BUILD_MODE`             | CMake build profile for edgcpp source builds ('release', 'llvm-cov', 'gcov', 'bug4-legacy', or 'all-modes').                                                                                                                                                        | `none`                                               |                  |
-| `EDGCPP_RT_LIB`                 | Filesystem path to libedg.a (containing gcc_be_eh_rt.o) automatically linked for C++ targets under EDG_BACKEND=gcc or EDG_BACKEND=c.                                                                                                                                | `none`                                               |                  |
+| `EDGCPP_RT_LIB`                 | Filesystem path to libedg.a or libedg_gcc_eh_rt.a (containing gcc_be_eh_rt.o) automatically linked for C++ targets under EDG_BACKEND=gcc or EDG_BACKEND=c.                                                                                                          | `none`                                               |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `engine/common/README.md`.

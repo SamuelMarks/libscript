@@ -9,8 +9,8 @@ The runner invokes `tests/update_results.{sh,cmd}` to inspect `.success` / `.fai
 `tests_tmp/` alongside architectural metadata across `_lib/<category>/<component>/`, emits a
 provenance-stamped `matrix_results.json` conforming to
 `experiments/schemas/os-matrix-results.schema.json` (`generated_at` UTC ISO-8601 timestamp +
-`git_commit` SHA), and deterministically regenerates the 5-tier **Supported Components** tables in
-`README.md`.
+`git_commit` SHA), and deterministically regenerates the `T1`–`T5` + `Plane A` **Supported
+Components** tables in `README.md`.
 
 ---
 
@@ -26,7 +26,7 @@ flowchart LR
 
     subgraph Inputs["Workspace Evidence"]
         Markers["tests_tmp/*.{success,failure}<br/>& 2x-Rerun Idempotency Logs"]
-        Catalog["547+ Recipes in _lib/<cat>/<comp><br/>(manifest.json, setup.{sh,cmd})"]
+        Catalog["498 Recipes in _lib/<cat>/<comp><br/>(577+ Tiered Components)"]
     end
 
     subgraph Engine["os-component-matrix (Sub-Suite M0)"]
@@ -35,7 +35,7 @@ flowchart LR
 
     subgraph Artifacts["Deterministic Outputs"]
         JSON["matrix_results.json<br/>(experiments/schemas/os-matrix-results.schema.json)"]
-        MD["Root README.md<br/>(5-Tier, 7-OS Markdown Tables)"]
+        MD["Root README.md<br/>(T1-T5 & Plane A, 7-OS Tables)"]
     end
 
     Linux & BSD & Desktop --> Markers

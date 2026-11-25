@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Hardened CC/CXX compiler driver wrapper and telemetry shim for the EDG C/C++ Compiler Frontend (edgcpp v7.0.1). Supports EDG-FE-ONLY, EDG-LLVM, EDG-GCC, EDG-C-LEGACY, and EDG-CPP-LEGACY without triggering the --gcc CLI trap.
+# Hardened CC/CXX compiler driver wrapper and telemetry shim for the EDG C/C++ Compiler Frontend (edgcpp v7.0.2 / v7.0.1). Supports EDG-FE-ONLY, EDG-LLVM, EDG-GCC, EDG-C-LEGACY, and EDG-CPP-LEGACY without triggering the --gcc CLI trap.
 # ## Usage
 # ./_lib/languages/edgcpp/edgcpp_wrapper.sh [compiler_args...]
 set -feu
@@ -90,10 +90,14 @@ resolve_edgcpp_binaries() {
     _edg_home="${EDGCPP_HOME}"
   elif [ -n "${_req_flavor}" ] && [ -d "${_edg_base}/${_req_flavor}" ]; then
     _edg_home="${_edg_base}/${_req_flavor}"
+  elif [ -n "${_req_flavor}" ] && [ -d "${_edg_base}/7.0.2-${_req_flavor}" ]; then
+    _edg_home="${_edg_base}/7.0.2-${_req_flavor}"
   elif [ -n "${_req_flavor}" ] && [ -d "${_edg_base}/7.0.1-${_req_flavor}" ]; then
     _edg_home="${_edg_base}/7.0.1-${_req_flavor}"
   elif [ -d "${_edg_base}/default" ]; then
     _edg_home="${_edg_base}/default"
+  elif [ -d "${_edg_base}/7.0.2" ]; then
+    _edg_home="${_edg_base}/7.0.2"
   elif [ -d "${_edg_base}/7.0.1" ]; then
     _edg_home="${_edg_base}/7.0.1"
   else
@@ -135,6 +139,8 @@ resolve_edgcpp_binaries() {
       _rt_lib="${_edg_home}/lib_src/libedg.a"
     elif [ -f "${_edg_home}/lib/libedg.a" ]; then
       _rt_lib="${_edg_home}/lib/libedg.a"
+    elif [ -f "${_edg_home}/lib/libedg_gcc_eh_rt.a" ]; then
+      _rt_lib="${_edg_home}/lib/libedg_gcc_eh_rt.a"
     fi
   fi
   RESOLVED_EDG_RT_LIB="${_rt_lib}"
@@ -451,19 +457,27 @@ record_edgcpp_event() {
 resolve_edgcpp_binaries
 detect_cpfe_cli_style
 
+_edg_reported_ver='7.0.2'
+if [ -f "${EDGCPP_RESOLVED_HOME}/edgcpp-release-metadata.json" ]; then
+  _meta_ver="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "${EDGCPP_RESOLVED_HOME}/edgcpp-release-metadata.json" | head -n 1 || true)"
+  if [ -n "${_meta_ver}" ]; then
+    _edg_reported_ver="${_meta_ver}"
+  fi
+fi
+
 if [ "$#" -eq 1 ]; then
   case "${1}" in
     --version|-v|-V)
       if [ -n "${EDGCPP_RESOLVED_CPFE}" ] && [ -x "${EDGCPP_RESOLVED_CPFE}" ]; then
         _cpfe_ver="$("${EDGCPP_RESOLVED_CPFE}" --version < /dev/null 2>&1 | head -n 1 || true)"
-        printf 'edgcpp 7.0.1 (%s; codegen=%s; cli=%s; host_backend=%s)\n' "${_cpfe_ver:-EDG C/C++ Front End v7.0.1}" "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" "${CPFE_CLI_STYLE}" "${EDGCPP_RESOLVED_BACKEND}"
+        printf 'edgcpp %s (%s; codegen=%s; cli=%s; host_backend=%s)\n' "${_edg_reported_ver}" "${_cpfe_ver:-EDG C/C++ Front End v${_edg_reported_ver}}" "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" "${CPFE_CLI_STYLE}" "${EDGCPP_RESOLVED_BACKEND}"
       else
-        printf 'edgcpp 7.0.1 (EDG C/C++ Front End wrapper; codegen=%s; host_backend=%s)\n' "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" "${EDGCPP_RESOLVED_BACKEND}"
+        printf 'edgcpp %s (EDG C/C++ Front End wrapper; codegen=%s; host_backend=%s)\n' "${_edg_reported_ver}" "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" "${EDGCPP_RESOLVED_BACKEND}"
       fi
       exit 0
       ;;
     -dumpversion)
-      printf '%s\n' '7.0.1'
+      printf '%s\n' "${_edg_reported_ver}"
       exit 0
       ;;
     -dumpmachine)

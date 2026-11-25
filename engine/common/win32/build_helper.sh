@@ -72,17 +72,15 @@ libscript_resolve_c_helper() {
   return 1
 }
 
-case "$(basename -- "${0}")" in
-  build_helper.sh)
-    if [ "${1:-}" = ":resolve_helper" ] || [ "${1:-}" = "resolve_helper" ]; then
-      shift
-    fi
-    if [ $# -ge 1 ]; then
-      libscript_resolve_c_helper "$1"
-      exit $?
-    fi
-    ;;
-esac
+if ! (return 0 2>/dev/null); then
+  if [ "${1:-}" = ":resolve_helper" ] || [ "${1:-}" = "resolve_helper" ]; then
+    shift
+  fi
+  if [ $# -ge 1 ]; then
+    libscript_resolve_c_helper "$1"
+    exit $?
+  fi
+fi
 
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

@@ -48,7 +48,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-for %%I in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 echo === Test: Validating Modular Zero-.EXE MSI Packaging and Reuse ===
 

@@ -42,13 +42,27 @@ unset SCRIPT_NAME || true
 _rd_action="${1:-${ACTION:-status}}"
 
 # ## configure_redis_storage
-# Delegates Redis/Valkey persistent data directory configuration to _lib/caches/valkey/service.sh.
+# Configures Redis persistent data directory and updates redis.conf dir/appendonly directives.
 configure_redis_storage() {
   _crs_dir="${1:-${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}}"
   [ -n "$_crs_dir" ] || return 0
-  if [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/service.sh" ]; then
-    VALKEY_DATA_DIR="$_crs_dir" REDIS_DATA_DIR="$_crs_dir" "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/service.sh" configure "$_crs_dir"
+  mkdir -p "$_crs_dir" 2>/dev/null || priv mkdir -p "$_crs_dir" 2>/dev/null || true
+  if id redis >/dev/null 2>&1; then
+    chown -R redis:redis "$_crs_dir" 2>/dev/null || priv chown -R redis:redis "$_crs_dir" 2>/dev/null || true
   fi
+  chmod 0750 "$_crs_dir" 2>/dev/null || priv chmod 0750 "$_crs_dir" 2>/dev/null || true
+  for _crs_conf in "${LIBSCRIPT_ETC_DIR:-/etc}/redis/redis.conf" "${LIBSCRIPT_ETC_DIR:-/etc}/redis.conf"; do
+    [ -f "$_crs_conf" ] || continue
+    _crs_tmp=$(mktemp)
+    if grep -Eq '^[[:space:]]*dir[[:space:]]+' "$_crs_conf" 2>/dev/null; then
+      sed "s|^[[:space:]]*dir[[:space:]].*|dir ${_crs_dir}|" "$_crs_conf" > "$_crs_tmp"
+    else
+      cat "$_crs_conf" > "$_crs_tmp"
+      printf '%s\n' "dir ${_crs_dir}" >> "$_crs_tmp"
+    fi
+    cp "$_crs_tmp" "$_crs_conf" 2>/dev/null || priv cp "$_crs_tmp" "$_crs_conf" 2>/dev/null || true
+    rm -f "$_crs_tmp"
+  done
 }
 
 case "$_rd_action" in

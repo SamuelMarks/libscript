@@ -180,7 +180,7 @@ run_torture_and_stl_suite() {
   fi
 
   export LIBSCRIPT_BUILD_TOOLCHAIN="${TORTURE_COMPILER}"
-  libscript_resolve_build_toolchain "edgcpp-torture" "7.0.1"
+  libscript_resolve_build_toolchain "edgcpp-torture" "7.0.2"
   _cc_bin="${LIBSCRIPT_RESOLVED_CC_BIN}"
   _cxx_bin="${LIBSCRIPT_RESOLVED_CXX_BIN:-}"
   if [ -z "${_cxx_bin}" ]; then

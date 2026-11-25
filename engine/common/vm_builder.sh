@@ -97,7 +97,7 @@ case "$WORKER_TYPE" in
       -e LIBSCRIPT_OFFLINE="${LIBSCRIPT_OFFLINE:-0}" \
       -e LIBSCRIPT_STAGE="${LIBSCRIPT_STAGE:-runtime}" \
       alpine:latest \
-      sh -c "SCRIPT_NAME=/workspace/engine/common/pkg_mgr.sh . /workspace/engine/common/pkg_mgr.sh >/dev/null 2>&1 && libscript_depends bash coreutils util-linux parted e2fsprogs btrfs-progs xfsprogs dosfstools cryptsetup findmnt udev >/dev/null 2>&1 || true; $*"
+      sh -c "SCRIPT_NAME=/workspace/engine/common/pkg_mgr.sh . /workspace/engine/common/pkg_mgr.sh >/dev/null 2>&1 && libscript_depends coreutils util-linux parted e2fsprogs btrfs-progs xfsprogs dosfstools cryptsetup findmnt udev >/dev/null 2>&1 || true; $*"
     ;;
   wsl2)
     WSL_BIN='wsl'

@@ -198,15 +198,15 @@ if [ "${NGINX_VARS-}" ] || [ "${NGINX_WWWROOT_NAME-}" ] || [ "${NGINX_SERVER_NAM
 fi
 
 if [ -n "${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "unix:${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 fi

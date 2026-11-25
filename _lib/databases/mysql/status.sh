@@ -35,9 +35,6 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_NAME"
 fi
 
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "$SCRIPT_NAME"
 
 
 if command -v mysql >/dev/null 2>&1; then

@@ -1,7 +1,7 @@
 @echo off
 :: # edgcpp_wrapper.cmd
 :: ## Overview
-:: Hardened CC/CXX compiler driver wrapper and telemetry shim for the EDG C/C++ Compiler Frontend (edgcpp v7.0.1) on Windows. Supports EDG-FE-ONLY, EDG-LLVM, EDG-GCC, EDG-C-LEGACY, and EDG-CPP-LEGACY without triggering the --gcc CLI trap.
+:: Hardened CC/CXX compiler driver wrapper and telemetry shim for the EDG C/C++ Compiler Frontend (edgcpp v7.0.2 / v7.0.1) on Windows. Supports EDG-FE-ONLY, EDG-LLVM, EDG-GCC, EDG-C-LEGACY, and EDG-CPP-LEGACY without triggering the --gcc CLI trap.
 :: ## Usage
 :: edgcpp_wrapper.cmd [compiler_args...]
 
@@ -115,40 +115,51 @@ if /i "!_raw_be!"=="fe-only" (
     set "SHORT_BACKEND_NAME=gcc"
 )
 
-if "%~1"=="--version" (
-    echo edgcpp 7.0.1 ^(EDG C/C++ Front End v7.0.1 wrapper; flavor=!EDGCPP_ACTIVE_FLAVOR!; codegen=!EDGCPP_ACTIVE_CODEGEN_BACKEND!^)
-    exit /b 0
-)
-if "%~1"=="-v" (
-    echo edgcpp 7.0.1 ^(EDG C/C++ Front End v7.0.1 wrapper; flavor=!EDGCPP_ACTIVE_FLAVOR!; codegen=!EDGCPP_ACTIVE_CODEGEN_BACKEND!^)
-    exit /b 0
-)
-if "%~1"=="-dumpversion" (
-    echo 7.0.1
-    exit /b 0
-)
-
-call :extract_source_arg %*
-
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 set "_edg_home=%EDGCPP_HOME%"
 if "!_edg_home!"=="" (
     if exist "%LIBSCRIPT_HOME%\edgcpp\!EDGCPP_ACTIVE_FLAVOR!" (
         set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\!EDGCPP_ACTIVE_FLAVOR!"
+    ) else if exist "%LIBSCRIPT_HOME%\edgcpp\7.0.2-!EDGCPP_ACTIVE_FLAVOR!" (
+        set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\7.0.2-!EDGCPP_ACTIVE_FLAVOR!"
     ) else if exist "%LIBSCRIPT_HOME%\edgcpp\7.0.1-!EDGCPP_ACTIVE_FLAVOR!" (
         set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\7.0.1-!EDGCPP_ACTIVE_FLAVOR!"
     ) else (
         set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\default"
     )
 )
+if not exist "!_edg_home!" set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\7.0.2"
 if not exist "!_edg_home!" set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\7.0.1"
+
+set "_edg_ver=7.0.2"
+if exist "!_edg_home!\edgcpp-release-metadata.json" (
+    for /f "tokens=2 delims=:," %%V in ('findstr /C:"version" "!_edg_home!\edgcpp-release-metadata.json" 2^>nul') do (
+        for %%W in (%%V) do set "_edg_ver=%%~W"
+    )
+)
+
+if "%~1"=="--version" (
+    echo edgcpp !_edg_ver! ^(EDG C/C++ Front End v!_edg_ver! wrapper; flavor=!EDGCPP_ACTIVE_FLAVOR!; codegen=!EDGCPP_ACTIVE_CODEGEN_BACKEND!^)
+    exit /b 0
+)
+if "%~1"=="-v" (
+    echo edgcpp !_edg_ver! ^(EDG C/C++ Front End v!_edg_ver! wrapper; flavor=!EDGCPP_ACTIVE_FLAVOR!; codegen=!EDGCPP_ACTIVE_CODEGEN_BACKEND!^)
+    exit /b 0
+)
+if "%~1"=="-dumpversion" goto :print_dumpversion
+
+call :extract_source_arg %*
 
 set "_cpfe_bin=%CPFE_BIN%"
 if "!_cpfe_bin!"=="" set "_cpfe_bin=!_edg_home!\bin\cpfe.exe"
 set "_rt_lib=%EDG_RT_LIB%"
 if "!_rt_lib!"=="" set "_rt_lib=%EDGCPP_RT_LIB%"
 if "!_rt_lib!"=="" (
-    if exist "!_edg_home!\lib\libedg.a" set "_rt_lib=!_edg_home!\lib\libedg.a"
+    if exist "!_edg_home!\lib\libedg.a" (
+        set "_rt_lib=!_edg_home!\lib\libedg.a"
+    ) else if exist "!_edg_home!\lib\libedg_gcc_eh_rt.a" (
+        set "_rt_lib=!_edg_home!\lib\libedg_gcc_eh_rt.a"
+    )
 )
 
 call :resolve_host_backend
@@ -484,4 +495,10 @@ if not "%EDG_DRIVER_LOG%"=="" (
     if not exist "!_drv_log_dir!" mkdir "!_drv_log_dir!"
     echo {"backend":"!SHORT_BACKEND_NAME!","srcs":["!_src_json!"],"std":"!WRAPPER_STD_DIALECT!","opt":"!WRAPPER_OPT_FLAG!","exit_code":%~3,"wall_s":0.0010,"fe_cpu_s":0.0000,"be_cpu_s":0.0000,"peak_rss_mb":0.00}>> "%EDG_DRIVER_LOG%"
 )
+exit /b 0
+
+:: ## print_dumpversion
+:: Prints the resolved edgcpp version string for -dumpversion queries.
+:print_dumpversion
+echo(!_edg_ver!
 exit /b 0

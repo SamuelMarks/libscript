@@ -39,7 +39,7 @@ LIVE_VAGRANT=0
 # Displays usage instructions for test_msi_vagrant_matrix.sh.
 show_help() {
   printf 'Usage: %s [--os <windows|linux|macos|freebsd|illumos|all>] [--target <openedx|wordpress|sqlite|all>] [--use-wix] [--compare-wix] [--live-vagrant]
-' "$0"
+' "${THIS_FILE}"
   printf 'Runs the cross-platform msi-rs build, GUI stage capture, and ../bento Vagrant test matrix.
 '
 }

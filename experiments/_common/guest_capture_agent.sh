@@ -3,7 +3,7 @@
 # Guest-side native screen, desktop icon, and browser authentication capture agent (`Steps 3-5`).
 # ## Usage
 # ./experiments/_common/guest_capture_agent.sh <screen|desktop|browser> [args...]
-set -feu
+set -feu; _gca_caller_this="${THIS_FILE:-}"; _gca_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -218,3 +218,12 @@ case "$_gca_act" in
     exit 1
     ;;
 esac
+
+if (return 0 2>/dev/null); then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_gca_caller_dir:-}" ] && SCRIPT_DIR="${_gca_caller_dir}"
+  [ -n "${_gca_caller_this:-}" ] && THIS_FILE="${_gca_caller_this}"
+  unset SCRIPT_NAME _gca_caller_this _gca_caller_dir || true
+  return 0
+fi

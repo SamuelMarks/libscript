@@ -122,6 +122,10 @@ _audit_posix_sh_chunk() {
         print "[FAIL] [" prev_f "] Unguarded $HOME reference in env.sh; use ${HOME:-/root} for set -u daemon safety"
         errs++
       }
+      if (has_dangling_sn) {
+        print "[FAIL] [" prev_f "] Dangling . $SCRIPT_NAME dot-source without preceding SCRIPT_NAME= assignment"
+        errs++
+      }
       if (has_crlf) {
         print "[FAIL] [" prev_f "] Literal carriage return (CRLF) detected in POSIX shell script; enforce LF line endings"
         errs++
@@ -135,7 +139,7 @@ _audit_posix_sh_chunk() {
       first_line = $0
       has_feu = 0; has_this = 0; bad_stack_quote = 0; unreachable_stack = 0;
       has_dbl_bracket = 0; has_func_kw = 0; has_source_kw = 0; has_echo_e = 0;
-      has_echo_n = 0; has_pipefail = 0; has_dirname_z0 = 0; has_raw_bash = 0; allow_bash_next = 0;
+      has_echo_n = 0; has_pipefail = 0; has_dirname_z0 = 0; has_raw_bash = 0; allow_bash_next = 0; has_dangling_sn = 0; sn_armed = 0;
       has_sort_v = 0; has_sed_i = 0; has_gnu_bre = 0; dq_hit = ""; sc2015_hit = ""; has_unguarded_home = 0;
       in_hd = 0; hd_delim = ""; hd_tab = 0; saw_ret_line = -10;
       is_env_sh = (FILENAME ~ /(^|\/)_lib\/[^\/]+\/[^\/]+\/env\.sh$/)
@@ -173,7 +177,12 @@ _audit_posix_sh_chunk() {
         if ($0 ~ /(^|[[:space:];|&(])echo[[:space:]]+-n([[:space:]]|$)/) has_echo_n = 1
         if ($0 ~ /set[[:space:]]+-o[[:space:]]+pipefail/) has_pipefail = 1
         if ($0 ~ /dirname[[:space:]]+(--[[:space:]]+)?["\x27]?\$(\{0\}|0)/) has_dirname_z0 = 1
-        if (!allow_bash_next && ($0 ~ /\|[[:space:]]*bash([[:space:]]|$)/ || $0 ~ /(^|[[:space:];|&(])bash[[:space:]]+-c[[:space:]]/)) has_raw_bash = 1
+        if (!allow_bash_next && ($0 ~ /\|[[:space:]]*bash([[:space:]]|$)/ || $0 ~ /(^|[[:space:];|&(])bash[[:space:]]+-c[[:space:]]/ || $0 ~ /=[\x27"]bash[\x27"]([[:space:];]|$)/)) has_raw_bash = 1
+        if ($0 ~ /SCRIPT_NAME=/) sn_armed = 1
+        if ($0 ~ /^[[:space:]]*\.[[:space:]]+"?\$\{?SCRIPT_NAME\}?"?([[:space:];|]|$)/) {
+          if (!sn_armed) has_dangling_sn = 1
+          sn_armed = 0
+        }
         allow_bash_next = 0
         if ($0 ~ /(^|[^A-Za-z0-9_])sort[[:space:]]+-V([^A-Za-z0-9_]|$)/) has_sort_v = 1
         if ($0 ~ /(^|[^A-Za-z0-9_])sed[[:space:]]+-i/) has_sed_i = 1

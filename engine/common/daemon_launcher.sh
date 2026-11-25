@@ -6,7 +6,7 @@
 # ## Usage
 # ./engine/common/daemon_launcher.sh [-Port <port>] [-Executable <path>] [-DataDir <dir>] [-HttpJson <json>]
 
-set -feu
+set -feu; _dl_caller_this="${THIS_FILE:-}"; _dl_caller_dir="${SCRIPT_DIR:-}"
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -122,4 +122,13 @@ EOF_DAEMON
   sleep 1
 fi
 
+
+if (return 0 2>/dev/null); then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_dl_caller_dir:-}" ] && SCRIPT_DIR="${_dl_caller_dir}"
+  [ -n "${_dl_caller_this:-}" ] && THIS_FILE="${_dl_caller_this}"
+  unset SCRIPT_NAME _dl_caller_this _dl_caller_dir || true
+  return 0
+fi
 exit 0

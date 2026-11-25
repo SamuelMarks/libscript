@@ -47,15 +47,15 @@ if ! is_installed 'etcd'; then
 fi
 
 if [ -n "${ETCD_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${ETCD_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "unix:${ETCD_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${ETCD_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${ETCD_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${ETCD_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${ETCD_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${ETCD_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${ETCD_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${ETCD_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${ETCD_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${ETCD_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 fi

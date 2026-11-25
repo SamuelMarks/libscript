@@ -28,7 +28,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
+REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 if [ $# -lt 1 ]; then
   echo "Usage: ${THIS_FILE} [vagrant_dir | target_user@target_host target_path]"

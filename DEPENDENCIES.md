@@ -25,11 +25,11 @@ flowchart TD
     end
 
     subgraph T3["T3: Image, OS & Artifact Synthesis (synthesis/)"]
-        OSDeps["Operating System, Unikernel, RTOS & Installer Synthesis<br/>(Sysroot FHS, Disk/LUKS2, Unikernels, Zephyr/FreeRTOS/MCUboot, Linux/FreeBSD/illumos/ReactOS, package-as)"]
+        OSDeps["Operating System, Unikernel, RTOS & Installer Synthesis<br/>(Sysroot FHS, Disk/LUKS2, Unikernels, Zephyr/FreeRTOS/MCUboot, Linux/FreeBSD/illumos/ReactOS/DOS, package-as)"]
     end
 
     subgraph T1_T2["T1 & T2: Atomic Recipes (_lib/) + T0 Solver (engine/)"]
-        SolverEngine["T0 Constraint Solver: engine/solver/resolve_stack.jq<br/>(Tarjan SCC Cycle Breaking, RTOS Fork Guard, ReactOS PE Bitness Guard & USE Variants)"]
+        SolverEngine["T0 Constraint Solver: engine/solver/resolve_stack.jq<br/>(Tarjan SCC Cycle Breaking, RTOS Fork Guard, ReactOS PE Bitness Guard, DOS FCB/DPMI Guards & USE Variants)"]
         HostTools["T1 Host Tools & Version Sandboxes (bison, meson, ninja, nodejs/22, python/3.12, rust/1.85)"]
         BuildDeps["T2 Sysroot Headers, Kernels & Libs (glibc, musl, linux, libdrm, wayland, alsa-lib)"]
         RuntimeDeps["T1/T2 Runtime Daemons & Hooks (sshd, seatd, pipewire, postgres, backup/restore)"]
@@ -259,6 +259,9 @@ schemas:
   userland execution plan.
 - **`synthesis/schemas/execution-plan.illumos.schema.json`**: illumos/SunOS kernel, SMF init, ZFS
   `rpool`, and desktop plan.
+- **`synthesis/schemas/execution-plan.reactos.schema.json`**: ReactOS (`i686`/`x86_64`) Win32 NT
+  kernel, RosBE/ISO staging, PE bitness guards, `unattend.inf`, and offline RAPPS/MSI execution
+  plan.
 - **`synthesis/schemas/execution-plan.dos.schema.json`**: FreeDOS (`1.3`/`1.4`) and MIT MS-DOS
   (`1.25`/`2.0`/`4.00`) kernel, shell (`win-cmd-asm` / `win-cmd-rs` / `FreeCOM` / `COMMAND.COM`),
   DPMI (`CWSDPMI` / `DOS32A`), `CONFIG.SYS`/`AUTOEXEC.BAT`, and rootless FAT12/16/32 execution plan.

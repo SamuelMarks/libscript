@@ -217,8 +217,14 @@ if /i "!COMPILER_ID!"=="clang" (
 
 echo "!COMPILER_ID!" | findstr /I "edgcpp" >nul 2>&1
 if not errorlevel 1 (
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\edgcpp\edgcpp_wrapper.cmd" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\edgcpp\edgcpp_wrapper.cmd" %LINUX_STD_FLAG% -D__KERNEL__ -O2 "%KERNEL_BUILD_DIR%\freestanding_src\kmain.c" -o "%KERNEL_BUILD_DIR%\vmlinux.exe" >"%KERNEL_BUILD_DIR%\build.log" 2>&1
+    set "_EDG_CC=%LIBSCRIPT_HOME%\edgcpp\default\bin\edgcpp-cc.cmd"
+    if "!LIBSCRIPT_HOME!"=="" set "_EDG_CC=%USERPROFILE%\.libscript\edgcpp\default\bin\edgcpp-cc.cmd"
+    if not exist "!_EDG_CC!" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install edgcpp latest >nul 2>&1
+    )
+    if exist "!_EDG_CC!" (
+        call "!_EDG_CC!" %LINUX_STD_FLAG% -D__KERNEL__ -O2 "%KERNEL_BUILD_DIR%\freestanding_src\kmain.c" -o "%KERNEL_BUILD_DIR%\vmlinux.exe" >"%KERNEL_BUILD_DIR%\build.log" 2>&1
     )
 )
 if not exist "%KERNEL_BUILD_DIR%\build.log" (

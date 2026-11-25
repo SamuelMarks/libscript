@@ -113,7 +113,7 @@ ensure_manifest_python_venvs() {
     [ -d "$_emp_proj" ] || continue
     if [ -f "${_emp_proj}/pyproject.toml" ] || [ -f "${_emp_proj}/requirements.txt" ]; then
       if [ -L "${_emp_proj}/.venv/bin/python" ] || [ -L "${_emp_proj}/.venv/bin/python3" ]; then
-        _emp_py_target=$(readlink -f "${_emp_proj}/.venv/bin/python3" 2>/dev/null || readlink "${_emp_proj}/.venv/bin/python3" 2>/dev/null || true)
+        _emp_py_target=$(readlink "${_emp_proj}/.venv/bin/python3" 2>/dev/null || true)
         case "$_emp_py_target" in
           /root/*)
             if [ -n "$_emp_user" ] && [ "$_emp_user" != "root" ]; then

@@ -31,12 +31,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "engine/common/environ.sh" "engine/common/pkg_mgr.sh" "engine/common/service.sh" "_lib/git-servers/utils/git.sh" "_lib/languages/python/setup.sh"; do
+for LIB in "engine/common/environ.sh" "engine/common/pkg_mgr.sh" "engine/common/service.sh" "engine/common/git.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
+STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install python latest
 
 PREVIOUS_WD="$(pwd)"
 SERVICE_NAME=''
@@ -136,15 +138,15 @@ libscript_install_service "${SERVICE_NAME}" "${EXEC_START}" "${PYTHON_SERVER_DES
 cd -- "${PREVIOUS_WD}"
 
 if [ -n "${PYTHON_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${PYTHON_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "unix:${PYTHON_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${PYTHON_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${PYTHON_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${PYTHON_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${PYTHON_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${PYTHON_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${PYTHON_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${PYTHON_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${PYTHON_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${PYTHON_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 fi

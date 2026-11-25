@@ -148,15 +148,8 @@ build_mock_msdos_zip() {
   printf 'MIT\n' > "$_dos_stage/${_stage_name}/LICENSE-MIT"
   if command -v zip >/dev/null 2>&1; then
     (cd "$_dos_stage" && zip -qr "$_out_zip" "${_stage_name}")
-  elif command -v python3 >/dev/null 2>&1; then
-    python3 -c '
-import os, sys, zipfile
-src, stage, out = sys.argv[1], sys.argv[2], sys.argv[3]
-with zipfile.ZipFile(out, "w") as zf:
-    for root_d, _, files in os.walk(os.path.join(src, stage)):
-        for fn in files:
-            zf.write(os.path.join(root_d, fn), stage + "/" + fn)
-' "$_dos_stage" "$_stage_name" "$_out_zip"
+  elif command -v bsdtar >/dev/null 2>&1; then
+    bsdtar --format zip -cf "$_out_zip" -C "$_dos_stage" "${_stage_name}"
   else
     tar -cf "$_out_zip" -C "$_dos_stage" "${_stage_name}"
   fi

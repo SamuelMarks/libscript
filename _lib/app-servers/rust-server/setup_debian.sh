@@ -32,12 +32,14 @@ export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
 for LIB in "engine/common/environ.sh" "engine/common/pkg_mgr.sh" "engine/common/service.sh" \
-            "_lib/git-servers/utils/git.sh" "_lib/languages/rust/setup.sh" "engine/common/envsubst_safe.sh"; do
+            "engine/common/git.sh" "engine/common/envsubst_safe.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
+STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install rust latest
 
 PREVIOUS_WD="$(pwd)"
 SERVICE_NAME=''
@@ -103,15 +105,15 @@ libscript_install_service "${SERVICE_NAME}" "${EXEC_START}" "${RUST_SERVER_DEST}
 cd -- "${PREVIOUS_WD}"
 
 if [ -n "${RUST_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${RUST_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "unix:${RUST_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${RUST_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${RUST_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${RUST_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${RUST_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${RUST_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${RUST_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${RUST_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${RUST_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${RUST_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 fi

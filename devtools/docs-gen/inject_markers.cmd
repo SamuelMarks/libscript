@@ -74,7 +74,7 @@ exit /b 0
 :: Injects <!-- BEGIN_VARS --> and <!-- BEGIN_PLATFORMS --> markers into
 :: README.md files. Windows equivalent of inject_markers.sh
 
-set "ROOT_DIR=!SCRIPT_DIR!\..\.."
+set "ROOT_DIR=!LIBSCRIPT_ROOT_DIR!"
 
 where powershell >nul 2>&1
 if not "%ERRORLEVEL%"=="0" (

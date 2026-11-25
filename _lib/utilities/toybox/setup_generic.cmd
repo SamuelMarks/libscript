@@ -208,9 +208,8 @@ for %%A in (basename cat cmp comm cp cut date diff dirname env file find grep he
             echo toybox.exe %%A %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9
         )
     ) else (
-        if not exist "!_MTS_DIR!\bin\%%A.exe" (
-            mklink /H "!_MTS_DIR!\bin\%%A.exe" "!_MTS_DIR!\bin\toybox.exe" >nul 2>&1
-        )
+        if exist "!_MTS_DIR!\bin\%%A.exe" del /f /q "!_MTS_DIR!\bin\%%A.exe" >nul 2>&1
+        mklink /H "!_MTS_DIR!\bin\%%A.exe" "!_MTS_DIR!\bin\toybox.exe" >nul 2>&1
         if not exist "!_MTS_DIR!\bin\%%A.exe" (
             > "!_MTS_DIR!\bin\%%A.bat" (
                 echo @echo off

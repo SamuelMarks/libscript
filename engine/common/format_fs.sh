@@ -7,7 +7,7 @@
 # Execute with target device and filesystem type:
 #   ./engine/common/format_fs.sh <block_device_or_image> [fs_type] [mount_point]
 
-set -feu
+set -feu; _ffs_caller_this="${THIS_FILE:-}"; _ffs_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -101,4 +101,13 @@ EOF
 fi
 
 printf '[INFO] Filesystem format completed: %s (%s)\n' "$DEV_PATH" "$FS_TYPE"
+
+if (return 0 2>/dev/null); then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_ffs_caller_dir:-}" ] && SCRIPT_DIR="${_ffs_caller_dir}"
+  [ -n "${_ffs_caller_this:-}" ] && THIS_FILE="${_ffs_caller_this}"
+  unset SCRIPT_NAME _ffs_caller_this _ffs_caller_dir || true
+  return 0
+fi
 exit 0

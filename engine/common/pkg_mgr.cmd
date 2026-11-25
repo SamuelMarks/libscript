@@ -1133,3 +1133,18 @@ if /i "!PKG_MGR!"=="scoop" (
     where scoop >nul 2>&1 && scoop uninstall "!_un_pkg!" >nul 2>&1
 )
 exit /b 0
+
+:: ## libscript_http_post_json
+:: Sends an HTTP POST JSON request via curl.exe when available.
+:libscript_http_post_json
+set "_lhp_url=%~1"
+set "_lhp_body=%~2"
+set "_lhp_timeout=%~3"
+if "!_lhp_timeout!"=="" set "_lhp_timeout=120"
+if "!_lhp_url!"=="" exit /b 1
+where curl.exe >nul 2>&1
+if "!errorlevel!" equ "0" (
+    curl.exe -sS --connect-timeout 5 --max-time "!_lhp_timeout!" -H "Content-Type: application/json" -d "!_lhp_body!" "!_lhp_url!" >nul 2>&1
+    exit /b !errorlevel!
+)
+exit /b 0

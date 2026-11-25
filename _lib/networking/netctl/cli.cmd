@@ -631,7 +631,7 @@ if not errorlevel 1 exit /b 0
 where certbot >nul 2>&1
 if errorlevel 1 (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\security\certbot\setup.cmd"
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install certbot latest
 )
 if not exist "!_ELC_WEBROOT!\.well-known\acme-challenge" mkdir "!_ELC_WEBROOT!\.well-known\acme-challenge"
 set "_ELC_EMAIL_ARG=--register-unsafely-without-email"

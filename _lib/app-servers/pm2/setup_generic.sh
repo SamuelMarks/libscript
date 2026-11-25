@@ -165,12 +165,10 @@ case "$ACTION" in
         if ! command -v npm >/dev/null 2>&1; then
           unset SCRIPT_NAME || true
           "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install nodejs latest || true
-          if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
-            SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh"
-            export SCRIPT_NAME
-            # shellcheck disable=SC1090
-            . "${SCRIPT_NAME}"
-          fi
+          for _nd_bin in "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs/default/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs/latest/bin"; do
+            [ -d "$_nd_bin" ] && PATH="${_nd_bin}:${PATH}"
+          done
+          export PATH
         fi
         if command -v npm >/dev/null 2>&1; then
           npm install --prefix "$TARGET_DIR" --no-audit --no-fund "pm2@${EXACT_VERSION}"

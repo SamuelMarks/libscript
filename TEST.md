@@ -27,7 +27,7 @@ flowchart TD
     end
 
     subgraph Layer4[4. Synthesized OS, Unikernel & RTOS Verification]
-        BootTest["Multi-OS & RTOS Boot Tests (os_boot_test.sh, freebsd_boot_test.sh, illumos_boot_test.sh, zephyr_boot_test.sh, freertos_boot_test.sh)<br/>(Headless QEMU & Simulators: Kernel Banner, Scheduler Self-Test, Login/Ready Marker)"]
+        BootTest["Multi-OS, DOS & RTOS Boot Tests (os_boot_test.sh, freebsd_boot_test.sh, illumos_boot_test.sh, reactos_boot_test.sh, test_qemu_msdos_smoke.sh, zephyr_boot_test.sh, freertos_boot_test.sh)<br/>(Headless QEMU, kvikdos & Simulators: Kernel Banner, Scheduler Self-Test, Login/Ready Marker)"]
         GUISmoke["os_gui_smoke_test.sh / .cmd<br/>(virtio-gpu: Wayland Socket, X11, PipeWire)"]
         AirGap["test_airgap_boot.sh / .cmd<br/>(Strict LIBSCRIPT_OFFLINE=1 Network Inhibition)"]
         LiveMatrix["test_live_installer_matrix.sh / .cmd<br/>(msi-rs Multiboot Live-CD / USB Verification & Screenshot Capture)"]
@@ -366,6 +366,36 @@ suite and 5-platform matrix runner across `{macOS, Windows, FreeBSD, SunOS, Linu
 
 ---
 
+## 9C. FreeDOS & MIT MS-DOS Synthesis, Solver & QEMU/kvikdos Verification Suite
+
+The DOS distribution subsystem (`synthesis/distro/dos/`, `_lib/kernel/{freedos,msdos}/`) includes
+dedicated solver, image synthesis, component PM, and headless QEMU/`kvikdos` smoke suites across all
+four supported kernels (`freedos-1.4`, `msdos-4.0`, `msdos-2.0`, `msdos-1.25`):
+
+- **DOS Constraint Solver Guards** (`tests/test_dos_solver.sh` / `.cmd`): Verifies
+  `DOS1_FLAT_FCB_ONLY`, `DOS2_NO_DPMI32`, `DOS_INCOMPATIBLE_FORK`, and
+  `execution-plan.dos.schema.json` conformance across all 4 reference profiles
+  (`synthesis/profiles/dos/*.json`).
+- **Rootless Kernel & Disk Image Synthesis** (`tests/test_dos_kernel_synthesis.sh` / `.cmd`):
+  Verifies rootless `FAT12` floppy and `FAT16 BIGDOS` / `FAT32 LBA` hard-disk assembly, boot-sector
+  BPB geometry, `WINCMD.COM` / `WINCMD1.COM` / `WINCMD.EXE` shell staging, and two-pass `[SKIP]`
+  idempotency.
+- **Headless QEMU & `kvikdos` Serial Smoke** (`tests/test_qemu_msdos_smoke.sh` / `.cmd`,
+  `tests/run_msdos_tests.sh` / `.cmd`): Verifies bootable DOS execution, `AUTOEXEC.BAT` serial
+  markers over `COM1`, and 8086/DPMI32 runtime behavior.
+- **Native Win32 & `dos32` Component PM Matrix** (`tests/test_win_dos_component_pm.sh` / `.cmd`):
+  Verifies target-aware `depends` resolution (`IS_MSDOS=1`) across `jq`, `gawk`, `busybox`,
+  `toybox`, `dash`, and `freebsd-usr-bin`.
+
+```sh
+./tests/test_dos_solver.sh
+./tests/test_dos_kernel_synthesis.sh
+./tests/test_qemu_msdos_smoke.sh
+./tests/test_win_dos_component_pm.sh
+```
+
+---
+
 ## 10. Live Installer Verification Matrix & Automated Screenshot Harness
 
 The `msi-rs` live installer subsystem (`devtools/build_live_installer.sh`) undergoes automated
@@ -375,7 +405,7 @@ cross-platform matrix testing and screenshot verification:
   - Builds live bootable ISO media adhering to `synthesis/schemas/execution-plan.live.schema.json`.
   - Boots the live image headless in QEMU across Headless, TUI, and kiosk GUI modes.
   - Asserts disk discovery, partitioning schemes, and co-installation pipeline execution across
-    Linux, FreeBSD, and illumos.
+    Linux, FreeBSD, illumos, and ReactOS.
   - Aggregates results into `tests_tmp/live_installer_matrix_summary.json`.
 - **Automated Visual Screenshot Capture (`devtools/capture_msi_live_screenshots.sh` / `.cmd`)**:
   - Spawns a virtual framebuffer under QEMU to record installer wizard milestones (Welcome, EULA,
@@ -404,10 +434,10 @@ kernel C (Linux kernel), and the 13-target C11/C++17 component corpus:
 # 4. Verify Linux kernel multi-compiler Kbuild / ELF synthesis, System.map diff & profile resolution
 ./tests/test_kernel_compiler_compare.sh
 
-# 5. Verify 13-target C11 & C++17 component corpus compilation with edgcpp v7.0.1
+# 5. Verify 13-target C11 & C++17 component corpus compilation with edgcpp v7.0.2
 ./tests/test_edgcpp_corpus_matrix.sh
 
-# 6. Verify 8 Linux kernel versions (4.19.322 through 6.12.1) across gnu89/gnu11 & llvm/gcc backends with edgcpp v7.0.1
+# 6. Verify 8 Linux kernel versions (4.19.322 through 6.12.1) across gnu89/gnu11 & llvm/gcc backends with edgcpp v7.0.2
 ./tests/test_edgcpp_kernel_versions.sh
 ```
 

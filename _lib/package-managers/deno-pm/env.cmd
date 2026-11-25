@@ -63,14 +63,11 @@ if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "deno-pm" "%DENO_PM_VERSION%"
 
-if exist "!SCRIPT_DIR!\..\..\languages\deno\env.cmd" (
-    call "!SCRIPT_DIR!\..\..\languages\deno\env.cmd"
-) else (
-    set "_CAND_P=%LIBSCRIPT_HOME%\deno\latest\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "deno-pm" "%DENO_PM_VERSION%"
+for %%D in ("%LIBSCRIPT_HOME%\deno\default\bin" "%LIBSCRIPT_HOME%\deno\latest\bin" "%USERPROFILE%\.deno\bin") do (
+    if exist "%%~D" (
+        echo ";!PATH!;" | findstr /I /C:";%%~D;" >nul 2>&1
+        if errorlevel 1 set "PATH=%%~D;!PATH!"
+    )
 )
 
 endlocal & (

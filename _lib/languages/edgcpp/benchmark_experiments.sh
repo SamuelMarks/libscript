@@ -105,7 +105,7 @@ run_single_workload_cell() {
     _t0="$(libscript_now_ms)"
     case "${_wl}" in
       linux-kernel)
-        LINUX_VERSION="6.6.30" LINUX_CONFIG_TARGET="defconfig" LINUX_ALLOW_CLANG_KBUILD="1" LINUX_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/linux/setup.sh" compile >/dev/null 2>&1 || _status='FAIL'
+        STACK="" LINUX_VERSION="6.6.30" LINUX_CONFIG_TARGET="defconfig" LINUX_ALLOW_CLANG_KBUILD="1" LINUX_BUILD_TOOLCHAIN="${_tag}" ACTION="compile" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install linux 6.6.30 >/dev/null 2>&1 || _status='FAIL'
         _k_metrics="${LIBSCRIPT_ROOT_DIR}/build/kernel/${_tag}-6.6.30-defconfig/build-metrics.json"
         if [ -f "${_k_metrics}" ]; then
           _text_b=$(awk -F': ' '/"text_size_bytes"/ {gsub(/[^0-9]/,"",$2); print $2}' "${_k_metrics}" | head -n 1)
@@ -115,22 +115,22 @@ run_single_workload_cell() {
         fi
         ;;
       gcc-core)
-        GCC_VERSION="14.1.0" GCC_INSTALL_METHOD="from-source" GCC_BUILD_TARGET="gcc-core" GCC_ENABLE_LANGUAGES="c" GCC_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/_lib/languages/gcc/setup.sh" install >/dev/null 2>&1 || _status='FAIL'
+        STACK="" GCC_VERSION="14.1.0" GCC_INSTALL_METHOD="from-source" GCC_BUILD_TARGET="gcc-core" GCC_ENABLE_LANGUAGES="c" GCC_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install gcc 14.1.0 >/dev/null 2>&1 || _status='FAIL'
         ;;
       g++)
-        GCC_VERSION="14.1.0" GCC_INSTALL_METHOD="from-source" GCC_BUILD_TARGET="g++" GCC_ENABLE_LANGUAGES="c,c++" GCC_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/_lib/languages/gcc/setup.sh" install >/dev/null 2>&1 || _status='FAIL'
+        STACK="" GCC_VERSION="14.1.0" GCC_INSTALL_METHOD="from-source" GCC_BUILD_TARGET="g++" GCC_ENABLE_LANGUAGES="c,c++" GCC_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install gcc 14.1.0 >/dev/null 2>&1 || _status='FAIL'
         ;;
       llvm-core)
-        CLANG_VERSION="18.1.8" CLANG_INSTALL_METHOD="from-source" CLANG_BUILD_TARGET="llvm-core" CLANG_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/_lib/languages/clang/setup.sh" install >/dev/null 2>&1 || _status='FAIL'
+        STACK="" CLANG_VERSION="18.1.8" CLANG_INSTALL_METHOD="from-source" CLANG_BUILD_TARGET="llvm-core" CLANG_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install clang 18.1.8 >/dev/null 2>&1 || _status='FAIL'
         ;;
       clang)
-        CLANG_VERSION="18.1.8" CLANG_INSTALL_METHOD="from-source" CLANG_BUILD_TARGET="clang" CLANG_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/_lib/languages/clang/setup.sh" install >/dev/null 2>&1 || _status='FAIL'
+        STACK="" CLANG_VERSION="18.1.8" CLANG_INSTALL_METHOD="from-source" CLANG_BUILD_TARGET="clang" CLANG_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install clang 18.1.8 >/dev/null 2>&1 || _status='FAIL'
         ;;
       clang++)
-        CLANG_VERSION="18.1.8" CLANG_INSTALL_METHOD="from-source" CLANG_BUILD_TARGET="clang++" CLANG_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/_lib/languages/clang/setup.sh" install >/dev/null 2>&1 || _status='FAIL'
+        STACK="" CLANG_VERSION="18.1.8" CLANG_INSTALL_METHOD="from-source" CLANG_BUILD_TARGET="clang++" CLANG_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install clang 18.1.8 >/dev/null 2>&1 || _status='FAIL'
         ;;
       sqlite3)
-        LIBSCRIPT_OFFLINE="${LIBSCRIPT_OFFLINE:-1}" SQLITE_VERSION="3.45.0" SQLITE_INSTALL_METHOD="from-source" SQLITE_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/_lib/databases/sqlite/setup.sh" install >/dev/null 2>&1 || _status='FAIL'
+        STACK="" LIBSCRIPT_OFFLINE="${LIBSCRIPT_OFFLINE:-1}" SQLITE_VERSION="3.45.0" SQLITE_INSTALL_METHOD="from-source" SQLITE_BUILD_TOOLCHAIN="${_tag}" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install sqlite 3.45.0 >/dev/null 2>&1 || _status='FAIL'
         ;;
       gcc-torture|stl-stress)
         "${SCRIPT_DIR}/torture_suite.sh" --compiler="${_tag}" --output="${_cell_dir}/torture.json" >/dev/null 2>&1 || _status='FAIL'
@@ -302,7 +302,7 @@ run_all_experiments() {
   cat <<EOF > "${EXPERIMENTS_REPORT_JSON}.tmp"
 {
   "protocol": "OOPSLA-2027-EDG-Backends-Experiments",
-  "compiler_version": "7.0.1",
+  "compiler_version": "7.0.2",
   "total_cells": ${_total_cells},
   "passed_cells": ${_passed_cells},
   "failed_cells": ${_failed_cells},

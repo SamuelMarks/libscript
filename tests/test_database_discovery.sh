@@ -68,21 +68,19 @@ echo "LISTEN 0 128 0.0.0.0:3306 0.0.0.0:*
 LISTEN 0 128 0.0.0.0:5432 0.0.0.0:*
 LISTEN 0 128 0.0.0.0:27017 0.0.0.0:*
 LISTEN 0 128 0.0.0.0:6379 0.0.0.0:*" > "$MOCK_SS_OUTPUT"
-JSON_OUT="$("$DISCOVER_SH" --json)"
-python3 -c "
-import json, sys
-data_raw = '''$JSON_OUT'''
-json_str = '\n'.join([l for l in data_raw.splitlines() if not l.startswith('[CONTINUE]') and not l.startswith('[STOP]')])
-data = json.loads(json_str)
-assert isinstance(data, list), 'Expected JSON list'
-print(f'Discovered {len(data)} databases in inventory')
-assert len(data) == 4, 'Expected all 4 mock engines to be discovered'
-engines = [d['engine'] for d in data]
-assert 'mysql' in engines
-assert 'postgres' in engines
-assert 'mongodb' in engines
-assert 'redis' in engines
-"
+JSON_OUT=$("$DISCOVER_SH" --json | grep -vE '^\[(CONTINUE|STOP)\]')
+for _exp_eng in mysql postgres mongodb redis; do
+  printf '%s\n' "$JSON_OUT" | grep -q "\"engine\"[[:space:]]*:[[:space:]]*\"${_exp_eng}\"" || {
+    printf '[FAIL] Missing expected engine %s in JSON output: %s\n' "$_exp_eng" "$JSON_OUT" >&2
+    exit 1
+  }
+done
+_eng_cnt=$(printf '%s\n' "$JSON_OUT" | grep -c '"engine"' || true)
+[ "$_eng_cnt" -eq 4 ] || {
+  printf '[FAIL] Expected 4 mock engines in JSON output, found %s\n' "$_eng_cnt" >&2
+  exit 1
+}
+printf 'Discovered %s databases in inventory\n' "$_eng_cnt"
 
 # 2. Test Check and Eval modes (idempotent passes)
 printf '[TEST 2] Testing discovery idempotency (two passes)...\n'

@@ -61,8 +61,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 echo [TEST]     SunOS / OmniOS Windows runner initialized.
 exit /b 0

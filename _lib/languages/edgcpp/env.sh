@@ -6,7 +6,7 @@
 # ## Usage
 # . ./_lib/languages/edgcpp/env.sh
 
-set -feu
+set -feu; _env_caller_this="${THIS_FILE:-}"; _env_caller_dir="${SCRIPT_DIR:-}"
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -22,7 +22,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"; [ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"; unset SCRIPT_NAME _env_caller_this _env_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -39,11 +39,14 @@ export LIBSCRIPT_ROOT_DIR
 
 _edg_ver="${EDGCPP_VERSION:-default}"
 case "${_edg_ver}" in
-  latest|stable|7.0|v7.0.1) _edg_ver="7.0.1" ;;
+  latest|stable|7.0|v7.0.2) _edg_ver="7.0.2" ;;
+  v7.0.1) _edg_ver="7.0.1" ;;
 esac
 _edg_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${_edg_ver}"
 if [ ! -d "${_edg_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default" ]; then
   _edg_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default"
+elif [ ! -d "${_edg_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.2" ]; then
+  _edg_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.2"
 elif [ ! -d "${_edg_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1" ]; then
   _edg_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1"
 fi
@@ -63,6 +66,9 @@ fi
 if [ -f "${_edg_prefix}/lib/libedg.a" ]; then
   export EDG_RT_LIB="${_edg_prefix}/lib/libedg.a"
   export EDGCPP_RT_LIB="${_edg_prefix}/lib/libedg.a"
+elif [ -f "${_edg_prefix}/lib/libedg_gcc_eh_rt.a" ]; then
+  export EDG_RT_LIB="${_edg_prefix}/lib/libedg_gcc_eh_rt.a"
+  export EDGCPP_RT_LIB="${_edg_prefix}/lib/libedg_gcc_eh_rt.a"
 fi
 
 if [ -x "${_edg_prefix}/bin/edgcpp" ]; then
@@ -85,3 +91,6 @@ export CXX_BACKEND='edgcpp'
 export EDGCPP_LOG_FILE="${EDGCPP_LOG_FILE:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/compile_events.jsonl}"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
+[ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"
+[ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"
+unset SCRIPT_NAME _env_caller_this _env_caller_dir || true

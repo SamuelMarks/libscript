@@ -36,7 +36,7 @@ CC0_BASE="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript"
 # Displays usage instructions for verify_screenshots.sh.
 show_help() {
   printf 'Usage: %s [--target <name|dir|all>] [--dir <path>]
-' "$0"
+' "${THIS_FILE}"
   printf 'Validates PNG headers, file sizes, declared verification_screenshots, and cropped dimensions.
 '
 }

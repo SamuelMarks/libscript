@@ -49,7 +49,6 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%I in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 )
 set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\engine\common\log.cmd"
 

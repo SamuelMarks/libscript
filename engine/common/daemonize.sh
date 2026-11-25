@@ -29,7 +29,6 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "${SCRIPT_DIR}/../../.." && pwd)}"
 for _dm_lib in "engine/common/log.sh" "engine/common/python_env.sh" "engine/common/service.sh" "engine/common/service_install.sh"; do
   if [ -f "${LIBSCRIPT_ROOT_DIR}/${_dm_lib}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_dm_lib}"

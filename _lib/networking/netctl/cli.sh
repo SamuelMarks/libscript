@@ -38,16 +38,11 @@ for LIB in "engine/common/log.sh" "engine/common/priv.sh" "_lib/networking/netct
   fi
 done
 unset SCRIPT_NAME || true
-if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
-  _nc_saved_this="${THIS_FILE}"
-  _nc_saved_dir="${SCRIPT_DIR}"
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-  unset SCRIPT_NAME || true
-  THIS_FILE="${_nc_saved_this}"
-  SCRIPT_DIR="${_nc_saved_dir}"
+if ! command -v jq >/dev/null 2>&1; then
+  for _jq_b in "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/jq/default/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/jq/latest/bin"; do
+    [ -d "$_jq_b" ] && PATH="${_jq_b}:${PATH}"
+  done
+  export PATH
 fi
 
 # ## usage
@@ -271,7 +266,7 @@ netctl_ensure_letsencrypt_cert() {
     _cb_bin=""
   fi
   if [ -z "$_cb_bin" ] || ! command -v certbot >/dev/null 2>&1; then
-    FORCE_REINSTALL=1 STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/security/certbot/setup.sh"
+    FORCE_REINSTALL=1 STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install certbot latest
   fi
 
   mkdir -p "${_elc_webroot}/.well-known/acme-challenge" 2>/dev/null || priv mkdir -p "${_elc_webroot}/.well-known/acme-challenge" 2>/dev/null || true

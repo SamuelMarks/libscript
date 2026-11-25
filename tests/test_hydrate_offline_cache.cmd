@@ -48,7 +48,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-for %%I in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "TEST_TMP_DIR=%LIBSCRIPT_ROOT_DIR%\tests_tmp\test_hydrate_%RANDOM%"
 if not exist "%TEST_TMP_DIR%" mkdir "%TEST_TMP_DIR%"

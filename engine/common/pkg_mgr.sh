@@ -1266,6 +1266,22 @@ libscript_process_aria2_file() {
   process_entry
 }
 
+# ## libscript_http_post_json
+# Sends an HTTP POST JSON request via curl or wget when online.
+libscript_http_post_json() {
+  _lhp_url="${1:-}"
+  _lhp_body="${2:-{}}"
+  _lhp_timeout="${3:-120}"
+  [ -n "$_lhp_url" ] || return 1
+  if command -v curl >/dev/null 2>&1; then
+    curl -sS --connect-timeout 5 --max-time "$_lhp_timeout" -H 'Content-Type: application/json' -d "$_lhp_body" "$_lhp_url" >/dev/null 2>&1 || return 1
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q -T "$_lhp_timeout" --header='Content-Type: application/json' --post-data="$_lhp_body" -O /dev/null "$_lhp_url" >/dev/null 2>&1 || return 1
+  fi
+  unset _lhp_url _lhp_body _lhp_timeout || true
+  return 0
+}
+
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_pmgr_caller_dir:-}" ] && SCRIPT_DIR="$_pmgr_caller_dir"

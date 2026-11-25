@@ -514,7 +514,7 @@ libscript_check_health() {
   return 1
 }
 
-if [ "${THIS_FILE}" = "${0}" ] && [ $# -gt 0 ]; then
+if ! (return 0 2>/dev/null) && [ $# -gt 0 ]; then
   libscript_service "$@"
 fi
 

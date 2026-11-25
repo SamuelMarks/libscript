@@ -52,7 +52,6 @@ goto :find_root
 
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 if "%WORDPRESS_VERSION%"=="" set "WORDPRESS_VERSION=7.1.2"

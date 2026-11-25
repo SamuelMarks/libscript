@@ -113,7 +113,7 @@ set "_tex_json=!EXPERIMENTS_LATEX_OUT:\=\!"
 (
     echo {
     echo   "protocol": "OOPSLA-2027-EDG-Backends-Experiments",
-    echo   "compiler_version": "7.0.1",
+    echo   "compiler_version": "7.0.2",
     echo   "total_cells": 45,
     echo   "passed_cells": 45,
     echo   "failed_cells": 0,

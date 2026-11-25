@@ -1,9 +1,11 @@
 @echo off
 :: # wordpress.cmd
+::
 :: ## Overview
-:: Preloads and configures the WordPress publishing platform workload on the target system. Provisions PHP runtime, Nginx/Apache web server configurations, MariaDB database structures, and generates secure wp-config.php settings with unique cryptographic salts.
+:: Preloads and stages the WordPress workload components into a target sysroot on Windows idempotently.
+::
 :: ## Usage
-:: Execute this script to stage WordPress in target sysroot: ./synthesis/msi/live_installer/presets/wordpress.cmd [target_dir]
+:: synthesis\msi\live_installer\presets\wordpress.cmd [target_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,47 +50,33 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
-
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
 if /i "%~1"=="/?" goto :show_help
 if /i "%~1"=="-?" goto :show_help
-
 goto :main
 
 :: ## show_help
 :: Displays usage instructions and supported parameters.
 :show_help
 echo Usage: %~nx0 [target_dir]
-echo.
-echo Deploys WordPress web publishing stack and config into target root.
+echo Stages WordPress service components and configuration into target root idempotently.
 exit /b 0
 
 :: ## main
-:: Executes primary orchestration routine.
+:: Invokes preload_assets.cmd for WordPress dependencies and records an idempotency stamp.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
-
 set "TARGET_DIR=%~1"
-if "%TARGET_DIR%"=="" set "TARGET_DIR=C:\libscript_target"
-
-echo [WORKLOAD-WORDPRESS] Preloading WordPress stack on Windows...
-
-where wsl >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    wsl sh "!SCRIPT_DIR!\wordpress.sh" "%TARGET_DIR%"
-    exit /b !errorlevel!
+if "!TARGET_DIR!"=="" set "TARGET_DIR=C:\libscript_target"
+set "STAMP_FILE=!TARGET_DIR!\.libscript_wordpress_preloaded.stamp"
+if exist "!STAMP_FILE!" (
+    echo [IDEMPOTENT] WordPress workload already preloaded in !TARGET_DIR!.
+    exit /b 0
 )
-
-where sh >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    sh "!SCRIPT_DIR!\wordpress.sh" "%TARGET_DIR%"
-    exit /b !errorlevel!
-)
-
-if not exist "%TARGET_DIR%\wordpress" mkdir "%TARGET_DIR%\wordpress"
-echo WordPress preloaded > "%TARGET_DIR%\.libscript_wordpress_preloaded.stamp"
-echo [OK] WordPress platform workload preloaded successfully.
+if not exist "!TARGET_DIR!\wordpress" mkdir "!TARGET_DIR!\wordpress"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\preloader\preload_assets.cmd" "!TARGET_DIR!" php mariadb nginx
+if errorlevel 1 exit /b !errorlevel!
+> "!STAMP_FILE!" echo wordpress preloaded
+echo [OK] WordPress workload preloaded into !TARGET_DIR!.
 exit /b 0

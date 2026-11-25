@@ -158,8 +158,18 @@ ARR_EOF
   "${LIBSCRIPT_BENCH_PROBE_BIN}" --json-out "${_b4_dir}/after.json" --stderr-file "${_b4_dir}/after.log" --timeout-ms 120000 --exec "${LIBSCRIPT_ROOT_DIR}/_lib/languages/edgcpp/edgcpp_wrapper.sh" -std=c11 -O0 -c "${_b4_dir}/table_decay.c" -o "${_b4_dir}/after.o"
   _after_s=$(awk -F: '/"elapsed_s"/ {gsub(/[^0-9.]/, "", $2); print $2+0}' "${_b4_dir}/after.json")
   _before_s=$(awk -v a="${_after_s}" 'BEGIN { printf "%.4f", (a + 0.0050) * 14.5 }')
-  if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1/bin/cpfe-bug4-legacy" ]; then
-    CPFE_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1/bin/cpfe-bug4-legacy" "${LIBSCRIPT_BENCH_PROBE_BIN}" --json-out "${_b4_dir}/before.json" --timeout-ms 120000 --exec "${LIBSCRIPT_ROOT_DIR}/_lib/languages/edgcpp/edgcpp_wrapper.sh" -std=c11 -O0 -c "${_b4_dir}/table_decay.c" -o "${_b4_dir}/before.o" || true
+  _bug4_bin=""
+  for _b4_cand in \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/cpfe-bug4-legacy" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.2/bin/cpfe-bug4-legacy" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1/bin/cpfe-bug4-legacy"; do
+    if [ -x "${_b4_cand}" ]; then
+      _bug4_bin="${_b4_cand}"
+      break
+    fi
+  done
+  if [ -n "${_bug4_bin}" ]; then
+    CPFE_BIN="${_bug4_bin}" "${LIBSCRIPT_BENCH_PROBE_BIN}" --json-out "${_b4_dir}/before.json" --timeout-ms 120000 --exec "${LIBSCRIPT_ROOT_DIR}/_lib/languages/edgcpp/edgcpp_wrapper.sh" -std=c11 -O0 -c "${_b4_dir}/table_decay.c" -o "${_b4_dir}/before.o" || true
     if [ -f "${_b4_dir}/before.json" ]; then
       _before_s=$(awk -F: '/"elapsed_s"/ {gsub(/[^0-9.]/, "", $2); print $2+0}' "${_b4_dir}/before.json")
     fi

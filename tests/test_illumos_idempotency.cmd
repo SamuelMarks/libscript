@@ -61,8 +61,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 set "PROFILE=%~1"
 if "%PROFILE%"=="" set "PROFILE=%REPO_ROOT%\synthesis\profiles\illumos\minimal-server.json"

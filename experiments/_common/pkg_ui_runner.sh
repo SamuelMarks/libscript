@@ -3,7 +3,7 @@
 # Top-level generic orchestrator composing Steps 0-5 (Bento/Vagrant, package resolution, 3x clean-snapshot installs, and guest UI/browser login verification).
 # ## Usage
 # ./experiments/_common/pkg_ui_runner.sh --suite-dir=<dir> [--phase=run|provision|sync|collect|teardown] [--target-os=<os>] [--pkg-format=<fmt>] [--pkg-source=github-release|build] [--install-modes=headless,quick,custom] [--dry-run=1]
-set -feu
+set -feu; _pur_caller_this="${THIS_FILE:-}"; _pur_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -292,3 +292,12 @@ case "$PUR_PHASE" in
     exit 1
     ;;
 esac
+
+if (return 0 2>/dev/null); then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_pur_caller_dir:-}" ] && SCRIPT_DIR="${_pur_caller_dir}"
+  [ -n "${_pur_caller_this:-}" ] && THIS_FILE="${_pur_caller_this}"
+  unset SCRIPT_NAME _pur_caller_this _pur_caller_dir || true
+  return 0
+fi

@@ -50,7 +50,6 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
@@ -236,9 +235,8 @@ if errorlevel 1 (
         where clang.exe >nul 2>&1
         if errorlevel 1 (
             echo C compiler not found; attempting setup via libscript languages\c...
-            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\c\setup.cmd" (
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\c\setup.cmd" install c latest
-            )
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install c latest
         )
     )
 )
@@ -250,11 +248,10 @@ if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
 where cargo.exe >nul 2>&1
 if errorlevel 1 (
     echo Cargo not found; attempting setup via libscript languages\rust...
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\rust\setup.cmd" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\rust\setup.cmd" install rust latest
-        if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
-            set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
-        )
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install rust latest
+    if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
+        set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
     )
 )
 

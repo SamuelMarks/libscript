@@ -397,7 +397,7 @@ libscript_python_ensure_venv_owner() {
   fi
 
   if [ -L "${_venv_dir}/.venv/bin/python" ] || [ -L "${_venv_dir}/.venv/bin/python3" ]; then
-    _venv_lnk=$(readlink -f "${_venv_dir}/.venv/bin/python3" 2>/dev/null || readlink "${_venv_dir}/.venv/bin/python3" 2>/dev/null || true)
+    _venv_lnk=$(readlink "${_venv_dir}/.venv/bin/python3" 2>/dev/null || true)
     case "$_venv_lnk" in
       /root/*)
         if [ -n "$_venv_user" ] && [ "$_venv_user" != "root" ]; then

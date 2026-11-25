@@ -185,9 +185,9 @@ repos:
           /bin/sh -c 'ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
           cd "$ROOT_DIR" || exit 1
           if [ "${OS:-}" = "Windows_NT" ]; then
-            cmd.exe /c "devtools\audit\doc_coverage.cmd"
+            cmd.exe /c "devtools\audit\doc_coverage.cmd --strict"
           else
-            "$ROOT_DIR/devtools/audit/doc_coverage.sh"
+            "$ROOT_DIR/devtools/audit/doc_coverage.sh" --strict
           fi'
         language: system
         pass_filenames: false

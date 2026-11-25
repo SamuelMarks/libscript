@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Unified multi-target C/C++ corpus build and conformance verification harness for edgcpp v7.0.1.
+# Unified multi-target C/C++ corpus build and conformance verification harness for edgcpp v7.0.2.
 # Compiles 13 C11 and C++17 targets (sqlite, linux, tcc, dash, jq, busybox, curl,
 # memcached, redis, valkey, nginx, postgres, duckdb) from source with --toolchain=edgcpp,
 # verifies 2x idempotency, asserts zero front-end errors in compile_events.jsonl,
@@ -103,7 +103,7 @@ EOF
 }
 
 unset SCRIPT_NAME || true
-"${LIBSCRIPT_ROOT_DIR}/libscript.sh" install edgcpp 7.0.1
+"${LIBSCRIPT_ROOT_DIR}/libscript.sh" install edgcpp 7.0.2
 
 _events_file="${LIBSCRIPT_HOME}/edgcpp/compile_events.jsonl"
 rm -f "${_events_file}"
@@ -131,7 +131,7 @@ _failed_tus=$(grep -cv '"cpfe_exit_code":0' "${_events_file}" || true)
 cat <<EOF > "${REPORT_JSON}.tmp"
 {
   "compiler": "edgcpp",
-  "compiler_version": "7.0.1",
+  "compiler_version": "7.0.2",
   "flavor": "${EDGCPP_FLAVOR:-edgcpp+llvm+gcc}",
   "total_targets": 13,
   "total_translation_units": ${_total_tus},
@@ -146,7 +146,7 @@ mv -f "${REPORT_JSON}.tmp" "${REPORT_JSON}"
 
 printf '=========================================================================================
 '
-printf ' EDG C/C++ Compiler Frontend (edgcpp v7.0.1) Multi-Target Corpus Verification Summary
+printf ' EDG C/C++ Compiler Frontend (edgcpp v7.0.2) Multi-Target Corpus Verification Summary
 '
 printf '=========================================================================================
 '
@@ -164,4 +164,4 @@ printf ' JSON Report Written To: %s
 
 rm -f "${CORPUS_ENTRIES_FILE}" "${CORPUS_TABLE_FILE}"
 printf '%s
-' "[PASS] All 13 C11 and C++17 corpus targets built and verified with edgcpp v7.0.1!"
+' "[PASS] All 13 C11 and C++17 corpus targets built and verified with edgcpp v7.0.2!"

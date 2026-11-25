@@ -50,7 +50,6 @@ goto :find_root
 :root_found
 
 if "%LIBSCRIPT_ROOT_DIR%"=="" (
-    for %%i in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 echo ==> Testing Remote DB Connection Failure Handling on Windows...

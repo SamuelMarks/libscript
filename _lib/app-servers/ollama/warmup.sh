@@ -39,10 +39,16 @@ ollama_warmup_model() {
     unset _lwo_model _lwo_ka || true
     return 0
   fi
-  if ! command -v curl >/dev/null 2>&1; then
-    unset _lwo_model _lwo_ka || true
-    return 0
-  fi
+  _lwo_saved_this="${THIS_FILE}"
+  _lwo_saved_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/pkg_mgr.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_lwo_saved_this}"
+  SCRIPT_DIR="${_lwo_saved_dir}"
+  unset _lwo_saved_this _lwo_saved_dir || true
   _lwo_host="${OLLAMA_HOST:-http://127.0.0.1:11434}"
   case "$_lwo_host" in
     http://*|https://*) _lwo_url="${_lwo_host%/}" ;;
@@ -50,8 +56,7 @@ ollama_warmup_model() {
   esac
   _lwo_url="${_lwo_url%/v1}"
   _lwo_payload=$(printf '{"model":"%s","prompt":"warmup","stream":false,"keep_alive":"%s","options":{"num_predict":1,"num_ctx":512,"num_gpu":0}}' "$_lwo_model" "$_lwo_ka")
-  # libscript-allow-raw-curl
-  curl -sS --connect-timeout 5 --max-time 120 -H 'Content-Type: application/json' -d "$_lwo_payload" "${_lwo_url}/api/generate" >/dev/null 2>&1 || true
+  libscript_http_post_json "${_lwo_url}/api/generate" "$_lwo_payload" 120 || true
   unset _lwo_model _lwo_ka _lwo_host _lwo_url _lwo_payload || true
   return 0
 }

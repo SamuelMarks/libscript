@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Generic Windows setup and lifecycle implementation for the EDG C/C++ Compiler Frontend (edgcpp). Supports downloading official v7.0.1 Windows x86_64/arm64 release archives across edgcpp+llvm+gcc, edgcpp+llvm, and edgcpp+gcc flavors, building from source, and staging edgcpp/edg-cc/edg-c++ compiler driver wrappers.
+:: Generic Windows setup and lifecycle implementation for the EDG C/C++ Compiler Frontend (edgcpp). Supports downloading official v7.0.2 and v7.0.1 Windows x86_64/arm64 release archives across edgcpp+llvm+gcc, edgcpp+llvm, and edgcpp+gcc flavors, building from source, and staging edgcpp/edg-cc/edg-c++ compiler driver wrappers.
 :: ## Usage
 :: setup_generic.cmd [ACTION]
 
@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 if "%ACTION%"=="" set "ACTION=install"
-if "%EDGCPP_VERSION%"=="" set "EDGCPP_VERSION=7.0.1"
+if "%EDGCPP_VERSION%"=="" set "EDGCPP_VERSION=7.0.2"
 call :resolve_latest_edgcpp_release
 if "%EDGCPP_FLAVOR%"=="" set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
@@ -63,12 +63,19 @@ if not "%EDGCPP_DOWNLOAD_URL%"=="" (
     set "EDGCPP_ASSET_SHA256="
 ) else (
     set "EDGCPP_ASSET_URL=https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v%EXACT_VERSION%/%EDGCPP_ASSET_NAME%"
-    set "EDGCPP_ASSET_SHA256=3221b67308aed3d5144a3b6cbc5ac2958f4c4c0ebc126584136279a32f1a1c1d"
+    set "EDGCPP_ASSET_SHA256="
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=3221b67308aed3d5144a3b6cbc5ac2958f4c4c0ebc126584136279a32f1a1c1d"
     if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=0ac2b826cb1dacce195c50da9bdc8062999a15323346dc94ac2a12fbaeb0621b"
     if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=9d02a8f933b3eb0c8eb7415f94d6fbeb14d89523f8620a1c966f436c2707a30c"
     if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=2663c9f8caebb75d43fd6c316fe776ffc25331647380e32f78b29dfd1d272488"
     if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=b1c2be566247de89e9663eb0a4e8369b98e2d591d3b5a8ea32a0e8b909fa54b6"
     if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=8e99c17d62a4104bf6a646018a69dd972e1281561f7c38c6c18bf14e12973b49"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.2-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=0911bf264637529e8535a316a6da272e6ad65c25d94acbda1ddb4300b2f17c02"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.2-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=0c6efae09060fd3e680cd6a22b8023a685b7f9d7cbbcc02a5782bbbe37af9488"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.2-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=4d376e1a7279f4fc2d03d0dbd684afd6812624ab62e05626ef85cde160feb235"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.2-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=3f93d2e0bdf6e76d2ad6a799eba9191203d07a0dd5d94120cb7d987a9ba37891"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.2-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=0cdb67d4162060794c4cc509593b70b846dec47767e98f7f0710edf596fa667b"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.2-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=cc326365f4b55761cdd435baa50e70def976f70c948765fec7f4e40ebabc0c09"
 )
 
 if /i "%ACTION%"=="ls" goto :action_ls
@@ -82,14 +89,16 @@ if /i "%ACTION%"=="uninstall" goto :action_uninstall
 goto :action_install
 
 :: ## resolve_latest_edgcpp_release
-:: Resolves semantic version aliases ('latest', 'stable', '7.0', 'v7.0.1') to '7.0.1' on Windows.
+:: Resolves semantic version aliases ('latest', 'stable', '7.0', 'v7.0.2', 'v7.0.1') on Windows.
 :resolve_latest_edgcpp_release
 if /i "%EDGCPP_VERSION%"=="latest" (
-    set "EXACT_VERSION=7.0.1"
+    set "EXACT_VERSION=7.0.2"
 ) else if /i "%EDGCPP_VERSION%"=="stable" (
-    set "EXACT_VERSION=7.0.1"
+    set "EXACT_VERSION=7.0.2"
 ) else if /i "%EDGCPP_VERSION%"=="7.0" (
-    set "EXACT_VERSION=7.0.1"
+    set "EXACT_VERSION=7.0.2"
+) else if /i "%EDGCPP_VERSION%"=="v7.0.2" (
+    set "EXACT_VERSION=7.0.2"
 ) else if /i "%EDGCPP_VERSION%"=="v7.0.1" (
     set "EXACT_VERSION=7.0.1"
 ) else (
@@ -108,6 +117,7 @@ exit /b 0
 :action_ls_remote
 echo 7.0.0
 echo 7.0.1
+echo 7.0.2
 echo latest
 exit /b 0
 
@@ -125,7 +135,7 @@ call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "%EDGC
 exit /b 0
 
 :: ## action_install
-:: Downloads/extracts the edgcpp v7.0.1 release archive, stages driver wrappers, and updates the default junction.
+:: Downloads/extracts the edgcpp release archive (v7.0.2 / v7.0.1), stages driver wrappers, and updates the default junction.
 :action_install
 set "TARGET_DIR=%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%-%EDGCPP_FLAVOR%"
 set "_meta_ok=1"

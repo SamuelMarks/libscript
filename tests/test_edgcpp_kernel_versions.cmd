@@ -1,7 +1,7 @@
 @echo off
 :: # test_edgcpp_kernel_versions.cmd
 :: ## Overview
-:: Multi-version Linux kernel build, C dialect (gnu89 vs gnu11), and idempotency verification test suite for edgcpp v7.0.1 on Windows.
+:: Multi-version Linux kernel build, C dialect (gnu89 vs gnu11), and idempotency verification test suite for edgcpp v7.0.2 on Windows.
 :: ## Usage
 :: tests\test_edgcpp_kernel_versions.cmd
 
@@ -51,7 +51,7 @@ goto :find_root
 
 call :run_multi_version_kernel_tests
 if errorlevel 1 exit /b 1
-echo [PASS] All 8 Linux kernel versions built and verified with edgcpp v7.0.1 on Windows^^!
+echo [PASS] All 8 Linux kernel versions built and verified with edgcpp v7.0.2 on Windows^^!
 exit /b 0
 
 :: ## run_multi_version_kernel_tests
@@ -79,7 +79,7 @@ for %%V in (4.19.322 5.4.284 5.10.226 5.15.167 6.1.112 6.6.52 6.11.2 6.12.1) do 
 (
     echo {
     echo   "compiler": "edgcpp",
-    echo   "compiler_version": "7.0.1",
+    echo   "compiler_version": "7.0.2",
     echo   "total_kernel_versions_tested": 8,
     echo   "cpfe_failed_tus": 0
     echo }

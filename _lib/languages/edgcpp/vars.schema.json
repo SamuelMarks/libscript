@@ -6,10 +6,10 @@
   "type": "object",
   "properties": {
     "EDGCPP_VERSION": {
-      "description": "Specific version or semantic alias of edgcpp to install (e.g., '7.0.1', 'v7.0.1', '7.0', 'latest', or 'stable').",
+      "description": "Specific version or semantic alias of edgcpp to install (e.g., '7.0.2', 'v7.0.2', '7.0.1', 'v7.0.1', '7.0', 'latest', or 'stable').",
       "type": "string",
-      "default": "7.0.1",
-      "aliases": ["latest", "stable", "7.0", "v7.0.1"]
+      "default": "7.0.2",
+      "aliases": ["latest", "stable", "7.0", "v7.0.2", "v7.0.1"]
     },
     "EDGCPP_FLAVOR": {
       "description": "Release backend flavor of edgcpp to install ('edgcpp+llvm+gcc' for combined LLVM and GCC/C-generating backend support, 'edgcpp+llvm' for LLVM backend, or 'edgcpp+gcc' for GCC/C-generating backend).",
@@ -195,7 +195,7 @@
     },
     "EDGCPP_RT_LIB": {
       "type": "string",
-      "description": "Filesystem path to libedg.a (containing gcc_be_eh_rt.o) automatically linked for C++ targets under EDG_BACKEND=gcc or EDG_BACKEND=c."
+      "description": "Filesystem path to libedg.a or libedg_gcc_eh_rt.a (containing gcc_be_eh_rt.o) automatically linked for C++ targets under EDG_BACKEND=gcc or EDG_BACKEND=c."
     }
   },
   "x-libscript-var-packs": ["source_toolchain"]

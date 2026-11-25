@@ -9,7 +9,7 @@ LibScript, maintaining 100% static documentation coverage (`devtools/audit/doc_c
       files dynamically inherit variable tables from `vars.schema.json` and `base_vars.schema.json`,
       verified via `devtools/docs-gen/` and `devtools/audit/doc_coverage.{sh,cmd}`.
 - [x] **Dynamic Platform Compatibility Matrices:** Automated OS/package-manager support tables
-      across all 547+ documented components and 580+ subsystems
+      across all 577+ documented components and 600+ subsystems
       (`devtools/docs-gen/generate_markdown_docs.*`, `experiments/os-component-matrix/`, and
       `tests/update_results.*`).
 - [x] **Packaging, Unikernel Constellation & Cloud Marketplace Guides:** Documented `package-as`
@@ -18,15 +18,18 @@ LibScript, maintaining 100% static documentation coverage (`devtools/audit/doc_c
       air-gapped variants, and modular WiX/MSI chaining in
       [PACKAGING_BRANDING_GUIDE.md](PACKAGING_BRANDING_GUIDE.md), [PAAS.md](PAAS.md),
       [WINDOWS_MSI.md](WINDOWS_MSI.md), and [WINDOWS.md](WINDOWS.md).
-- [x] **ReactOS Synthesis & Native Windows/MS-DOS (`dos32`) Porting Specifications:** Documented
-      modular ReactOS (`i686`/`x86_64`) synthesis
-      (`synthesis/schemas/execution-plan.reactos.schema.json`), quad-boot `msi-rs` live media, and
-      the zero-emulation Windows PE & MS-DOS `dos32` binary porting architecture in
-      [WINDOWS.md](WINDOWS.md) and [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+- [x] **ReactOS, FreeDOS & MIT MS-DOS Synthesis & Native Windows/DOS Porting Specifications:**
+      Documented modular ReactOS (`i686`/`x86_64`) synthesis
+      (`synthesis/schemas/execution-plan.reactos.schema.json`), rootless FreeDOS (`1.3`/`1.4`) and
+      MIT MS-DOS (`1.25`/`2.0`/`4.00`) synthesis
+      (`synthesis/schemas/execution-plan.dos.schema.json`, `synthesis/distro/dos/`,
+      `synthesis/profiles/dos/`), quad-boot `msi-rs` live media, and the zero-emulation Windows PE &
+      MS-DOS (`dos32`/`dos16`) binary porting architecture in [WINDOWS.md](WINDOWS.md),
+      [DEPENDENCIES.md](DEPENDENCIES.md), and [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
 - [x] **Six-Tier (`T0`–`T5`) & Orthogonal Planes Architecture Guides:** Unified documentation across
       `engine/` (`T0`), `_lib/` (`T1`/`T2`), `synthesis/` (`T3`), `infrastructure/` (`T4`),
       `workloads/` (`T5`), `traits/` (`Plane A`), and `experiments/` + `libscript-rest-api/`
-      (`Plane B`) in [ARCHITECTURE.md](ARCHITECTURE.md) and [TODO_PLAN.md](TODO_PLAN.md).
+      (`Plane B`) in [ARCHITECTURE.md](ARCHITECTURE.md) and [README.md](README.md).
 - [x] **Universal Live Installer Operator Guide:** Documented the `msi-rs` live multiboot installer,
       partitioning canvas, and multi-OS co-installation in
       [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
@@ -51,7 +54,7 @@ LibScript, maintaining 100% static documentation coverage (`devtools/audit/doc_c
 ## Active & Future Objectives
 
 1. **Hosted Searchable Documentation Portal:** Extend `devtools/generate_html_docs.{sh,cmd}` with
-   client-side search indexing across all `492` atomic `T1`/`T2` recipes, `T3`–`T5` synthesis,
+   client-side search indexing across all `498` atomic `T1`/`T2` recipes, `T3`–`T5` synthesis,
    infrastructure, and workload subsystems, JSON schemas, and OpenAPI 3.2.0 endpoints.
 2. **illumos, FreeBSD & ReactOS Deep-Dive Internals:** Add dedicated architecture walkthroughs for
    ZFS boot environments (`beadm`), SMF service manifests, FreeBSD `MAKEOBJDIRPREFIX` world

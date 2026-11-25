@@ -49,7 +49,6 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%i in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 echo [MATRIX] Starting Multi-Platform Host Build Matrix Verification on Windows...

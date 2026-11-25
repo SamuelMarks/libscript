@@ -76,7 +76,13 @@ if "%REDIS_DOWNLOAD_URL%"=="" (
     if "%_tmp_ver%"=="latest" (
         where git >nul 2>&1
         if not errorlevel 1 (
-            for /f "usebackq tokens=*" %%I in (`powershell -NoProfile -Command "git ls-remote --tags 'https://github.com/SamuelMarks/redis-windows' ^| Select-String -Pattern '\d+\.\d+\.\d+' -AllMatches ^| ForEach-Object { $_.Matches.Value } ^| Sort-Object {[version]$_} ^| Select-Object -Last 1"`) do set "_tmp_ver=%%I"
+            for /f "tokens=2" %%I in ('git ls-remote --tags --refs --sort=-v:refname "https://github.com/SamuelMarks/redis-windows" 2^>nul') do (
+                if "!_tmp_ver!"=="latest" (
+                    set "_cand_tag=%%~nxI"
+                    if "!_cand_tag:~0,1!"=="v" set "_cand_tag=!_cand_tag:~1!"
+                    set "_tmp_ver=!_cand_tag!"
+                )
+            )
         ) else (
             set "_tmp_ver=7.2.4"
         )

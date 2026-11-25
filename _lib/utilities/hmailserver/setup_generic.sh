@@ -44,5 +44,5 @@ if [ "${UNAME:-}" != "CYGWIN_NT" ] && [ "${UNAME:-}" != "MINGW64_NT" ]; then
     exit 0
   fi
   log_info 'On POSIX platforms, Exim is recommended. Invoking Exim setup...'
-  "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/exim/setup.sh" "$@"
+  STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install exim latest "$@"
 fi

@@ -87,7 +87,7 @@ if "%CMD_ARGS%"=="" (
     exit /b 1
 )
 
-for %%I in ("!SCRIPT_DIR!\..\..") do set "REPO_ROOT=%%~fI"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 if "%WORKER_TYPE%"=="auto" (
     docker --version >nul 2>&1

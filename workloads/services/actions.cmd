@@ -49,7 +49,6 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
 set "action=%cmd%"
 if /i "!action!"=="deprovision-db" (

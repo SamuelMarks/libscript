@@ -66,12 +66,8 @@ resolve_exact_version() {
 ensure_c_toolchain() {
   if ! command -v cc >/dev/null 2>&1 && ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
     log_info 'C toolchain not detected; bootstrapping standard C compiler...'
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/c/setup.sh" ]; then
-      unset SCRIPT_NAME || true
-      ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/languages/c/setup.sh" install c latest || true
-    elif type libscript_depends >/dev/null 2>&1; then
-      libscript_depends 'c' || true
-    fi
+    unset SCRIPT_NAME || true
+    STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install c latest || true
   fi
 }
 
@@ -85,21 +81,11 @@ ensure_rust_toolchain() {
 
   if ! command -v cargo >/dev/null 2>&1 || ! command -v rustc >/dev/null 2>&1; then
     log_info 'Rust toolchain not detected; bootstrapping Rust and Cargo...'
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh" ]; then
-      unset SCRIPT_NAME || true
-      ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh" install rust latest || true
-      # shellcheck disable=SC1090,SC1091
-      [ -f "${HOME:-/root}/.cargo/env" ] && . "${HOME:-/root}/.cargo/env"
-      [ -d "${HOME:-/root}/.cargo/bin" ] && export PATH="${HOME:-/root}/.cargo/bin:${PATH}"
-    elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rustup/setup.sh" ]; then
-      unset SCRIPT_NAME || true
-      ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rustup/setup.sh" install rustup latest || true
-      # shellcheck disable=SC1090,SC1091
-      [ -f "${HOME:-/root}/.cargo/env" ] && . "${HOME:-/root}/.cargo/env"
-      [ -d "${HOME:-/root}/.cargo/bin" ] && export PATH="${HOME:-/root}/.cargo/bin:${PATH}"
-    elif type libscript_depends >/dev/null 2>&1; then
-      libscript_depends 'rust' || true
-    fi
+    unset SCRIPT_NAME || true
+    STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install rust latest || STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install rustup latest || true
+    # shellcheck disable=SC1090,SC1091
+    [ -f "${HOME:-/root}/.cargo/env" ] && . "${HOME:-/root}/.cargo/env"
+    [ -d "${HOME:-/root}/.cargo/bin" ] && export PATH="${HOME:-/root}/.cargo/bin:${PATH}"
   fi
 }
 

@@ -404,6 +404,7 @@ Before submitting changes, execute the repository's automated compliance and aud
 ./devtools/audit/audit_standards.sh --all
 ./devtools/audit/audit_tiers.sh --all
 ./devtools/audit/audit_posix.sh --all
+./devtools/audit/audit_cmd.sh --all
 ./devtools/audit/audit_version_manager.sh
 ./devtools/audit/audit_schema_vars.sh --all
 ./devtools/audit/doc_coverage.sh --strict
@@ -412,11 +413,13 @@ Before submitting changes, execute the repository's automated compliance and aud
 ./tests/test_idempotency_matrix.sh
 ./tests/test_win_dos_component_pm.sh
 
-# 3. Verify headless QEMU boot tests for synthesized OS and RTOS images
+# 3. Verify headless QEMU & kvikdos boot tests for synthesized OS, DOS, and RTOS images
 ./tests/os_boot_test.sh build/disk.qcow2 60
 ./tests/freebsd_boot_test.sh build/freebsd.qcow2 60
 ./tests/illumos_boot_test.sh build/illumos.qcow2 60
 ./tests/reactos_boot_test.sh build/reactos.iso 90
+./tests/test_dos_kernel_synthesis.sh
+./tests/test_qemu_msdos_smoke.sh
 ./tests/zephyr_boot_test.sh build/zephyr.elf 30
 ./tests/freertos_boot_test.sh build/freertos.elf 30
 

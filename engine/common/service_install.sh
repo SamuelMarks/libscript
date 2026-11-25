@@ -1047,7 +1047,7 @@ libscript_uninstall_service() {
   fi
 }
 
-if [ "${THIS_FILE}" = "${0}" ] && [ $# -gt 0 ]; then
+if ! (return 0 2>/dev/null) && [ $# -gt 0 ]; then
   _si_cmd="$1"
   shift
   case "$_si_cmd" in

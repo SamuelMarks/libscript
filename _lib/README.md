@@ -2,8 +2,8 @@
 
 ## Overview
 
-`_lib/` is LibScript's catalog of **492+ self-contained, atomic software recipes** organized across
-30 functional categories, accompanied by `_lib/checksums.txt` for offline cryptographic artifact
+`_lib/` is LibScript's catalog of **498+ self-contained, atomic software recipes** organized across
+31 functional categories, accompanied by `_lib/checksums.txt` for offline cryptographic artifact
 verification.
 
 Every directory `_lib/<category>/<component>/` is an autonomous component-package-manager governed
@@ -19,9 +19,9 @@ by [`../engine/schemas/manifest.schema.json`](../engine/schemas/manifest.schema.
     supervision across `systemd`, `openrc`, `runit`, `s6`, `dinit`, `launchd`, `smf`, and Windows
     Services.
 - **Tier 2 (`T2`) — OS Kernels, Bootloaders, Init Systems & Sysroot Plumbing**:
-  - Kernels (`linux`, `initramfs`, `zephyr`, `freertos`), bootloaders (`grub`, `systemd-boot`,
-    `limine`, `u-boot`, `mcuboot`), C standard libraries (`glibc`, `musl`), Wayland/DRM/Mesa
-    graphics plumbing, and PID 1 init systems.
+  - Kernels (`linux`, `initramfs`, `freedos`, `msdos`, `zephyr`, `freertos`), bootloaders (`grub`,
+    `systemd-boot`, `limine`, `refind`, `mcuboot`), C standard libraries (`glibc`, `musl`),
+    Wayland/DRM/Mesa graphics plumbing, and PID 1 init systems.
   - Respects `LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`, and `LIBSCRIPT_TARGET_TRIPLET` when
     invoked by `T3` OS synthesizers (`synthesis/`).
 

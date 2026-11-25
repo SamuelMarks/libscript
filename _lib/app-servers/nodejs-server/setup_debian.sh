@@ -31,12 +31,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "engine/common/environ.sh" "engine/common/pkg_mgr.sh" "engine/common/service.sh" "_lib/git-servers/utils/git.sh" "_lib/languages/nodejs/setup.sh"; do
+for LIB in "engine/common/environ.sh" "engine/common/pkg_mgr.sh" "engine/common/service.sh" "engine/common/git.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
+STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install nodejs latest
 
 PREVIOUS_WD="$(pwd)"
 SERVICE_NAME=''
@@ -123,15 +125,15 @@ libscript_install_service "${SERVICE_NAME}" "${EXEC_START}" "${NODEJS_SERVER_DES
 cd -- "${PREVIOUS_WD}"
 
 if [ -n "${NODEJS_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${NODEJS_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "unix:${NODEJS_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${NODEJS_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${NODEJS_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${NODEJS_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${NODEJS_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${NODEJS_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${NODEJS_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${NODEJS_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "${NODEJS_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" netctl --listen "${NODEJS_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
 fi

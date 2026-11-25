@@ -1,9 +1,11 @@
 @echo off
 :: # git.cmd
+::
 :: ## Overview
-:: Common Git manipulation utilities for Windows batch.
+:: Git manipulation wrapper for git-servers/utils delegating to T0 engine\common\git.cmd.
+::
 :: ## Usage
-:: Provides :git_get <repo> <target> [branch] for idempotent repo cloning/pulling.
+:: call "%LIBSCRIPT_ROOT_DIR%\_lib\git-servers\utils\git.cmd" :git_get <repo> <target> [branch]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,34 +52,7 @@ goto :find_root
 :root_found
 
 if not "%~1"=="" (
-    call :%*
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\git.cmd" %*
     exit /b !ERRORLEVEL!
 )
 exit /b 0
-
-:: ## git_get
-:: Clones a Git repository or fetches and updates an existing checkout idempotently.
-:git_get
-set "repo=%~1"
-set "target=%~2"
-set "branch=%~3"
-
-if "%target%"=="" exit /b 1
-
-set "GIT_DIR_=%target%\.git"
-if exist "%GIT_DIR_%" (
-    if not "%branch%"=="" (
-        git --git-dir="%GIT_DIR_%" --work-tree="%target%" fetch origin "%branch%":"%branch%"
-    ) else (
-        git --git-dir="%GIT_DIR_%" --work-tree="%target%" pull --ff-only
-    )
-) else (
-    if exist "%target%" rmdir /s /q "%target%" >nul 2>&1
-    for %%P in ("%target%") do if not exist "%%~dpP" mkdir "%%~dpP"
-    if not "%branch%"=="" (
-        git clone --depth=1 --single-branch --branch "%branch%" "%repo%" "%target%"
-    ) else (
-        git clone --depth=1 --single-branch "%repo%" "%target%"
-    )
-)
-exit /b %errorlevel%

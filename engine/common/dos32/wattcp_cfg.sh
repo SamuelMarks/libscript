@@ -81,8 +81,6 @@ export STACK
 [ -n "${_wc_caller_this:-}" ] && THIS_FILE="$_wc_caller_this"
 unset SCRIPT_NAME _wc_caller_this _wc_caller_dir || true
 
-case "$(basename -- "${0}")" in
-  wattcp_cfg.sh)
-    libscript_ensure_wattcp_cfg "$@"
-    ;;
-esac
+if ! (return 0 2>/dev/null); then
+  libscript_ensure_wattcp_cfg "$@"
+fi

@@ -41,7 +41,7 @@ LOCAL_FALLBACK="${LINUX_VAGRANT_LOCAL_FALLBACK:-1}"
 # Prints CLI usage and supported flags for the Vagrant kernel matrix runner.
 show_help() {
   printf 'Usage: %s [--distro=debian-13|rockylinux-10.2|alpine-3.24|all] [--versions="..."] [--compilers="..."] [--keep-vm]
-' "${0}"
+' "${THIS_FILE}"
 }
 
 for _arg in "$@"; do

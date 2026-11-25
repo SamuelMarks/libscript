@@ -5,7 +5,7 @@
 # ## Usage
 # Source or execute this script to set environment variables for exim.
 
-set -feu
+set -feu; _env_caller_this="${THIS_FILE:-}"; _env_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,7 +20,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"; [ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"; unset SCRIPT_NAME _env_caller_this _env_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -38,3 +38,6 @@ export EXIM_SMTP_PORT="${EXIM_SMTP_PORT:-25}"
 export EXIM_RELAY_FROM_HOSTS="${EXIM_RELAY_FROM_HOSTS:-127.0.0.1 : ::::1}"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
+[ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"
+[ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"
+unset SCRIPT_NAME _env_caller_this _env_caller_dir || true

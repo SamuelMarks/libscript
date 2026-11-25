@@ -184,7 +184,21 @@ _audit_lib_category() {
       fi
       for _comp_scr in "${_sub}"/*.sh "${_sub}"/*.cmd "${_sub}"/*.ps1; do
         [ -f "$_comp_scr" ] || continue
-        if grep -Eq '(\.\.[/\\]_common[/\\]|\.\.[/\\]\.\.[/\\]_common[/\\]|\.\.[/\\][a-zA-Z0-9_-]+[/\\](setup|cli|env|service|uninstall|test)\.(sh|cmd|ps1))' "$_comp_scr" 2>/dev/null; then
+        if awk -v my_cat="$_bn" -v my_comp="$_sbn" '
+          /^[[:space:]]*(#|::|rem[[:space:]]|REM[[:space:]])/ { next }
+          /(\.\.[/\\]_common[/\\]|\.\.[/\\]\.\.[/\\]_common[/\\]|\.\.[/\\][a-zA-Z0-9_-]+[/\\](setup|cli|env|service|uninstall|test)\.(sh|cmd|ps1))/ { bad = 1; exit }
+          match($0, /_lib[\/\\][a-z0-9-]+[/\\][a-z0-9-]+[/\\]/) {
+            seg = substr($0, RSTART + 5, RLENGTH - 6)
+            gsub(/\\/, "/", seg)
+            if (seg != (my_cat "/" my_comp)) { bad = 1; exit }
+          }
+          match($0, /\.\.[/\\]\.\.[/\\][a-z0-9-]+[/\\][a-z0-9-]+[/\\]/) {
+            seg = substr($0, RSTART + 6, RLENGTH - 7)
+            gsub(/\\/, "/", seg)
+            if (seg !~ /^(engine|cli)\// && seg != (my_cat "/" my_comp)) { bad = 1; exit }
+          }
+          END { exit(bad ? 0 : 1) }
+        ' "$_comp_scr" 2>/dev/null; then
           printf '[TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib/%s/%s/%s: Lateral cross-component or stale _common reference is forbidden; route via libscript.{sh,cmd} or engine/common/.\n' "$_bn" "$_sbn" "$(basename "$_comp_scr")" >&2
           _lc_errs=$((_lc_errs + 1))
         fi

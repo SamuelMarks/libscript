@@ -208,9 +208,8 @@ for %%A in (ash awk basename cat cmp comm cp cut date diff dirname env find grep
             echo busybox.exe %%A %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9
         )
     ) else (
-        if not exist "!_MBS_DIR!\bin\%%A.exe" (
-            mklink /H "!_MBS_DIR!\bin\%%A.exe" "!_MBS_DIR!\bin\busybox.exe" >nul 2>&1
-        )
+        if exist "!_MBS_DIR!\bin\%%A.exe" del /f /q "!_MBS_DIR!\bin\%%A.exe" >nul 2>&1
+        mklink /H "!_MBS_DIR!\bin\%%A.exe" "!_MBS_DIR!\bin\busybox.exe" >nul 2>&1
         if not exist "!_MBS_DIR!\bin\%%A.exe" (
             > "!_MBS_DIR!\bin\%%A.bat" (
                 echo @echo off

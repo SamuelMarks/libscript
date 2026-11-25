@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # C89/C99/C11 and C++17 language conformance and binary verification test suite
-# for the EDG C/C++ Compiler Frontend (edgcpp v7.0.1).
+# for the EDG C/C++ Compiler Frontend (edgcpp v7.0.2).
 # Verifies cpfe (including direct --llvm-be native object emission), cpfe-cp
 # (C++-generating backend), cdisp, mk_errinfo, edg_decode, include_c99/,
 # include_c++/, edgcpp (C driver), and edg-c++ (C++ driver).
@@ -31,9 +31,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 _EDGCPP_DIR="${SCRIPT_DIR}"
 
-if [ ! -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default" ] && [ ! -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1" ]; then
+if [ ! -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default" ] && [ ! -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.2" ]; then
   unset SCRIPT_NAME || true
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install edgcpp 7.0.1
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install edgcpp 7.0.2
 fi
 
 if [ -f "${SCRIPT_DIR}/env.sh" ]; then
@@ -276,6 +276,41 @@ LNK_EOF
   rm -rf "${_mb_dir}"
 }
 
+# ## verify_v702_versioning_and_checksums
+# Verifies ls-remote lists both 7.0.1 and 7.0.2, checksums.txt registers v7.0.2 digests, edgcpp_wrapper reports installed metadata versions accurately, and libedg_gcc_eh_rt.a is auto-discovered.
+verify_v702_versioning_and_checksums() {
+  _remote_list="$("${SCRIPT_DIR}/cli.sh" ls-remote)"
+  printf '%s\n' "${_remote_list}" | grep -qx '7.0.1'
+  printf '%s\n' "${_remote_list}" | grep -qx '7.0.2'
+  grep -q 'v7\.0\.2/edgcpp+llvm+gcc-v7\.0\.2-macos-aarch64\.tar\.gz 7dc4e7f546656c12e8be3adba8b9e569282743a2b3f1f00417c5d9fded378568' "${LIBSCRIPT_ROOT_DIR}/_lib/checksums.txt"
+  grep -q 'v7\.0\.2/SHA256SUMS\.txt 02d51932546c281926f62933892e8110320e62539ac170852c3b733e690de4ae' "${LIBSCRIPT_ROOT_DIR}/_lib/checksums.txt"
+
+  _v_dir="${TMPDIR:-/tmp}/libscript_edg_ver_test_$$"
+  mkdir -p "${_v_dir}/p702/lib" "${_v_dir}/p701/lib"
+  printf '{"component":"edgcpp","version":"7.0.2"}\n' > "${_v_dir}/p702/edgcpp-release-metadata.json"
+  printf '{"component":"edgcpp","version":"7.0.1"}\n' > "${_v_dir}/p701/edgcpp-release-metadata.json"
+  printf 'AR' > "${_v_dir}/p702/lib/libedg_gcc_eh_rt.a"
+
+  _dv702="$(EDGCPP_HOME="${_v_dir}/p702" "${SCRIPT_DIR}/edgcpp_wrapper.sh" -dumpversion)"
+  [ "${_dv702}" = "7.0.2" ]
+  _dv701="$(EDGCPP_HOME="${_v_dir}/p701" "${SCRIPT_DIR}/edgcpp_wrapper.sh" -dumpversion)"
+  [ "${_dv701}" = "7.0.1" ]
+
+  _mock_cxx="${_v_dir}/mock_cxx"
+  _lnk_log="${_v_dir}/link_args.log"
+  cat <<'LNK_EOF' > "${_mock_cxx}"
+#!/bin/sh
+printf '%s\n' "$*" > "${MOCK_LINK_ARGS_LOG}"
+exit 0
+LNK_EOF
+  chmod +x "${_mock_cxx}"
+  MOCK_LINK_ARGS_LOG="${_lnk_log}" EDGCPP_HOME="${_v_dir}/p702" EDG_RT_LIB="" EDGCPP_RT_LIB="" EDG_HOST_CXX="${_mock_cxx}" EDG_BACKEND="gcc" EDGCPP_DRIVER_LANG="c++" "${SCRIPT_DIR}/edgcpp_wrapper.sh" "${_v_dir}/dummy.o" -o "${_v_dir}/dummy_bin"
+  grep -q "${_v_dir}/p702/lib/libedg_gcc_eh_rt.a" "${_lnk_log}"
+
+  rm -rf "${_v_dir}"
+}
+
 verify_edgcpp_binaries_and_headers
 verify_c_and_cxx_conformance
 verify_multibackend_cli_trap_and_depfiles
+verify_v702_versioning_and_checksums

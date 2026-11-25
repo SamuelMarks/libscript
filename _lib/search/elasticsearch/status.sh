@@ -35,9 +35,6 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_NAME"
 fi
 
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "$SCRIPT_NAME"
 
 SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/engine/common/service.sh"
 export SCRIPT_NAME

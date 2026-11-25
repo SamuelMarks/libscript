@@ -75,7 +75,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/python_env.sh" ]; then
   libscript_python_sync_deps "$app_dir" "$python_version"
   if [ -d "$app_dir/.venv" ] && [ ! -d "$app_dir/venv" ]; then
     rm -f "$app_dir/venv" 2>/dev/null || true
-    ln -sf ".venv" "$app_dir/venv" 2>/dev/null || true
+    ln -sfn ".venv" "$app_dir/venv" 2>/dev/null || ln -sf ".venv" "$app_dir/venv" 2>/dev/null || true
   fi
 fi
 [ -d "$app_dir/venv" ] && venv_dir="$app_dir/venv"

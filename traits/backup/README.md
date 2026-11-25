@@ -22,6 +22,7 @@ filesystems (`ZFS` and `Btrfs`), and remote encrypted object stores (`S3`, `GCS`
 
 ```sh
 ./libscript.sh trait apply backup
-./traits/backup/orchestrate.sh --component postgres --ship s3://my-backups/pg
-./traits/backup/restore.sh --component postgres --from s3://my-backups/pg/latest
+./traits/backup/orchestrate.sh /var/backups/postgres postgres
+./traits/backup/ship.sh /var/backups/postgres s3://my-backups/pg
+./traits/backup/restore.sh postgres /var/backups/postgres
 ```

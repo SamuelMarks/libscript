@@ -101,12 +101,11 @@ set "STACK="
 call "!SCRIPT_DIR!\gen_freertos_config.cmd" "!BUILD_DIR!" || exit /b 1
 
 set "BSP_DIR=!SCRIPT_DIR!\bsp"
-set "Z_BSP_DIR=!LIBSCRIPT_ROOT_DIR!\_lib\kernel\zephyr\bsp"
 set "BUILT_OK=0"
 
 if /I "!PORT!"=="mps2_an385" (
     where arm-none-eabi-gcc >nul 2>&1 && (
-        arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -ffreestanding -nostdlib -O2 -DFREERTOS_ARCH_ARM_CM3=1 -DFREERTOS_VER_STR=\"!FREERTOS_VER!\" -I"!BUILD_DIR!" -Wl,-T,"!Z_BSP_DIR!\cortex_m3.ld" -o "!BOOT_DIR!\freertos.elf" "!BSP_DIR!\freertos_boot_main.c"
+        arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -ffreestanding -nostdlib -O2 -DFREERTOS_ARCH_ARM_CM3=1 -DFREERTOS_VER_STR=\"!FREERTOS_VER!\" -I"!BUILD_DIR!" -Wl,-T,"!BSP_DIR!\cortex_m3.ld" -o "!BOOT_DIR!\freertos.elf" "!BSP_DIR!\freertos_boot_main.c"
         if not errorlevel 1 set "BUILT_OK=1"
     )
 )

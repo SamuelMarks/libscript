@@ -579,7 +579,7 @@ verify_native_host() {
 
   if [ "${CORE_EXPERIMENT_REQUIRE_NATIVE_ISA}" = "1" ]; then
     log_info "[verify_native_host] Enforcing RULE-2 native ISA guard (${CORE_EXPERIMENT_HOST_ARCH}) and host preparation on '${CORE_EXPERIMENT_NODE}'..."
-    _v_cmd="cd ~/libscript && SCRIPT_NAME=./experiments/_common/harness.sh . ./experiments/_common/harness.sh && libscript_exp_assert_native_isa '${CORE_EXPERIMENT_HOST_ARCH}' && libscript_prepare_benchmark_host"
+    _v_cmd="cd ~/libscript && SCRIPT_NAME=~/libscript/experiments/_common/harness.sh . ~/libscript/experiments/_common/harness.sh && libscript_exp_assert_native_isa '${CORE_EXPERIMENT_HOST_ARCH}' && libscript_prepare_benchmark_host"
     cloud_exec_remote "${_v_cmd}"
   fi
 
@@ -614,7 +614,7 @@ install_virtualization_stack() {
   fi
 
   log_info "[install_virtualization_stack] Installing Vagrant, Packer, Ruby, QEMU, and Bento Builder stack via LibScript on '${CORE_EXPERIMENT_NODE}'..."
-  _vstack_cmd='cd ~/libscript && ./libscript.sh install ruby latest && ./libscript.sh install packer latest && ./libscript.sh install vagrant latest && ./libscript.sh install qemu latest && ./libscript.sh install bento-builder latest'
+  _vstack_cmd='cd ~/libscript && ~/libscript/libscript.sh install ruby latest && ~/libscript/libscript.sh install packer latest && ~/libscript/libscript.sh install vagrant latest && ~/libscript/libscript.sh install qemu latest && ~/libscript/libscript.sh install bento-builder latest'
   cloud_exec_remote "${_vstack_cmd}"
   write_experiment_state 'install_virtualization_stack' 'true'
   log_info '[install_virtualization_stack] Virtualization stack installed.'
@@ -633,7 +633,7 @@ deploy_vagrant_box() {
   _os_list=$(printf '%s' "${CORE_EXPERIMENT_TARGET_OS}" | tr ',' ' ')
   for _tgt_os in ${_os_list}; do
     log_info "[deploy_vagrant_box] Building & deploying Bento Vagrant box for target OS '${_tgt_os}'..."
-    _deploy_cmd="cd ~/libscript && BENTO_DIR='${CORE_EXPERIMENT_BENTO_DIR}' ./synthesis/distro/bento/cli.sh build '${_tgt_os}' && ./tests/run_local_tests.sh --os '${_tgt_os}' --boot-only"
+    _deploy_cmd="cd ~/libscript && BENTO_DIR='${CORE_EXPERIMENT_BENTO_DIR}' ~/libscript/synthesis/distro/bento/cli.sh build '${_tgt_os}' && ~/libscript/tests/run_local_tests.sh --os '${_tgt_os}' --boot-only"
     cloud_exec_remote "${_deploy_cmd}"
   done
 
@@ -681,10 +681,10 @@ test_libscript_components() {
   _os_list=$(printf '%s' "${CORE_EXPERIMENT_TARGET_OS}" | tr ',' ' ')
   for _tgt_os in ${_os_list}; do
     log_info "[test_libscript_components] Running LibScript component suite (${CORE_EXPERIMENT_COMPONENTS}@${CORE_EXPERIMENT_COMPONENT_VERSION}) on '${_tgt_os}' (snapshot=${CORE_EXPERIMENT_SNAPSHOT_NAME}, idempotency_runs=${CORE_EXPERIMENT_IDEMPOTENCY_RUNS})..."
-    _matrix_cmd="cd ~/libscript && SNAPSHOT_NAME='${CORE_EXPERIMENT_SNAPSHOT_NAME}' IDEMPOTENCY_RUNS='${CORE_EXPERIMENT_IDEMPOTENCY_RUNS}' ./tests/run_local_tests.sh --os '${_tgt_os}' --reuse-vm ${_extra_matrix_flags}"
+    _matrix_cmd="cd ~/libscript && SNAPSHOT_NAME='${CORE_EXPERIMENT_SNAPSHOT_NAME}' IDEMPOTENCY_RUNS='${CORE_EXPERIMENT_IDEMPOTENCY_RUNS}' ~/libscript/tests/run_local_tests.sh --os '${_tgt_os}' --reuse-vm ${_extra_matrix_flags}"
     if [ "${CORE_EXPERIMENT_COMPONENTS}" != "all" ]; then
       _comp_args=$(printf '%s' "${CORE_EXPERIMENT_COMPONENTS}" | tr ',' ' ')
-      _matrix_cmd="cd ~/libscript && SNAPSHOT_NAME='${CORE_EXPERIMENT_SNAPSHOT_NAME}' IDEMPOTENCY_RUNS='${CORE_EXPERIMENT_IDEMPOTENCY_RUNS}' ./tests/run_local_tests.sh ${_comp_args} --os '${_tgt_os}' --reuse-vm ${_extra_matrix_flags}"
+      _matrix_cmd="cd ~/libscript && SNAPSHOT_NAME='${CORE_EXPERIMENT_SNAPSHOT_NAME}' IDEMPOTENCY_RUNS='${CORE_EXPERIMENT_IDEMPOTENCY_RUNS}' ~/libscript/tests/run_local_tests.sh ${_comp_args} --os '${_tgt_os}' --reuse-vm ${_extra_matrix_flags}"
     fi
     cloud_exec_remote "${_matrix_cmd}"
   done
@@ -749,7 +749,7 @@ run_experiments() {
 
   if [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ]; then
     log_info "[run_experiments] Running edgcpp_backends empirical suites (${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}' (arch=${CORE_EXPERIMENT_HOST_ARCH})..."
-    _eb_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 ./experiments/edgcpp-backends/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/edgcpp_backends_results'"
+    _eb_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 ~/libscript/experiments/edgcpp-backends/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/edgcpp_backends_results'"
     cloud_exec_remote "${_eb_cmd}"
     if [ "${DRY_RUN_MODE}" = "1" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/experiments/edgcpp-backends/benchmark_experiments.sh" ]; then
       EDGCPP_BACKENDS_SUITE_SYNTHETIC='1' "${LIBSCRIPT_ROOT_DIR}/experiments/edgcpp-backends/benchmark_experiments.sh" --synthetic-fixtures --subsuites="${CORE_EXPERIMENT_SUBSUITES}" --host-arch="${CORE_EXPERIMENT_HOST_ARCH}" --results-dir="${LIBSCRIPT_ROOT_DIR}/build/experiment_bundle/results" >/dev/null 2>&1 || true
@@ -760,7 +760,7 @@ run_experiments() {
 
   if [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ]; then
     log_info "[run_experiments] Running win_port empirical suites (${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}' (arch=${CORE_EXPERIMENT_HOST_ARCH})..."
-    _wp_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 ./experiments/win-port/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/win_port_results'"
+    _wp_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 ~/libscript/experiments/win-port/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/win_port_results'"
     cloud_exec_remote "${_wp_cmd}"
     if [ "${DRY_RUN_MODE}" = "1" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/experiments/win-port/benchmark_experiments.sh" ]; then
       WIN_PORT_SUITE_SYNTHETIC='1' "${LIBSCRIPT_ROOT_DIR}/experiments/win-port/benchmark_experiments.sh" --synthetic-fixtures --subsuites="${CORE_EXPERIMENT_SUBSUITES}" --host-arch="${CORE_EXPERIMENT_HOST_ARCH}" --results-dir="${LIBSCRIPT_ROOT_DIR}/build/experiment_bundle/results" >/dev/null 2>&1 || true
@@ -775,7 +775,7 @@ run_experiments() {
   fi
   if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
     log_info "[run_experiments] Running libtpu empirical suites (${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}' (warmup=${CORE_EXPERIMENT_WARMUP}, trials=${CORE_EXPERIMENT_TRIALS}, arch=${CORE_EXPERIMENT_HOST_ARCH})..."
-    _libtpu_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 LIBSCRIPT_BENCH_DROP_CACHES=1 ./_lib/toolchains/libtpu-rs/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --warmup='${CORE_EXPERIMENT_WARMUP}' --trials='${CORE_EXPERIMENT_TRIALS}' --cargo-profile='${CORE_EXPERIMENT_CARGO_PROFILE}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/libtpu_results'"
+    _libtpu_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 LIBSCRIPT_BENCH_DROP_CACHES=1 ~/libscript/_lib/toolchains/libtpu-rs/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --warmup='${CORE_EXPERIMENT_WARMUP}' --trials='${CORE_EXPERIMENT_TRIALS}' --cargo-profile='${CORE_EXPERIMENT_CARGO_PROFILE}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/libtpu_results'"
     cloud_exec_remote "${_libtpu_cmd}"
     if [ "${DRY_RUN_MODE}" = "1" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/experiments/libtpu-pjrt/benchmark_experiments.sh" ]; then
       LIBTPU_RS_SYNTHETIC_FIXTURES='1' LIBTPU_RS_DRY_RUN='1' "${LIBSCRIPT_ROOT_DIR}/experiments/libtpu-pjrt/benchmark_experiments.sh" --subsuites="${CORE_EXPERIMENT_SUBSUITES}" --warmup="${CORE_EXPERIMENT_WARMUP}" --trials="${CORE_EXPERIMENT_TRIALS}" --cargo-profile="${CORE_EXPERIMENT_CARGO_PROFILE}" --host-arch="${CORE_EXPERIMENT_HOST_ARCH}" --results-dir="${LIBSCRIPT_ROOT_DIR}/build/experiment_bundle/results" >/dev/null 2>&1 || true
@@ -785,7 +785,7 @@ run_experiments() {
   fi
 
   log_info "[run_experiments] Running EDG backend experiments on '${CORE_EXPERIMENT_NODE}' (workloads=${CORE_EXPERIMENT_WORKLOADS}, compilers=${CORE_EXPERIMENT_COMPILERS}, runs=${CORE_EXPERIMENT_RUNS})..."
-  _remote_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 LIBSCRIPT_BENCH_DROP_CACHES=1 ./_lib/languages/edgcpp/cli.sh experiments --workloads='${CORE_EXPERIMENT_WORKLOADS}' --compilers='${CORE_EXPERIMENT_COMPILERS}' --runs='${CORE_EXPERIMENT_RUNS}'"
+  _remote_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 LIBSCRIPT_BENCH_DROP_CACHES=1 ~/libscript/_lib/languages/edgcpp/cli.sh experiments --workloads='${CORE_EXPERIMENT_WORKLOADS}' --compilers='${CORE_EXPERIMENT_COMPILERS}' --runs='${CORE_EXPERIMENT_RUNS}'"
   cloud_exec_remote "${_remote_cmd}"
 
   if [ "${DRY_RUN_MODE}" = "1" ]; then

@@ -22,13 +22,18 @@ or operating system.
 
 ## Completed Phases (Phases 3–14)
 
-### Phase 14: Clean-Break `T0`–`T5` + Orthogonal Planes Architectural Refactoring (Completed)
+### Phase 14: Clean-Break `T0`–`T5` + Orthogonal Planes Refactoring & FreeDOS/MS-DOS Kernel Synthesis (Completed)
 
 - [x] Replaced fractional tiers (`1.5`, `3.5`) and legacy redirect shims with 6 strictly ordered
       compositional tiers (`T0` `engine/`, `T1` & `T2` atomic `_lib/` recipes, `T3` `synthesis/`,
       `T4` `infrastructure/`, `T5` `workloads/`) and 2 orthogonal planes (`Plane A` `traits/`,
       `Plane B` `experiments/` & `libscript-rest-api/`), statically enforced by
       `devtools/audit/audit_tiers.{sh,cmd}`.
+- [x] Rootless FreeDOS (`1.3`, `1.4`) and MIT MS-DOS (`1.25`, `2.0`, `4.00`) base kernel and modular
+      distribution synthesis (`synthesis/distro/dos/`, `_lib/kernel/{freedos,msdos}/`,
+      `_lib/networking/dos-pktdrv/`, `_lib/toolchains/{djgpp,kvikdos,win-cmd-asm,win-cmd-rs}/`,
+      `synthesis/schemas/execution-plan.dos.schema.json`, `synthesis/profiles/dos/*.json`, and
+      `dos-{floppy,iso,qcow2,raw,vhd,vmdk,vagrant-box}` exporters).
 
 ### Phase 13: ReactOS Modular Distribution Synthesis, Declarative `installer-e2e` & Native Windows/MS-DOS (`dos32`) Component PMs (Completed)
 
@@ -109,7 +114,7 @@ or operating system.
 - [x] Standalone `T1` C/C++ compiler recipes (`_lib/languages/{gcc,clang,tcc,edgcpp,custom-cc}/`)
       and unified `cc` / `c` / `cpp` routers with `cc_wrapper.{sh,cmd}` and
       `edgcpp_wrapper.{sh,cmd}` JSONL telemetry.
-- [x] EDG C/C++ Compiler Frontend (`edgcpp` v7.0.1) multi-flavor installer (`edgcpp+llvm+gcc`,
+- [x] EDG C/C++ Compiler Frontend (`edgcpp` v7.0.2) multi-flavor installer (`edgcpp+llvm+gcc`,
       `edgcpp+llvm`, `edgcpp+gcc`) and 13-target C11/C++17 corpus verification
       (`tests/test_edgcpp_corpus_matrix.{sh,cmd}`).
 - [x] SQLite C amalgamation multi-compiler builder, 6-stage SQL torture suite, and 4-way

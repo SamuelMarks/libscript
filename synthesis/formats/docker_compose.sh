@@ -154,9 +154,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
             printf '%s\n' 'COPY . /opt/libscript'
             printf '%s\n' 'WORKDIR /opt/libscript'
             if [ "$is_offline" -eq 1 ]; then
-              printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION} --offline"
+              printf '%s\n' "RUN /app/libscript.sh install $pkg \${${pkg_up}_VERSION} --offline"
             else
-              printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}"
+              printf '%s\n' "RUN /app/libscript.sh install $pkg \${${pkg_up}_VERSION}"
             fi
           } >> "$df"
 

@@ -51,7 +51,6 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\.."
 )
 
 call "!SCRIPT_DIR!\_common_installer_args.cmd" %*

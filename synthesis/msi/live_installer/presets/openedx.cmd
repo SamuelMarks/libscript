@@ -1,9 +1,11 @@
 @echo off
 :: # openedx.cmd
+::
 :: ## Overview
-:: Preloads and configures the Open edX platform workload on the target system. Provisions MySQL/MariaDB, MongoDB, Redis, and OpenSearch services, performs database migrations, registers init system service units, and prepares first-boot verification.
+:: Preloads and stages the Open edX workload components into a target sysroot on Windows idempotently.
+::
 :: ## Usage
-:: Execute this script to stage Open edX in target sysroot: ./synthesis/msi/live_installer/presets/openedx.cmd [target_dir]
+:: synthesis\msi\live_installer\presets\openedx.cmd [target_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,60 +50,33 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
-
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
 if /i "%~1"=="/?" goto :show_help
 if /i "%~1"=="-?" goto :show_help
-
 goto :main
 
 :: ## show_help
 :: Displays usage instructions and supported parameters.
 :show_help
 echo Usage: %~nx0 [target_dir]
-echo.
-echo Deploys Open edX services and database configs into target root.
+echo Stages Open edX service components and configuration into target root idempotently.
 exit /b 0
 
 :: ## main
-:: Executes primary orchestration routine.
+:: Invokes preload_assets.cmd for Open edX dependencies and records an idempotency stamp.
 :main
-set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
-
 set "TARGET_DIR=%~1"
-if "%TARGET_DIR%"=="" set "TARGET_DIR=C:\libscript_target"
-
-set "STAMP_FILE=%TARGET_DIR%\.libscript_openedx_preloaded.stamp"
-if exist "%STAMP_FILE%" (
-    echo [IDEMPOTENT] Open edX workload already preloaded in %TARGET_DIR% ^(stamp exists^). Skipping.
+if "!TARGET_DIR!"=="" set "TARGET_DIR=C:\libscript_target"
+set "STAMP_FILE=!TARGET_DIR!\.libscript_openedx_preloaded.stamp"
+if exist "!STAMP_FILE!" (
+    echo [IDEMPOTENT] Open edX workload already preloaded in !TARGET_DIR!.
     exit /b 0
 )
-
-echo [WORKLOAD-OPENEDX] Preloading Open edX stack on Windows...
-
-where wsl >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    wsl sh "!SCRIPT_DIR!\openedx.sh" "%TARGET_DIR%"
-    exit /b !errorlevel!
-)
-
-where sh >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    sh "!SCRIPT_DIR!\openedx.sh" "%TARGET_DIR%"
-    exit /b !errorlevel!
-)
-
-if not exist "%TARGET_DIR%\edx\bin" mkdir "%TARGET_DIR%\edx\bin"
-if exist "!REPO_ROOT!\workloads\apps\openedx\config.cmd" (
-    set "OPENEDX_INSTALL_DIR=%TARGET_DIR%\edx\app\edxapp\edx-platform"
-    call "!REPO_ROOT!\workloads\apps\openedx\config.cmd" generate >nul 2>&1
-)
-(
-    echo @echo off
-    echo call "!REPO_ROOT!\workloads\apps\openedx\service.cmd" start
-) > "%TARGET_DIR%\edx\bin\start_openedx.cmd"
-echo Open edX preloaded > "%TARGET_DIR%\.libscript_openedx_preloaded.stamp"
-echo [OK] Open edX platform workload preloaded successfully.
+if not exist "!TARGET_DIR!\openedx" mkdir "!TARGET_DIR!\openedx"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\preloader\preload_assets.cmd" "!TARGET_DIR!" mysql mongodb redis opensearch python nodejs nginx
+if errorlevel 1 exit /b !errorlevel!
+> "!STAMP_FILE!" echo openedx preloaded
+echo [OK] Open edX workload preloaded into !TARGET_DIR!.
 exit /b 0

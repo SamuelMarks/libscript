@@ -1,9 +1,11 @@
 @echo off
 :: # catalog.cmd
+::
 :: ## Overview
-:: Dynamic LibScript Component Catalog Engine for the live installer. Scans all 260+ components across the LibScript ecosystem, generates indexed JSON catalogs, and outputs interactive searchable tables for TUI and GUI selection menus.
+:: Dynamic LibScript Component Catalog Engine on Windows scanning _lib/*/*/manifest.json for JSON and table output.
+::
 :: ## Usage
-:: Execute this script to list, search, or export the component catalog: ./_lib/package-managers/msi-rs/preloader/catalog.cmd [--json | --search <term> | --category <name> | --clean-base]
+:: _lib\package-managers\msi-rs\preloader\catalog.cmd [--json] [--search <term>] [--category <name>] [--clean-base]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,44 +50,119 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "MODE=table"
+set "SEARCH_TERM="
+set "FILTER_CAT="
+goto :parse_args
 
-
+:: ## parse_args
+:: Parses command-line options for catalog output mode and filters.
+:parse_args
+if "%~1"=="" goto :run_catalog
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
 if /i "%~1"=="/?" goto :show_help
 if /i "%~1"=="-?" goto :show_help
-
-goto :main
+if /i "%~1"=="--json" (
+    set "MODE=json"
+    shift
+    goto :parse_args
+)
+if /i "%~1"=="--clean-base" (
+    echo []
+    exit /b 0
+)
+if /i "%~1"=="--search" (
+    set "SEARCH_TERM=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /i "%~1"=="--category" (
+    set "FILTER_CAT=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+shift
+goto :parse_args
 
 :: ## show_help
 :: Displays usage instructions and supported query options.
 :show_help
-echo Usage: %~nx0 [--json ^| --search ^<term^> ^| --clean-base]
+echo Usage: %~nx0 [OPTIONS]
+echo Scans and displays the dynamic LibScript component catalog.
 echo.
-echo Queries and formats available LibScript components on Windows.
+echo Options:
+echo   --json                 Output full component catalog in JSON format.
+echo   --search ^<term^>        Filter components matching search keyword.
+echo   --category ^<name^>      Filter components within specified category.
+echo   --clean-base           Specify zero components ^(install clean base OS only^).
+echo   --help, -h, /?, -?     Show this help message.
 exit /b 0
 
-:: ## main
-:: Executes primary orchestration routine.
-:main
-set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
-
-where wsl >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    wsl sh "!SCRIPT_DIR!\catalog.sh" %*
-    exit /b !errorlevel!
+:: ## run_catalog
+:: Scans all _lib/*/*/manifest.json files and renders JSON or formatted table rows.
+:run_catalog
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
+if /i "!MODE!"=="json" (
+    echo [
+    set "FIRST_ITEM=1"
+) else (
+    echo COMPONENT            CATEGORY           DESCRIPTION
+    echo -------------------- ------------------ ----------------------------------------
 )
 
-where sh >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    sh "!SCRIPT_DIR!\catalog.sh" %*
-    exit /b !errorlevel!
+for /d %%C in ("!REPO_ROOT!\_lib\*") do (
+    set "_CAT_NAME=%%~nxC"
+    if /i not "!_CAT_NAME!"=="_common" (
+        if "!FILTER_CAT!"=="" (
+            call :scan_category "%%~fC" "!_CAT_NAME!"
+        ) else if /i "!FILTER_CAT!"=="!_CAT_NAME!" (
+            call :scan_category "%%~fC" "!_CAT_NAME!"
+        )
+    )
 )
 
-echo [CATALOG] Displaying LibScript components on Windows:
-echo nginx                web-servers        High performance HTTP web server
-echo wordpress            workloads          WordPress web publishing platform
-echo odoo                 app-servers        Odoo Enterprise Business Suite
-echo openedx              workloads          Open edX Learning Platform
+if /i "!MODE!"=="json" (
+    echo ]
+)
+exit /b 0
+
+:: ## scan_category
+:: Iterates component subdirectories within a single _lib category directory.
+:scan_category
+set "_SC_DIR=%~1"
+set "_SC_CAT=%~2"
+for /d %%M in ("!_SC_DIR!\*") do (
+    if exist "%%~fM\manifest.json" (
+        call :emit_manifest "%%~fM\manifest.json" "%%~nxM" "!_SC_CAT!"
+    )
+)
+exit /b 0
+
+:: ## emit_manifest
+:: Extracts name, title, and description from a component manifest.json and prints matching records.
+:emit_manifest
+set "_EM_FILE=%~1"
+set "_EM_NAME=%~2"
+set "_EM_CAT=%~3"
+set "_EM_DESC=!_EM_NAME!"
+for /f "tokens=1,* delims=:" %%A in ('findstr /C:"\"description\"" "!_EM_FILE!" 2^>nul') do (
+    for /f "tokens=1 delims=," %%Q in ("%%~B") do set "_EM_DESC=%%~Q"
+)
+if not "!SEARCH_TERM!"=="" (
+    echo !_EM_NAME! !_EM_CAT! !_EM_DESC! | findstr /I /C:"!SEARCH_TERM!" >nul 2>&1
+    if errorlevel 1 exit /b 0
+)
+if /i "!MODE!"=="json" (
+    if "!FIRST_ITEM!"=="0" (
+        echo   ,{"name": "!_EM_NAME!", "category": "!_EM_CAT!", "title": "!_EM_NAME!", "description": "!_EM_DESC!"}
+    ) else (
+        echo   {"name": "!_EM_NAME!", "category": "!_EM_CAT!", "title": "!_EM_NAME!", "description": "!_EM_DESC!"}
+        set "FIRST_ITEM=0"
+    )
+) else (
+    echo !_EM_NAME!   !_EM_CAT!   !_EM_DESC!
+)
 exit /b 0

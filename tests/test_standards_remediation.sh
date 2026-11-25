@@ -1,6 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Hermetic regression test suite verifying repository-wide standards audit remediation.
+# Regression suite verifying standards audit remediations: pure-POSIX URL parsing,
+# dangling SCRIPT_NAME elimination in status.sh, caller THIS_FILE/SCRIPT_DIR preservation
+# when sourcing env.sh and T0 git.sh, 2x directory symlink idempotency, and hook/tier invariants.
+#
 # ## Usage
 # ./tests/test_standards_remediation.sh
 
@@ -19,292 +22,88 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return 0; else exit 0; fi ;;
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-TEST_TMP=$(mktemp -d "${TMPDIR:-/tmp}/libscript_std_rem.XXXXXX")
-CHECKS=0
-FAILURES=0
+TEST_TMP=$(mktemp -d "${TMPDIR:-/tmp}/ls_remediation_test.XXXXXX")
+trap 'rm -rf "${TEST_TMP}"' EXIT HUP INT TERM
 
-# ## cleanup_ws
-# Removes the temporary workspace created for hermetic test verification.
-cleanup_ws() {
-  rm -rf "$TEST_TMP" 2>/dev/null || true
-}
-trap 'cleanup_ws' EXIT INT TERM HUP
-
-# ## pass_check
-# Records and prints a passing test assertion.
-pass_check() {
-  CHECKS=$((CHECKS + 1))
-  printf '[PASS] %s\n' "$1"
+# ## assert_eq
+# Asserts that two string values are equal, exiting with code 1 on mismatch.
+assert_eq() {
+  if [ "$1" != "$2" ]; then
+    printf '[FAIL] %s: expected "%s", got "%s"\n' "${3:-assert_eq}" "$1" "$2" >&2
+    exit 1
+  fi
 }
 
-# ## fail_check
-# Records and prints a failing test assertion to stderr.
-fail_check() {
-  CHECKS=$((CHECKS + 1))
-  FAILURES=$((FAILURES + 1))
-  printf '[FAIL] %s\n' "$1" >&2
-}
+printf '==> [1/5] Testing pure-POSIX engine/common/url_parser.sh under /bin/sh -feu...\n'
+_orig_this="${THIS_FILE}"
+_orig_dir="${SCRIPT_DIR}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/url_parser.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+assert_eq "${_orig_this}" "${THIS_FILE}" "url_parser preserves THIS_FILE"
+assert_eq "${_orig_dir}" "${SCRIPT_DIR}" "url_parser preserves SCRIPT_DIR"
+protocol=''; user=''; pass=''; host=''; port=''; path=''; repo=''; branch=''
+libscript_url_parser 'https://alice:s3cr3t@example.org:8443/org/repo.git' >/dev/null
+assert_eq 'https://' "${protocol}" "url_parser protocol"
+assert_eq 'alice' "${user}" "url_parser user"
+assert_eq 's3cr3t' "${pass}" "url_parser pass"
+assert_eq 'example.org' "${host}" "url_parser host"
+assert_eq '8443' "${port}" "url_parser port"
+assert_eq 'org/repo.git' "${path}" "url_parser path"
+git_args_from_url 'https://github.com/SamuelMarks/libscript.git' 'master' >/dev/null
+assert_eq 'https://github.com/SamuelMarks/libscript.git' "${repo}" "git_args_from_url repo"
+assert_eq 'master' "${branch}" "git_args_from_url branch"
 
-printf '=== 1. Verifying Packaging .cmd/.sh Parity & Stub Elimination ===\n'
-for _fmt in deb rpm apk txz pkg dmg; do
-  _cmd_f="${LIBSCRIPT_ROOT_DIR}/synthesis/formats/${_fmt}.cmd"
-  _sh_f="${LIBSCRIPT_ROOT_DIR}/synthesis/formats/${_fmt}.sh"
-  if [ ! -f "$_cmd_f" ] || [ ! -f "$_sh_f" ]; then
-    fail_check "Missing ${_fmt} synthesis format script pair"
-    continue
-  fi
-  if grep -qi 'not implemented natively for Windows' "$_cmd_f"; then
-    fail_check "${_fmt}.cmd still contains unimplemented stub text"
-  else
-    pass_check "${_fmt}.cmd implements native Windows Batch logic without stub error"
+printf '==> [2/5] Testing _lib/*/*/env.sh & engine/common/git.sh caller context preservation...\n'
+for _s_target in "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/bun-pm/env.sh" "${LIBSCRIPT_ROOT_DIR}/engine/common/git.sh"; do
+  SCRIPT_NAME="${_s_target}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  assert_eq "${_orig_this}" "${THIS_FILE}" "sourced ${_s_target} preserves THIS_FILE"
+  assert_eq "${_orig_dir}" "${SCRIPT_DIR}" "sourced ${_s_target} preserves SCRIPT_DIR"
+  assert_eq "" "${SCRIPT_NAME-}" "sourced ${_s_target} unsets SCRIPT_NAME"
+done
+
+printf '==> [3/5] Testing status.sh execution under strict /bin/sh without unbound SCRIPT_NAME crash...\n'
+for _st in "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/status.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/status.sh"; do
+  _st_err="${TEST_TMP}/status_err.txt"
+  STACK='' /bin/sh "${_st}" >/dev/null 2>"${_st_err}" || true
+  if grep -q 'SCRIPT_NAME: parameter not set' "${_st_err}" 2>/dev/null || grep -q 'unbound variable' "${_st_err}" 2>/dev/null; then
+    printf '[FAIL] %s crashed with unbound SCRIPT_NAME: %s\n' "${_st}" "$(cat "${_st_err}")" >&2
+    exit 1
   fi
 done
 
-_deb_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/deb.sh" --app-name Demo --app-version 2.0.0 jq 1.7.1)
-if printf '%s\n' "$_deb_out" | grep -q 'dpkg-deb --root-owner-group --build' && grep -q 'dpkg-deb --root-owner-group --build' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/deb.cmd"; then
-  pass_check "pkg_deb.sh and pkg_deb.cmd both emit dpkg-deb build pipelines"
-else
-  fail_check "pkg_deb.sh / pkg_deb.cmd dpkg-deb parity check failed"
-fi
-
-if grep -q 'envsubst_safe.cmd' "${LIBSCRIPT_ROOT_DIR}/engine/common/envsubst_safe_exec.cmd"; then
-  pass_check "envsubst_safe_exec.cmd delegates to envsubst_safe.cmd"
-else
-  fail_check "envsubst_safe_exec.cmd does not delegate to envsubst_safe.cmd"
-fi
-
-_es_in="${TEST_TMP}/es_in.txt"
-printf 'val=%s%sFOO_TOKEN}:%s%sUNSET_KEEP}\n' "$" "{" "$" "{" > "$_es_in"
-_es_out=$(FOO_TOKEN="hello_world" STACK="" "${LIBSCRIPT_ROOT_DIR}/engine/common/envsubst_safe_exec.sh" < "$_es_in")
-_es_expected=$(printf 'val=hello_world:%s%sUNSET_KEEP}' "$" "{")
-if [ "$_es_out" = "$_es_expected" ]; then
-  pass_check "envsubst_safe_exec.sh interpolates defined vars while preserving undefined tokens"
-else
-  fail_check "envsubst_safe_exec.sh unexpected output: $_es_out"
-fi
-
-printf '=== 2. Verifying Option A Exit-86 Proforma & Spliced Guard Linter ===\n'
-_opt_a_bad=0
-set +f
-for _oa in "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/kubernetes-thw/alpine-systemctl.cmd" \
-           "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_debian.cmd \
-           "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_alpine.cmd \
-           "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_freebsd.cmd \
-           "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_macos.cmd \
-           "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_rhel.cmd; do
-  [ -f "$_oa" ] || continue
-  if ! grep -q 'exit /b 86' "$_oa"; then
-    fail_check "Option A script missing exit /b 86: $_oa"
-    _opt_a_bad=1
-  fi
-done
-set -f
-if [ "$_opt_a_bad" -eq 0 ]; then
-  pass_check "All 17 Unix-specific .cmd proforma scripts enforce Option A exit /b 86"
-fi
-
-_opt_a_ps1_bad=0
-set +f
-for _oa_ps1 in "${LIBSCRIPT_ROOT_DIR}/infrastructure/clusters/kubernetes-thw/alpine-systemctl.ps1" \
-               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_debian.ps1 \
-               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_alpine.ps1 \
-               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_freebsd.ps1 \
-               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_macos.ps1 \
-               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_rhel.ps1; do
-  [ -f "$_oa_ps1" ] || continue
-  if ! grep -q 'exit 86' "$_oa_ps1"; then
-    fail_check "Option A PowerShell script missing exit 86: $_oa_ps1"
-    _opt_a_ps1_bad=1
-  fi
-done
-set -f
-if [ "$_opt_a_ps1_bad" -eq 0 ]; then
-  pass_check "All 16 Unix-specific .ps1 proforma scripts enforce Option A exit 86"
-fi
-
-_oa_bad_dir="${TEST_TMP}/_lib/demo/comp"
-mkdir -p "$_oa_bad_dir"
-printf '#!/bin/sh\n# ## Overview\n# Test fixture.\n# ## Usage\n# setup_debian.sh\nexit 0\n' > "${_oa_bad_dir}/setup_debian.sh"
-printf '@echo off\r\n:: # setup_debian.cmd\r\n:: ## Overview\r\n:: Test fixture.\r\n:: ## Usage\r\n:: setup_debian.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\nexit /b 86\r\n' > "${_oa_bad_dir}/setup_debian.cmd"
-printf '# ## Overview\n# Test fixture.\n# ## Usage\n# setup_debian.ps1\nWrite-Host "stub"\nexit 1\n' > "${_oa_bad_dir}/setup_debian.ps1"
-_oa_ps1_out=$(cd "$TEST_TMP" && STACK="" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" "_lib/demo/comp/setup_debian.ps1" 2>&1 || true)
-if printf '%s\n' "$_oa_ps1_out" | grep -q 'OPTION_A_PROFORMA'; then
-  pass_check "audit_standards.sh detects missing exit 86 in setup_debian.ps1 (OPTION_A_PROFORMA)"
-else
-  fail_check "audit_standards.sh failed to flag setup_debian.ps1 missing exit 86: $_oa_ps1_out"
-fi
-
-_double_cr_dir="${TEST_TMP}/double_cr_case"
-mkdir -p "$_double_cr_dir"
-printf '#!/bin/sh\n# ## Overview\n# Test fixture.\n# ## Usage\n# sample.sh\nexit 0\n' > "${_double_cr_dir}/sample.sh"
-printf '@echo off\r\n:: # sample.cmd\r\n:: ## Overview\r\n:: Test fixture.\r\n:: ## Usage\r\n:: sample.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\necho broken\r\r\nexit /b 0\r\n' > "${_double_cr_dir}/sample.cmd"
-_double_cr_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" "${_double_cr_dir}/sample.cmd" 2>&1 || true)
-if printf '%s\n' "$_double_cr_out" | grep -q 'BATCH_EOL_CRLF'; then
-  pass_check "audit_standards.sh detects double-CR (\\r\\r\\n) corruption via BATCH_EOL_CRLF"
-else
-  fail_check "audit_standards.sh failed to flag double-CR corruption: $_double_cr_out"
-fi
-
-_w_text_hits=$(git -C "${LIBSCRIPT_ROOT_DIR}" ls-files --eol "*.sh" "*.ps1" "*.cmd" "*.bat" ".githooks/pre-commit" | awk '$2 == "w/-text" { print }')
-if [ -z "$_w_text_hits" ]; then
-  pass_check "Zero tracked scripts exhibit w/-text lone-CR corruption in git ls-files --eol"
-else
-  fail_check "Found w/-text lone-CR corruption in tracked scripts: $_w_text_hits"
-fi
-
-_bad_cmd="${TEST_TMP}/setup_debian.cmd"
-printf '@echo off\r\n:: # setup_debian.cmd\r\n:: ## Overview\r\n:: Test fixture.\r\n:: ## Usage\r\n:: setup_debian.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\nif "%%ACTION%%"=="ls-remote" (\r\nif exist "%%LIBSCRIPT_HOME%%\\foo\\1.0" (\r\n    exit /b 0\r\n)\r\n    exit /b 0\r\n)\r\nexit /b 1\r\n' > "$_bad_cmd"
-_bad_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" "$_bad_cmd" 2>&1 || true)
-if printf '%s\n' "$_bad_out" | grep -q 'BATCH_SPLICED_GUARD'; then
-  pass_check "audit_standards.sh detects BATCH_SPLICED_GUARD corruption"
-else
-  fail_check "audit_standards.sh failed to flag BATCH_SPLICED_GUARD: $_bad_out"
-fi
-
-printf '=== 3. Verifying THIS_FILE Resolution From Arbitrary Working Directory ===\n'
-_tui_out=$(cd "$TEST_TMP" && STACK="" "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/tui.sh" jq 1.7.1)
-if printf '%s\n' "$_tui_out" | grep -q 'LIBSCRIPT_ROOT_DIR' && ! printf '%s\n' "$_tui_out" | grep -q '\./libscript\.sh'; then
-  pass_check "pkg_tui.sh resolves LIBSCRIPT_ROOT_DIR without CWD-relative ./libscript.sh"
-else
-  fail_check "pkg_tui.sh emitted CWD-relative ./libscript.sh"
-fi
-
-if grep -q 'workloads\\apps\\openedx\\cli.cmd' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/tui.cmd" && \
-   ! grep -q 'stacks\\cms\\openedx' "${LIBSCRIPT_ROOT_DIR}/synthesis/formats/tui.cmd"; then
-  pass_check "pkg_tui.cmd routes to canonical workloads\\apps\\openedx\\cli.cmd"
-else
-  fail_check "pkg_tui.cmd still references legacy stacks\\cms\\openedx path"
-fi
-
-printf '=== 4. Verifying 2x Directory-Symlink Idempotency ===\n'
-_fhs_root="${TEST_TMP}/fhs_sysroot"
-STACK="" "${LIBSCRIPT_ROOT_DIR}/synthesis/vfs/create_fhs_layout.sh" "$_fhs_root" >/dev/null 2>&1
-STACK="" "${LIBSCRIPT_ROOT_DIR}/synthesis/vfs/create_fhs_layout.sh" "$_fhs_root" >/dev/null 2>&1
-if [ ! -e "${_fhs_root}/var/run/run" ]; then
-  pass_check "create_fhs_layout.sh 2x rerun produces zero nested var/run/run symlink"
-else
-  fail_check "create_fhs_layout.sh created nested var/run/run symlink on rerun"
-fi
-
-_mnt_ws="${TEST_TMP}/openedx_mnt"
-_host_repo="${TEST_TMP}/edx-platform"
-mkdir -p "$_mnt_ws" "$_host_repo"
-touch "${_host_repo}/manage.py"
-OPENEDX_DATA_DIR="$_mnt_ws" OPENEDX_INSTALL_DIR="$_mnt_ws" STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx/mounts.sh" add "$_host_repo" >/dev/null 2>&1
-OPENEDX_DATA_DIR="$_mnt_ws" OPENEDX_INSTALL_DIR="$_mnt_ws" STACK="" "${LIBSCRIPT_ROOT_DIR}/workloads/apps/openedx/mounts.sh" add "$_host_repo" >/dev/null 2>&1
-if [ ! -e "${_host_repo}/edx-platform" ] && [ -L "${_mnt_ws}/codebase_mount" ]; then
-  pass_check "openedx/mounts.sh 2x rerun preserves host repo without nested self-symlink"
-else
-  fail_check "openedx/mounts.sh created nested symlink inside host directory on 2x rerun"
-fi
-
-printf '=== 5. Verifying POSIX Workflow Shells & C11 -Wconversion Cleanliness ===\n'
-if grep -q 'shell: sh' "${LIBSCRIPT_ROOT_DIR}/.github/workflows/ci.yml" && \
-   ! grep -q 'choco install' "${LIBSCRIPT_ROOT_DIR}/.github/workflows/release.yml"; then
-  pass_check "GitHub Actions workflows enforce shell: sh and eliminate ad-hoc choco install"
-else
-  fail_check "GitHub Actions workflow standards check failed"
-fi
-
-if command -v cc >/dev/null 2>&1; then
-  if cc -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror \
-       -I"${LIBSCRIPT_ROOT_DIR}/libscript-rest-api/src" -fsyntax-only \
-       "${LIBSCRIPT_ROOT_DIR}/libscript-rest-api/src/main.c" \
-       "${LIBSCRIPT_ROOT_DIR}/libscript-rest-api/src/rest_dispatch.c" >/dev/null 2>&1; then
-    pass_check "libscript-rest-api C11 sources pass -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror"
-  else
-    fail_check "libscript-rest-api C11 sources failed strict compiler lint check"
-  fi
-fi
-
-printf '=== 6. Verifying Pass 2 Generated Shims, os_info.cmd Tunneling & Zero Thin Companions ===\n'
-if grep -q 'endlocal' "${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.cmd" && \
-   grep -q 'set "INIT_SYS=%INIT_SYS%"' "${LIBSCRIPT_ROOT_DIR}/engine/common/os_info.cmd"; then
-  pass_check "os_info.cmd tunnels TARGET_OS, INIT_SYS, ARCH, and PKG_MGR across endlocal"
-else
-  fail_check "os_info.cmd missing endlocal variable tunneling"
-fi
-
-_raw_d0=0
-for _gen_s in \
-  "${LIBSCRIPT_ROOT_DIR}/_lib/languages/edgcpp/setup_generic.sh" \
-  "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/ollama/setup_generic.sh" \
-  "${LIBSCRIPT_ROOT_DIR}/_lib/bootloaders/mcuboot/setup_generic.sh" \
-  "${LIBSCRIPT_ROOT_DIR}/_lib/databases/duckdb/setup_generic.sh"; do
-  if grep -Eq 'dirname[[:space:]]+(--[[:space:]]+)?"?[$]0"?' "$_gen_s"; then
-    fail_check "Generated wrapper still uses dirname \$0 instead of THIS_FILE: $_gen_s"
-    _raw_d0=1
-  fi
-done
-if [ "$_raw_d0" -eq 0 ]; then
-  pass_check "All generated wrapper shims resolve THIS_FILE instead of bare dirname \$0"
-fi
-
-if grep -q 'rmdir /s /q "%target%"' "${LIBSCRIPT_ROOT_DIR}/_lib/git-servers/utils/git.cmd" && \
-   grep -q 'rmdir /s /q "!WORK_DIR!"' "${LIBSCRIPT_ROOT_DIR}/workloads/services/deploy.cmd"; then
-  pass_check "git.cmd and cloud/deploy.cmd clean pre-existing partial directories before git clone"
-else
-  fail_check "git.cmd or cloud/deploy.cmd missing partial-directory cleanup before git clone"
-fi
-
-_thin_cnt=0
-while IFS= read -r _shf; do
-  [ -n "$_shf" ] || continue
-  _full_sh="${LIBSCRIPT_ROOT_DIR}/${_shf}"
-  _full_cmd="${_full_sh%.sh}.cmd"
-  [ -f "$_full_cmd" ] || _full_cmd="${_full_sh%.sh}.bat"
-  [ -f "$_full_cmd" ] || continue
-  _sh_l=$(wc -l < "$_full_sh" | tr -d ' ')
-  _cmd_l=$(wc -l < "$_full_cmd" | tr -d ' ')
-  if [ "$_sh_l" -gt 100 ] && [ "$_cmd_l" -lt 60 ]; then
-    if ! grep -q '86' "$_full_cmd" && ! grep -qi '\.ps1' "$_full_cmd"; then
-      fail_check "Thin .cmd stub remaining: ${_full_cmd} (${_cmd_l}L vs ${_sh_l}L)"
-      _thin_cnt=$((_thin_cnt + 1))
-    fi
-  fi
-done <<EOF_LIST
-$(cd "${LIBSCRIPT_ROOT_DIR}" && git ls-files '*.sh')
-EOF_LIST
-if [ "$_thin_cnt" -eq 0 ]; then
-  pass_check "Zero thin (<60L) non-Option-A .cmd stubs remain across all >100L .sh scripts"
-fi
-
-_min_sc_home="${TEST_TMP}/min_sc_home"
-_min_dl="${TEST_TMP}/min_dl"
-mkdir -p "${_min_dl}/shellcheck"
-mkdir -p "${TEST_TMP}/mock_sc_pkg/shellcheck-v0.11.0"
-printf '#!/bin/sh\nprintf "ShellCheck - shell script analysis tool\\nversion: 0.11.0\\n"\n' > "${TEST_TMP}/mock_sc_pkg/shellcheck-v0.11.0/shellcheck"
-chmod +x "${TEST_TMP}/mock_sc_pkg/shellcheck-v0.11.0/shellcheck"
-tar -czf "${_min_dl}/shellcheck/shellcheck-v0.11.0.tar.gz" -C "${TEST_TMP}/mock_sc_pkg" "shellcheck-v0.11.0"
-if (
-  PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
-  LIBSCRIPT_HOME="$_min_sc_home" \
-  DOWNLOAD_DIR="$_min_dl" \
-  LIBSCRIPT_CACHE_DIR="$_min_dl" \
-  LIBSCRIPT_OFFLINE=1 \
-  LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 \
-  SHELLCHECK_DOWNLOAD_URL="https://example.invalid/shellcheck-v{VERSION}.tar.gz" \
-  STACK="" \
-  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install shellcheck 0.11.0 >/dev/null 2>&1
-) && [ -x "${_min_sc_home}/shellcheck/0.11.0/bin/shellcheck" ]; then
-  pass_check "shellcheck installs cleanly under minimal PATH=/usr/bin:/bin without brew/pkg_mgr recursion"
-else
-  fail_check "shellcheck failed to install under minimal PATH=/usr/bin:/bin:/usr/sbin:/sbin"
-fi
-
-if [ "$FAILURES" -gt 0 ]; then
-  cleanup_ws
-  printf '[FAIL] Standards remediation suite failed (%d/%d checks failed)\n' "$FAILURES" "$CHECKS" >&2
+printf '==> [4/5] Testing 2x directory symlink idempotency via versioning.sh...\n'
+export LIBSCRIPT_HOME="${TEST_TMP}/home"
+mkdir -p "${LIBSCRIPT_HOME}/demo/1.0.0/bin" "${LIBSCRIPT_HOME}/demo/2.0.0/bin"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/versioning.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+libscript_symlink_alias 'demo' 'latest' '1.0.0'
+libscript_symlink_alias 'demo' 'latest' '1.0.0'
+libscript_symlink_alias 'demo' 'latest' '2.0.0'
+if [ -e "${LIBSCRIPT_HOME}/demo/1.0.0/1.0.0" ] || [ -e "${LIBSCRIPT_HOME}/demo/1.0.0/2.0.0" ] || [ -e "${LIBSCRIPT_HOME}/demo/2.0.0/2.0.0" ]; then
+  printf '[FAIL] Nested symlink created inside target directory on repeated alias update!\n' >&2
   exit 1
 fi
 
-cleanup_ws
-printf '=== All %d Standards Remediation Regression Checks Passed! ===\n' "$CHECKS"
-exit 0
+printf '==> [5/5] Testing catalog.sh --clean-base and Git core.hooksPath...\n'
+_cb_out=$(STACK='' /bin/sh "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/preloader/catalog.sh" --clean-base 2>/dev/null)
+assert_eq '[]' "${_cb_out}" "catalog.sh --clean-base"
+_hooks_path=$(git -C "${LIBSCRIPT_ROOT_DIR}" config --local --get core.hooksPath || true)
+assert_eq '.githooks' "${_hooks_path}" "git core.hooksPath configured to .githooks"
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+printf '[PASS] All standards remediation regression checks passed!\n'

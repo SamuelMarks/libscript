@@ -61,8 +61,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 if not exist "%REPO_ROOT%\tests_tmp" mkdir "%REPO_ROOT%\tests_tmp"
 set "RESULTS_FILE=%REPO_ROOT%\tests_tmp\results_sunos.json"

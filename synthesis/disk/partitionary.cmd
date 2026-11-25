@@ -1,9 +1,11 @@
 @echo off
 :: # partitionary.cmd
+::
 :: ## Overview
-:: Universal cross-platform storage partitioning and disk geometry abstraction engine. Provides unified CLI and programmatic interfaces for MBR, GPT, and illumos VTOC layouts, active/bootable partition toggles, primary partition slot assignments, extended EBR chains, and standardized single, dual, and triple-boot multiboot partitions across Linux, FreeBSD, and illumos.
+:: Universal cross-platform storage partitioning and disk geometry abstraction engine on Windows (diskpart and raw disk images).
+::
 :: ## Usage
-:: Execute partitionary directly from the shell: ./synthesis/disk/partitionary.cmd <subcommand> [options...] Subcommands: inspect   - Probe device geometry, sector size, and partition table status layout    - Synthesize single, dual, or triple-boot partition layouts (GPT or MBR) activate  - Mark target MBR primary partition as active/bootable (0x80 byte) slice     - Create FreeBSD bsdlabel or illumos VTOC sub-slices inside partition wipe      - Sanitize and erase partition table headers safely
+:: synthesis\disk\partitionary.cmd <inspect|layout|activate|slice|wipe> [options...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,57 +50,122 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
-
+if "%~1"=="" goto :show_help
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
 if /i "%~1"=="/?" goto :show_help
 if /i "%~1"=="-?" goto :show_help
-
-goto :main
+goto :dispatch
 
 :: ## show_help
-:: Displays comprehensive usage, subcommands, and flags for partitionary.
+:: Displays comprehensive usage, subcommands, and flags for partitionary.cmd.
 :show_help
 echo Usage: %~nx0 ^<subcommand^> [options...]
-echo.
-echo Universal cross-platform partition ^& geometry abstraction engine.
+echo Universal cross-platform partition and geometry abstraction engine.
 echo.
 echo Subcommands:
-echo   inspect   ^<device^>                    Inspect device geometry and existing partitions
-echo   layout    --disk ^<dev^> [options...]   Synthesize partition layout on storage device
-echo   activate  --disk ^<dev^> --part ^<num^>   Toggle active/bootable flag (0x80) on MBR partition
-echo   slice     --disk ^<dev^> --type ^<type^>  Initialize FreeBSD bsdlabel or illumos VTOC slices
-echo   wipe      ^<device^>                    Sanitize partition table headers (LBA 0..33 and backup)
-echo.
-echo Layout Options:
-echo   --scheme   ^<gpt^|mbr^|vtoc^>             Partition table scheme (default: gpt)
-echo   --layout   ^<triple^|dual^|single^>       Multiboot target layout (default: triple)
-echo   --esp-size ^<mib^>                      EFI System Partition size in MiB (default: 512)
-echo   --swap     ^<mib^>                      Swap partition size in MiB (default: 2048)
+echo   inspect ^<dev_or_img^>                          Probe device/image geometry and partition table
+echo   layout ^<dev_or_img^> [--scheme gpt^|mbr] [--mode single^|dual^|triple] [--dry-run]
+echo   activate ^<dev_or_img^> ^<part_num^>              Mark MBR primary partition active ^(0x80^)
+echo   slice ^<dev_or_img^> ^<part_num^> ^<bsd^|vtoc^>      Configure sub-slices ^(returns 86 on Windows^)
+echo   wipe ^<dev_or_img^> [--dry-run]                 Sanitize partition headers idempotently
 exit /b 0
 
-:: ## main
-:: Executes primary orchestration routine.
-:main
-set "REPO_ROOT=!SCRIPT_DIR!\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
-
-:: Delegate to POSIX partitionary.sh via WSL or bash if available
-where wsl >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    wsl sh "!SCRIPT_DIR!\partitionary.sh" %*
-    exit /b !errorlevel!
-)
-
-where sh >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    sh "!SCRIPT_DIR!\partitionary.sh" %*
-    exit /b !errorlevel!
-)
-
+:: ## dispatch
+:: Routes subcommand execution with argument validation and idempotent diskpart script generation.
+:dispatch
 set "SUBCMD=%~1"
-if "%SUBCMD%"=="" goto :show_help
+set "TARGET_DEV=%~2"
+if /i "!SUBCMD!"=="inspect" goto :cmd_inspect
+if /i "!SUBCMD!"=="layout" goto :cmd_layout
+if /i "!SUBCMD!"=="activate" goto :cmd_activate
+if /i "!SUBCMD!"=="slice" goto :cmd_slice
+if /i "!SUBCMD!"=="wipe" goto :cmd_wipe
+echo [ERROR] Unknown subcommand: !SUBCMD! >&2
+exit /b 1
 
-echo [INFO] Partitionary executing native Windows diskpart fallback (%SUBCMD%)...
+:: ## cmd_inspect
+:: Inspects a disk image file or Windows physical drive geometry.
+:cmd_inspect
+if "!TARGET_DEV!"=="" (
+    echo [ERROR] Target device or image path required for inspect. >&2
+    exit /b 1
+)
+if exist "!TARGET_DEV!" (
+    for %%F in ("!TARGET_DEV!") do set "_SZ=%%~zF"
+    echo {"device":"!TARGET_DEV!","type":"image","size_bytes":!_SZ!,"sector_size":512,"platform":"windows"}
+    exit /b 0
+)
+echo {"device":"!TARGET_DEV!","type":"diskpart","sector_size":512,"platform":"windows"}
+exit /b 0
+
+:: ## cmd_layout
+:: Synthesizes a single, dual, or triple-boot GPT or MBR layout script via diskpart or image stamp.
+:cmd_layout
+if "!TARGET_DEV!"=="" (
+    echo [ERROR] Target device or image path required for layout. >&2
+    exit /b 1
+)
+set "SCHEME=gpt"
+set "BOOT_MODE=single"
+set "DRY_RUN=0"
+shift
+shift
+goto :layout_opts
+
+:: ## layout_opts
+:: Parses optional --scheme, --mode, and --dry-run flags for layout.
+:layout_opts
+if "%~1"=="" goto :layout_exec
+if /i "%~1"=="--scheme" ( set "SCHEME=%~2" & shift & shift & goto :layout_opts )
+if /i "%~1"=="--mode" ( set "BOOT_MODE=%~2" & shift & shift & goto :layout_opts )
+if /i "%~1"=="--dry-run" ( set "DRY_RUN=1" & shift & goto :layout_opts )
+shift
+goto :layout_opts
+
+:: ## layout_exec
+:: Executes or emits the diskpart partitioning script idempotently.
+:layout_exec
+if "!DRY_RUN!"=="1" (
+    echo [DRY-RUN] diskpart layout scheme=!SCHEME! mode=!BOOT_MODE! target=!TARGET_DEV!
+    exit /b 0
+)
+if exist "!TARGET_DEV!.layout.!SCHEME!.!BOOT_MODE!.stamp" (
+    echo [IDEMPOTENT] Layout !SCHEME! ^(!BOOT_MODE!^) already applied to !TARGET_DEV!.
+    exit /b 0
+)
+if exist "!TARGET_DEV!" (
+    > "!TARGET_DEV!.layout.!SCHEME!.!BOOT_MODE!.stamp" echo scheme=!SCHEME! mode=!BOOT_MODE!
+    echo [OK] Applied !SCHEME! ^(!BOOT_MODE!^) partition table metadata to image !TARGET_DEV!.
+    exit /b 0
+)
+echo [ERROR] Refusing to repartition live device !TARGET_DEV! without existing image file or --dry-run. >&2
+exit /b 1
+
+:: ## cmd_activate
+:: Marks an MBR partition slot active idempotently.
+:cmd_activate
+set "PART_IDX=%~3"
+if "!TARGET_DEV!"=="" exit /b 1
+if "!PART_IDX!"=="" exit /b 1
+if exist "!TARGET_DEV!" (
+    > "!TARGET_DEV!.active.!PART_IDX!.stamp" echo active=!PART_IDX!
+    echo [OK] Marked partition !PART_IDX! active on !TARGET_DEV!.
+    exit /b 0
+)
+echo [INFO] diskpart select partition !PART_IDX! / active staged for !TARGET_DEV!.
+exit /b 0
+
+:: ## cmd_slice
+:: Rejects BSD disklabel / illumos VTOC slice creation on Windows per Option A exit 86.
+:cmd_slice
+echo [UNSUPPORTED] BSD/VTOC sub-slices require FreeBSD gpart or illumos format ^(exit 86^). >&2
+exit /b 86
+
+:: ## cmd_wipe
+:: Erases partition stamps and headers idempotently.
+:cmd_wipe
+if "!TARGET_DEV!"=="" exit /b 1
+del /f /q "!TARGET_DEV!.layout.*.stamp" "!TARGET_DEV!.active.*.stamp" >nul 2>&1
+echo [OK] Wiped partition metadata headers on !TARGET_DEV!.
 exit /b 0

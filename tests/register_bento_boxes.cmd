@@ -263,6 +263,7 @@ if "!_L_VAG_HOME!"=="" set "_L_VAG_HOME=%USERPROFILE%\.vagrant.d"
 for %%V in (arm64 amd64) do (
     if exist "!_L_VAG_HOME!\boxes\!_L_VSLASH!\0\%%V\qemu\" (
         if not exist "!_L_VAG_HOME!\boxes\!_L_VSLASH!\0\%%V\libvirt\" (
+            rmdir /q "!_L_VAG_HOME!\boxes\!_L_VSLASH!\0\%%V\libvirt" >nul 2>&1
             mklink /J "!_L_VAG_HOME!\boxes\!_L_VSLASH!\0\%%V\libvirt" "!_L_VAG_HOME!\boxes\!_L_VSLASH!\0\%%V\qemu" >nul 2>&1
         )
     )

@@ -110,13 +110,8 @@ case "$ACTION" in
             ln -sf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
           elif [ -f "${HOME:-/root}/.bun/bin/bun" ]; then
             ln -sf "${HOME:-/root}/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
-          else
-            libscript_depends 'bash' 'curl' 'unzip'
-            # libscript-allow-upstream-bash: upstream bun.sh installer script requires bash
-            libscript_fetch_stdout "https://bun.sh/install" | bash || true
-            if [ -f "${HOME:-/root}/.bun/bin/bun" ]; then
-              ln -sf "${HOME:-/root}/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
-            fi
+          elif [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/default/bin/bun" ]; then
+            ln -sf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/default/bin/bun" "${TARGET_DIR}/bin/bun"
           fi
         fi
       else

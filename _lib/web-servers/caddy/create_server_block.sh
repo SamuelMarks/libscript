@@ -35,14 +35,23 @@ for LIB in "engine/common/envsubst_safe.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
 
 if [ -z "${ENV_SCRIPT_FILE+x}" ]; then
   >&2 printf 'ENV_SCRIPT_FILE must be set'
   exit 3
 fi
 
+_ws_saved_this="${THIS_FILE}"
+_ws_saved_dir="${SCRIPT_DIR}"
+SCRIPT_NAME="${ENV_SCRIPT_FILE}"
+export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${ENV_SCRIPT_FILE}"
+unset SCRIPT_NAME || true
+THIS_FILE="${_ws_saved_this}"
+SCRIPT_DIR="${_ws_saved_dir}"
+unset _ws_saved_this _ws_saved_dir || true
 
 export SERVER_NAME="${SERVER_NAME:-localhost}"
 export LISTEN="${LISTEN:-80}"

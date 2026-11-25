@@ -101,8 +101,6 @@ ensure_ollama_systemd_unit() {
     _eos_user='ollama'
   fi
   libscript_install_service "ollama" "${_eos_bin} serve" "/" "Ollama Service" "" "$_eos_user" || true
-  # libscript-allow-raw-daemon
-  priv systemctl daemon-reload 2>/dev/null || systemctl daemon-reload 2>/dev/null || true
   return 0
 }
 

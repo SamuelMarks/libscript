@@ -3,7 +3,7 @@
 # Generic setup and lifecycle implementation for the EDG C/C++ Compiler Frontend (edgcpp).
 # Supports Mode 1 (pkg_mgr/system), Mode 2/3 (from-source with selectable bootstrap
 # toolchain), local_binary registration, and native GitHub release archive installation
-# across edgcpp+llvm+gcc, edgcpp+llvm, and edgcpp+gcc flavors (v7.0.1).
+# across edgcpp+llvm+gcc, edgcpp+llvm, and edgcpp+gcc flavors (v7.0.1, v7.0.2).
 # ## Usage
 # ./_lib/languages/edgcpp/setup_generic.sh
 set -feu
@@ -45,10 +45,10 @@ fi
 EDGCPP_INSTALL_METHOD="${EDGCPP_INSTALL_METHOD:-$(libscript_resolve_install_method "EDGCPP")}"
 EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-edgcpp+llvm+gcc}"
 ACTION="${ACTION:-install}"
-VERSION="${EDGCPP_VERSION:-${VERSION:-7.0.1}}"
+VERSION="${EDGCPP_VERSION:-${VERSION:-7.0.2}}"
 
 # ## resolve_latest_edgcpp_release
-# Queries the GitHub Releases API for the latest SamuelMarks/edgcpp-compiler tag when EDGCPP_CHECK_LATEST=1 and LIBSCRIPT_OFFLINE!=1, falling back to 7.0.1.
+# Queries the GitHub Releases API for the latest SamuelMarks/edgcpp-compiler tag when EDGCPP_CHECK_LATEST=1 and LIBSCRIPT_OFFLINE!=1, falling back to 7.0.2.
 resolve_latest_edgcpp_release() {
   if [ "${EDGCPP_CHECK_LATEST:-0}" = "1" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v curl >/dev/null 2>&1; then
     _api_tag="$(curl -fsSL --connect-timeout 5 "https://api.github.com/repos/SamuelMarks/edgcpp-compiler/releases/latest" 2>/dev/null | grep '"tag_name"' | head -n 1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/' || true)"
@@ -57,17 +57,20 @@ resolve_latest_edgcpp_release() {
       return 0
     fi
   fi
-  printf '%s\n' '7.0.1'
+  printf '%s\n' '7.0.2'
 }
 
 # ## resolve_exact_version
-# Resolves semantic version aliases ('latest', 'stable', '7.0', 'v7.0.1') to '7.0.1' or the dynamically queried latest release.
+# Resolves semantic version aliases ('latest', 'stable', '7.0', 'v7.0.2', 'v7.0.1') to the corresponding exact release or the dynamically queried latest release.
 resolve_exact_version() {
   case "${VERSION:-latest}" in
     latest|stable|"")
       EXACT_VERSION="$(resolve_latest_edgcpp_release)"
       ;;
-    7.0|v7.0.1|7.0.1)
+    7.0|v7.0.2|7.0.2)
+      EXACT_VERSION='7.0.2'
+      ;;
+    v7.0.1|7.0.1)
       EXACT_VERSION='7.0.1'
       ;;
     v*)
@@ -116,9 +119,10 @@ resolve_edgcpp_release_asset() {
   EDGCPP_ASSET_URL="${EDGCPP_DOWNLOAD_URL:-https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v${EXACT_VERSION}/${EDGCPP_ASSET_NAME}}"
   EDGCPP_SHA256SUMS_URL="https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v${EXACT_VERSION}/SHA256SUMS.txt"
   EDGCPP_SHA256SUMS_DIGEST=""
-  if [ "${EXACT_VERSION}" = "7.0.1" ]; then
-    EDGCPP_SHA256SUMS_DIGEST='1463b963d76d1b6fb1950f43dc1d3a8e53703923e4a44d778ac33b412516d0c0'
-  fi
+  case "${EXACT_VERSION}" in
+    7.0.1) EDGCPP_SHA256SUMS_DIGEST='1463b963d76d1b6fb1950f43dc1d3a8e53703923e4a44d778ac33b412516d0c0' ;;
+    7.0.2) EDGCPP_SHA256SUMS_DIGEST='02d51932546c281926f62933892e8110320e62539ac170852c3b733e690de4ae' ;;
+  esac
   EDGCPP_ASSET_SHA256=""
 
   case "${EDGCPP_ASSET_NAME}" in
@@ -137,6 +141,21 @@ resolve_edgcpp_release_asset() {
     "edgcpp+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="19c91cae85deccd39bb56bbbb012fc3911b5a60c8cb1f0cc48f755a7f0c25eb1" ;;
     "edgcpp+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="b1c2be566247de89e9663eb0a4e8369b98e2d591d3b5a8ea32a0e8b909fa54b6" ;;
     "edgcpp+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="8e99c17d62a4104bf6a646018a69dd972e1281561f7c38c6c18bf14e12973b49" ;;
+    "edgcpp+llvm+gcc-v7.0.2-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="0f33dc3ce86c9b2de5804426b5337e15222be9f0a35d85354e03d14f763779b7" ;;
+    "edgcpp+llvm+gcc-v7.0.2-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="cb5ead11081ff04824fd3bd8a0a478c99d7e8c78838aaac4c71a33a55e0548dc" ;;
+    "edgcpp+llvm+gcc-v7.0.2-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="7dc4e7f546656c12e8be3adba8b9e569282743a2b3f1f00417c5d9fded378568" ;;
+    "edgcpp+llvm+gcc-v7.0.2-windows-x86_64.zip") EDGCPP_ASSET_SHA256="0911bf264637529e8535a316a6da272e6ad65c25d94acbda1ddb4300b2f17c02" ;;
+    "edgcpp+llvm+gcc-v7.0.2-windows-arm64.zip") EDGCPP_ASSET_SHA256="0c6efae09060fd3e680cd6a22b8023a685b7f9d7cbbcc02a5782bbbe37af9488" ;;
+    "edgcpp+llvm-v7.0.2-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="d5d49d5998258609eba72c9f7b14606f23366d6dc04fea1a9daee07a14ccae14" ;;
+    "edgcpp+llvm-v7.0.2-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="8a9bfa043a76c72db7c14cbafbe06cdb5b69ea2f366872c69251f0e7d496df28" ;;
+    "edgcpp+llvm-v7.0.2-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="2c90e44a6fe1f9d2725b7b5a4b944a6864e34c0145bdaf6a2069102eb6cfcf60" ;;
+    "edgcpp+llvm-v7.0.2-windows-x86_64.zip") EDGCPP_ASSET_SHA256="4d376e1a7279f4fc2d03d0dbd684afd6812624ab62e05626ef85cde160feb235" ;;
+    "edgcpp+llvm-v7.0.2-windows-arm64.zip") EDGCPP_ASSET_SHA256="3f93d2e0bdf6e76d2ad6a799eba9191203d07a0dd5d94120cb7d987a9ba37891" ;;
+    "edgcpp+gcc-v7.0.2-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="26c9b4ce0cd7731afd132bbb1f3d44fcabdb76231f64cb4a2e9e644a4c98fd23" ;;
+    "edgcpp+gcc-v7.0.2-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="1a8ecc2201ca90c3d1389333af56a77cbd37a0495e133922aabca4031f8989eb" ;;
+    "edgcpp+gcc-v7.0.2-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="ab41003d84cfc797bd72720559e2d457d4e6c3043d6de3c1ecf8ce46046e0832" ;;
+    "edgcpp+gcc-v7.0.2-windows-x86_64.zip") EDGCPP_ASSET_SHA256="0cdb67d4162060794c4cc509593b70b846dec47767e98f7f0710edf596fa667b" ;;
+    "edgcpp+gcc-v7.0.2-windows-arm64.zip") EDGCPP_ASSET_SHA256="cc326365f4b55761cdd435baa50e70def976f70c948765fec7f4e40ebabc0c09" ;;
   esac
 
   if [ -z "${EDGCPP_ASSET_SHA256}" ] && [ -z "${EDGCPP_DOWNLOAD_URL:-}" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
@@ -165,14 +184,14 @@ stage_edgcpp_wrappers() {
     ln -sf "${EDGCPP_BIN}" "${_target_dir}/bin/cpfe"
   fi
 
-  for _bin_tool in cpfe cpfe-cp eccp cdisp mk_errinfo edg_decode; do
+  for _bin_tool in cpfe cpfe++ edg++ cpfe-cp eccp cdisp mk_errinfo edg_decode; do
     if [ -f "${_target_dir}/bin/${_bin_tool}" ]; then
       chmod +x "${_target_dir}/bin/${_bin_tool}" 2>/dev/null || true
     fi
   done
 
   if command -v install_name_tool >/dev/null 2>&1 && command -v otool >/dev/null 2>&1 && [ -f "/opt/homebrew/opt/z3/lib/libz3.dylib" ]; then
-    for _macho_bin in cpfe cpfe-cp; do
+    for _macho_bin in cpfe cpfe++ edg++ cpfe-cp; do
       if [ -f "${_target_dir}/bin/${_macho_bin}" ]; then
         _stale_z3=$(otool -L "${_target_dir}/bin/${_macho_bin}" 2>/dev/null | awk '/libz3\.[0-9.]+\.dylib/ {print $1}' || true)
         for _z3_dep in ${_stale_z3}; do
@@ -310,7 +329,7 @@ EOF
           # shellcheck disable=SC1090
           . "${SCRIPT_NAME}"
           unset SCRIPT_NAME || true
-          for _eb in cpfe cpfe-cp eccp cdisp mk_errinfo edg_decode; do
+          for _eb in cpfe cpfe++ edg++ cpfe-cp eccp cdisp mk_errinfo edg_decode; do
             if [ -f "${_target_dir}/bin/${_eb}" ]; then
               libscript_patch_elf_verneed "${_target_dir}/bin/${_eb}" \
                 "GLIBC_2.36=GLIBC_2.34" "GLIBCXX_3.4.32=GLIBCXX_3.4.29"
@@ -333,12 +352,17 @@ EOF
 EOF
   fi
 
+  _resolved_rt_lib="${_target_dir}/lib/libedg.a"
+  if [ ! -f "${_resolved_rt_lib}" ] && [ -f "${_target_dir}/lib/libedg_gcc_eh_rt.a" ]; then
+    _resolved_rt_lib="${_target_dir}/lib/libedg_gcc_eh_rt.a"
+  fi
+
   cat <<EOF > "${_target_dir}/bin/edgcpp.env"
 EDGCPP_HOME="${_target_dir}"
 EDGCPP_INSTALLED_FLAVOR="${EDGCPP_FLAVOR}"
 CPFE_BIN="${_target_dir}/bin/cpfe"
 CPFE_CP_BIN="${_target_dir}/bin/cpfe-cp"
-EDG_RT_LIB="${_target_dir}/lib/libedg.a"
+EDG_RT_LIB="${_resolved_rt_lib}"
 EDGCPP_WRAPPER_SCRIPT="${DIR}/edgcpp_wrapper.sh"
 EOF
 
@@ -753,8 +777,7 @@ case "${ACTION}" in
     ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/" 2>/dev/null || true
     ;;
   ls-remote)
-    printf '%s
-' "7.0.0" "7.0.1" "latest"
+    printf '%s\n' "7.0.0" "7.0.1" "7.0.2" "latest"
     ;;
   use)
     install_edgcpp_component

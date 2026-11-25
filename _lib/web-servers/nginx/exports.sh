@@ -62,17 +62,26 @@ infer_locations() {
       trap 'rm -f -- "${ENV_SAVED_FILE}"' EXIT HUP INT QUIT TERM
 
       # shellcheck disable=SC1090
-      LIBSCRIPT_ROOT_DIR="$(. "${ENV_SAVED_FILE}"; printf '%s' "${LIBSCRIPT_ROOT_DIR}")"
+      LIBSCRIPT_ROOT_DIR="$(SCRIPT_NAME="${ENV_SAVED_FILE}" . "${ENV_SAVED_FILE}"; printf '%s' "${LIBSCRIPT_ROOT_DIR}")"
       # shellcheck disable=SC1090
-      VARS="$(. "${ENV_SAVED_FILE}"; printf '%s' "${VARS:-}")"
+      VARS="$(SCRIPT_NAME="${ENV_SAVED_FILE}" . "${ENV_SAVED_FILE}"; printf '%s' "${VARS:-}")"
 
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/engine/common/envsubst_safe.sh'
       export SCRIPT_NAME
       # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
 
+      _ngx_saved_this="${THIS_FILE}"
+      _ngx_saved_dir="${SCRIPT_DIR}"
+      SCRIPT_NAME="${ENV_SAVED_FILE}"
+      export SCRIPT_NAME
       # shellcheck disable=SC1090,SC1091
       . "${ENV_SAVED_FILE}"
+      unset SCRIPT_NAME || true
+      THIS_FILE="${_ngx_saved_this}"
+      SCRIPT_DIR="${_ngx_saved_dir}"
+      unset _ngx_saved_this _ngx_saved_dir || true
 
       unset ENV_SAVED_FILE
   fi

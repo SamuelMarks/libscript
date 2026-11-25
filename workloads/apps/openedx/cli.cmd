@@ -49,7 +49,6 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 set "SUBCMD=%~1"
@@ -266,7 +265,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" (
     exit /b !ERRORLEVEL!
 )
 if exist "!SCRIPT_DIR!\..\..\..\engine\common\component_core.cmd" (
-    call "!SCRIPT_DIR!\..\..\..\engine\common\component_core.cmd" %*
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\component_core.cmd" %*
     exit /b !ERRORLEVEL!
 )
 echo [ERROR] component_core.cmd not found >&2

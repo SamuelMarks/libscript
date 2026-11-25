@@ -1,9 +1,11 @@
 @echo off
 :: # tui.cmd
+::
 :: ## Overview
-:: Terminal User Interface (TUI) interactive installer wizard for msi-rs. Provides multi-screen keyboard navigation, target disk selector, distribution picker, workload checkboxes, and real-time progress indicators using whiptail or dialog.
+:: Terminal User Interface (TUI) installer wizard companion on Windows supporting --test verification and Option A exit 86 for whiptail/dialog live-ISO menus.
+::
 :: ## Usage
-:: Execute this script to launch the interactive TUI installer: ./synthesis/msi/live_installer/engine/tui.cmd [--test | --help]
+:: synthesis\msi\live_installer\engine\tui.cmd [--test | --help]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,47 +50,30 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
-
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
 if /i "%~1"=="/?" goto :show_help
 if /i "%~1"=="-?" goto :show_help
-
-goto :main
+if /i "%~1"=="--test" goto :run_test
+goto :unsupported_live_tui
 
 :: ## show_help
 :: Displays usage instructions and supported CLI parameters.
 :show_help
-echo Usage: %~nx0 [--test]
-echo.
-echo Runs interactive terminal user interface wizard for msi-rs live installer on Windows.
-echo.
-echo Options:
-echo   --test              Run automated non-interactive verification test.
-echo   --help, -h, /?, -?  Show this help message and exit.
+echo Usage: %~nx0 [--test ^| --help]
+echo Terminal User Interface wizard for msi-rs live media ^(use msiexec /qb or headless.cmd on Windows^).
 exit /b 0
 
-:: ## main
-:: Executes primary orchestration routine.
-:main
-set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+:: ## run_test
+:: Runs non-interactive verification of catalog and headless installer integration on Windows.
+:run_test
+call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\preloader\catalog.cmd" --clean-base >nul
+if errorlevel 1 exit /b 1
+echo [PASS] Windows TUI preflight verification succeeded.
+exit /b 0
 
-echo [TUI] Launching msi-rs Terminal User Interface Wizard...
-
-where wsl >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    wsl sh "!SCRIPT_DIR!\tui.sh" %*
-    exit /b !errorlevel!
-)
-
-where sh >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    sh "!SCRIPT_DIR!\tui.sh" %*
-    exit /b !errorlevel!
-)
-
-echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system.
-echo [ERROR] The TUI mode requires a POSIX environment providing 'dialog' or 'whiptail'.
-exit /b 1
+:: ## unsupported_live_tui
+:: Exits with Option A code 86 when interactive POSIX whiptail/dialog live-ISO console is requested on Windows.
+:unsupported_live_tui
+echo [UNSUPPORTED] Interactive whiptail/dialog live-ISO TUI requires POSIX live media ^(exit 86^); use msiexec.exe or headless.cmd on Windows. >&2
+exit /b 86

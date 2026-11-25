@@ -70,7 +70,7 @@ exit /b 0
 :: ## main
 :: Executes the primary orchestration workflow for this script.
 :main
-set "ROOT_DIR=!SCRIPT_DIR!\..\.."
+set "ROOT_DIR=!LIBSCRIPT_ROOT_DIR!"
 if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" (
     set "STACK="
     call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" >nul 2>&1

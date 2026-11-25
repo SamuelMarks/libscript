@@ -328,19 +328,12 @@ case "$ACTION" in
         if (return 0 2>/dev/null); then return 0; else exit 0; fi
       fi
 
-      if ! command -v uv >/dev/null 2>&1 && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" install latest >/dev/null 2>&1 || true
-        if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/env.sh" ]; then
-          _py_saved_this="${THIS_FILE:-}"
-          _py_saved_dir="${SCRIPT_DIR:-}"
-          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/env.sh"
-          export SCRIPT_NAME
-          # shellcheck disable=SC1090,SC1091
-          . "${SCRIPT_NAME}" || true
-          unset SCRIPT_NAME || true
-          [ -n "$_py_saved_this" ] && THIS_FILE="$_py_saved_this"
-          [ -n "$_py_saved_dir" ] && SCRIPT_DIR="$_py_saved_dir"
-        fi
+      if ! command -v uv >/dev/null 2>&1; then
+        STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install uv latest >/dev/null 2>&1 || true
+        for _uv_b in "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uv/default/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uv/latest/bin" "${HOME:-/root}/.local/bin"; do
+          [ -d "$_uv_b" ] && PATH="${_uv_b}:${PATH}"
+        done
+        export PATH
       fi
       if command -v uv >/dev/null 2>&1; then
         _req_py="${PYTHON_VERSION}"

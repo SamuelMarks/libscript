@@ -1,7 +1,7 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: C89/C99/C11 and C++17 language conformance and binary verification smoke test suite for the EDG C/C++ Compiler Frontend (edgcpp v7.0.1) on Windows.
+:: C89/C99/C11 and C++17 language conformance and binary verification smoke test suite for the EDG C/C++ Compiler Frontend (edgcpp v7.0.2) on Windows.
 :: ## Usage
 :: _lib\languages\edgcpp\test.cmd
 
@@ -54,6 +54,11 @@ if exist "!SCRIPT_DIR!\env.cmd" (
     call "!SCRIPT_DIR!\env.cmd"
 )
 
+call "!SCRIPT_DIR!\cli.cmd" ls-remote | findstr /C:"7.0.2" >nul 2>&1
+if errorlevel 1 exit /b 1
+call "!SCRIPT_DIR!\cli.cmd" ls-remote | findstr /C:"7.0.1" >nul 2>&1
+if errorlevel 1 exit /b 1
+
 call "!SCRIPT_DIR!\edgcpp_wrapper.cmd" --version
 if errorlevel 1 exit /b 1
 
@@ -73,5 +78,5 @@ if not errorlevel 1 if exist "!_TMP_DIR!\c_conformance.exe" (
     )
 )
 rmdir /s /q "!_TMP_DIR!" 2>nul
-echo [PASS] edgcpp v7.0.1 C/C++ conformance test suite succeeded.
+echo [PASS] edgcpp v7.0.2 C/C++ conformance test suite succeeded.
 exit /b 0

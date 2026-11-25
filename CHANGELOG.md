@@ -35,6 +35,22 @@ All notable changes to the LibScript framework are documented here.
     `experiments/schemas/installer-experiment.schema.json`),
     `./libscript.sh experiment scaffold <app> --template=installer-e2e`, and built-in
     `experiments/openedx/` suite.
+- **Built-in FreeDOS (`1.3`, `1.4`) & MIT MS-DOS (`1.25`, `2.0`, `4.00`) Base Kernel & Modular
+  Distribution Synthesis (`synthesis/distro/dos/`, `freedos`, `msdos`, `win-cmd-asm`,
+  `win-cmd-rs`)**:
+  - Declarative `synthesis/schemas/execution-plan.dos.schema.json` and 4 reference profiles under
+    `synthesis/profiles/dos/` spanning `dos32-dpmi` (`freedos-1.4-djgpp-i586`,
+    `msdos-4.0-djgpp-i586`), `dos16-handle` (`msdos-2.0-realmode-i8086`), and `dos16-fcb`
+    (`msdos-1.25-heritage-i8086`), with `DOS1_FLAT_FCB_ONLY`, `DOS2_NO_DPMI32`, and
+    `DOS_INCOMPATIBLE_FORK` solver guards in `engine/solver/resolve_stack.jq`.
+  - Standalone `T1`/`T2` recipes for `_lib/kernel/freedos/`, `_lib/kernel/msdos/` (clean-room
+    `IO.SYS` + `MSDOS.SYS`/`COMMAND.COM`), `_lib/networking/dos-pktdrv/` (`PCNTPKT` + `Watt-32`),
+    `_lib/toolchains/djgpp/` (`CWSDPMI` + GNU `bash`/`coreutils`), `_lib/toolchains/kvikdos/`, and
+    `_lib/toolchains/{win-cmd-asm,win-cmd-rs}/` (`WINCMD.COM`, `WINCMD1.COM`, `WINCMD.EXE`).
+  - Rootless `FAT12`/`FAT16 BIGDOS`/`FAT32 LBA` disk synthesis (`dos-distro`,
+    `dos-{floppy,iso,qcow2,raw,vhd,vmdk,vagrant-box}`), `wincheck --dialect dos622` batch auditing,
+    and headless `kvikdos`/QEMU verification (`tests/test_dos_kernel_synthesis.{sh,cmd}`,
+    `tests/test_dos_solver.{sh,cmd}`, `tests/test_qemu_msdos_smoke.{sh,cmd}`).
 - **Built-in ReactOS Modular Distribution Synthesis (`synthesis/distro/reactos/`, `rapps`,
   `rosbe`)**:
   - Declarative `synthesis/schemas/execution-plan.reactos.schema.json` and 5 curated `i686` /
@@ -60,9 +76,9 @@ All notable changes to the LibScript framework are documented here.
       `LIBSCRIPT_OFFLINE`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_TARGET_ARCH`, `LIBSCRIPT_TARGET_LIBC`,
       `LIBSCRIPT_TARGET_OS`, `LIBSCRIPT_TARGET_TRIPLET`).
     - Multi-stage cross-toolchain bootstrapping (`_lib/toolchains/bootstrap/stage{0,1}.{sh,cmd}`)
-      and complete base-system, kernel (`linux`, `initramfs`, `zephyr`, `freertos`), bootloader
-      (`grub`, `systemd-boot`, `limine`, `u-boot`, `mcuboot`), graphics/Wayland/desktop, audio, and
-      networking catalogs.
+      and complete base-system, kernel (`linux`, `initramfs`, `freedos`, `msdos`, `zephyr`,
+      `freertos`), bootloader (`grub`, `systemd-boot`, `limine`, `refind`, `mcuboot`),
+      graphics/Wayland/desktop, audio, and networking catalogs.
     - Unified `O(1)` toolchain version management (`ls-remote`, `install`, `ls`, `use`, `uninstall`)
       for Node.js, Python, Rust, Ruby, Go, Java, PHP, C/C++ compilers, and databases.
   - **`T3`: Image, OS & Artifact Synthesis (`synthesis/`)**:
@@ -70,7 +86,7 @@ All notable changes to the LibScript framework are documented here.
       (`synthesis/schemas/execution-plan*.schema.json`), interactive TUI configurator
       (`cli/commands/config/`), and curated profiles (`synthesis/profiles/`).
     - Isolated sysroot FHS & VFS lifecycle (`synthesis/vfs/`), GPT/MBR/LUKS2 disk provisioning
-      (`synthesis/disk/`), Linux/FreeBSD/illumos/ReactOS/Bento distro builders
+      (`synthesis/disk/`), Linux/FreeBSD/illumos/ReactOS/DOS/Bento distro builders
       (`synthesis/distro/`), offline cache/repo generators (`synthesis/repogen/`), and universal
       `package-as` drivers (`synthesis/formats/` & `synthesis/msi/`).
   - **`T4`: Infrastructure Providers, Resources & Cluster Substrates (`infrastructure/`)**:

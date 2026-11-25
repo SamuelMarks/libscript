@@ -77,12 +77,10 @@ case "${ACTION}" in
     fi
     if ! command -v dotnet >/dev/null 2>&1; then
       "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install csharp 8.0
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/csharp/env.sh" ]; then
-        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/csharp/env.sh"
-        export SCRIPT_NAME
-        # shellcheck disable=SC1090
-        . "${SCRIPT_NAME}"
-      fi
+      for _cs_b in "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/csharp/8.0/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/csharp/default/bin" "${HOME:-/root}/.dotnet"; do
+        [ -d "$_cs_b" ] && PATH="${_cs_b}:${PATH}"
+      done
+      export PATH
     fi
     mkdir -p "${TARGET_DIR}/bin"
     dotnet tool install --tool-path "${TARGET_DIR}/bin" wix --version "${EXACT_VERSION}" || \

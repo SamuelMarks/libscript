@@ -1,12 +1,11 @@
 #!/bin/sh
 # ## Overview
-# Common Git manipulation utilities.
+# Git manipulation wrapper for git-servers/utils delegating to T0 `engine/common/git.sh`.
 #
 # ## Usage
-# Provides `git_get <repo> <target> [branch]` for idempotent repo cloning/pulling.
+# Source this file and invoke `git_get <repo> <target> [branch]`.
 
-
-set -feu
+set -feu; _gsu_caller_this="${THIS_FILE:-}"; _gsu_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -21,34 +20,22 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_gsu_caller_this}" ] && THIS_FILE="${_gsu_caller_this}"; [ -n "${_gsu_caller_dir}" ] && SCRIPT_DIR="${_gsu_caller_dir}"; unset SCRIPT_NAME _gsu_caller_this _gsu_caller_dir || true
+    if (return 0 2>/dev/null); then return 0; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-# ## git_get
-# Clones a Git repository or fetches and updates an existing checkout idempotently.
-git_get() {
-    repo="${1}"
-    target="${2}"
-    branch="${3:-}"
 
-    GIT_DIR_="${target}"'/.git'
-    if [ -d "${GIT_DIR_}" ]; then
-        if [ -n "${branch}" ]; then
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git -c core.sshCommand=ssh -c "url.https://github.com/.insteadOf=ssh://git@github.com/" fetch origin "${branch}" 2>/dev/null || true
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git reset --hard "origin/${branch}" 2>/dev/null || true
-        else
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git -c core.sshCommand=ssh -c "url.https://github.com/.insteadOf=ssh://git@github.com/" fetch --depth=1 origin HEAD 2>/dev/null || true
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git reset --hard FETCH_HEAD 2>/dev/null || true
-        fi
-    else
-        mkdir -p -- "${target}"
-        if [ -n "${branch}" ]; then
-            git -c core.sshCommand=ssh -c "url.https://github.com/.insteadOf=ssh://git@github.com/" clone --depth=1 --single-branch --branch "${branch}" -- "${repo}" "${target}"
-        else
-            git -c core.sshCommand=ssh -c "url.https://github.com/.insteadOf=ssh://git@github.com/" clone --depth=1 --single-branch -- "${repo}" "${target}"
-        fi
-    fi
-}
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/git.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_gsu_caller_dir:-}" ] && SCRIPT_DIR="${_gsu_caller_dir}"
+[ -n "${_gsu_caller_this:-}" ] && THIS_FILE="${_gsu_caller_this}"
+unset _gsu_caller_this _gsu_caller_dir || true

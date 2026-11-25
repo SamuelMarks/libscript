@@ -119,9 +119,9 @@ case "$ACTION" in
           if command -v brew >/dev/null 2>&1; then
             libscript_depends_via brew cabal-install || true
           fi
-          if ! command -v cabal >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh" ]; then
+          if ! command -v cabal >/dev/null 2>&1; then
             unset SCRIPT_NAME || true
-            "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh"
+            STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install ghcup latest || true
             GHCUP_BIN="${HOME:-/root}/.ghcup/bin/ghcup"
             [ ! -x "$GHCUP_BIN" ] && GHCUP_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ghcup/latest/bin/ghcup"
             if [ -x "$GHCUP_BIN" ]; then

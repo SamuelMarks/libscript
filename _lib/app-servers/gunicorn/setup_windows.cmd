@@ -49,14 +49,10 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\waitress\setup.cmd" (
-    set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\waitress\setup.cmd" >nul 2>&1
-)
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\uvicorn\setup.cmd" (
-    set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\uvicorn\setup.cmd" >nul 2>&1
-)
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install waitress latest >nul 2>&1
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install uvicorn latest >nul 2>&1
 
 set "BIN_DIR=%USERPROFILE%\.libscript\gunicorn\latest\bin"
 if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"

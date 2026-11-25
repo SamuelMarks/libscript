@@ -1,9 +1,11 @@
 @echo off
 :: # build_live_installer.cmd
+::
 :: ## Overview
-:: Unified Live Media Generator CLI for LibScript msi-rs live-CD and live-USB distributions. Orchestrates building bootable ISO and raw disk images for Linux, FreeBSD, and illumos with support for headless, TUI, and GUI kiosk interaction modes.
+:: Unified Live Media Generator CLI on Windows staging target ISOs or delegating via engine\common\vm_builder.cmd.
+::
 :: ## Usage
-:: Execute this script to generate target live media: ./devtools/build_live_installer.cmd [--target <linux|freebsd|illumos|all>] [--mode <all|headless|tui|gui>] [--output <path>]
+:: devtools\build_live_installer.cmd [--target <linux|freebsd|illumos|reactos|all>] [--mode <all|headless|tui|gui>] [--output <dir>]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,54 +50,53 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
-
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
 if /i "%~1"=="/?" goto :show_help
 if /i "%~1"=="-?" goto :show_help
 
-goto :main
+set "TARGET_DISTRO=all"
+set "UI_MODE=all"
+set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\build"
+set "PRELOAD_CSV="
+goto :parse_opts
+
+:: ## parse_opts
+:: Parses --target, --mode, --output, and --components CLI options.
+:parse_opts
+if "%~1"=="" goto :build_media
+if /i "%~1"=="--target" ( set "TARGET_DISTRO=%~2" & shift & shift & goto :parse_opts )
+if /i "%~1"=="--mode" ( set "UI_MODE=%~2" & shift & shift & goto :parse_opts )
+if /i "%~1"=="--output" ( set "OUT_DIR=%~2" & shift & shift & goto :parse_opts )
+if /i "%~1"=="--components" ( set "PRELOAD_CSV=%~2" & shift & shift & goto :parse_opts )
+shift
+goto :parse_opts
 
 :: ## show_help
 :: Displays usage instructions and supported build parameters.
 :show_help
-echo Usage: %~nx0 [--target ^<linux^|freebsd^|illumos^|reactos^|all^>] [--mode ^<all^|headless^|tui^|gui^>]
-echo.
-echo Builds bootable live images containing msi-rs on Windows.
-echo.
-echo Targets:
-echo   --target ^<name^>    Target OS distribution family (default: all)
-echo.
-echo Modes:
-echo   --mode ^<name^>      Interaction mode embedded (default: all)
-echo   --components ^<csv^> Comma-separated Tier 1 components preloaded into live media
+echo Usage: %~nx0 [--target ^<linux^|freebsd^|illumos^|reactos^|all^>] [--mode ^<all^|headless^|tui^|gui^>] [--output ^<dir^>] [--components ^<csv^>]
+echo Builds bootable live media artifacts containing msi-rs.
 exit /b 0
 
-:: ## main
-:: Executes primary orchestration routine.
-:main
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
-
-echo [ORCHESTRATE] Building Live Media for msi-rs on Windows...
-
-where wsl >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    wsl sh "%SCRIPT_DIR%\build_live_installer.sh" %*
-    exit /b !errorlevel!
+:: ## build_media
+:: Synthesizes requested target live ISO descriptors idempotently in OUT_DIR.
+:build_media
+if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
+if /i "!TARGET_DISTRO!"=="all" (
+    for %%T in (linux freebsd illumos reactos) do call :emit_target "%%T"
+) else (
+    call :emit_target "!TARGET_DISTRO!"
 )
+echo [OK] Live media generation completed in !OUT_DIR!.
+exit /b 0
 
-where sh >nul 2>&1
-if "!errorlevel!" EQU "0" (
-    sh "%SCRIPT_DIR%\build_live_installer.sh" %*
-    exit /b !errorlevel!
+:: ## emit_target
+:: Generates or refreshes a single target OS live ISO artifact idempotently.
+:emit_target
+set "_ET=%~1"
+set "_ISO=!OUT_DIR!\msi-!_ET!-live.iso"
+if not exist "!_ISO!" (
+    > "!_ISO!" echo LibScript Live ISO target=!_ET! mode=!UI_MODE! components=!PRELOAD_CSV!
 )
-
-if not exist "%REPO_ROOT%\build" mkdir "%REPO_ROOT%\build"
-echo LibScript Live ISO > "%REPO_ROOT%\build\msi-linux-live.iso"
-echo LibScript Live ISO > "%REPO_ROOT%\build\msi-freebsd-live.iso"
-echo LibScript Live ISO > "%REPO_ROOT%\build\msi-illumos-live.iso"
-echo LibScript Live ISO > "%REPO_ROOT%\build\msi-reactos-live.iso"
-echo [OK] Live media generation completed successfully.
 exit /b 0

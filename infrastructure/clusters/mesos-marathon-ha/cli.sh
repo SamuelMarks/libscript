@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf 'Usage: %s <up|status|scale|drain|failover|upgrade|down|destroy> [args...]
-' "$0"
+' "${THIS_FILE}"
   exit 0
 fi
 

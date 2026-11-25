@@ -55,8 +55,7 @@ if "%~1"=="-h" goto show_help
 if "%~1"=="/?" goto show_help
 if "%~1"=="-?" goto show_help
 
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 if not exist "%REPO_ROOT%\tests_tmp" mkdir "%REPO_ROOT%\tests_tmp"
 set "SUMMARY_FILE=%REPO_ROOT%\tests_tmp\msi_rs_matrix_summary.json"

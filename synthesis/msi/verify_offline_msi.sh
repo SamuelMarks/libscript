@@ -34,7 +34,7 @@ while [ $# -gt 0 ]; do
     --msi) MSI_PATH="${2:-$MSI_PATH}"; shift 2 ;;
     --help|-h)
       printf 'Usage: %s [--dry-run] [--msi <path>]
-' "$0"
+' "${THIS_FILE}"
       exit 0
       ;;
     *) shift ;;

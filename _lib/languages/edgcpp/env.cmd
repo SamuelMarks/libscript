@@ -51,7 +51,10 @@ goto :find_root
 
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\default"
+if not exist "!_edg_home!" set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\7.0.2"
 if not exist "!_edg_home!" set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\7.0.1"
+set "_edg_rt_lib=!_edg_home!\lib\libedg.a"
+if not exist "!_edg_rt_lib!" if exist "!_edg_home!\lib\libedg_gcc_eh_rt.a" set "_edg_rt_lib=!_edg_home!\lib\libedg_gcc_eh_rt.a"
 set "_CAND_P=!_edg_home!\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
@@ -62,8 +65,8 @@ endlocal & (
     set "EDGCPP_HOME=%_edg_home%"
     set "CPFE_BIN=%_edg_home%\bin\cpfe.exe"
     set "CPFE_CP_BIN=%_edg_home%\bin\cpfe-cp.exe"
-    set "EDG_RT_LIB=%_edg_home%\lib\libedg.a"
-    set "EDGCPP_RT_LIB=%_edg_home%\lib\libedg.a"
+    set "EDG_RT_LIB=%_edg_rt_lib%"
+    set "EDGCPP_RT_LIB=%_edg_rt_lib%"
     set "CC=%SCRIPT_DIR%\edgcpp_wrapper.cmd"
     set "CXX=%SCRIPT_DIR%\edgcpp_wrapper.cmd"
     set "HOSTCC=%SCRIPT_DIR%\edgcpp_wrapper.cmd"

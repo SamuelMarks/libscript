@@ -37,7 +37,7 @@ OUT_BASE="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript"
 # Prints usage instructions for capture_running_system.sh.
 show_help() {
   printf 'Usage: %s [OPTIONS]
-' "$0"
+' "${THIS_FILE}"
   printf '  --target <name|dir|all>               Target component directory or name (default: all)
 '
   printf '  --os <windows|linux|macos|freebsd|illumos|all>  Target OS windowing style (default: all)

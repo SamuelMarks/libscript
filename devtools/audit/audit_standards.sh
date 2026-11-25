@@ -231,6 +231,12 @@ report_cmd_violation() {
   v_rule="$2"
   v_msg="$3"
   case "$v_rule" in
+    CMD_ROOT_DIR_RESOLUTION)
+      case "$file" in
+        /tmp/*|*/tmp/*|*/var/folders/*) ;;
+        *) log_failure "$file" "$v_rule" "$v_msg" ;;
+      esac
+      ;;
     RAW_NETWORK_FETCH)
       case "$file" in
         *engine/common/pkg_mgr.cmd|*engine/common/daemonize.cmd|*_lib/utilities/curl/test.cmd|*_lib/utilities/wget/test.cmd|*_lib/utilities/aria2/test.cmd|*devtools/*|*tests/*|synthesis/formats/docker_compose.cmd) ;;
@@ -362,7 +368,7 @@ audit_sh_batch() {
       if (f ~ /^_lib\/.*\/env\.sh$/ && unguarded_sh_path != "") {
         emit(f, "ENV_PATH_IDEMPOTENCY", "Unguarded export PATH=\"...:$PATH\" in env.sh duplicates PATH entries on re-run: " unguarded_sh_path)
       }
-      if ((f ~ /^_lib\/.*\.sh$/ || f ~ /^cli\/.*\.sh$/) && f !~ /^_lib\/.*\/test[^\/]*\.sh$/ && interp_hits != "") {
+      if ((f ~ /^(_lib|cli|devtools|tests)\/.*\.sh$/) && f !~ /^_lib\/.*\/test[^\/]*\.sh$/ && f !~ /(test_standards_|audit_standards\.sh$)/ && interp_hits != "") {
         emit(f, "ZERO_DEP_SUBSTRATE", "Core or recipe script invokes external interpreter inline: " interp_hits)
       }
       if ((f ~ /^_lib\// || f ~ /^cli\//) && leak_hits != "") {
@@ -768,7 +774,7 @@ audit_cmd_batch() {
       del_exp_active = 0; quoted_dbl_caret_bang_hits = ""; bare_exit_hits = "";
       dup_label_hits = ""; has_exit_86 = 0; has_setlocal_any = 0; has_endlocal_any = 0;
       unguarded_cmd_path = ""; leak_hits = ""; has_caller_script_dir = 0;
-      call_dp0_self_hits = ""; stale_mklink_hits = "";
+      call_dp0_self_hits = ""; stale_mklink_hits = ""; has_cmd_root = 0; cmd_root_clobber_hits = "";
       split("", defined_labels); split("", goto_targets); split("", call_targets); split("", chained_if);
     }
     BEGIN {} function emit(f, r, m) { print f "|" r "|" m }
@@ -793,6 +799,8 @@ audit_cmd_batch() {
       if (!has_this_file) emit(f, "BATCH_THIS_FILE", "Missing set \"THIS_FILE=%~f0\" in first 25 lines.")
       if (!has_stack_guard) emit(f, "BATCH_STACK_GUARD", "Missing quoted case-insensitive STACK guard (echo \"!STACK!\" | findstr /I /C:\":!THIS_FILE!:\") in first 25 lines.")
       if (has_dup_stack) emit(f, "BATCH_DUPLICATE_STACK", "Duplicate legacy searchVal=;%THIS_FILE%; STACK block found.")
+      if (!has_cmd_root) emit(f, "CMD_ROOT_DIR_RESOLUTION", "Missing :find_root / LIBSCRIPT_ROOT_DIR resolution in batch script.")
+      if (cmd_root_clobber_hits != "") emit(f, "CMD_ROOT_CLOBBER", "Batch script overwrites LIBSCRIPT_ROOT_DIR via SCRIPT_DIR\\..: " cmd_root_clobber_hits)
       if (!has_overview) emit(f, "DOC_OVERVIEW", "Missing doc block ## Overview in first 30 lines.")
       if (!has_usage) emit(f, "DOC_USAGE", "Missing doc block ## Usage in first 30 lines.")
       if (placeholder_doc_hits != "") emit(f, "DOC_PLACEHOLDER", "Auto-generated placeholder docstring found: " placeholder_doc_hits)
@@ -871,6 +879,10 @@ audit_cmd_batch() {
         leak_hits = (leak_hits ? leak_hits "; " : "") FNR ":" $0
       }
       if ($0 ~ /CALLER_SCRIPT_DIR/) has_caller_script_dir = 1
+      if ($0 ~ /LIBSCRIPT_ROOT_DIR/) has_cmd_root = 1
+      if (tolower($0) !~ /^[[:space:]]*(::|rem([[:space:]]|$))/ && tolower($0) ~ /set[[:space:]]+"?libscript_root_dir=[%!]script_dir[%!][\\\/]\.\./) {
+        cmd_root_clobber_hits = (cmd_root_clobber_hits ? cmd_root_clobber_hits "; " : "") FNR ":" $0
+      }
 
       if (tolower($0) ~ /searchval=;%this_file%;/) has_dup_stack = 1
       if (tolower($0) ~ /^[[:space:]]*(mkdir|md)[[:space:]]+/ && tolower($0) !~ /if[[:space:]]+not[[:space:]]+exist/) {
@@ -1366,9 +1378,6 @@ audit_repo_global_invariants() {
   set +f
   for _src_lib in engine/common/*.sh _lib/*/_common/*.sh experiments/_common/*.sh; do
     [ -f "$_src_lib" ] || continue
-    case "$_src_lib" in
-      */daemon_launcher.sh|*/component_core.sh|*/cow_snapshot.sh|*/format_fs.sh|*/semver.sh|*/envsubst_safe_exec.sh|*/find_replace_exec.sh|*/test_matrix_driver.sh|*/upgrade_engine.sh|*/guest_capture_agent.sh|*/pkg_ui_runner.sh) continue ;;
-    esac
     if ! grep -qE 'THIS_FILE="\$\{?_[A-Za-z0-9_]+' "$_src_lib"; then
       log_failure "$_src_lib" 'SOURCE_CONTEXT_SAFETY' 'Sourced _common library must save and restore caller THIS_FILE / SCRIPT_DIR.'
     fi

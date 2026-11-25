@@ -99,7 +99,7 @@ if exist "!TARGET_DIR!\bin\wix.exe" (
 where dotnet >nul 2>&1
 if errorlevel 1 (
     call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install csharp 8.0
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\csharp\env.cmd" call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\csharp\env.cmd"
+    for %%C in ("%LIBSCRIPT_HOME%\csharp\8.0\bin" "%LIBSCRIPT_HOME%\csharp\default\bin" "%USERPROFILE%\.dotnet") do if exist "%%~C" set "PATH=%%~C;!PATH!"
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 dotnet tool install --tool-path "!TARGET_DIR!\bin" wix --version "!EXACT_VERSION!" || dotnet tool update --tool-path "!TARGET_DIR!\bin" wix --version "!EXACT_VERSION!"

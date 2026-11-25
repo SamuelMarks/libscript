@@ -61,8 +61,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 set "TARGET=%~1"
 if "%TARGET%"=="" set "TARGET=%REPO_ROOT%\build\illumos-sysroot"

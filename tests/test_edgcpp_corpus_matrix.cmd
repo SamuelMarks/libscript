@@ -1,7 +1,7 @@
 @echo off
 :: # test_edgcpp_corpus_matrix.cmd
 :: ## Overview
-:: Unified multi-target C/C++ corpus build and conformance verification harness for edgcpp v7.0.1 on Windows.
+:: Unified multi-target C/C++ corpus build and conformance verification harness for edgcpp v7.0.2 on Windows.
 :: ## Usage
 :: test_edgcpp_corpus_matrix.cmd
 
@@ -51,7 +51,7 @@ goto :find_root
 
 call :run_corpus_matrix_windows
 if errorlevel 1 exit /b 1
-echo [PASS] All 13 C11 and C++17 corpus targets built and verified with edgcpp v7.0.1 on Windows^^!
+echo [PASS] All 13 C11 and C++17 corpus targets built and verified with edgcpp v7.0.2 on Windows^^!
 exit /b 0
 
 :: ## run_corpus_matrix_windows
@@ -66,7 +66,7 @@ for %%C in (sqlite linux tcc dash jq busybox curl memcached redis valkey nginx p
 (
     echo {
     echo   "compiler": "edgcpp",
-    echo   "compiler_version": "7.0.1",
+    echo   "compiler_version": "7.0.2",
     echo   "total_targets": 13,
     echo   "all_targets_passed": true
     echo }

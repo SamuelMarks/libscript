@@ -63,23 +63,23 @@ All packaging generators accept normalized command-line flags across POSIX `/bin
 
 ```sh
 # Generate WiX MSI package
-./libscript.sh package-as msi
-  --app-name "MyEnterpriseApp"
-  --license-file "legal/LICENSE.txt"
-  --icon "assets/app.ico"
-  --banner-top "assets/header.bmp"
+./libscript.sh package-as msi \
+  --app-name "MyEnterpriseApp" \
+  --license-file "legal/LICENSE.txt" \
+  --icon "assets/app.ico" \
+  --banner-top "assets/header.bmp" \
   --banner-side "assets/sidebar.bmp"
 
 # Generate Inno Setup package
-./libscript.sh package-as innosetup
-  --app-name "MyEnterpriseApp"
-  --license-file "legal/LICENSE.txt"
+./libscript.sh package-as innosetup \
+  --app-name "MyEnterpriseApp" \
+  --license-file "legal/LICENSE.txt" \
   --banner-side "assets/sidebar.bmp"
 
 # Generate NSIS package
-./libscript.sh package-as nsis
-  --app-name "MyEnterpriseApp"
-  --license-file "legal/LICENSE.txt"
+./libscript.sh package-as nsis \
+  --app-name "MyEnterpriseApp" \
+  --license-file "legal/LICENSE.txt" \
   --icon "assets/app.ico"
 ```
 
@@ -157,7 +157,8 @@ and compliance-gated cloud marketplace bundles:
 # UEFI/GPT & Hyper-V Gen2 VHD cloud-boot unikernels and MCUboot-signed RTOS firmware
 ./libscript.sh package-as unikernel --cloud-boot=uefi-gpt
 ./libscript.sh package-as unikernel --cloud-boot=azure-vhd
-./libscript.sh package-as firmware
+./libscript.sh package-as rtos-distro --format firmware-bin
+./libscript.sh package-as mcuboot-signed
 
 # SPDX 2.3 SBOM & compliance-gated AWS / Azure / GCP Marketplace bundle synthesis
 ./libscript.sh publish-marketplace workloads/constellations/openedx-unikernel-pod/marketplace/offer.json --clouds=aws,azure,gcp --stage-only

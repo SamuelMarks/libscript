@@ -61,7 +61,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 call "%REPO_ROOT%\engine\common\vm_builder.cmd" "%REPO_ROOT%\synthesis\formats\bsd_img.sh" %*
 exit /b %ERRORLEVEL%

@@ -1,0 +1,88 @@
+@echo off
+:: # git.cmd
+::
+:: ## Overview
+:: Common T0 Git repository checkout and update utilities for Windows Batch.
+::
+:: ## Usage
+:: call "%LIBSCRIPT_ROOT_DIR%\engine\common\git.cmd" :git_get <repo> <target> [branch]
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
+if not "%~1"=="" (
+    call %*
+    exit /b !ERRORLEVEL!
+)
+exit /b 0
+
+:: ## git_get
+:: Clones a Git repository or fetches and updates an existing checkout idempotently.
+:git_get
+set "repo=%~1"
+set "target=%~2"
+set "branch=%~3"
+
+if "%target%"=="" exit /b 1
+
+set "GIT_DIR_=%target%\.git"
+if exist "%GIT_DIR_%" (
+    if not "%branch%"=="" (
+        git --git-dir="%GIT_DIR_%" --work-tree="%target%" fetch origin "%branch%":"%branch%" 2>nul
+        git --git-dir="%GIT_DIR_%" --work-tree="%target%" reset --hard "origin/%branch%" 2>nul
+    ) else (
+        git --git-dir="%GIT_DIR_%" --work-tree="%target%" fetch --depth=1 origin HEAD 2>nul
+        git --git-dir="%GIT_DIR_%" --work-tree="%target%" reset --hard FETCH_HEAD 2>nul
+    )
+    exit /b 0
+) else (
+    if exist "%target%" rmdir /s /q "%target%" >nul 2>&1
+    for %%P in ("%target%") do if not exist "%%~dpP" mkdir "%%~dpP"
+    if not "%branch%"=="" (
+        git clone --depth=1 --single-branch --branch "%branch%" "%repo%" "%target%"
+    ) else (
+        git clone --depth=1 --single-branch "%repo%" "%target%"
+    )
+)
+exit /b !errorlevel!

@@ -68,7 +68,7 @@ case "${TARGET_OS}" in
     # Start VM early just for building
     vagrant up --no-provision || { printf '[ERROR] Vagrant up failed.\n' >&2; exit 1; }
     vagrant rsync || true
-    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as deb workloads/apps/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*_*.deb ${REMOTE_TMP}/openedx-setup.deb"
+    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ${REMOTE_REPO_DIR}/libscript.sh package-as deb workloads/apps/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*_*.deb ${REMOTE_TMP}/openedx-setup.deb"
     ;;
   rockylinux-*|almalinux-*|fedora-*|centos-*)
     printf '[INFO] Building .rpm package inside VM...\n'
@@ -76,7 +76,7 @@ case "${TARGET_OS}" in
     vagrant rsync || true
     # Make sure rpm-build is installed
     vagrant ssh -c "sudo dnf install -y rpm-build"
-    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as rpm workloads/apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.rpm ${REMOTE_TMP}/openedx-setup.rpm"
+    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ${REMOTE_REPO_DIR}/libscript.sh package-as rpm workloads/apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.rpm ${REMOTE_TMP}/openedx-setup.rpm"
     ;;
   alpine-*)
     printf '[INFO] Building .apk package inside VM...\n'
@@ -84,7 +84,7 @@ case "${TARGET_OS}" in
     vagrant rsync || true
     # Make sure abuild and signing key are initialized
     vagrant ssh -c "sudo apk add abuild && abuild-keygen -a -n 2>/dev/null || true; sudo cp -f ~/.abuild/*.rsa.pub /etc/apk/keys/ 2>/dev/null || true"
-    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ./libscript.sh package-as apk workloads/apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.apk ${REMOTE_TMP}/openedx-setup.apk"
+    vagrant ssh -c "cd ${REMOTE_REPO_DIR} && OUT_DIR=build ${REMOTE_REPO_DIR}/libscript.sh package-as apk workloads/apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.apk ${REMOTE_TMP}/openedx-setup.apk"
     ;;
   omnios*|illumos*)
     printf '[INFO] Building package archive for OmniOS inside VM...\n'

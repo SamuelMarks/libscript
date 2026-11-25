@@ -25,7 +25,8 @@ LibScript generates enterprise-grade `.msi` packages supporting:
   commit.
 - **Cross-Platform MSI Engine (`msi-rs`)**: In addition to standard WiX and `wixl` compilation,
   LibScript incorporates the `msi-rs` engine to power universal live-CD/USB installer environments
-  across Linux, FreeBSD, and illumos (see [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md)).
+  across Linux, FreeBSD, illumos, and ReactOS (see
+  [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md)).
 
 ---
 
