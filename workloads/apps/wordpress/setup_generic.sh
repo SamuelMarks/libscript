@@ -493,6 +493,7 @@ chown -R nginx:nginx "${WORDPRESS_WWWROOT}" 2>/dev/null || true
 printf '[INFO] Applying WAMP-class PHP optimization tuning...\n'
 _wp_etc_dir="${LIBSCRIPT_ETC_DIR:-/etc}"
 _wp_usr_local_etc="${LIBSCRIPT_USR_LOCAL_ETC:-/usr/local/etc}"
+set +f
 for php_ini in "${_wp_etc_dir}"/php/*/fpm/php.ini "${_wp_etc_dir}"/php/*/cli/php.ini "${_wp_etc_dir}/php.ini" "${_wp_usr_local_etc}/php.ini"; do
   if [ -f "$php_ini" ]; then
     _php_tmp=$(mktemp)
@@ -507,6 +508,7 @@ for php_ini in "${_wp_etc_dir}"/php/*/fpm/php.ini "${_wp_etc_dir}"/php/*/cli/php
     rm -f "$_php_tmp" 2>/dev/null || true
   fi
 done
+set -f
 
 # Provision dedicated PHP-FPM pool for WordPress
 php_fpm_pool_dir="${WORDPRESS_PHP_FPM_POOL_DIR:-}"

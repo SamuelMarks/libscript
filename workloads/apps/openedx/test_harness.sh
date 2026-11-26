@@ -29,6 +29,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+_OPENEDX_THIS_FILE="${THIS_FILE}"
 _OPENEDX_SCRIPT_DIR="${SCRIPT_DIR}"
 ENV_SCRIPT="${SCRIPT_DIR}/env.sh"
 if [ -f "${ENV_SCRIPT}" ]; then
@@ -38,6 +39,7 @@ if [ -f "${ENV_SCRIPT}" ]; then
   . "${SCRIPT_NAME}"
   unset SCRIPT_NAME || true
 fi
+THIS_FILE="${_OPENEDX_THIS_FILE}"
 SCRIPT_DIR="${_OPENEDX_SCRIPT_DIR}"
 
 CONNECT_IP='127.0.0.1'

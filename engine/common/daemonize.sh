@@ -7,7 +7,7 @@
 # Run `daemonize.sh <action> <json_file> [--remove] [--verify-ingress] [--public-url=<url>]`
 # where action is `start`, `stop`, `up`, `down`, `status`, `health`, `logs`, or `uninstall`.
 
-set -feu
+set -feu; _dm_caller_this="${THIS_FILE:-}"; _dm_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -18,14 +18,14 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_dm_caller_dir:-}" ] && SCRIPT_DIR="${_dm_caller_dir}"; [ -n "${_dm_caller_this:-}" ] && THIS_FILE="${_dm_caller_this}"; unset SCRIPT_NAME _dm_caller_this _dm_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+_dm_self_this="${THIS_FILE}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
@@ -824,6 +824,12 @@ $SERVICES
 EOF_ING_SERVICES
   fi
 fi
+
+STACK="${STACK%"${_dm_self_this}":}"
+export STACK
+[ -n "${_dm_caller_dir:-}" ] && SCRIPT_DIR="${_dm_caller_dir}"
+[ -n "${_dm_caller_this:-}" ] && THIS_FILE="${_dm_caller_this}"
+unset SCRIPT_NAME _dm_self_this _dm_caller_this _dm_caller_dir || true
 
 if [ "$ACTION" = "health" ] && [ "$HEALTH_FAILED" -ne 0 ]; then
   exit 1

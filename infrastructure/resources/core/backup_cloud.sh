@@ -243,7 +243,7 @@ if [ "$TARGET" = "local" ]; then
   printf '%s\n' '  -> Mocked AES-256 encryption applied.'
   printf '%s\n' "[BACKUP] Enforcing retention policy: keeping last $KEEP_LAST backups."
   # shellcheck disable=SC2012
-  ls -1t "$BACKUP_DIR"/backup-*.tar.zst 2>/dev/null | tail -n +$((KEEP_LAST + 1)) | xargs rm -f 2>/dev/null || true
+  (set +f; ls -1t "$BACKUP_DIR"/backup-*.tar.zst 2>/dev/null | tail -n +$((KEEP_LAST + 1)) | xargs rm -f 2>/dev/null || true)
 elif [ "$TARGET" = "s3" ] || [ "$TARGET" = "gcs" ] || [ "$TARGET" = "azure" ]; then
   printf '%s\n' "[BACKUP] Streaming backup to remote object storage ($TARGET)..."
   printf '%s\n' '  -> Handling multipart uploads for large files.'

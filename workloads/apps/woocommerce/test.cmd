@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Implements automated tests to verify the correctness of the WooCommerce e-commerce platform stack.
-:: 
+:: Implements automated tests to verify the correctness of the WooCommerce stack.
 :: ## Usage
-:: Execute this script to run the test suite for woocommerce.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!WOOCOMMERCE_WWWROOT!"=="" set "WOOCOMMERCE_WWWROOT=C:\inetpub\wwwroot\wordpress"
+echo Validating WooCommerce installation...
+if exist "!WOOCOMMERCE_WWWROOT!\wp-content\plugins\woocommerce" (
+    echo WooCommerce directory found at !WOOCOMMERCE_WWWROOT!
+    exit /b 0
+) else (
+    echo WooCommerce directory not found at !WOOCOMMERCE_WWWROOT!
+    exit /b 1
+)

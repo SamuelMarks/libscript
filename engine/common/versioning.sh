@@ -288,15 +288,18 @@ libscript_check_installed_version() {
         return 0
       fi
       if [ -d "${_civ_home}/nodejs" ]; then
+        set +f
         for _civ_d in "${_civ_home}/nodejs"/*; do
           [ -x "${_civ_d}/bin/node" ] || continue
           _civ_v=$("${_civ_d}/bin/node" -v 2>/dev/null | sed 's/^v//' || true)
           if [ "$_civ_req" = "latest" ] || [ "$_civ_req" = "lts" ] || [ "${_civ_v#"${_civ_prefix}".}" != "$_civ_v" ] || [ "$_civ_v" = "$_civ_prefix" ]; then
+            set -f
             libscript_symlink_alias "nodejs" "$_civ_req" "$(basename -- "$_civ_d")" 2>/dev/null || true
             printf '%s\n' "${_civ_d}/bin"
             return 0
           fi
         done
+        set -f
       fi
       if command -v node >/dev/null 2>&1; then
         _civ_v=$(node -v 2>/dev/null | sed 's/^v//' || true)
@@ -320,12 +323,15 @@ libscript_check_installed_version() {
         if [ -z "$_civ_uv_py_dir" ] || [ ! -d "$_civ_uv_py_dir" ]; then
           continue
         fi
+        set +f
         for _civ_pyd in "$_civ_uv_py_dir"/cpython-"${_civ_prefix}"*; do
           if [ -x "${_civ_pyd}/bin/python3" ]; then
+            set -f
             printf '%s\n' "${_civ_pyd}/bin"
             return 0
           fi
         done
+        set -f
       done
       if command -v python3 >/dev/null 2>&1; then
         _civ_pyv=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2 || true)

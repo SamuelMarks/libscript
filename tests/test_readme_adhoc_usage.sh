@@ -37,7 +37,7 @@ mkdir -p "$TMP_DIR"
 # Removes temporary artifacts created during README ad-hoc usage verification.
 cleanup() {
   trap - EXIT INT TERM
-  rm -rf "$TMP_DIR" "${LIBSCRIPT_ROOT_DIR}/build/images" "${LIBSCRIPT_ROOT_DIR}/build/disk."* "${LIBSCRIPT_ROOT_DIR}/build/"*_temp.raw*
+  (set +f; rm -rf "$TMP_DIR" "${LIBSCRIPT_ROOT_DIR}/build/images" "${LIBSCRIPT_ROOT_DIR}/build/disk."* "${LIBSCRIPT_ROOT_DIR}/build/"*_temp.raw*)
 }
 trap cleanup EXIT INT TERM
 

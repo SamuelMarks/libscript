@@ -185,6 +185,7 @@ ensure_msi_built() {
   _tname="$2"
   _v="$3"
   _out_prefix="${LIBSCRIPT_ROOT_DIR}/synthesis/msi/${_tname}-${_v}"
+  set +f
   for _cand in "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/"*.msi; do
     [ -f "$_cand" ] || continue
     _base=$(basename "$_cand" .msi | tr '[:upper:]' '[:lower:]')
@@ -204,6 +205,7 @@ ensure_msi_built() {
       esac
     fi
   done
+  set -f
   if [ ! -f "${_out_prefix}.msi" ]; then
     "${LIBSCRIPT_ROOT_DIR}/synthesis/msi/build_msi.sh" "$_tdir" "--${_v}" --out "$_out_prefix" >/dev/null
   fi
@@ -1076,7 +1078,7 @@ for _tdir in $TARGET_DIRS; do
       capture_verification_views "$_tdir" "$_tname" "$_os"
     fi
   done
-  rm -f "${OUT_BASE}/${_tname}/screenshots"/.live_*.png 2>/dev/null || true
+  (set +f; rm -f "${OUT_BASE}/${_tname}/screenshots"/.live_*.png 2>/dev/null || true)
 done
 
 printf '[OK] Schema-driven screenshot-to-running-system pipeline complete in %s

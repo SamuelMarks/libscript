@@ -1,17 +1,16 @@
 # ## Overview
-# PowerShell script for test.ps1.
+# Implements automated tests to verify the correctness of the Drupal stack.
 #
 # ## Usage
-# Execute via PowerShell.
-
-<#
-.SYNOPSIS
-Implements automated tests to verify the correctness of the Drupal CMS stack.
-
-.DESCRIPTION
-Execute this script to run the test suite for drupal.
-#>
+# Execute via PowerShell: .\test.ps1
 
 $ErrorActionPreference = "Stop"
-
-Write-Output "drupal test pass"
+$wwwRoot = if ($env:DRUPAL_WWWROOT) { $env:DRUPAL_WWWROOT } else { "C:\inetpub\wwwroot\drupal" }
+Write-Host "Validating Drupal installation..."
+if (Test-Path (Join-Path $wwwRoot "core")) {
+    Write-Output "Drupal directory found at $wwwRoot"
+    exit 0
+} else {
+    Write-Error "Drupal directory not found at $wwwRoot"
+    exit 1
+}

@@ -48,8 +48,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if not defined LIBSCRIPT_ROOT_DIR (
-)
 
 set "TEST_TMP_DIR=%LIBSCRIPT_ROOT_DIR%\tests_tmp\test_docker_offline_%RANDOM%"
 if not exist "%TEST_TMP_DIR%" mkdir "%TEST_TMP_DIR%"

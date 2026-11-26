@@ -49,8 +49,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "!LIBSCRIPT_ROOT_DIR!"=="" (
-)
 
 if "%OPENEDX_INSTALL_DIR%"=="" (
     if defined LIBSCRIPT_HOME (

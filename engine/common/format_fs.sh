@@ -18,11 +18,10 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_ffs_caller_dir:-}" ] && SCRIPT_DIR="${_ffs_caller_dir}"; [ -n "${_ffs_caller_this:-}" ] && THIS_FILE="${_ffs_caller_this}"; unset SCRIPT_NAME _ffs_caller_this _ffs_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'

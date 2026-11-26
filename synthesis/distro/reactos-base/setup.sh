@@ -153,7 +153,7 @@ fi
 if [ "$STAMP_MODE" != 'source' ]; then
   _flag='--allow-stub'
   [ "$STRICT_BUILD" = '1' ] && _flag='--strict'
-  STACK='' "${SCRIPT_DIR}/../reactos/base.sh" "$_flag" "$TARGET_SYSROOT" "$REACTOS_VER" "$TARGET_ARCH"
+  STACK='' "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/reactos/base.sh" "$_flag" "$TARGET_SYSROOT" "$REACTOS_VER" "$TARGET_ARCH"
 fi
 
 printf 'mode=%s\ntimestamp=%s\n' "$STAMP_MODE" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"

@@ -43,10 +43,12 @@ sqlite3 "$DB_FILE" "
   CREATE TABLE IF NOT EXISTS files (id INTEGER PRIMARY KEY, version_id INTEGER, url TEXT, checksum TEXT);
 "
 
+set +f
 for comp_path in "$LIBSCRIPT_ROOT_DIR"/_lib/*/*; do
   [ -d "$comp_path" ] || continue
   comp_name="$(basename "$comp_path")"
   sqlite3 "$DB_FILE" "INSERT OR IGNORE INTO components (name) VALUES ('$comp_name');"
 done
+set -f
 
 printf '%s\n' 'Registry database updated successfully.'

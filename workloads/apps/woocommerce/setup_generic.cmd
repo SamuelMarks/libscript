@@ -1,9 +1,9 @@
 @echo off
-:: # setup.cmd
+:: # setup_generic.cmd
 :: ## Overview
-:: Orchestrates the setup and installation process for the WooCommerce e-commerce platform stack.
+:: Native zero-PowerShell Windows Batch setup for the WooCommerce e-commerce plugin stack.
 :: ## Usage
-:: Execute this script to install and configure woocommerce on the local system.
+:: setup_generic.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,11 +48,32 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where powershell >nul 2>&1
-if "%ERRORLEVEL%" NEQ "0" (
-    echo [ERROR] PowerShell not found. Cannot configure WooCommerce on Windows.
-    exit /b 1
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!WOOCOMMERCE_WWWROOT!"=="" set "WOOCOMMERCE_WWWROOT=C:\inetpub\wwwroot\wordpress"
+if "!WOOCOMMERCE_VERSION!"=="" set "WOOCOMMERCE_VERSION=latest"
+
+if exist "!WOOCOMMERCE_WWWROOT!\wp-content\plugins\woocommerce" (
+    echo [INFO] WooCommerce is already installed at !WOOCOMMERCE_WWWROOT!\wp-content\plugins\woocommerce.
+    exit /b 0
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\setup.ps1"
-if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!
+if exist "!LIBSCRIPT_ROOT_DIR!\workloads\apps\wordpress\setup.cmd" (
+    set "WORDPRESS_WWWROOT=!WOOCOMMERCE_WWWROOT!"
+    call "!LIBSCRIPT_ROOT_DIR!\workloads\apps\wordpress\setup.cmd"
+)
+
+if /I "!WOOCOMMERCE_VERSION!"=="latest" (
+    set "DL_URL=https://downloads.wordpress.org/plugin/woocommerce.zip"
+) else (
+    set "DL_URL=https://downloads.wordpress.org/plugin/woocommerce.!WOOCOMMERCE_VERSION!.zip"
+)
+
+set "TMP_ZIP=%TEMP%\woocommerce_!RANDOM!.zip"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "!TMP_ZIP!"
+if errorlevel 1 exit /b 1
+if not exist "!WOOCOMMERCE_WWWROOT!\wp-content\plugins" mkdir "!WOOCOMMERCE_WWWROOT!\wp-content\plugins"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_ZIP!" "!WOOCOMMERCE_WWWROOT!\wp-content\plugins"
+del /f /q "!TMP_ZIP!" 2>nul
+
+echo [OK] WooCommerce setup complete.
+exit /b 0

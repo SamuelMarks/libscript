@@ -1,17 +1,16 @@
 # ## Overview
-# PowerShell script for test.ps1.
+# Implements automated tests to verify the correctness of the Magento stack.
 #
 # ## Usage
-# Execute via PowerShell.
-
-<#
-.SYNOPSIS
-Implements automated tests to verify the correctness of the Magento e-commerce platform stack.
-
-.DESCRIPTION
-Execute this script to run the test suite for magento.
-#>
+# Execute via PowerShell: .\test.ps1
 
 $ErrorActionPreference = "Stop"
-
-Write-Output "magento test pass"
+$wwwRoot = if ($env:MAGENTO_WWWROOT) { $env:MAGENTO_WWWROOT } else { "C:\inetpub\wwwroot\magento" }
+Write-Host "Validating Magento installation..."
+if (Test-Path (Join-Path $wwwRoot "app")) {
+    Write-Output "Magento directory found at $wwwRoot"
+    exit 0
+} else {
+    Write-Error "Magento directory not found at $wwwRoot"
+    exit 1
+}

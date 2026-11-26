@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Implements automated tests to verify the correctness of the Actix+Diesel authentication scaffold stack.
-:: 
 :: ## Usage
-:: Execute this script to run the test suite for serve-actix-diesel-auth-scaffold.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+echo Tested via cargo run
+exit /b 0

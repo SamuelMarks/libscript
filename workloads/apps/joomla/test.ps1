@@ -1,17 +1,16 @@
 # ## Overview
-# PowerShell script for test.ps1.
+# Implements automated tests to verify the correctness of the Joomla stack.
 #
 # ## Usage
-# Execute via PowerShell.
-
-<#
-.SYNOPSIS
-Implements automated tests to verify the correctness of the Joomla CMS stack.
-
-.DESCRIPTION
-Execute this script to run the test suite for joomla.
-#>
+# Execute via PowerShell: .\test.ps1
 
 $ErrorActionPreference = "Stop"
-
-Write-Output "joomla test pass"
+$wwwRoot = if ($env:JOOMLA_WWWROOT) { $env:JOOMLA_WWWROOT } else { "C:\inetpub\wwwroot\joomla" }
+Write-Host "Validating Joomla installation..."
+if (Test-Path (Join-Path $wwwRoot "administrator")) {
+    Write-Output "Joomla directory found at $wwwRoot"
+    exit 0
+} else {
+    Write-Error "Joomla directory not found at $wwwRoot"
+    exit 1
+}

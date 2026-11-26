@@ -32,11 +32,13 @@ if [ -f /usr/lib/libxkbcommon.so ] || [ -f /usr/lib/libxkbcommon.so.0 ] || [ -f 
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libxkbcommon.so.0" ] || [ -f "${_lib_dir}/libxkbcommon.so" ]; then
     exit 0
   fi
 done
+set -f
 
 if command -v pkg >/dev/null 2>&1 && pkg info -e libxkbcommon >/dev/null 2>&1; then
   exit 0

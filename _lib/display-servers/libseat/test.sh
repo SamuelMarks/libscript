@@ -32,11 +32,13 @@ if [ -f /usr/lib/libseat.so ] || [ -f /usr/lib/libseat.so.1 ] || [ -f /usr/lib64
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libseat.so.1" ] || [ -f "${_lib_dir}/libseat.so" ]; then
     exit 0
   fi
 done
+set -f
 
 if command -v pkg >/dev/null 2>&1 && (pkg info -e seatd >/dev/null 2>&1 || pkg info -e libseat >/dev/null 2>&1); then
   exit 0

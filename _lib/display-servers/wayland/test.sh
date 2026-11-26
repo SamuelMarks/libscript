@@ -32,11 +32,13 @@ if [ -f /usr/lib/libwayland-client.so.0 ] || [ -f /usr/lib64/libwayland-client.s
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64; do
   if [ -f "${_lib_dir}/libwayland-client.so.0" ]; then
     exit 0
   fi
 done
+set -f
 
 if command -v wayland-scanner >/dev/null 2>&1; then
   exit 0

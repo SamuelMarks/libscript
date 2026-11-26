@@ -25,3 +25,9 @@ running the setup script.
 
 <!-- BEGIN_PLATFORMS -->
 <!-- END_PLATFORMS -->
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/caches/redis`

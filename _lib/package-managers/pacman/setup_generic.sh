@@ -103,7 +103,7 @@ case "$ACTION" in
         if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
           log_info 'Falling back to system package manager for pacman...'
           libscript_depends 'pacman'
-        elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pacman/"*"${VERSION}"* >/dev/null 2>&1; then
+        elif (set +f; set -- "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pacman/"*"${VERSION}"*; [ -f "${1:-}" ]); then
           log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pacman/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then

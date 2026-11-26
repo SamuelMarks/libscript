@@ -297,6 +297,10 @@ _tier_scan_batch() {
           }
         }
       }
+      if (is_code && rel !~ /^devtools\/audit\// && ($0 ~ /_common[\/\\](pkg_mgr|component_core|setup_base|env_base|service|log|os_info|priv)/ || $0 ~ /_lib[\/\\]databases[\/\\]provision_schema\.(sh|cmd|ps1)/ || $0 ~ /\$libDir[[:space:]]+"databases[\/\\]provision_schema/)) {
+        print "[TIER VIOLATION] [NO_LEGACY_ALIASES] " rel ":" FNR ": Stale pre-T0-T5 _common or moved hook path reference: " $0
+        errs++
+      }
       if (is_frac_target && $0 ~ /Tier[[:space:]]+(1\.5|3\.5)/) {
         split(rel, fp, "/")
         scan_top = fp[1]

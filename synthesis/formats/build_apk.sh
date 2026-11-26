@@ -52,7 +52,7 @@ rm -rf "$WORK_DIR"
 mkdir -p "$WORK_DIR/pkg"
 
 if [ -d "$STAGE_DIR" ]; then
-  cp -R "$STAGE_DIR"/* "$WORK_DIR/pkg/" 2>/dev/null || true
+  (set +f; cp -R "$STAGE_DIR"/* "$WORK_DIR/pkg/" 2>/dev/null || true)
 else
   mkdir -p "$WORK_DIR/pkg/usr/bin"
   printf '#!/bin/sh

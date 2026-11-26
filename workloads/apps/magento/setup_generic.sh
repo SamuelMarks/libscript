@@ -119,12 +119,14 @@ if [ -z "${MAGENTO_PHP_FPM_LISTEN:-}" ]; then
     export MAGENTO_PHP_FPM_LISTEN='unix:/var/run/php-fpm.sock'
   else
     export MAGENTO_PHP_FPM_LISTEN='127.0.0.1:9000'
+    set +f
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
         export MAGENTO_PHP_FPM_LISTEN="unix:$sock"
         break
       fi
     done
+    set -f
   fi
 fi
 

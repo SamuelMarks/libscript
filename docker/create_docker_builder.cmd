@@ -2,10 +2,10 @@
 :: # create_docker_builder.cmd
 ::
 :: ## Overview
-:: Creates a Docker-based builder environment for isolated compilation on Windows.
-:: 
+:: Creates Docker builder scripts (`docker_builder.cmd`, `docker_builder_parallel.cmd`, `docker_builder.sh`, `docker_builder_parallel.sh`) on Windows with full CLI option parity (`-p`, `-s`, `-i`, `-v`, `-h`).
+::
 :: ## Usage
-:: Execute this script to generate docker_builder.cmd for building Docker images.
+:: docker\create_docker_builder.cmd [-p <prefix>] [-s <suffix>] [-i <input_dir>] [-v] [-h]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,26 +51,102 @@ goto :find_root
 :root_found
 
 set "PREFIX=%DOCKER_IMAGE_PREFIX%"
-if "%PREFIX%"=="" set "PREFIX=deploysh-"
+if "!PREFIX!"=="" set "PREFIX=deploysh-"
 set "SUFFIX=%DOCKER_IMAGE_SUFFIX%"
-if "%SUFFIX%"=="" set "SUFFIX=-latest"
-set "BUILDER_OUT=%SCRIPT_DIR%\docker_builder.cmd"
+if "!SUFFIX!"=="" set "SUFFIX=-latest"
+set "INPUT_DIRECTORY="
+set "VERBOSE=0"
+goto :parse_args
 
-echo Generating %BUILDER_OUT%...
-> "%BUILDER_OUT%" (
+:: ## parse_args
+:: Parses command-line flags matching create_docker_builder.sh.
+:parse_args
+if "%~1"=="" goto :args_done
+if /I "%~1"=="--help" goto :show_help_ok
+if /I "%~1"=="-?" goto :show_help_ok
+if /I "%~1"=="/?" goto :show_help_ok
+if /I "%~1"=="-h" goto :show_help_err
+if "%~1"=="-p" ( set "PREFIX=%~2" & shift & shift & goto :parse_args )
+if "%~1"=="-s" ( set "SUFFIX=%~2" & shift & shift & goto :parse_args )
+if "%~1"=="-i" ( set "INPUT_DIRECTORY=%~2" & shift & shift & goto :parse_args )
+if "%~1"=="-v" ( set /a "VERBOSE+=1" & shift & goto :parse_args )
+shift
+goto :parse_args
+
+:: ## args_done
+:: Generates idempotent serial and parallel Docker builder scripts in the target directory.
+:args_done
+if not "!INPUT_DIRECTORY!"=="" pushd "!INPUT_DIRECTORY!"
+
+set "DOCKER_BUILD_ARGS_VAL=%DOCKER_BUILD_ARGS%"
+if "!DOCKER_BUILD_ARGS_VAL!"=="" set "DOCKER_BUILD_ARGS_VAL=--progress="plain" --no-cache"
+
+set "BUILDER_SH=docker_builder.sh"
+set "BUILDER_PAR_SH=docker_builder_parallel.sh"
+set "BUILDER_CMD=docker_builder.cmd"
+set "BUILDER_PAR_CMD=docker_builder_parallel.cmd"
+
+(
+    echo #^^!/bin/sh
+    echo set -feu
+    echo.
+) > "!BUILDER_SH!"
+(
+    echo #^^!/bin/sh
+    echo set -feu
+    echo.
+) > "!BUILDER_PAR_SH!"
+(
     echo @echo off
     echo :: Auto-generated docker build script
     echo.
-)
+) > "!BUILDER_CMD!"
+(
+    echo @echo off
+    echo :: Auto-generated parallel docker build script
+    echo.
+) > "!BUILDER_PAR_CMD!"
 
-for /f "delims=" %%D in ('dir /b /s "%SCRIPT_DIR%\*Dockerfile*" 2^>nul') do (
-    set "df=%%D"
-    set "fname=%%~nxD"
-    if not "!fname!"=="create_docker_builder.cmd" if not "!fname!"=="create_docker_builder.sh" (
-        for %%I in ("!df!\..") do set "dir_name=%%~nxI"
-        >> "%BUILDER_OUT%" echo docker build %DOCKER_BUILD_ARGS% -f "%%D" -t "%PREFIX%!dir_name!%SUFFIX%" .
+for %%F in (docker\*Dockerfile) do (
+    if exist "%%~F" (
+        set "_df_win=%%~F"
+        set "_df_sh=!_df_win:\=/!"
+        set "_base=%%~nxF"
+        for /f "tokens=1,2 delims=." %%A in ("!_base!") do (
+            set "_tag=%%A"
+            set "_name=%%B"
+        )
+        if "!_name!"=="Dockerfile" set "_name="
+        if "!_tag!"=="Dockerfile" (
+            set "_name="
+            set "_tag="
+        )
+        >> "!BUILDER_SH!" echo docker build --file '!_df_sh!' !DOCKER_BUILD_ARGS_VAL! --tag '!PREFIX!!_name!':'!_tag!!SUFFIX!' .
+        >> "!BUILDER_PAR_SH!" echo docker build --file '!_df_sh!' !DOCKER_BUILD_ARGS_VAL! --tag '!PREFIX!!_name!':'!_tag!!SUFFIX!' . ^&
+        >> "!BUILDER_CMD!" echo docker build --file "!_df_win!" !DOCKER_BUILD_ARGS_VAL! --tag "!PREFIX!!_name!":"!_tag!!SUFFIX!" .
+        >> "!BUILDER_PAR_CMD!" echo start "" /b docker build --file "!_df_win!" !DOCKER_BUILD_ARGS_VAL! --tag "!PREFIX!!_name!":"!_tag!!SUFFIX!" .
     )
 )
+>> "!BUILDER_PAR_SH!" echo wait
 
-echo %BUILDER_OUT% generated successfully.
+if not "!INPUT_DIRECTORY!"=="" popd
+if "!VERBOSE!" GEQ "1" echo Generated !BUILDER_CMD!, !BUILDER_PAR_CMD!, !BUILDER_SH!, and !BUILDER_PAR_SH!.
+exit /b 0
+
+:: ## show_help_ok
+:: Displays usage instructions and exits with status 0.
+:show_help_ok
+call :print_usage
+exit /b 0
+
+:: ## show_help_err
+:: Displays usage instructions and exits with status 2 matching getopts -h.
+:show_help_err
+call :print_usage
+exit /b 2
+
+:: ## print_usage
+:: Prints CLI flags for create_docker_builder.cmd.
+:print_usage
+echo Usage: %~nx0 [-p prefix] [-s suffix] [-i input_dir] [-v] [-h] >&2
 exit /b 0

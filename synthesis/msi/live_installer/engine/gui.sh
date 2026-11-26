@@ -64,11 +64,13 @@ done
 probe_gpu_hardware() {
   printf '[INFO] Probing graphics hardware and display pipeline...\n'
   if [ -d /sys/class/drm ]; then
+    set +f
     for card in /sys/class/drm/card[0-9]*; do
       [ -d "$card" ] || continue
       _cname=$(basename "$card")
       printf '       Found DRM device: %s\n' "$_cname"
     done
+    set -f
   fi
 
   if command -v lspci >/dev/null 2>&1; then

@@ -31,8 +31,8 @@ if ((Test-Path (Join-Path $WwwRoot "configuration.php")) -or (Test-Path (Join-Pa
 
 Write-Host "Installing dependencies for Joomla ($WebServer)..."
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$rootDir = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$rootDir = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path } else { $d = $scriptDir; while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) { $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }; $d }
 $libDir = Join-Path $rootDir "_lib"
 
 if ($WebServer -eq "iis") {
@@ -51,7 +51,7 @@ if (-not (Test-Path $WwwRoot)) {
 $tmpZip = Join-Path $env:TEMP "joomla_$(Get-Random).zip"
 $dlUrl = "https://github.com/joomla/joomla-cms/releases/download/$JoomlaVersion/Joomla_$JoomlaVersion-Stable-Full_Package.zip"
 
-& (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
+& (Join-Path $rootDir "engine\common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
 
 if (Test-Path $tmpZip) {
     Expand-Archive -Path $tmpZip -DestinationPath $WwwRoot -Force
@@ -59,7 +59,7 @@ if (Test-Path $tmpZip) {
 }
 
 Write-Host "Configuring Database..."
-$provSchema = Join-Path $libDir "databases\provision_schema.cmd"
+$provSchema = Join-Path $rootDir "engine\hooks\databases\provision_schema.cmd"
 if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     try {
         & $provSchema --engine mysql --host 127.0.0.1 --port 3306 --schema $DbName --user $DbUser --password $DbPass

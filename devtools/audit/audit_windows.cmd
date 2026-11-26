@@ -70,10 +70,18 @@ exit /b 0
 :: Executes the primary orchestration workflow for this script.
 :main
 set "ROOT_DIR=!LIBSCRIPT_ROOT_DIR!"
+if not exist "!ROOT_DIR!\tests_tmp" mkdir "!ROOT_DIR!\tests_tmp"
+
+if /I not "%~1"=="--live" if /I not "%~1"=="--vm" (
+    call "!ROOT_DIR!\devtools\audit\audit_standards.cmd" --all
+    if errorlevel 1 exit /b !errorlevel!
+    echo [PASS] All Windows batch ^(.cmd^) scripts pass static parity and standards audit.
+    exit /b 0
+)
 
 where powershell >nul 2>&1
 if "%ERRORLEVEL%" NEQ "0" (
-    echo [ERROR] PowerShell not found. Cannot audit windows components.
+    echo [ERROR] PowerShell not found. Cannot audit live Windows VM components.
     exit /b 1
 )
 

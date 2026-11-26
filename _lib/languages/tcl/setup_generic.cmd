@@ -179,7 +179,7 @@ if exist "!CACHED_DL!" (
     if errorlevel 1 exit /b 1
 )
 if /i "!URL:~-4!"==".zip" (
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!TMP_FILE!' -DestinationPath '!TARGET_DIR!' -Force"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_FILE!" "!TARGET_DIR!"
     for /d %%D in ("!TARGET_DIR!\*") do (
         if /i not "%%~nxD"=="bin" (
             set "_DO_FLAT=0"

@@ -1,9 +1,9 @@
 @echo off
-:: # setup.cmd
+:: # setup_generic.cmd
 :: ## Overview
-:: Orchestrates the setup and installation process for the Magento e-commerce platform stack.
+:: Native zero-PowerShell Windows Batch setup for the Magento e-commerce stack.
 :: ## Usage
-:: Execute this script to install and configure magento on the local system.
+:: setup_generic.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,11 +48,52 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where powershell >nul 2>&1
-if "%ERRORLEVEL%" NEQ "0" (
-    echo [ERROR] PowerShell not found. Cannot configure Magento on Windows.
-    exit /b 1
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!MAGENTO_VERSION!"=="" set "MAGENTO_VERSION=2.4.7"
+if "!MAGENTO_WWWROOT!"=="" set "MAGENTO_WWWROOT=C:\inetpub\wwwroot\magento"
+if "!MAGENTO_DB_DRIVER!"=="" set "MAGENTO_DB_DRIVER=mariadb"
+if "!MAGENTO_DB_NAME!"=="" set "MAGENTO_DB_NAME=magento"
+if "!MAGENTO_DB_USER!"=="" set "MAGENTO_DB_USER=magento"
+if "!MAGENTO_DB_PASS!"=="" set "MAGENTO_DB_PASS=magento"
+if "!MAGENTO_DB_HOST!"=="" set "MAGENTO_DB_HOST=127.0.0.1"
+if "!MAGENTO_SERVER_NAME!"=="" set "MAGENTO_SERVER_NAME=localhost"
+if "!MAGENTO_LISTEN!"=="" set "MAGENTO_LISTEN=80"
+
+if exist "!MAGENTO_WWWROOT!\app" (
+    echo [INFO] Magento is already installed at !MAGENTO_WWWROOT!.
+    exit /b 0
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\setup.ps1"
-if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!
+if not "!LIBSCRIPT_SKIP_SYSTEM_DEPS!"=="1" (
+    where php >nul 2>&1
+    if errorlevel 1 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install php latest
+)
+
+if not exist "!MAGENTO_WWWROOT!" mkdir "!MAGENTO_WWWROOT!"
+set "TMP_ZIP=%TEMP%\magento_!RANDOM!.zip"
+set "TMP_EXT=%TEMP%\mg_ext_!RANDOM!"
+set "DL_URL=https://github.com/magento/magento2/archive/refs/tags/!MAGENTO_VERSION!.zip"
+
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "!TMP_ZIP!"
+if errorlevel 1 exit /b 1
+if not exist "!TMP_EXT!" mkdir "!TMP_EXT!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_ZIP!" "!TMP_EXT!"
+set "_MG_FLAT=0"
+for /d %%D in ("!TMP_EXT!\magento*") do (
+    if "!_MG_FLAT!"=="0" (
+        xcopy /E /I /Y "%%~fD\*" "!MAGENTO_WWWROOT!\" >nul
+        set "_MG_FLAT=1"
+    )
+)
+if "!_MG_FLAT!"=="0" xcopy /E /I /Y "!TMP_EXT!\*" "!MAGENTO_WWWROOT!\" >nul
+del /f /q "!TMP_ZIP!" 2>nul
+rmdir /s /q "!TMP_EXT!" 2>nul
+
+if /I "!MAGENTO_DB_DRIVER!"=="mariadb" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine mysql --host "!MAGENTO_DB_HOST!" --port 3306 --schema "!MAGENTO_DB_NAME!" --user "!MAGENTO_DB_USER!" --password "!MAGENTO_DB_PASS!"
+) else if /I "!MAGENTO_DB_DRIVER!"=="mysql" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine mysql --host "!MAGENTO_DB_HOST!" --port 3306 --schema "!MAGENTO_DB_NAME!" --user "!MAGENTO_DB_USER!" --password "!MAGENTO_DB_PASS!"
+)
+
+echo [OK] Magento setup complete on !MAGENTO_SERVER_NAME! ^(Port !MAGENTO_LISTEN!^).
+exit /b 0

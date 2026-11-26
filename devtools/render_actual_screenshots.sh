@@ -79,12 +79,15 @@ elif command -v powershell >/dev/null 2>&1 && [ -f "$PS_COMPANION" ]; then
   powershell -NoProfile -ExecutionPolicy Bypass -File "$PS_COMPANION" "$@"
 else
   # Verify assets exist or copy from staging
+  set +f
   for img in "${CC0_MSI_DIR}"/*.png; do
+    set -f
     if [ -f "$img" ]; then
       base_name=$(basename "$img" .png)
       save_rendered_asset "$img" "$base_name"
     fi
   done
+  set -f
 fi
 
 printf '[OK] All sequential screenshots rendered with step prefixes and stored in cc0-assets.\n'

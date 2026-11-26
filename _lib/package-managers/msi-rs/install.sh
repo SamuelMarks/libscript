@@ -206,7 +206,7 @@ case "$ACTION" in
         fi
       elif [ "$os_name" = "linux" ]; then
         is_musl=0
-        if ldd --version 2>&1 | grep -iq musl || ls /lib/ld-musl* >/dev/null 2>&1; then
+        if ldd --version 2>&1 | grep -iq musl || (set +f; set -- /lib/ld-musl*; [ -e "${1:-}" ]); then
           is_musl=1
         fi
         if [ "$arch_name" = "arm64" ] || [ "$arch_name" = "aarch64" ]; then
@@ -233,7 +233,7 @@ case "$ACTION" in
         if libscript_download "${release_url}" "${tmp_archive}"; then
           tar -xzf "${tmp_archive}" -C "${TARGET_DIR}/bin" --strip-components=1 || true
           rm -f "${tmp_archive}"
-          chmod +x "${TARGET_DIR}/bin"/* 2>/dev/null || true
+          (set +f; chmod +x "${TARGET_DIR}/bin"/* 2>/dev/null || true)
           
           if [ -x "${TARGET_DIR}/bin/msi-cli" ]; then
             cp -f "${TARGET_DIR}/bin/msi-cli" "${TARGET_DIR}/bin/msi-rs" 2>/dev/null || true
@@ -303,9 +303,13 @@ case "$ACTION" in
         rm -f "${tmp_archive}"
       else
         log_info "Cloning upstream repository from ${REPO_URL} at ${EXACT_VERSION}..."
-        rm -rf "${build_stage_dir}"
         mkdir -p "$(dirname -- "${build_stage_dir}")"
-        git clone "${REPO_URL}" "${build_stage_dir}"
+        if [ -d "${build_stage_dir}/.git" ]; then
+          (cd "${build_stage_dir}" && git fetch --all --tags 2>/dev/null) || true
+        else
+          rm -rf "${build_stage_dir}"
+          git clone "${REPO_URL}" "${build_stage_dir}"
+        fi
         (cd "${build_stage_dir}" && git checkout "${EXACT_VERSION}" && cargo build --release -p msi-cli)
         install_binaries_from_dir "${build_stage_dir}/target/release"
         rm -rf "${build_stage_dir}"

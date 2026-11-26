@@ -33,3 +33,10 @@ Defined in [`payload.json`](./payload.json) and validated against
 .\libscript.cmd payload compile workloads\payloads\ai\vllm\payload.json --scheduler native
 .\libscript.cmd payload submit workloads\payloads\ai\vllm\payload.json --scheduler native
 ```
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/app-servers/vllm`
+- `_lib/languages/python`

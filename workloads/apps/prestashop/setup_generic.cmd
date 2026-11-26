@@ -1,9 +1,9 @@
 @echo off
-:: # setup.cmd
+:: # setup_generic.cmd
 :: ## Overview
-:: Orchestrates the setup and installation process for the PrestaShop e-commerce platform stack.
+:: Native zero-PowerShell Windows Batch setup for the PrestaShop e-commerce stack.
 :: ## Usage
-:: Execute this script to install and configure prestashop on the local system.
+:: setup_generic.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,11 +48,50 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where powershell >nul 2>&1
-if "%ERRORLEVEL%" NEQ "0" (
-    echo [ERROR] PowerShell not found. Cannot configure PrestaShop on Windows.
-    exit /b 1
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!PRESTASHOP_VERSION!"=="" set "PRESTASHOP_VERSION=8.1.4"
+if "!PRESTASHOP_WWWROOT!"=="" set "PRESTASHOP_WWWROOT=C:\inetpub\wwwroot\prestashop"
+if "!PRESTASHOP_DB_TYPE!"=="" set "PRESTASHOP_DB_TYPE=mariadb"
+if "!PRESTASHOP_DB_NAME!"=="" set "PRESTASHOP_DB_NAME=prestashop"
+if "!PRESTASHOP_DB_USER!"=="" set "PRESTASHOP_DB_USER=prestashop"
+if "!PRESTASHOP_DB_PASS!"=="" set "PRESTASHOP_DB_PASS=prestashop"
+if "!PRESTASHOP_SERVER_NAME!"=="" set "PRESTASHOP_SERVER_NAME=localhost"
+if "!PRESTASHOP_LISTEN!"=="" set "PRESTASHOP_LISTEN=80"
+
+if exist "!PRESTASHOP_WWWROOT!\classes" (
+    echo [INFO] PrestaShop is already installed at !PRESTASHOP_WWWROOT!.
+    exit /b 0
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\setup.ps1"
-if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!
+if not "!LIBSCRIPT_SKIP_SYSTEM_DEPS!"=="1" (
+    where php >nul 2>&1
+    if errorlevel 1 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install php latest
+)
+
+if not exist "!PRESTASHOP_WWWROOT!" mkdir "!PRESTASHOP_WWWROOT!"
+set "TMP_ZIP=%TEMP%\prestashop_!RANDOM!.zip"
+set "TMP_EXT=%TEMP%\ps_ext_!RANDOM!"
+set "DL_URL=https://github.com/PrestaShop/PrestaShop/releases/download/!PRESTASHOP_VERSION!/prestashop_!PRESTASHOP_VERSION!.zip"
+
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "!TMP_ZIP!"
+if errorlevel 1 exit /b 1
+if not exist "!TMP_EXT!" mkdir "!TMP_EXT!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_ZIP!" "!TMP_EXT!"
+if exist "!TMP_EXT!\prestashop.zip" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_EXT!\prestashop.zip" "!PRESTASHOP_WWWROOT!"
+) else (
+    xcopy /E /I /Y "!TMP_EXT!\*" "!PRESTASHOP_WWWROOT!\" >nul
+)
+del /f /q "!TMP_ZIP!" 2>nul
+rmdir /s /q "!TMP_EXT!" 2>nul
+
+if /I "!PRESTASHOP_DB_TYPE!"=="mariadb" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine mysql --host 127.0.0.1 --port 3306 --schema "!PRESTASHOP_DB_NAME!" --user "!PRESTASHOP_DB_USER!" --password "!PRESTASHOP_DB_PASS!"
+) else if /I "!PRESTASHOP_DB_TYPE!"=="mysql" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine mysql --host 127.0.0.1 --port 3306 --schema "!PRESTASHOP_DB_NAME!" --user "!PRESTASHOP_DB_USER!" --password "!PRESTASHOP_DB_PASS!"
+) else if /I "!PRESTASHOP_DB_TYPE!"=="sqlite" (
+    if not exist "!PRESTASHOP_WWWROOT!\var\sqlite" mkdir "!PRESTASHOP_WWWROOT!\var\sqlite"
+)
+
+echo [OK] PrestaShop setup complete on !PRESTASHOP_SERVER_NAME! ^(Port !PRESTASHOP_LISTEN!^).
+exit /b 0

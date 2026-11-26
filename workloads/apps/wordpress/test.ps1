@@ -1,21 +1,16 @@
 # ## Overview
-# PowerShell script for test.ps1.
+# Implements automated tests to verify the correctness of the WordPress stack.
 #
 # ## Usage
-# Execute via PowerShell.
-
-<#
-.SYNOPSIS
-Implements automated tests to verify the correctness of the WordPress CMS stack.
-
-.DESCRIPTION
-Execute this script to run the test suite for wordpress.
-#>
+# Execute via PowerShell: .\test.ps1
 
 $ErrorActionPreference = "Stop"
-$ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
-$healthCmd = Join-Path $ScriptDir "healthcheck.cmd"
-if (Test-Path $healthCmd) {
-    & cmd.exe /c "`"$healthCmd`"" | Out-Null
+$wwwRoot = if ($env:WORDPRESS_WWWROOT) { $env:WORDPRESS_WWWROOT } else { "C:\inetpub\wwwroot\wordpress" }
+Write-Host "Validating WordPress installation..."
+if (Test-Path (Join-Path $wwwRoot "wp-admin")) {
+    Write-Output "WordPress directory found at $wwwRoot"
+    exit 0
+} else {
+    Write-Error "WordPress directory not found at $wwwRoot"
+    exit 1
 }
-Write-Output "wordpress test pass"

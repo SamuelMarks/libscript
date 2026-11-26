@@ -38,8 +38,8 @@ $WebServer = if ($env:ODOO_WEBSERVER) { $env:ODOO_WEBSERVER } else { "iis" }
 
 Write-Host "Installing dependencies for Odoo ($WebServer)..."
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$rootDir = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$rootDir = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path } else { $d = $scriptDir; while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) { $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }; $d }
 $libDir = Join-Path $rootDir "_lib"
 
 if (-not $SkipDeps) {
@@ -81,7 +81,7 @@ $tmpExtDir = Join-Path $env:TEMP "odoo_extract_$(Get-Random)"
 $dlUrl = "https://github.com/odoo/odoo/archive/refs/heads/${OdooVersion}.zip"
 
 if (-not (Test-Path (Join-Path $WwwRoot "odoo-bin"))) {
-    & (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
+    & (Join-Path $rootDir "engine\common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
     New-Item -ItemType Directory -Force -Path $tmpExtDir | Out-Null
     Expand-Archive -Path $tmpZip -DestinationPath $tmpExtDir -Force
     # github zip extracts into a folder like odoo-17.0
@@ -102,7 +102,7 @@ if (Test-Path $reqFile) {
 }
 
 Write-Host "Configuring Database ($DbType)..."
-$provSchema = Join-Path $libDir "databases\provision_schema.cmd"
+$provSchema = Join-Path $rootDir "engine\hooks\databases\provision_schema.cmd"
 if ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
     try {
         & $provSchema --engine postgres --host $DbHost --port $DbPort --schema $DbName --user $DbUser --password $DbPass

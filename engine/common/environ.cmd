@@ -64,6 +64,7 @@ exit /b 0
 :: Exports current environment variables as SET assignments to stdout or a target file.
 :save_environment
 set "_OUT_FILE=%~1"
+if not "!_OUT_FILE!"=="" type nul > "!_OUT_FILE!"
 for /f "delims=" %%L in ('set') do (
     for /f "tokens=1* delims==" %%A in ("%%L") do (
         if not "%%A"=="" (
@@ -80,7 +81,7 @@ exit /b 0
 :: ## clear_environment
 :: Resets non-essential user environment variables while preserving system paths.
 :clear_environment
-set "PATH=%SystemRoot%\system32;%SystemRoot%"
+endlocal & set "PATH=%SystemRoot%\system32;%SystemRoot%"
 exit /b 0
 
 :: ## load_env

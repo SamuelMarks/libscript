@@ -27,9 +27,15 @@ if (Test-Path $pluginDir) {
     exit 0
 }
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$libDir = Resolve-Path (Join-Path $scriptDir "..\..\..")
-$wpSetup = Join-Path $libDir "workloads\apps\wordpress\setup.ps1"
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$rootDir = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) {
+    (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path
+} else {
+    $d = $scriptDir
+    while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) { $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }
+    $d
+}
+$wpSetup = Join-Path $rootDir "workloads\apps\wordpress\setup.cmd"
 
 Write-Host "Running WordPress Setup for WooCommerce..."
 if (Test-Path $wpSetup) {
@@ -45,11 +51,7 @@ if (-not (Test-Path $pluginDir)) {
     }
 
     $tmpZip = Join-Path $env:TEMP "woocommerce_$(Get-Random).zip"
-    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-        curl.exe -sSL "$dlUrl" -o "$tmpZip"
-    } else {
-        libscript_download $dlUrl $tmpZip
-    }
+    & (Join-Path $rootDir "engine\common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
     
     $pluginDest = Join-Path $WwwRoot "wp-content\plugins"
     if (-not (Test-Path $pluginDest)) {

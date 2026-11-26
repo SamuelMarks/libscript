@@ -97,25 +97,28 @@ find_existing_python() {
     if [ -z "$_fep_uv_dir" ] || [ ! -d "$_fep_uv_dir" ]; then
       continue
     fi
+    _fep_found=""
     set +f
     if [ "$_fep_has_patch" -eq 1 ]; then
       for _fep_cand in "$_fep_uv_dir"/cpython-"${PYTHON_VERSION}"-*/bin/python3 "$_fep_uv_dir"/cpython-"${PYTHON_VERSION}"/bin/python3; do
         if [ -x "$_fep_cand" ]; then
-          set -f
-          printf '%s\n' "$_fep_cand"
-          return 0
+          _fep_found="$_fep_cand"
+          break
         fi
       done
     else
       for _fep_cand in "$_fep_uv_dir"/cpython-"${_fep_req}".*/bin/python3; do
         if [ -x "$_fep_cand" ]; then
-          set -f
-          printf '%s\n' "$_fep_cand"
-          return 0
+          _fep_found="$_fep_cand"
+          break
         fi
       done
     fi
     set -f
+    if [ -n "$_fep_found" ]; then
+      printf '%s\n' "$_fep_found"
+      return 0
+    fi
   done
   return 1
 }
@@ -383,7 +386,7 @@ case "$ACTION" in
         else
           libscript_depends 'wget' 'curl' 'xz' 'openssl' 'readline' 'sqlite3' 'gcc' 'make'
         fi
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/"*"${EXACT_VERSION}"* >/dev/null 2>&1; then
+        if (set +f; set -- "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/"*"${EXACT_VERSION}"*; [ -f "${1:-}" ]); then
           log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/" -maxdepth 1 -type f -name "*${EXACT_VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then

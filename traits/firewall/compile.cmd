@@ -57,6 +57,50 @@ netsh advfirewall firewall show rule name="LibScript-Anti-Lockout" >nul 2>&1
 if errorlevel 1 (
     netsh advfirewall firewall add rule name="LibScript-Anti-Lockout" dir=in action=allow protocol=TCP localport=22,5985,5986,3389,8080 >nul 2>&1
 )
+
+set "_FW_COMPS=%*"
+if "!_FW_COMPS!"=="" set "_FW_COMPS=postgres nginx"
+
+where jq >nul 2>&1
+if errorlevel 1 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+)
+
+for %%C in (!_FW_COMPS!) do (
+    call :apply_component_firewall "%%~C"
+)
+exit /b 0
+
+:: ## apply_component_firewall
+:: Queries announce hook metadata for a component and idempotently registers Windows Firewall rules.
+:apply_component_firewall
+set "_COMP=%~1"
+if "!_COMP!"=="" exit /b 0
+set "_ANN_JSON="
+if exist "!LIBSCRIPT_ROOT_DIR!\engine\hooks\run_hooks.cmd" (
+    set "STACK="
+    for /f "delims=" %%J in ('call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\run_hooks.cmd" "!_COMP!" "announce" 2^>nul') do (
+        set "_ANN_JSON=%%J"
+    )
+)
+if "!_ANN_JSON!"=="" exit /b 0
+where jq >nul 2>&1
+if errorlevel 1 exit /b 0
+set "_PORT="
+set "_VIS="
+for /f "delims=" %%P in ('echo !_ANN_JSON!^| jq -r ".port // empty" 2^>nul') do set "_PORT=%%P"
+for /f "delims=" %%V in ('echo !_ANN_JSON!^| jq -r ".visibility // \"private\"" 2^>nul') do set "_VIS=%%V"
+if "!_PORT!"=="" exit /b 0
+if "!_PORT!"=="null" exit /b 0
+set "_RULE=LibScript-!_COMP!-!_PORT!"
+netsh advfirewall firewall show rule name="!_RULE!" >nul 2>&1
+if not errorlevel 1 exit /b 0
+if /I "!_VIS!"=="public" (
+    netsh advfirewall firewall add rule name="!_RULE!" dir=in action=allow protocol=TCP localport=!_PORT! >nul 2>&1
+) else (
+    netsh advfirewall firewall add rule name="!_RULE!" dir=in action=allow protocol=TCP localport=!_PORT! remoteip=LocalSubnet,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16 >nul 2>&1
+)
 exit /b 0
 
 :: ## help

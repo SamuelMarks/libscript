@@ -2,11 +2,11 @@
   "$schema": "../../../schemas/payload.schema.json",
   "name": "ollama",
   "version": "1.0.0",
-  "description": "Standalone local and edge large language model serving runtime powered by _lib/utilities/ollama.",
+  "description": "Standalone local and edge large language model serving runtime powered by _lib/app-servers/ollama.",
   "type": "ai-inference",
   "artifact": {
     "format": "libscript-component",
-    "component": "_lib/utilities/ollama",
+    "component": "_lib/app-servers/ollama",
     "entrypoint": ["ollama", "serve"],
     "args": [],
     "working_dir": "/var/lib/ollama"

@@ -25,3 +25,11 @@ running the setup script.
 
 <!-- BEGIN_PLATFORMS -->
 <!-- END_PLATFORMS -->
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/databases/postgres`
+- `_lib/databases/etcd`
+- `_lib/networking/netctl`

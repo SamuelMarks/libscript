@@ -4,9 +4,7 @@
 # ## Usage
 # DOS_VAGRANT_DIR=/path/to/vagrant/<box> DOS_BOX_NAME=<box> . ./vagrant/_common/dos_ctest_common.sh
 
-set -feu
-_dcc_caller_this="${THIS_FILE:-}"
-_dcc_caller_dir="${SCRIPT_DIR:-}"
+set -feu; _dcc_caller_this="${THIS_FILE:-}"; _dcc_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,8 +18,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    [ -n "$_dcc_caller_this" ] && THIS_FILE="$_dcc_caller_this"
-    [ -n "$_dcc_caller_dir" ] && SCRIPT_DIR="$_dcc_caller_dir"
+    [ -n "${_dcc_caller_this:-}" ] && THIS_FILE="${_dcc_caller_this}"; [ -n "${_dcc_caller_dir:-}" ] && SCRIPT_DIR="${_dcc_caller_dir}"; unset SCRIPT_NAME _dcc_caller_this _dcc_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -224,3 +221,7 @@ JSON_EOF
   mv -f "${DOS_OUT_JSON}.tmp" "${DOS_OUT_JSON}"
   return "$_exit_rc"
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_dcc_caller_dir:-}" ] && SCRIPT_DIR="${_dcc_caller_dir}"; [ -n "${_dcc_caller_this:-}" ] && THIS_FILE="${_dcc_caller_this}"; unset SCRIPT_NAME _dcc_caller_this _dcc_caller_dir || true

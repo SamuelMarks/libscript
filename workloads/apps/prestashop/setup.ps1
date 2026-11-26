@@ -24,8 +24,8 @@ $ServerName = if ($env:PRESTASHOP_SERVER_NAME) { $env:PRESTASHOP_SERVER_NAME } e
 $ListenPort = if ($env:PRESTASHOP_LISTEN) { $env:PRESTASHOP_LISTEN } else { "80" }
 $WebServer = if ($env:PRESTASHOP_WEBSERVER) { $env:PRESTASHOP_WEBSERVER } else { "iis" }
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$rootDir = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$rootDir = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path } else { $d = $scriptDir; while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) { $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }; $d }
 $libDir = Join-Path $rootDir "_lib"
 
 Write-Host "Installing dependencies for PrestaShop ($WebServer)..."
@@ -68,7 +68,7 @@ if (-not (Test-Path (Join-Path $WwwRoot "classes")) -and -not (Test-Path (Join-P
     $tmpExtDir = Join-Path $env:TEMP "ps_extract_$(Get-Random)"
     $dlUrl = "https://github.com/PrestaShop/PrestaShop/releases/download/$PrestashopVersion/prestashop_$PrestashopVersion.zip"
 
-    & (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
+    & (Join-Path $rootDir "engine\common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
     New-Item -ItemType Directory -Force -Path $tmpExtDir | Out-Null
     Expand-Archive -Path $tmpZip -DestinationPath $tmpExtDir -Force
     
@@ -83,7 +83,7 @@ if (-not (Test-Path (Join-Path $WwwRoot "classes")) -and -not (Test-Path (Join-P
 }
 
 Write-Host "Configuring Database..."
-$provSchema = Join-Path $libDir "databases\provision_schema.cmd"
+$provSchema = Join-Path $rootDir "engine\hooks\databases\provision_schema.cmd"
 if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     try {
         & $provSchema --engine mysql --host 127.0.0.1 --port 3306 --schema $DbName --user $DbUser --password $DbPass

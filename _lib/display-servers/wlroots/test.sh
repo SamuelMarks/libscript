@@ -28,15 +28,17 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-if [ -f /usr/lib/libwlroots.so ] || [ -f /usr/lib/libwlroots-0.20.so ] || [ -f /usr/lib/libwlroots-0.19.so ] || [ -f /usr/lib/libwlroots-0.18.so ] || [ -f /usr/local/lib/libwlroots.so ] || ls /usr/local/lib/libwlroots*.so* >/dev/null 2>&1; then
+if [ -f /usr/lib/libwlroots.so ] || [ -f /usr/lib/libwlroots-0.20.so ] || [ -f /usr/lib/libwlroots-0.19.so ] || [ -f /usr/lib/libwlroots-0.18.so ] || [ -f /usr/local/lib/libwlroots.so ] || (set +f; set -- /usr/local/lib/libwlroots*.so*; [ -e "${1:-}" ]); then
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-gnu* /usr/local/lib; do
-  if [ -f "${_lib_dir}/libwlroots.so" ] || [ -f "${_lib_dir}/libwlroots-0.20.so" ] || [ -f "${_lib_dir}/libwlroots-0.19.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so.18" ] || ls "${_lib_dir}"/libwlroots*.so* >/dev/null 2>&1; then
+  if [ -f "${_lib_dir}/libwlroots.so" ] || [ -f "${_lib_dir}/libwlroots-0.20.so" ] || [ -f "${_lib_dir}/libwlroots-0.19.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so.18" ] || (set -- "${_lib_dir}"/libwlroots*.so*; [ -e "${1:-}" ]); then
     exit 0
   fi
 done
+set -f
 
 if command -v pkg >/dev/null 2>&1 && (pkg info -e wlroots >/dev/null 2>&1 || pkg info | grep -q '^wlroots'); then
   exit 0

@@ -157,28 +157,28 @@ exit /b 0
 :: Enforces downward-only tier imports across _lib, traits, infrastructure, and workloads.
 :check_upward_imports
 if exist "!TARGET_ROOT!\_lib\" (
-    findstr /S /R /C:"synthesis[/\\]" /C:"infrastructure[/\\]" /C:"workloads[/\\]" /C:"traits[/\\]" /C:"experiments[/\\]" "!TARGET_ROOT!\_lib\*.sh" "!TARGET_ROOT!\_lib\*.cmd" "!TARGET_ROOT!\_lib\*.json" >nul 2>&1
+    findstr /S /R /C:"synthesis[/\\]" /C:"infrastructure[/\\]" /C:"workloads[/\\]" /C:"traits[/\\]" /C:"experiments[/\\]" "!TARGET_ROOT!\_lib\*.sh" "!TARGET_ROOT!\_lib\*.cmd" "!TARGET_ROOT!\_lib\*.ps1" "!TARGET_ROOT!\_lib\*.json" >nul 2>&1
     if not errorlevel 1 (
         echo [TIER VIOLATION] [TIER_UPWARD_IMPORT] _lib: T1/T2 recipe layer references higher tier. >&2
         set /a ERRORS+=1
     )
 )
 if exist "!TARGET_ROOT!\infrastructure\" (
-    findstr /S /R /C:"workloads[/\\]" /C:"experiments[/\\]" "!TARGET_ROOT!\infrastructure\*.sh" "!TARGET_ROOT!\infrastructure\*.cmd" "!TARGET_ROOT!\infrastructure\*.json" >nul 2>&1
+    findstr /S /R /C:"workloads[/\\]" /C:"experiments[/\\]" "!TARGET_ROOT!\infrastructure\*.sh" "!TARGET_ROOT!\infrastructure\*.cmd" "!TARGET_ROOT!\infrastructure\*.ps1" "!TARGET_ROOT!\infrastructure\*.json" >nul 2>&1
     if not errorlevel 1 (
         echo [TIER VIOLATION] [TIER_UPWARD_IMPORT] infrastructure: T4 infrastructure layer references higher tier. >&2
         set /a ERRORS+=1
     )
 )
 if exist "!TARGET_ROOT!\workloads\" (
-    findstr /S /R /C:"experiments[/\\]" "!TARGET_ROOT!\workloads\*.sh" "!TARGET_ROOT!\workloads\*.cmd" "!TARGET_ROOT!\workloads\*.json" >nul 2>&1
+    findstr /S /R /C:"experiments[/\\]" "!TARGET_ROOT!\workloads\*.sh" "!TARGET_ROOT!\workloads\*.cmd" "!TARGET_ROOT!\workloads\*.ps1" "!TARGET_ROOT!\workloads\*.json" >nul 2>&1
     if not errorlevel 1 (
         echo [TIER VIOLATION] [TIER_UPWARD_IMPORT] workloads: T5 workloads layer references Plane B experiments. >&2
         set /a ERRORS+=1
     )
 )
 if exist "!TARGET_ROOT!\traits\" (
-    findstr /S /R /C:"synthesis[/\\]" /C:"infrastructure[/\\]" /C:"workloads[/\\]" /C:"experiments[/\\]" "!TARGET_ROOT!\traits\*.sh" "!TARGET_ROOT!\traits\*.cmd" "!TARGET_ROOT!\traits\*.json" >nul 2>&1
+    findstr /S /R /C:"synthesis[/\\]" /C:"infrastructure[/\\]" /C:"workloads[/\\]" /C:"experiments[/\\]" "!TARGET_ROOT!\traits\*.sh" "!TARGET_ROOT!\traits\*.cmd" "!TARGET_ROOT!\traits\*.ps1" "!TARGET_ROOT!\traits\*.json" >nul 2>&1
     if not errorlevel 1 (
         echo [TIER VIOLATION] [TIER_UPWARD_IMPORT] traits: Plane A traits references higher tier. >&2
         set /a ERRORS+=1

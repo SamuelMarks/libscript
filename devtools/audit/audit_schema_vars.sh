@@ -245,14 +245,19 @@ audit_manifest_json() {
 # ## audit_root_schemas_and_profiles
 # Validates root OS/RTOS/TFRC/LibScript schemas, scoped variable packs, and profiles/**/*.json files.
 audit_root_schemas_and_profiles() {
-  for _rs in "$BASE_SCHEMA" "$RTOS_SCHEMA" "$EXEC_COMMON_SCHEMA" "$ROOT_LIBSCRIPT_SCHEMA" "$TFRC_POLICY_SCHEMA"; do
+  for _rs in "$BASE_SCHEMA" "$RTOS_SCHEMA" "$EXEC_COMMON_SCHEMA" "$ROOT_LIBSCRIPT_SCHEMA" "$TFRC_POLICY_SCHEMA" "${LIBSCRIPT_ROOT_DIR}/component-scaffold.schema.json"; do
     if [ -f "$_rs" ]; then
       check_schema_descriptions "$_rs" || true
     fi
   done
 
   set +f
-  for _vp in "${VARS_PACK_DIR}"/*.schema.json; do
+  for _vp in \
+    "${VARS_PACK_DIR}"/*.schema.json \
+    "${LIBSCRIPT_ROOT_DIR}/engine/schemas"/*.schema.json \
+    "${LIBSCRIPT_ROOT_DIR}/synthesis/schemas"/*.schema.json \
+    "${LIBSCRIPT_ROOT_DIR}/workloads/schemas"/*.schema.json \
+    "${LIBSCRIPT_ROOT_DIR}/experiments/schemas"/*.schema.json; do
     [ -f "$_vp" ] || continue
     check_schema_descriptions "$_vp" || true
   done

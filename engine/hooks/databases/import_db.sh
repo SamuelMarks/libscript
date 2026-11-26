@@ -104,12 +104,14 @@ while IFS= read -r db_entry <&3; do
     postgres|postgresql)
       if command -v psql >/dev/null 2>&1; then
         _dump_file=""
+        set +f
         for _cand_sql in "${APP_STAGE}/postgres/${DB_NAME}.sql" "${STAGE_DIR}/postgres/${DB_NAME}.sql" "${STAGE_DIR}/postgres/"*.sql; do
           if [ -f "$_cand_sql" ]; then
             _dump_file="$_cand_sql"
             break
           fi
         done
+        set -f
         if [ -n "$_dump_file" ]; then
           _targets="$DB_NAME $(printf '%s\n' "$db_entry" | jq -r '.legacy_names[]? // empty' 2>/dev/null | tr '\n' ' ')"
           for _t_db in $_targets; do
@@ -176,6 +178,7 @@ _imp_cert_store=$(expand_manifest_vars "$_imp_cert_store")
 for _cand_certs in "${APP_STAGE}/certs" "${STAGE_DIR}/certs"; do
   if [ -d "${_cand_certs}/live" ]; then
     mkdir -p "${_imp_cert_store}/live" 2>/dev/null || priv mkdir -p "${_imp_cert_store}/live" 2>/dev/null || true
+    set +f
     for _c_dom_dir in "${_cand_certs}/live"/*; do
       [ -d "$_c_dom_dir" ] || continue
       _c_dom=$(basename "$_c_dom_dir")
@@ -188,6 +191,7 @@ for _cand_certs in "${APP_STAGE}/certs" "${STAGE_DIR}/certs"; do
         chmod 0555 "${_imp_cert_store}/live/${_c_dom}" 2>/dev/null || priv chmod 0555 "${_imp_cert_store}/live/${_c_dom}" 2>/dev/null || true
       }
     done
+    set -f
     break
   fi
 done

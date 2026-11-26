@@ -32,11 +32,13 @@ if [ -f /usr/lib/libvdpau.so ] || [ -f /usr/lib/libvdpau.so.1 ] || [ -f /usr/lib
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libvdpau.so.1" ] || [ -f "${_lib_dir}/libvdpau.so" ]; then
     exit 0
   fi
 done
+set -f
 
 if command -v pkg >/dev/null 2>&1 && pkg info -e libvdpau >/dev/null 2>&1; then
   exit 0

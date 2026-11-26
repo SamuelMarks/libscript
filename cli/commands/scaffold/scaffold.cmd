@@ -222,6 +222,12 @@ if not exist "!_SPEC_FILE!" (
 )
 where jq >nul 2>&1
 if errorlevel 1 (
+    set "_SCAF_LS_HOME=%LIBSCRIPT_HOME%"
+    if "!_SCAF_LS_HOME!"=="" set "_SCAF_LS_HOME=%USERPROFILE%\.libscript"
+    if exist "!_SCAF_LS_HOME!\bin\jq.exe" set "PATH=!_SCAF_LS_HOME!\bin;!PATH!"
+)
+where jq >nul 2>&1
+if errorlevel 1 (
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
     )
@@ -242,18 +248,7 @@ if not errorlevel 1 (
     for /f "usebackq delims=" %%V in (`jq -r ".pkg_mappings.rapps // empty" "!_SPEC_FILE!"`) do set "SCAF_PKG_RAPPS=%%V"
     exit /b 0
 )
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.name) { $j.name }"`) do set "SCAF_NAME=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.title) { $j.title }"`) do set "SCAF_TITLE=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.category) { $j.category }"`) do set "SCAF_CATEGORY=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.description) { $j.description }"`) do set "SCAF_DESCRIPTION=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.binary_name) { $j.binary_name }"`) do set "SCAF_BINARY_NAME=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.default_install_method) { $j.default_install_method }"`) do set "SCAF_INSTALL_METHOD=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.version_scheme) { $j.version_scheme }"`) do set "SCAF_VERSION_SCHEME=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.github_repo) { $j.github_repo }"`) do set "SCAF_GITHUB_REPO=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.download_url_template_unix) { $j.download_url_template_unix }"`) do set "SCAF_URL_UNIX=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.download_url_template_windows) { $j.download_url_template_windows }"`) do set "SCAF_URL_WINDOWS=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.releases_url) { $j.releases_url }"`) do set "SCAF_RELEASES_URL=%%V"
-for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.pkg_mappings -and $j.pkg_mappings.rapps) { $j.pkg_mappings.rapps }"`) do set "SCAF_PKG_RAPPS=%%V"
+for /f "usebackq tokens=1,* delims==" %%K in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.name) { 'SCAF_NAME=' + $j.name }; if ($j.title) { 'SCAF_TITLE=' + $j.title }; if ($j.category) { 'SCAF_CATEGORY=' + $j.category }; if ($j.description) { 'SCAF_DESCRIPTION=' + $j.description }; if ($j.binary_name) { 'SCAF_BINARY_NAME=' + $j.binary_name }; if ($j.default_install_method) { 'SCAF_INSTALL_METHOD=' + $j.default_install_method }; if ($j.version_scheme) { 'SCAF_VERSION_SCHEME=' + $j.version_scheme }; if ($j.github_repo) { 'SCAF_GITHUB_REPO=' + $j.github_repo }; if ($j.download_url_template_unix) { 'SCAF_URL_UNIX=' + $j.download_url_template_unix }; if ($j.download_url_template_windows) { 'SCAF_URL_WINDOWS=' + $j.download_url_template_windows }; if ($j.releases_url) { 'SCAF_RELEASES_URL=' + $j.releases_url }; if ($j.pkg_mappings -and $j.pkg_mappings.rapps) { 'SCAF_PKG_RAPPS=' + $j.pkg_mappings.rapps }"`) do set "%%K=%%L"
 exit /b 0
 
 :: ## run_interactive_prompter

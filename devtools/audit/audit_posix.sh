@@ -126,6 +126,22 @@ _audit_posix_sh_chunk() {
         print "[FAIL] [" prev_f "] Dangling . $SCRIPT_NAME dot-source without preceding SCRIPT_NAME= assignment"
         errs++
       }
+      if (noglob_hit != "" && prev_f !~ /(audit_posix\.sh|audit_standards\.sh|\.tpl)$/) {
+        print "[FAIL] [" prev_f "] Unquoted pathname glob under active `set -f` (`noglob`) without `set +f`: " noglob_hit
+        errs++
+      }
+      if (is_sourced_lib && prev_f !~ /(component_core|compile_host_c89)\.sh$/ && (!lib_saves_caller || !lib_restores_stop || !lib_restores_eof)) {
+        print "[FAIL] [" prev_f "] Sourced shared library / env.sh must save and restore caller THIS_FILE and SCRIPT_DIR on [STOP] and EOF"
+        errs++
+      }
+      if (has_test_eqeq && prev_f !~ /(audit_posix\.sh|audit_standards\.sh|\.tpl)$/) {
+        print "[FAIL] [" prev_f "] Banned bashism: `[ ... == ... ]` string comparison detected; use POSIX `=`"
+        errs++
+      }
+      if (has_nonposix_flag && prev_f !~ /(audit_posix\.sh|audit_standards\.sh|\.tpl)$/) {
+        print "[FAIL] [" prev_f "] Non-POSIX GNU flag (`ps -q`, `sed -r`, or `grep -P`) detected"
+        errs++
+      }
       if (has_crlf) {
         print "[FAIL] [" prev_f "] Literal carriage return (CRLF) detected in POSIX shell script; enforce LF line endings"
         errs++
@@ -141,13 +157,26 @@ _audit_posix_sh_chunk() {
       has_dbl_bracket = 0; has_func_kw = 0; has_source_kw = 0; has_echo_e = 0;
       has_echo_n = 0; has_pipefail = 0; has_dirname_z0 = 0; has_raw_bash = 0; allow_bash_next = 0; has_dangling_sn = 0; sn_armed = 0;
       has_sort_v = 0; has_sed_i = 0; has_gnu_bre = 0; dq_hit = ""; sc2015_hit = ""; has_unguarded_home = 0;
+      has_test_eqeq = 0; has_nonposix_flag = 0;
+      noglob_state = 0; noglob_hit = "";
+      lib_saves_caller = 0; lib_restores_stop = 0; lib_restores_eof = 0; in_stop_win = 0;
       in_hd = 0; hd_delim = ""; hd_tab = 0; saw_ret_line = -10;
-      is_env_sh = (FILENAME ~ /(^|\/)_lib\/[^\/]+\/[^\/]+\/env\.sh$/)
+      is_env_sh = (FILENAME ~ /(^|\/)(_lib|infrastructure|workloads|synthesis)\/[^\/]+\/[^\/]+\/env\.sh$/)
+      is_sourced_lib = (is_env_sh || FILENAME ~ /(^|\/)(engine\/(common|target)|traits\/[^\/]+|(experiments|vagrant)\/_common)\/[^\/]+\.sh$/ || FILENAME ~ /(^|\/)(engine\/common\/_noop\/env|docker\/conf_no_all\.env)\.sh$/)
     }
     { if ($0 ~ /\r$/) has_crlf = 1; sub(/\r$/, "", $0) }
     FNR <= 30 {
       if ($0 !~ /^[[:space:]]*#/ && $0 ~ /set -feu/) has_feu = 1
       if ($0 !~ /^[[:space:]]*#/ && $0 ~ /THIS_FILE=/) has_this = 1
+    }
+    is_sourced_lib && $0 !~ /^[[:space:]]*#/ {
+      if (FNR <= 30 && $0 ~ /SCRIPT_DIR:-?/) lib_saves_caller = 1
+      if ($0 ~ /case "\$\{STACK\+x\}" in/) in_stop_win = 9
+      if (in_stop_win > 0) {
+        if ($0 ~ /SCRIPT_DIR=.*(_caller_dir|_outer_dir|_saved_dir|CALLER_DIR)/) lib_restores_stop = 1
+        in_stop_win--
+      }
+      if (FNR > 24 && $0 ~ /SCRIPT_DIR=.*(_caller_dir|_outer_dir|_saved_dir|CALLER_DIR)/) lib_restores_eof = 1
     }
     {
       if (in_hd) {
@@ -201,6 +230,22 @@ _audit_posix_sh_chunk() {
           }
         }
         if (is_env_sh && $0 ~ /\$HOME([^A-Za-z0-9_]|$)|(\$\{HOME\})/) has_unguarded_home = 1
+        if ($0 !~ /(jq[[:space:]]|awk[[:space:]])/ && $0 ~ /(^|[[:space:];|&(])\[[[:space:]]+(!?[[:space:]]*)?["\x27$A-Za-z0-9_.\/:-]+[[:space:]]+==[[:space:]]/) has_test_eqeq = 1
+        if ($0 ~ /(^|[[:space:];|&(])(ps[[:space:]]+-q|sed[[:space:]]+-r|grep[[:space:]]+-[a-zA-Z]*P)([[:space:]]|$)/) has_nonposix_flag = 1
+        if ($0 !~ /\([[:space:]]*set[[:space:]]+\+[a-zA-Z]*f/) {
+          if ($0 ~ /(^|[[:space:];&(])set[[:space:]]+-[a-zA-Z]*f/) noglob_state = 1
+          if ($0 ~ /(^|[[:space:];&(])set[[:space:]]+\+[a-zA-Z]*f/) noglob_state = 0
+          if (noglob_state && noglob_hit == "") {
+            ng_line = $0
+            gsub(/\x27[^\x27]*\x27/, "SQ", ng_line)
+            gsub(/"[^"]*"/, "DQ", ng_line)
+            sub(/[[:space:]]+#.*$/, "", ng_line)
+            if (ng_line ~ /(^|[[:space:];&(])for[[:space:]]+[A-Za-z_][A-Za-z0-9_]*[[:space:]]+in[[:space:]]+[^;#]*\*/ ||
+                ng_line ~ /(^|[[:space:];|&(])(rm|cp|mv|chmod|chown|ls|cat)[[:space:]][^;#|&]*(\/\*|\*\.[A-Za-z0-9]+|[A-Za-z0-9_-]+\*)/) {
+              noglob_hit = FNR ":" $0
+            }
+          }
+        }
       }
     }
     END {

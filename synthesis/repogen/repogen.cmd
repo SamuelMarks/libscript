@@ -48,8 +48,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if not defined LIBSCRIPT_ROOT_DIR (
-)
 
 set "REPO_BASE=!LIBSCRIPT_ROOT_DIR!\build\packages"
 set "ACTION=all"

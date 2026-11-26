@@ -86,7 +86,7 @@ Push-Location $repoRoot
 try {
     $trackedScripts = $null
     if ((Get-Command git -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath (Join-Path $repoRoot ".git"))) {
-        $trackedScripts = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" 2>$null
+        $trackedScripts = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" ".githooks/pre-commit" 2>$null
     }
     if (-not $trackedScripts) {
         $trackedScripts = Get-ChildItem -Path $repoRoot -Include "*.sh", "*.cmd", "*.bat", "*.ps1" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
@@ -95,7 +95,7 @@ try {
     }
     foreach ($relPath in $trackedScripts) {
         $norm = ([string]$relPath).Replace([char]92, [char]47)
-        if ($norm -match '^(\.git|build|dist|gen|cache|tmp|tests_tmp|node_modules|vagrant)/') {
+        if ($norm -match '^(\.git|build|dist|gen|cache|tmp|tests_tmp|node_modules)/') {
             continue
         }
         $fullPath = Join-Path $repoRoot $relPath
@@ -129,14 +129,21 @@ Get-ChildItem -Path $repoRoot -Filter "*.schema.json" -Recurse -File -ErrorActio
 
 Write-Host "==> Auditing Shell Function Docstring Coverage..."
 $missingShFunctions = 0
-foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".sh" })) {
+foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".sh" -or $_.Name -eq "pre-commit" })) {
     $lines = [System.IO.File]::ReadAllLines($sf.FullName)
     $hasDoc = $false
+    $inHd = $false
+    $hdDelim = ""
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $ln = $lines[$i]
+        if ($inHd) {
+            if ($ln.TrimStart([char]9) -eq $hdDelim) { $inHd = $false; $hdDelim = "" }
+            continue
+        }
         if ($ln -match '^\s*#\s*##\s+') { $hasDoc = $true; continue }
         if ($ln -match '^\s*#') { continue }
-        if ($ln -match '^\s*[a-zA-Z_][a-zA-Z0-9_]*\(\)\s*\{') {
+        $isShFn = ($ln -match '^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\(\)\s*[{(]') -or (($ln -match '^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\(\)\s*$') -and (($i + 1) -lt $lines.Count) -and ($lines[$i + 1] -match '^\s*[{(]'))
+        if ($isShFn) {
             if (-not $hasDoc) {
                 Write-Warning "Missing Shell function docstring in $($sf.FullName):$($i + 1)"
                 $missingShFunctions++
@@ -145,6 +152,10 @@ foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".sh" })) {
             continue
         }
         if ($ln -match '^\s*$') { continue }
+        if ($ln -match '<<-?\s*[\x27"\\]?([A-Za-z_][A-Za-z0-9_]*)[\x27"]?') {
+            $hdDelim = $Matches[1]
+            $inHd = $true
+        }
         $hasDoc = $false
     }
 }
@@ -158,7 +169,7 @@ foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".cmd" -or $_.Ex
         $ln = $lines[$i]
         if ($ln -match '^\s*::\s*##\s+') { $hasDoc = $true; continue }
         if ($ln -match '^\s*::') { continue }
-        if ($ln -match '^\s*:[A-Za-z0-9_.-]+' -and $ln -notmatch '^\s*:(EOF|eof|root_found|find_root)\b') {
+        if ($ln -match '^\s*:[A-Za-z0-9_.-]+' -and $ln -notmatch '^\s*:(EOF|eof)\b') {
             if (-not $hasDoc) {
                 Write-Warning "Missing Batch label docstring in $($sf.FullName):$($i + 1)"
                 $missingCmdLabels++

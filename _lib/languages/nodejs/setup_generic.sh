@@ -89,14 +89,21 @@ find_local_matching_nodejs() {
       return 0
     fi
   fi
+  _flm_hit=""
+  set +f
   for _flm_d in "$_flm_base"/v*; do
     [ -x "${_flm_d}/bin/node" ] || continue
     _flm_v=$("${_flm_d}/bin/node" -v 2>/dev/null | sed 's/^v//' || true)
     if [ "$_flm_req" = "latest" ] || [ "$_flm_req" = "lts" ] || [ "${_flm_v#"${_flm_req}".}" != "$_flm_v" ] || [ "$_flm_v" = "$_flm_req" ]; then
-      EXACT_VERSION="$_flm_v"
-      return 0
+      _flm_hit="$_flm_v"
+      break
     fi
   done
+  set -f
+  if [ -n "$_flm_hit" ]; then
+    EXACT_VERSION="$_flm_hit"
+    return 0
+  fi
   return 1
 }
 

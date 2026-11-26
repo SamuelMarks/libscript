@@ -163,6 +163,7 @@ do_restore() {
   if [ -d "${_stage}/mongodb_dump" ] && command -v mongorestore >/dev/null 2>&1; then
     mongorestore --host 127.0.0.1 --port 27017 --drop "${_stage}/mongodb_dump" >/dev/null 2>&1 || true
   fi
+  set +f
   for _item in "${_stage}"/*; do
     if [ -e "${_item}" ]; then
       _base=$(basename "${_item}")
@@ -174,6 +175,7 @@ do_restore() {
       fi
     fi
   done
+  set -f
 
   rm -rf "${_stage}"
   printf 'Restore applied successfully.\n'

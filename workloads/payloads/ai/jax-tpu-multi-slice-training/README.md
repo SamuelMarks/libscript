@@ -33,3 +33,10 @@ Defined in [`payload.json`](./payload.json) and validated against
 .\libscript.cmd payload compile workloads\payloads\ai\jax-tpu-multi-slice-training\payload.json --scheduler tpu_vm
 .\libscript.cmd payload submit workloads\payloads\ai\jax-tpu-multi-slice-training\payload.json --scheduler tpu_vm
 ```
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/languages/python`
+- `_lib/schedulers/kubernetes`

@@ -519,10 +519,14 @@ case "$ACTION" in
     fi
     if [ "$is_offline" -eq 1 ] && [ -n "${offline_cache_dir:-}" ] && [ -d "${offline_cache_dir}/codebase" ]; then
       log_info 'Extracting codebase from cache/codebase...'
+      set +f
       for _f in "${offline_cache_dir}/codebase"/*openedx-release*.zip "${offline_cache_dir}/codebase"/*edx-platform*.zip "${offline_cache_dir}/codebase"/*.tar.gz; do
+        set -f
         [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/codebase"
       done
+      set -f
       if [ ! -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ]; then
+        set +f
         for _sub in "${OPENEDX_INSTALL_DIR}/codebase"/*; do
           if [ -d "$_sub" ] && [ -f "$_sub/manage.py" ]; then
             cp -Rf "$_sub"/. "${OPENEDX_INSTALL_DIR}/codebase/" 2>/dev/null || true
@@ -530,6 +534,7 @@ case "$ACTION" in
             break
           fi
         done
+        set -f
       fi
     elif [ "${OPENEDX_INSTALL_MODE:-minimal}" = "production" ] && [ ! -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ] && [ ! -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       if ! command -v git >/dev/null 2>&1; then
@@ -555,11 +560,13 @@ case "$ACTION" in
         elif [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/python" ]; then
           _py="${OPENEDX_INSTALL_DIR}/runtimes/python/python"
         fi
+        set +f
         for _w in "${offline_cache_dir}/wheels"/*.whl; do
           if [ -f "$_w" ]; then
             "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" "$_w" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
           fi
         done
+        set -f
       fi
 
       # Step 5: Ingest demo content

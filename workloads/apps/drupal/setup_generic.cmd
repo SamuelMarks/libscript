@@ -1,9 +1,9 @@
 @echo off
-:: # setup.cmd
+:: # setup_generic.cmd
 :: ## Overview
-:: Orchestrates the setup and installation process for the Drupal CMS stack.
+:: Native zero-PowerShell Windows Batch setup for the Drupal CMS stack.
 :: ## Usage
-:: Execute this script to install and configure drupal on the local system.
+:: setup_generic.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,11 +48,60 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where powershell >nul 2>&1
-if "%ERRORLEVEL%" NEQ "0" (
-    echo [ERROR] PowerShell not found. Cannot configure Drupal on Windows.
-    exit /b 1
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!DRUPAL_VERSION!"=="" set "DRUPAL_VERSION=10.2.4"
+if "!DRUPAL_WWWROOT!"=="" set "DRUPAL_WWWROOT=C:\inetpub\wwwroot\drupal"
+if "!DRUPAL_DB_TYPE!"=="" set "DRUPAL_DB_TYPE=mariadb"
+if "!DRUPAL_DB_NAME!"=="" set "DRUPAL_DB_NAME=drupal"
+if "!DRUPAL_DB_USER!"=="" set "DRUPAL_DB_USER=drupal"
+if "!DRUPAL_DB_PASS!"=="" set "DRUPAL_DB_PASS=drupal"
+if "!DRUPAL_SERVER_NAME!"=="" set "DRUPAL_SERVER_NAME=localhost"
+if "!DRUPAL_LISTEN!"=="" set "DRUPAL_LISTEN=80"
+
+if exist "!DRUPAL_WWWROOT!\core" (
+    echo [INFO] Drupal is already installed at !DRUPAL_WWWROOT!.
+    exit /b 0
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\setup.ps1"
-if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!
+if not "!LIBSCRIPT_SKIP_SYSTEM_DEPS!"=="1" (
+    where php >nul 2>&1
+    if errorlevel 1 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install php latest
+    if /I "!DRUPAL_DB_TYPE!"=="mariadb" (
+        where mysql >nul 2>&1
+        if errorlevel 1 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install mariadb latest
+    )
+    if /I "!DRUPAL_DB_TYPE!"=="postgres" (
+        where psql >nul 2>&1
+        if errorlevel 1 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install postgres latest
+    )
+)
+
+if not exist "!DRUPAL_WWWROOT!" mkdir "!DRUPAL_WWWROOT!"
+set "TMP_ZIP=%TEMP%\drupal_!RANDOM!.zip"
+set "TMP_EXT=%TEMP%\dp_ext_!RANDOM!"
+set "DL_URL=https://ftp.drupal.org/files/projects/drupal-!DRUPAL_VERSION!.zip"
+
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "!TMP_ZIP!"
+if errorlevel 1 exit /b 1
+if not exist "!TMP_EXT!" mkdir "!TMP_EXT!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_ZIP!" "!TMP_EXT!"
+if exist "!TMP_EXT!\drupal-!DRUPAL_VERSION!" (
+    xcopy /E /I /Y "!TMP_EXT!\drupal-!DRUPAL_VERSION!\*" "!DRUPAL_WWWROOT!\" >nul
+) else (
+    xcopy /E /I /Y "!TMP_EXT!\*" "!DRUPAL_WWWROOT!\" >nul
+)
+del /f /q "!TMP_ZIP!" 2>nul
+rmdir /s /q "!TMP_EXT!" 2>nul
+
+if /I "!DRUPAL_DB_TYPE!"=="mariadb" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine mysql --host 127.0.0.1 --port 3306 --schema "!DRUPAL_DB_NAME!" --user "!DRUPAL_DB_USER!" --password "!DRUPAL_DB_PASS!"
+) else if /I "!DRUPAL_DB_TYPE!"=="mysql" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine mysql --host 127.0.0.1 --port 3306 --schema "!DRUPAL_DB_NAME!" --user "!DRUPAL_DB_USER!" --password "!DRUPAL_DB_PASS!"
+) else if /I "!DRUPAL_DB_TYPE!"=="postgres" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine postgres --host 127.0.0.1 --port 5432 --schema "!DRUPAL_DB_NAME!" --user "!DRUPAL_DB_USER!" --password "!DRUPAL_DB_PASS!"
+) else if /I "!DRUPAL_DB_TYPE!"=="sqlite" (
+    if not exist "!DRUPAL_WWWROOT!\sites\default\files" mkdir "!DRUPAL_WWWROOT!\sites\default\files"
+)
+
+echo [OK] Drupal setup complete on !DRUPAL_SERVER_NAME! ^(Port !DRUPAL_LISTEN!^).
+exit /b 0

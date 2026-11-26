@@ -66,7 +66,7 @@ do_build() {
       _sub_name="${_mfe_name}"
       [ "${_mfe_name}" = "course-authoring" ] && _sub_name="authoring"
       if [ -f "${_root_dir}/${_sub_name}/index.html" ]; then
-        cp -f "${_root_dir}/${_sub_name}/"* "${_dist_dir}/" 2>/dev/null || true
+        (set +f; cp -f "${_root_dir}/${_sub_name}/"* "${_dist_dir}/" 2>/dev/null || true)
       fi
       break
     fi

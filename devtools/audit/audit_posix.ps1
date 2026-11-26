@@ -93,12 +93,21 @@ function Test-ShellScriptPosix {
     $dqHit = ''
     $sc2015Hit = ''
     $hasUnguardedHome = $false
+    $noglobState = $false
+    $noglobHit = ''
+    $libSavesCaller = $false
+    $libRestoresStop = $false
+    $libRestoresEof = $false
+    $hasTestEqEq = $false
+    $hasNonPosixFlag = $false
 
     $inHd = $false
     $hdDelim = ''
     $hdTab = $false
     $sawRetLine = -10
-    $isEnvSh = ($norm -match '(^|/)_lib/[^/]+/[^/]+/env\.sh$')
+    $inStopWin = 0
+    $isEnvSh = ($norm -match '(^|/)(_lib|infrastructure|workloads|synthesis)/[^/]+/[^/]+/env\.sh$')
+    $isSourcedLib = (($isEnvSh -or $norm -match '(^|/)(engine/(common|target)|traits/[^/]+|(experiments|vagrant)/_common)/[^/]+\.sh$' -or $norm -match '(^|/)(engine/common/_noop/env|docker/conf_no_all\.env)\.sh$') -and $norm -notmatch '(component_core|compile_host_c89)\.sh$')
     $skipStyleRules = ($norm -match '(audit_posix\.sh|audit_standards\.sh|\.tpl)$')
 
     for ($idx = 0; $idx -lt $lines.Length; $idx++) {
@@ -108,6 +117,15 @@ function Test-ShellScriptPosix {
         if ($fnr -le 30 -and $ln -notmatch '^\s*#') {
             if ($ln -match 'set -feu') { $hasFeu = $true }
             if ($ln -match 'THIS_FILE=') { $hasThis = $true }
+        }
+        if ($isSourcedLib -and $ln -notmatch '^\s*#') {
+            if ($fnr -le 30 -and $ln -match 'SCRIPT_DIR:-?\}') { $libSavesCaller = $true }
+            if ($ln -match 'case\s+\x22\$\{STACK\+x\}\x22\s+in') { $inStopWin = 9 }
+            if ($inStopWin -gt 0) {
+                if ($ln -match 'SCRIPT_DIR=.*(_caller_dir|_outer_dir|_saved_dir|CALLER_DIR)') { $libRestoresStop = $true }
+                $inStopWin--
+            }
+            if ($fnr -gt 24 -and $ln -match 'SCRIPT_DIR=.*(_caller_dir|_outer_dir|_saved_dir|CALLER_DIR)') { $libRestoresEof = $true }
         }
 
         if ($inHd) {
@@ -152,6 +170,21 @@ function Test-ShellScriptPosix {
                 }
             }
             if ($isEnvSh -and $ln -match '(\$HOME([^A-Za-z0-9_]|$)|\$\{HOME\})') { $hasUnguardedHome = $true }
+            if (-not $skipStyleRules -and $ln -notmatch '(jq\s|awk\s)' -and $ln -match '(^|[\s;|&(])\[\s+(!?\s*)?[\x22\x27$A-Za-z0-9_./:-]+\s+==\s') { $hasTestEqEq = $true }
+            if (-not $skipStyleRules -and $ln -match '(^|[\s;|&(])(ps\s+-q|sed\s+-r|grep\s+-[a-zA-Z]*P)(\s|$)') { $hasNonPosixFlag = $true }
+            if (-not $skipStyleRules -and $ln -notmatch '\(\s*set\s+\+[a-zA-Z]*f') {
+                if ($ln -match '(^|[\s;&(])set\s+-[a-zA-Z]*f') { $noglobState = $true }
+                if ($ln -match '(^|[\s;&(])set\s+\+[a-zA-Z]*f') { $noglobState = $false }
+                if ($noglobState -and $noglobHit -eq '') {
+                    $ngLine = [regex]::Replace($ln, '\x27[^\x27]*\x27', 'SQ')
+                    $ngLine = [regex]::Replace($ngLine, '\x22[^\x22]*\x22', 'DQ')
+                    $ngLine = [regex]::Replace($ngLine, '\s+#.*$', '')
+                    if ($ngLine -match '(^|[\s;&(])for\s+[A-Za-z_][A-Za-z0-9_]*\s+in\s+[^;#]*\*' -or
+                        $ngLine -match '(^|[\s;|&(])(rm|cp|mv|chmod|chown|ls|cat)\s+[^;#|&]*(/\*|\*\.[A-Za-z0-9]+|[A-Za-z0-9_-]+\*)') {
+                        $noglobHit = "${fnr}:${ln}"
+                    }
+                }
+            }
         }
     }
 
@@ -169,6 +202,10 @@ function Test-ShellScriptPosix {
     if ($dqHit -ne '') { Add-AuditError -File $norm -Message "Unnecessary double quotes where single quotes suffice: $dqHit" }
     if ($sc2015Hit -ne '') { Add-AuditError -File $norm -Message "SC2015-prone `A && B || true` chain detected (use explicit `if ...; then ... || true; fi`): $sc2015Hit" }
     if ($hasUnguardedHome) { Add-AuditError -File $norm -Message 'Unguarded $HOME reference in env.sh; use ${HOME:-/root} for set -u daemon safety' }
+    if ($noglobHit -ne '') { Add-AuditError -File $norm -Message "Unquoted pathname glob under active `set -f` (`noglob`) without `set +f`: $noglobHit" }
+    if ($hasTestEqEq) { Add-AuditError -File $norm -Message 'Banned bashism: `[ ... == ... ]` string comparison detected; use POSIX `=`' }
+    if ($hasNonPosixFlag) { Add-AuditError -File $norm -Message 'Non-POSIX GNU flag (`ps -q`, `sed -r`, or `grep -P`) detected' }
+    if ($isSourcedLib -and (-not $libSavesCaller -or -not $libRestoresStop -or -not $libRestoresEof)) { Add-AuditError -File $norm -Message 'Sourced shared library / env.sh must save and restore caller THIS_FILE and SCRIPT_DIR on [STOP] and EOF' }
 }
 
 # ## Test-BatchHeaderInvariants

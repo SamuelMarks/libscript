@@ -34,3 +34,10 @@ Defined in [`payload.json`](./payload.json) and validated against
 .\libscript.cmd payload compile workloads\payloads\ai\gke-xpk-training\payload.json --scheduler xpk
 .\libscript.cmd payload submit workloads\payloads\ai\gke-xpk-training\payload.json --scheduler xpk
 ```
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/languages/python`
+- `_lib/schedulers/kubernetes`

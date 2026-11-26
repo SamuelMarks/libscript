@@ -152,10 +152,11 @@ case "$OS" in
 esac
 
 log_info 'Dependency resolution complete. C compiler, git, and cmake are ready.'
+THIS_FILE="${_BOOTSTRAP_THIS_FILE:-${THIS_FILE}}"
 SCRIPT_DIR="${_BOOTSTRAP_SCRIPT_DIR}"
 
 # Fetch c-rest-framework
-VENDOR_DIR="${SCRIPT_DIR}/../vendor"
+VENDOR_DIR="${LIBSCRIPT_ROOT_DIR}/libscript-rest-api/vendor"
 mkdir -p "$VENDOR_DIR"
 if [ ! -d "$VENDOR_DIR/c-rest-framework/.git" ]; then
   log_info 'Cloning c-rest-framework into vendor directory...'

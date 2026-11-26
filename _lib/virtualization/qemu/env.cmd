@@ -54,7 +54,6 @@ if "%QEMU_TARGET_ARCHS%"=="" set "QEMU_TARGET_ARCHS=arm,aarch64,riscv32,riscv64,
 
 for %%Q in (
     "C:\Program Files\qemu"
-    "%USERPROFILE%\scoop\apps\qemu\current"
     "%LIBSCRIPT_HOME%\qemu\latest\bin"
 ) do (
     if exist "%%~Q" (
@@ -65,8 +64,5 @@ for %%Q in (
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "qemu"
 
-endlocal & (
-    set "QEMU_TARGET_ARCHS=%QEMU_TARGET_ARCHS%"
-    set "PATH=%PATH%"
-)
+endlocal & set "QEMU_TARGET_ARCHS=%QEMU_TARGET_ARCHS%" & set "PATH=%PATH%"
 exit /b 0

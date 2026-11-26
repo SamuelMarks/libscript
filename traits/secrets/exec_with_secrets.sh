@@ -5,7 +5,7 @@
 # ## Usage
 # ./traits/secrets/exec_with_secrets.sh --source <secrets_file> --template <tpl> --output <out> [-- <cmd> [args...]]
 
-set -feu
+set -feu; _tr_caller_this="${THIS_FILE:-}"; _tr_caller_dir="${SCRIPT_DIR:-}"
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -21,6 +21,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "${_tr_caller_dir:-}" ] && SCRIPT_DIR="${_tr_caller_dir}"; [ -n "${_tr_caller_this:-}" ] && THIS_FILE="${_tr_caller_this}"; unset SCRIPT_NAME _tr_caller_this _tr_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -86,3 +87,9 @@ if [ $# -gt 0 ]; then
   fi
   "$@" --secrets-file "$FIFO_PATH"
 fi
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_tr_caller_dir:-}" ] && SCRIPT_DIR="${_tr_caller_dir}"
+[ -n "${_tr_caller_this:-}" ] && THIS_FILE="${_tr_caller_this}"
+unset SCRIPT_NAME _tr_caller_this _tr_caller_dir || true

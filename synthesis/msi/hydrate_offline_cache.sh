@@ -437,6 +437,7 @@ cp -f "$MANIFEST_PATH" "${CACHE_DIR}/manifest.json"
 
 _hash_file="${CACHE_DIR}/checksums.sha256"
 : > "$_hash_file"
+set +f
 for _f in "${CACHE_DIR}/runtimes"/* "${CACHE_DIR}/databases"/* "${CACHE_DIR}/webservers"/* "${CACHE_DIR}/applications"/* "${CACHE_DIR}/wheels"/* "${CACHE_DIR}/codebase"/*; do
   if [ -f "$_f" ]; then
     _h=$(compute_sha256 "$_f" || true)
@@ -445,6 +446,7 @@ for _f in "${CACHE_DIR}/runtimes"/* "${CACHE_DIR}/databases"/* "${CACHE_DIR}/web
     fi
   fi
 done
+set -f
 
 if [ "$TOTAL_ERRORS" -gt 0 ]; then
   log_error "Offline cache hydration completed with ${TOTAL_ERRORS} failure(s)."

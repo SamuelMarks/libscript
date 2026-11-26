@@ -258,14 +258,16 @@ function Test-RootSchemasAndProfiles {
     .SYNOPSIS
     Validates root schemas, scoped variable packs, wrapper $ref integrity, and profiles/**/*.json files.
     #>
-    foreach ($rs in @($baseSchemaPath, $rtosSchemaPath, $execCommonSchemaPath, $rootLibscriptSchemaPath, $tfrcPolicySchemaPath)) {
+    foreach ($rs in @($baseSchemaPath, $rtosSchemaPath, $execCommonSchemaPath, $rootLibscriptSchemaPath, $tfrcPolicySchemaPath, (Join-Path $repoRoot "component-scaffold.schema.json"))) {
         if (Test-Path -LiteralPath $rs) {
             [void](Test-SchemaDescriptions -SchemaFile $rs)
         }
     }
-    if (Test-Path -LiteralPath $varsPackDir) {
-        Get-ChildItem -LiteralPath $varsPackDir -Filter "*.schema.json" -File | ForEach-Object {
-            [void](Test-SchemaDescriptions -SchemaFile $_.FullName)
+    foreach ($sDir in @($varsPackDir, (Join-Path $repoRoot "engine\schemas"), (Join-Path $repoRoot "synthesis\schemas"), (Join-Path $repoRoot "workloads\schemas"), (Join-Path $repoRoot "experiments\schemas"))) {
+        if (Test-Path -LiteralPath $sDir) {
+            Get-ChildItem -LiteralPath $sDir -Filter "*.schema.json" -File | ForEach-Object {
+                [void](Test-SchemaDescriptions -SchemaFile $_.FullName)
+            }
         }
     }
     if (Test-Path -LiteralPath $baseSchemaPath) {

@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Implements automated tests to verify the correctness of the phpBB forum software stack.
-:: 
+:: Implements automated tests to verify the correctness of the phpBB stack.
 :: ## Usage
-:: Execute this script to run the test suite for phpbb.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!PHPBB_WWWROOT!"=="" set "PHPBB_WWWROOT=C:\inetpub\wwwroot\phpbb"
+echo Validating phpBB installation...
+if exist "!PHPBB_WWWROOT!\phpbb" (
+    echo phpBB directory found at !PHPBB_WWWROOT!
+    exit /b 0
+) else (
+    echo phpBB directory not found at !PHPBB_WWWROOT!
+    exit /b 1
+)

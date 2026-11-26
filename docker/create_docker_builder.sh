@@ -35,13 +35,12 @@ fi
 
 set +f
 
-DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-
 PREFIX="${DOCKER_IMAGE_PREFIX:-deploysh-}"
 SUFFIX="${DOCKER_IMAGE_SUFFIX:--latest}"
 DOCKER_BUILDER='docker_builder.sh'
 DOCKER_BUILDER_CMD='docker_builder.cmd'
 DOCKER_BUILDER_PARALLEL='docker_builder_parallel.sh'
+DOCKER_BUILDER_PARALLEL_CMD='docker_builder_parallel.cmd'
 HEADER_TPL='###################\n#\t\t%s\t#\n###################\n\n'
 HEADER_CMD_TPL=':: ###################\n:: #\t%s #\n:: ###################\n\n'
 
@@ -60,7 +59,7 @@ while getopts 'p:s:i:vh' opt; do
       *) ;;
     esac
 done
-export verbose
+export VERBOSE
 
 shift "$((OPTIND - 1))"
 REMAINING="$*"
@@ -92,7 +91,12 @@ if [ "${INPUT_DIRECTORY-}" ]; then
   cd -- "${INPUT_DIRECTORY}"
 fi
 
-awk 'NR==1,/^fi$/' "${DIR}"'/../engine/common/prelude.sh' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
+: > "${DOCKER_BUILDER}"
+: > "${DOCKER_BUILDER_PARALLEL}"
+printf '@echo off\r\n:: Auto-generated docker build script\r\n\r\n' > "${DOCKER_BUILDER_CMD}"
+printf '@echo off\r\n:: Auto-generated parallel docker build script\r\n\r\n' > "${DOCKER_BUILDER_PARALLEL_CMD}"
+
+awk 'NR==1,/^fi$/' "${LIBSCRIPT_ROOT_DIR}"'/engine/common/prelude.sh' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
 chmod +x "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}"
 
 # ## collect_when_pattern
@@ -191,7 +195,7 @@ for section in "${TOOLCHAIN_DFS}" "${SERVER_DFS}" "${STORAGE_DFS}" "${THIRD_PART
   # shellcheck disable=SC2059
   printf "${HEADER_TPL}" "${res}" | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
   # shellcheck disable=SC2059
-  printf "${HEADER_CMD_TPL}" "${res}" >> "${DOCKER_BUILDER_CMD}"
+  printf "${HEADER_CMD_TPL}" "${res}" | tee -a "${DOCKER_BUILDER_CMD}" "${DOCKER_BUILDER_PARALLEL_CMD}" >/dev/null
   for dockerfile in ${section}; do
     process_one_dockerfile "${dockerfile}" ' &
 ' "'" >> "${DOCKER_BUILDER_PARALLEL}"
@@ -199,9 +203,12 @@ for section in "${TOOLCHAIN_DFS}" "${SERVER_DFS}" "${STORAGE_DFS}" "${THIRD_PART
 ' "'" >> "${DOCKER_BUILDER}"
     process_one_dockerfile "${dockerfile}" '
 ' '"' >> "${DOCKER_BUILDER_CMD}"
+    printf 'start "" /b ' >> "${DOCKER_BUILDER_PARALLEL_CMD}"
+    process_one_dockerfile "${dockerfile}" '
+' '"' >> "${DOCKER_BUILDER_PARALLEL_CMD}"
   done
   printf 'wait\n\n' >> "${DOCKER_BUILDER_PARALLEL}"
-  printf '\n' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_CMD}" >/dev/null
+  printf '\n' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_CMD}" "${DOCKER_BUILDER_PARALLEL_CMD}" >/dev/null
 done
 
 if [ "${INPUT_DIRECTORY-}" ]; then

@@ -220,7 +220,7 @@ if exist "%STAGE_ROOT%" rmdir /s /q "%STAGE_ROOT%" 2>nul
 if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%" 2>nul
 
-if /i "%CURR_VAR%"=="offline" (
+if /i not "%CURR_VAR%"=="offline" goto :variant_online_stage
     set "NEED_HYDRATE=0"
     if /i "%COMPONENT%"=="mysql" (
         set "FOUND_ARC="
@@ -286,7 +286,7 @@ if /i "%CURR_VAR%"=="offline" (
     if "!NEED_HYDRATE!"=="1" (
         echo [INFO] Hydrating %COMPONENT% offline cache before build...
         call "!SCRIPT_DIR!\hydrate_offline_cache.cmd" --manifest "%BUNDLE_JSON%" --cache-dir "%OFFLINE_SOURCE%" --component "%COMPONENT%"
-        if !ERRORLEVEL! neq 0 (
+        if "!ERRORLEVEL!" neq "0" (
             echo [ERROR] Offline cache hydration failed for %COMPONENT%. >&2
             exit /b 1
         )
@@ -531,11 +531,19 @@ if /i "%CURR_VAR%"=="offline" (
     if /i "%COMPONENT%"=="gunicorn" if not exist "%STAGE_ROOT%\bin\python.exe" ( echo [ERROR] Missing staged bin\python.exe >&2 & exit /b 1 )
     if /i "%COMPONENT%"=="nodeenv" if not exist "%STAGE_ROOT%\bin\python.exe" ( echo [ERROR] Missing staged bin\python.exe >&2 & exit /b 1 )
     if /i "%COMPONENT%"=="exim" if not exist "%STAGE_ROOT%\bin\python.exe" ( echo [ERROR] Missing staged bin\python.exe >&2 & exit /b 1 )
-) else (
-    echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"online"} > "%STAGE_ROOT%\component.json"
-    echo LibScript %COMPONENT% Online Standalone Installer > "%STAGE_ROOT%\README.txt"
-    echo LibScript %COMPONENT% Online Stub > "%STAGE_ROOT%\bin\README.txt"
-)
+goto :after_variant_stage
+
+:: ## variant_online_stage
+:: Emits lightweight online stub metadata for the component staging root.
+:variant_online_stage
+echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"online"} > "%STAGE_ROOT%\component.json"
+echo LibScript %COMPONENT% Online Standalone Installer > "%STAGE_ROOT%\README.txt"
+echo LibScript %COMPONENT% Online Stub > "%STAGE_ROOT%\bin\README.txt"
+goto :after_variant_stage
+
+:: ## after_variant_stage
+:: Continues MSI manifest templating and payload harvesting after variant staging.
+:after_variant_stage
 
 set "MAIN_WXS=!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wxs"
 set "PAYLOAD_WXS=!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wxs"

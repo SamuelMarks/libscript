@@ -18,8 +18,18 @@ param(
     [switch]$DryRun
 )
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoRoot = Resolve-Path (Join-Path $scriptDir "..\..")
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+$repoRoot = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) {
+    (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path
+} else {
+    $d = $scriptDir
+    while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) {
+        $p = Split-Path -Parent $d
+        if ($p -eq $d) { break }
+        $d = $p
+    }
+    $d
+}
 
 if (-not (Test-Path $PlanFile)) {
     Write-Error "[ERROR] Execution plan file not found: $PlanFile"
@@ -54,12 +64,12 @@ foreach ($stage in $plan.stages) {
             if ($DryRun) {
                 Write-Host "[DRYRUN] Would execute $($task.action) on $($task.component) and touch $stampFile" -ForegroundColor Magenta
             } else {
-                $execScript = Join-Path $repoRoot "$($task.component)\setup.ps1"
                 $execCmd = Join-Path $repoRoot "$($task.component)\setup.cmd"
-                if (Test-Path $execScript) {
-                    & $execScript $task.action
-                } elseif (Test-Path $execCmd) {
+                $execScript = Join-Path $repoRoot "$($task.component)\setup.ps1"
+                if (Test-Path $execCmd) {
                     & cmd.exe /c "`"$execCmd`" $($task.action)"
+                } elseif (Test-Path $execScript) {
+                    & $execScript $task.action
                 } else {
                     Write-Host "[INFO]  No leaf script for $($task.component); registering step completion" -ForegroundColor DarkGray
                 }

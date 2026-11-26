@@ -27,3 +27,14 @@ running the setup script.
 
 <!-- BEGIN_PLATFORMS -->
 <!-- END_PLATFORMS -->
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/web-servers/caddy`
+- `_lib/databases/mysql`
+- `_lib/databases/mongodb`
+- `_lib/caches/redis`
+- `_lib/search/meilisearch`
+- `workloads/apps/openedx`

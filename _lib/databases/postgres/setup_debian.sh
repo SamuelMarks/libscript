@@ -99,7 +99,7 @@ if ! dpkg -s -- 'postgresql-'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
   fi
   libscript_depends 'postgresql-server-dev-'"${POSTGRES_VERSION}" 'postgresql-'"${POSTGRES_VERSION}"
   # non systemd for environments like docker
-  if [ ! "$(ps -q 1 -o comm=)" = 'systemd' ]; then
+  if [ ! "$(ps -p 1 -o comm= 2>/dev/null || true)" = 'systemd' ]; then
     if [ "${RUNLEVEL-}" ]; then
       export PREVIOUS_RUNLEVEL="${RUNLEVEL}"
     else

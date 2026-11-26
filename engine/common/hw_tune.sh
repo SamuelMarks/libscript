@@ -128,11 +128,13 @@ libscript_detect_hardware() {
   export LIBSCRIPT_HW_SIMD="${LIBSCRIPT_HW_SIMD:-$_simd}"
 
   _nvme=0
+  set +f
   if [ -d /sys/class/nvme ] || ls /dev/nvme* >/dev/null 2>&1; then
     _nvme=1
   elif [ "${UNAME:-}" = "Darwin" ]; then
     _nvme=1
   fi
+  set -f
   export LIBSCRIPT_HW_NVME="${LIBSCRIPT_HW_NVME:-$_nvme}"
   if [ "$LIBSCRIPT_HW_NVME" = "1" ]; then
     export LIBSCRIPT_TUNE_PG_RANDOM_PAGE_COST="${LIBSCRIPT_TUNE_PG_RANDOM_PAGE_COST:-1.1}"
@@ -235,6 +237,7 @@ libscript_detect_ac_power() {
       *'Battery Power'*) _ac_state='false' ;;
     esac
   elif [ "${UNAME:-}" = "Linux" ] && [ -d /sys/class/power_supply ]; then
+    set +f
     for _ps in /sys/class/power_supply/*/online; do
       if [ -r "${_ps}" ]; then
         _val=$(head -n 1 "${_ps}" 2>/dev/null || printf '')
@@ -246,6 +249,7 @@ libscript_detect_ac_power() {
         fi
       fi
     done
+    set -f
   fi
   export LIBSCRIPT_HW_AC_POWER="${LIBSCRIPT_HW_AC_POWER:-${_ac_state}}"
 }

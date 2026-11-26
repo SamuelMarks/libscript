@@ -32,3 +32,10 @@ Defined in [`payload.json`](./payload.json) and validated against
 .\libscript.cmd payload compile workloads\payloads\ai\gcp-gpu-vm\payload.json --scheduler native
 .\libscript.cmd payload submit workloads\payloads\ai\gcp-gpu-vm\payload.json --scheduler native
 ```
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/app-servers/vllm`
+- `infrastructure/providers/gcp-gpu-vm`

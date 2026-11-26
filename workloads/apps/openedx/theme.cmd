@@ -49,8 +49,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "!LIBSCRIPT_ROOT_DIR!"=="" (
-)
 
 if "!OPENEDX_INSTALL_DIR!"=="" (
     if exist "%ProgramData%\OpenEdX\install_dir.txt" (
@@ -129,13 +127,17 @@ if not errorlevel 1 (
         popd
     ) else (
         if exist "%DEST_DIR%" rmdir /s /q "%DEST_DIR%" >nul 2>&1
-        git clone --depth 1 --branch "%BRANCH%" "%GIT_URL%" "%DEST_DIR%" 2>nul
+        git clone --depth 1 --branch "%BRANCH%" "%GIT_URL%" "%DEST_DIR%" 2>nul || git clone --depth 1 "%GIT_URL%" "%DEST_DIR%" 2>nul
+        if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
     )
 ) else (
     if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 )
 
-"%PYTHON_BIN%" -c "import json, os; p = r'%THEME_REGISTRY%'; d = json.load(open(p)) if os.path.exists(p) else {}; d['%THEME_NAME%'] = {'url': '%GIT_URL%', 'branch': '%BRANCH%', 'installed': True, 'active': False}; json.dump(d, open(p, 'w'), indent=2)"
+call :ensure_jq
+for %%D in ("%THEME_REGISTRY%") do if not exist "%%~dpD" mkdir "%%~dpD" >nul 2>&1
+if not exist "%THEME_REGISTRY%" echo {}> "%THEME_REGISTRY%"
+jq --arg n "%THEME_NAME%" --arg u "%GIT_URL%" --arg b "%BRANCH%" ".[$n] = {\"url\": $u, \"branch\": $b, \"installed\": true, \"active\": false}" "%THEME_REGISTRY%" > "%THEME_REGISTRY%.tmp" 2>nul && move /y "%THEME_REGISTRY%.tmp" "%THEME_REGISTRY%" >nul
 echo [INFO] Theme '%THEME_NAME%' installed.
 exit /b 0
 
@@ -187,18 +189,26 @@ if not exist "%DEST_DIR%" (
     echo [ERROR] Theme '%THEME_NAME%' not installed. >&2
     exit /b 1
 )
+call :ensure_jq
 echo [INFO] Applying theme '%THEME_NAME%' to %DOMAIN%...
-"%PYTHON_BIN%" -c "import json, os; p = r'%THEME_REGISTRY%'; d = json.load(open(p)) if os.path.exists(p) else {}; [d[k].update({'active': (k == '%THEME_NAME%')}) for k in d]; json.dump(d, open(p, 'w'), indent=2)"
+if exist "%THEME_REGISTRY%" (
+    jq --arg n "%THEME_NAME%" "with_entries(.value.active = (.key == $n))" "%THEME_REGISTRY%" > "%THEME_REGISTRY%.tmp" 2>nul && move /y "%THEME_REGISTRY%.tmp" "%THEME_REGISTRY%" >nul
+)
 echo [INFO] Theme '%THEME_NAME%' applied.
 exit /b 0
 
 :: ## do_list
 :: Lists all registered Open edX themes and active states.
 :do_list
+call :ensure_jq
 echo ============================================================================
 echo THEME NAME               ACTIVE     SOURCE URL
 echo ----------------------------------------------------------------------------
-"%PYTHON_BIN%" -c "import json, os; p = r'%THEME_REGISTRY%'; d = json.load(open(p)) if os.path.exists(p) else {}; [print(f'{k:<24} {str(v.get("active", False)):<10} {v.get("url", "local"):<40}') for k, v in d.items()]"
+if exist "%THEME_REGISTRY%" (
+    for /f "tokens=1,2,3 delims=	" %%A in ('jq -r "to_entries[] | \"\(.key)\t\(.value.active // false)\t\(.value.url // \"local\")\"" "%THEME_REGISTRY%" 2^>nul') do (
+        echo %%A                      %%B        %%C
+    )
+)
 echo ============================================================================
 exit /b 0
 
@@ -211,10 +221,30 @@ if "%THEME_NAME%"=="" (
     echo [ERROR] Theme name required. >&2
     exit /b 1
 )
+call :ensure_jq
 echo [INFO] Removing theme '%THEME_NAME%'...
 if exist "%THEMES_DIR%\%THEME_NAME%" rmdir /s /q "%THEMES_DIR%\%THEME_NAME%"
-"%PYTHON_BIN%" -c "import json, os; p = r'%THEME_REGISTRY%'; d = json.load(open(p)) if os.path.exists(p) else {}; d.pop('%THEME_NAME%', None); json.dump(d, open(p, 'w'), indent=2)"
+if exist "%THEME_REGISTRY%" (
+    jq --arg n "%THEME_NAME%" "del(.[$n])" "%THEME_REGISTRY%" > "%THEME_REGISTRY%.tmp" 2>nul && move /y "%THEME_REGISTRY%.tmp" "%THEME_REGISTRY%" >nul
+)
 echo [INFO] Theme '%THEME_NAME%' removed.
+exit /b 0
+
+:: ## ensure_jq
+:: Ensures jq is available on PATH via LibScript's _lib\utilities\jq component.
+:ensure_jq
+where jq >nul 2>&1
+if errorlevel 1 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+)
+where jq >nul 2>&1
+if errorlevel 1 (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install jq latest >nul 2>&1
+    set "STACK="
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+)
 exit /b 0
 
 :: ## show_help

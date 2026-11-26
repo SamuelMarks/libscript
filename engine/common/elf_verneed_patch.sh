@@ -21,7 +21,7 @@ case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     [ -n "$_evp_caller_this" ] && THIS_FILE="$_evp_caller_this"
     [ -n "$_evp_caller_dir" ] && SCRIPT_DIR="$_evp_caller_dir"
-    unset SCRIPT_NAME || true
+    unset SCRIPT_NAME _evp_caller_this _evp_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'

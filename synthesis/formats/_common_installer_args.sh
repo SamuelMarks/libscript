@@ -5,9 +5,7 @@
 # ## Usage
 # This script is called by the packaging system and should not be executed manually.
 
-
-set -feu
-__common_installer_args_caller_this="${THIS_FILE:-}"; __common_installer_args_caller_dir="${SCRIPT_DIR:-}"
+set -feu; __common_installer_args_caller_this="${THIS_FILE:-}"; __common_installer_args_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -22,6 +20,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
+    [ -n "${__common_installer_args_caller_dir:-}" ] && SCRIPT_DIR="${__common_installer_args_caller_dir}"; [ -n "${__common_installer_args_caller_this:-}" ] && THIS_FILE="${__common_installer_args_caller_this}"; unset SCRIPT_NAME __common_installer_args_caller_this __common_installer_args_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
@@ -153,6 +152,4 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
-[ -n "${__common_installer_args_caller_dir:-}" ] && SCRIPT_DIR="$__common_installer_args_caller_dir"
-[ -n "${__common_installer_args_caller_this:-}" ] && THIS_FILE="$__common_installer_args_caller_this"
-unset SCRIPT_NAME __common_installer_args_caller_this __common_installer_args_caller_dir || true
+[ -n "${__common_installer_args_caller_dir:-}" ] && SCRIPT_DIR="$__common_installer_args_caller_dir"; [ -n "${__common_installer_args_caller_this:-}" ] && THIS_FILE="$__common_installer_args_caller_this"; unset SCRIPT_NAME __common_installer_args_caller_this __common_installer_args_caller_dir || true

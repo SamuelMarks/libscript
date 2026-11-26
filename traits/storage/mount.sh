@@ -6,8 +6,7 @@
 # ## Usage
 # ./traits/storage/mount.sh <device_or_uuid|--auto-data-disk> <mount_point> [fstype]
 
-set -feu
-
+set -feu; _tr_caller_this="${THIS_FILE:-}"; _tr_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -18,11 +17,10 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_tr_caller_dir:-}" ] && SCRIPT_DIR="${_tr_caller_dir}"; [ -n "${_tr_caller_this:-}" ] && THIS_FILE="${_tr_caller_this}"; unset SCRIPT_NAME _tr_caller_this _tr_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -171,6 +169,7 @@ normalize_mount_ownership() {
   _nmo_grp="${SERVICE_GROUP:-${REMOTE_GROUP:-$_nmo_user}}"
   if [ -n "$_nmo_user" ] && id "$_nmo_user" >/dev/null 2>&1; then
     chown "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || priv chown "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || true
+    set +f
     for _nmo_entry in "${_nmo_dir}"/* "${_nmo_dir}"/.[!.]* "${_nmo_dir}"/..*; do
       [ -e "$_nmo_entry" ] || continue
       case "${_nmo_entry##*/}" in
@@ -178,6 +177,7 @@ normalize_mount_ownership() {
       esac
       chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_entry" 2>/dev/null || priv chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_entry" 2>/dev/null || true
     done
+    set -f
   fi
   restore_ollama_models_ownership "$_nmo_dir" "$_nmo_user" "$_nmo_grp"
   restore_service_data_ownership "$_nmo_dir"
@@ -267,3 +267,9 @@ if [ "$SYSROOT" = "/" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && [ -b "$DEVICE
 fi
 normalize_mount_ownership
 printf '[INFO] Storage trait applied for %s -> %s (%s).\n' "$DEVICE" "$MOUNT_POINT" "$FSTYPE"
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_tr_caller_dir:-}" ] && SCRIPT_DIR="${_tr_caller_dir}"
+[ -n "${_tr_caller_this:-}" ] && THIS_FILE="${_tr_caller_this}"
+unset SCRIPT_NAME _tr_caller_this _tr_caller_dir || true

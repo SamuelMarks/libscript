@@ -96,7 +96,7 @@ if [ ! -d "${PRESTASHOP_WWWROOT}/classes" ] && [ ! -d "${PRESTASHOP_WWWROOT}/ins
   if [ -f "${tmp_dir}/prestashop.zip" ]; then
     priv unzip -q -o "${tmp_dir}/prestashop.zip" -d "${PRESTASHOP_WWWROOT}"
   else
-    priv cp -r "${tmp_dir}/"* "${PRESTASHOP_WWWROOT}/"
+    (set +f; priv cp -r "${tmp_dir}/"* "${PRESTASHOP_WWWROOT}/")
   fi
 
   rm -rf "${tmp_zip}" "${tmp_dir}"
@@ -136,12 +136,14 @@ if [ -z "${PRESTASHOP_PHP_FPM_LISTEN:-}" ]; then
     export PRESTASHOP_PHP_FPM_LISTEN='unix:/var/run/php-fpm.sock'
   else
     export PRESTASHOP_PHP_FPM_LISTEN='127.0.0.1:9000'
+    set +f
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
         export PRESTASHOP_PHP_FPM_LISTEN="unix:$sock"
         break
       fi
     done
+    set -f
   fi
 fi
 

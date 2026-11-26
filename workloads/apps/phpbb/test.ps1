@@ -1,17 +1,16 @@
 # ## Overview
-# PowerShell script for test.ps1.
+# Implements automated tests to verify the correctness of the phpBB stack.
 #
 # ## Usage
-# Execute via PowerShell.
-
-<#
-.SYNOPSIS
-Implements automated tests to verify the correctness of the phpBB forum software stack.
-
-.DESCRIPTION
-Execute this script to run the test suite for phpbb.
-#>
+# Execute via PowerShell: .\test.ps1
 
 $ErrorActionPreference = "Stop"
-
-Write-Output "phpbb test pass"
+$wwwRoot = if ($env:PHPBB_WWWROOT) { $env:PHPBB_WWWROOT } else { "C:\inetpub\wwwroot\phpbb" }
+Write-Host "Validating phpBB installation..."
+if (Test-Path (Join-Path $wwwRoot "phpbb")) {
+    Write-Output "phpBB directory found at $wwwRoot"
+    exit 0
+} else {
+    Write-Error "phpBB directory not found at $wwwRoot"
+    exit 1
+}

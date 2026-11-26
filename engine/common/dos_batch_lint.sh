@@ -139,6 +139,15 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+if (return 0 2>/dev/null); then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_dbl_caller_dir:-}" ] && SCRIPT_DIR="${_dbl_caller_dir}"
+  [ -n "${_dbl_caller_this:-}" ] && THIS_FILE="${_dbl_caller_this}"
+  unset SCRIPT_NAME _dbl_caller_this _dbl_caller_dir || true
+  return 0
+fi
+
 if [ "$#" -eq 0 ]; then
   show_dos_lint_help >&2
   exit 1

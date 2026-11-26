@@ -93,4 +93,5 @@ if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" >nul 2>&1
 if not exist "%BIN_DIR%" mkdir "%BIN_DIR%" >nul 2>&1
 if not exist "%LOGS_DIR%" mkdir "%LOGS_DIR%" >nul 2>&1
 
+endlocal & set "LIBSCRIPT_CACHE_DIR=%LIBSCRIPT_CACHE_DIR%" & set "LIBSCRIPT_DOWNLOAD_DIR=%LIBSCRIPT_DOWNLOAD_DIR%" & set "DOWNLOAD_DIR=%DOWNLOAD_DIR%" & set "LIBSCRIPT_DATA_DIR=%LIBSCRIPT_DATA_DIR%" & set "DATA_DIR=%DATA_DIR%" & set "BIN_DIR=%BIN_DIR%" & set "LIBSCRIPT_LOG_DIR=%LIBSCRIPT_LOG_DIR%" & set "LIBSCRIPT_LOGS_DIR=%LIBSCRIPT_LOGS_DIR%" & set "LOGS_DIR=%LOGS_DIR%"
 exit /b 0

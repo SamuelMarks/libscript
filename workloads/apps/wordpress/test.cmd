@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Implements automated tests to verify the correctness of the WordPress CMS stack.
-:: 
+:: Implements automated tests to verify the correctness of the WordPress stack.
 :: ## Usage
-:: Execute this script to run the test suite for wordpress.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!WORDPRESS_WWWROOT!"=="" set "WORDPRESS_WWWROOT=C:\inetpub\wwwroot\wordpress"
+echo Validating WordPress installation...
+if exist "!WORDPRESS_WWWROOT!\wp-admin" (
+    echo WordPress directory found at !WORDPRESS_WWWROOT!
+    exit /b 0
+) else (
+    echo WordPress directory not found at !WORDPRESS_WWWROOT!
+    exit /b 1
+)

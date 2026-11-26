@@ -62,7 +62,9 @@ main() {
 
   mkdir -p "${_install_dir}/config" "${_install_dir}/data" "${_install_dir}/data/mako_lms" "${_install_dir}/data/mako_cms" "${_install_dir}/data/grades" "${_install_dir}/data/financial-reports" "${_install_dir}/data/django-pyfs/static/django-pyfs" "${_install_dir}/logs" "${_install_dir}/media" "${_install_dir}/media/profile-images" "${_install_dir}/media-private" "${_install_dir}/staticfiles" "${_install_dir}/staticfiles/studio" "${_install_dir}/course_repos" "${_install_dir}/export_course_repos" "${_install_dir}/mfe_dist"
 
+  set +f
   for _sp in "${_install_dir}/.venv/lib"/python*/site-packages "${_install_dir}/.venv/Lib/site-packages"; do
+    set -f
     if [ -d "${_sp}" ]; then
       cat << 'RESEOF' > "${_sp}/resource.py"
 """

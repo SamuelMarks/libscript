@@ -232,6 +232,11 @@ _run_wincheck_chunk() {
   else
     wincheck --severity "${WC_SEVERITY}" --dialect "${WC_DIALECT}" --format "${WC_FORMAT}" "$@"
   fi
+  _wc_long=$(wincheck --dialect "${WC_DIALECT}" --format tty --include CMD1002 "$@" 2>&1 | grep 'The input line is too long' || true)
+  if [ -n "${_wc_long}" ]; then
+    printf '%s\n' "${_wc_long}" >&2
+    return 1
+  fi
 }
 
 # shellcheck disable=SC2329

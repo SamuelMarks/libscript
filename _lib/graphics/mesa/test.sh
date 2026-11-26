@@ -32,11 +32,13 @@ if [ -f /usr/lib/libgbm.so ] || [ -f /usr/lib/libgbm.so.1 ] || [ -f /usr/lib64/l
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libgbm.so.1" ] || [ -f "${_lib_dir}/libGL.so.1" ] || [ -f "${_lib_dir}/libgbm.so" ] || [ -f "${_lib_dir}/libGL.so" ]; then
     exit 0
   fi
 done
+set -f
 
 if command -v pkg >/dev/null 2>&1 && (pkg info -e mesa-libs >/dev/null 2>&1 || pkg info -e mesa-dri >/dev/null 2>&1); then
   exit 0

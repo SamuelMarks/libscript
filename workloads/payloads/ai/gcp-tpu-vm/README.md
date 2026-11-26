@@ -34,3 +34,10 @@ Defined in [`payload.json`](./payload.json) and validated against
 .\libscript.cmd payload compile workloads\payloads\ai\gcp-tpu-vm\payload.json --scheduler tpu_vm
 .\libscript.cmd payload submit workloads\payloads\ai\gcp-tpu-vm\payload.json --scheduler tpu_vm
 ```
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/languages/python`
+- `infrastructure/providers/gcp-tpu-vm`

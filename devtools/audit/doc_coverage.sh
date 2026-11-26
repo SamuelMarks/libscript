@@ -184,31 +184,31 @@ filter_existing_rel_paths() {
 if [ "$STAGED_ONLY" -eq 1 ] && [ -d "${TARGET_ROOT}/.git" ] && git -C "${TARGET_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   : > "${DC_WORK}/ALL_SCRIPTS.TXT"
   : > "${DC_WORK}/SCHEMAS.TXT"
-  git -C "${TARGET_ROOT}" diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM -- '*.sh' '*.cmd' '*.bat' '*.ps1'     | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/'     | while IFS= read -r _sp || [ -n "$_sp" ]; do
+  git -C "${TARGET_ROOT}" diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM -- '*.sh' '*.cmd' '*.bat' '*.ps1' '.githooks/pre-commit'     | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules)/'     | while IFS= read -r _sp || [ -n "$_sp" ]; do
       [ -f "${TARGET_ROOT}/${_sp}" ] && printf '%s\n' "$_sp"
     done > "${DC_WORK}/ALL_SCRIPTS.TXT" || true
   awk -v root="${TARGET_ROOT}/" -v d="${DC_WORK}" '
-    /\.sh$/ { print root $0 >> (d "/SH.TXT"); next }
+    /(\.sh|pre-commit)$/ { print root $0 >> (d "/SH.TXT"); next }
     /\.(cmd|bat)$/ { print root $0 >> (d "/CMD.TXT"); next }
     /\.ps1$/ { print root $0 >> (d "/PS1.TXT"); next }
   ' "${DC_WORK}/ALL_SCRIPTS.TXT"
-  git -C "${TARGET_ROOT}" diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM -- '*.schema.json'     | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/'     | while IFS= read -r _scp || [ -n "$_scp" ]; do
+  git -C "${TARGET_ROOT}" diff --no-ext-diff --no-renames --cached --name-only --diff-filter=ACM -- '*.schema.json'     | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules)/'     | while IFS= read -r _scp || [ -n "$_scp" ]; do
       [ -f "${TARGET_ROOT}/${_scp}" ] && printf '%s/%s\n' "${TARGET_ROOT}" "$_scp"
     done > "${DC_WORK}/SCHEMAS.TXT" || true
 elif [ -d "${TARGET_ROOT}/.git" ] && git -C "${TARGET_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   _raw_scripts="${DC_WORK}/RAW_SCRIPTS.TXT"
-  git -C "${TARGET_ROOT}" ls-files --cached --others --exclude-standard '*.sh' '*.cmd' '*.bat' '*.ps1' \
-    | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/' > "$_raw_scripts" || true
+  git -C "${TARGET_ROOT}" ls-files --cached --others --exclude-standard '*.sh' '*.cmd' '*.bat' '*.ps1' '.githooks/pre-commit' \
+    | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules)/' > "$_raw_scripts" || true
   filter_existing_rel_paths "$_raw_scripts" "${DC_WORK}/ALL_SCRIPTS.TXT"
   awk -v root="${TARGET_ROOT}/" -v d="${DC_WORK}" '
-    /\.sh$/ { print root $0 >> (d "/SH.TXT"); next }
+    /(\.sh|pre-commit)$/ { print root $0 >> (d "/SH.TXT"); next }
     /\.(cmd|bat)$/ { print root $0 >> (d "/CMD.TXT"); next }
     /\.ps1$/ { print root $0 >> (d "/PS1.TXT"); next }
   ' "${DC_WORK}/ALL_SCRIPTS.TXT"
 
   _raw_schemas="${DC_WORK}/RAW_SCHEMAS.TXT"
   git -C "${TARGET_ROOT}" ls-files --cached --others --exclude-standard '*.schema.json' \
-    | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/' > "$_raw_schemas" || true
+    | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules)/' > "$_raw_schemas" || true
   filter_existing_rel_paths "$_raw_schemas" "${DC_WORK}/REL_SCHEMAS.TXT"
   awk -v root="${TARGET_ROOT}/" '{ print root $0 }' "${DC_WORK}/REL_SCHEMAS.TXT" > "${DC_WORK}/SCHEMAS.TXT"
 else
@@ -317,7 +317,22 @@ _dc_schema_batch() {
 # Checks a batch of .sh files for function docstring coverage.
 _dc_sh_batch() {
   awk -v root="${TARGET_ROOT}/" '
-    FNR == 1 { has_doc = 0; prev_hdr = ""; rel = FILENAME; sub("^" root, "", rel) }
+    FNR == 1 { has_doc = 0; pend_fn = 0; prev_hdr = ""; in_hd = 0; hd_delim = ""; hd_tab = 0; rel = FILENAME; sub("^" root, "", rel) }
+    in_hd {
+      t = $0; if (hd_tab) sub(/^\t+/, "", t)
+      if (t == hd_delim) { in_hd = 0; hd_delim = ""; hd_tab = 0 }
+      next
+    }
+    pend_fn > 0 {
+      if ($0 ~ /^[[:space:]]*[{(]/) {
+        if (!has_doc) {
+          print rel "\t" rel ":" pend_fn
+        }
+        has_doc = 0; prev_hdr = ""; pend_fn = 0
+        next
+      }
+      pend_fn = 0
+    }
     /^[[:space:]]*# ## / {
       if ($0 == prev_hdr) {
         print rel "\t" rel ":" FNR " (duplicate docstring header)"
@@ -329,7 +344,7 @@ _dc_sh_batch() {
     /^[[:space:]]*# (Executes .* (functionality|logic)|Performs the .* operation and updates component state)\.$/ {
       print rel "\t" rel ":" FNR " (placeholder docstring)"
     }
-    /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ {
+    /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*\(\)[[:space:]]*[{(]/ {
       if (!has_doc) {
         print rel "\t" rel ":" FNR
       }
@@ -337,8 +352,21 @@ _dc_sh_batch() {
       prev_hdr = ""
       next
     }
+    /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*\(\)[[:space:]]*$/ {
+      pend_fn = FNR
+      next
+    }
     /^[[:space:]]*#/ || NF == 0 { next }
-    { has_doc = 0; prev_hdr = "" }
+    {
+      if (match($0, /<<-?[[:space:]]*[\x27"\\]?[A-Za-z_][A-Za-z0-9_]*[\x27"]?/)) {
+        s = substr($0, RSTART, RLENGTH)
+        hd_tab = (s ~ /^<<-/)
+        sub(/^<<-?[[:space:]]*/, "", s)
+        gsub(/[\x27"\\]/, "", s)
+        if (s != "") { hd_delim = s; in_hd = 1 }
+      }
+      has_doc = 0; prev_hdr = ""
+    }
   ' "$@" >> "${DC_SH_SHARD_OUT}"
 }
 
@@ -370,7 +398,7 @@ _dc_cmd_batch() {
     /^[[:space:]]*:: (Executes .* (functionality|logic)|Performs the .* operation and updates component state)\.$/ {
       print rel "\t" rel ":" FNR " (placeholder docstring)"
     }
-    /^[[:space:]]*:[A-Za-z0-9_.-]+/ && !/^[[:space:]]*:EOF([[:space:]]|$)/ && !/^[[:space:]]*:eof([[:space:]]|$)/ && !/^[[:space:]]*:root_found([[:space:]]|$)/ && !/^[[:space:]]*:find_root([[:space:]]|$)/ {
+    /^[[:space:]]*:[A-Za-z0-9_.-]+/ && !/^[[:space:]]*:EOF([[:space:]]|$)/ && !/^[[:space:]]*:eof([[:space:]]|$)/ {
       if (!has_doc) {
         print rel "\t" rel ":" FNR
       }

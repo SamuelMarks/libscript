@@ -6,8 +6,7 @@
 # ## Usage
 # Execute this script to list or inspect disks:
 #   ./engine/common/disk_discovery.sh [--json | --help | --wipe <device>]
-set -feu
-
+set -feu; _dd_caller_this="${THIS_FILE:-}"; _dd_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -18,11 +17,10 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_dd_caller_dir:-}" ] && SCRIPT_DIR="${_dd_caller_dir}"; [ -n "${_dd_caller_this:-}" ] && THIS_FILE="${_dd_caller_this}"; unset SCRIPT_NAME _dd_caller_this _dd_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -109,12 +107,15 @@ discover_unmounted_data_disk() {
       return 0
     fi
   done
+  set +f
   for _g_cand in /dev/disk/by-id/google-*; do
     if [ -b "$_g_cand" ] && ! is_boot_media "$_g_cand" && ! is_device_mounted "$_g_cand"; then
+      set -f
       printf '%s\n' "$_g_cand"
       return 0
     fi
   done
+  set -f
   return 1
 }
 
@@ -171,6 +172,7 @@ probe_linux_disks() {
   else
     printf '%-15s %-10s %-8s %-6s %-12s %-20s\n' "DEVICE" "SIZE" "TYPE" "ROTA" "TRANSPORT" "MODEL"
     printf '%-15s %-10s %-8s %-6s %-12s %-20s\n' "---------------" "----------" "--------" "------" "------------" "--------------------"
+    set +f
     for block in /sys/block/*; do
       [ -d "$block" ] || continue
       _dev_name=$(basename "$block")
@@ -190,6 +192,7 @@ probe_linux_disks() {
 
       printf '%-15s %-10s %-8s %-6s %-12s %-20s\n' "/dev/${_dev_name}" "${_size_gib}G" "disk" "$_rota" "$_tran" "$_model"
     done
+    set -f
   fi
 }
 
@@ -307,3 +310,9 @@ case "$os_name" in
     exit 1
     ;;
 esac
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_dd_caller_dir:-}" ] && SCRIPT_DIR="${_dd_caller_dir}"
+[ -n "${_dd_caller_this:-}" ] && THIS_FILE="${_dd_caller_this}"
+unset SCRIPT_NAME _dd_caller_this _dd_caller_dir || true

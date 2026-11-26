@@ -500,7 +500,8 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="PROP_OPENEDX_REPO_AUTH_TOKEN" Hidden="yes" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_GIT_DEPTH" Value="1" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_BRANCH_PRESET" Value="Verawood" Secure="yes" /^>
-
+) > "%WXS_FILE%"
+(
     echo     ^<Property Id="PROP_LMS_HOST" Value="localhost" Secure="yes" /^>
     echo     ^<Property Id="PROP_LMS_PORT" Value="8000" Secure="yes" /^>
     echo     ^<Property Id="PROP_CMS_HOST" Value="localhost" Secure="yes" /^>
@@ -558,7 +559,8 @@ setlocal DisableDelayedExpansion
     echo         ^</Directory^>
     echo       ^</Directory^>
     echo     ^</Directory^>
-
+) >> "%WXS_FILE%"
+(
     echo     ^<CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;curl.exe -fsSI --max-time 5 https://github.com &gt;nul 2&gt;&amp;1 &amp;&amp; curl.exe -fsSI --max-time 5 https://pypi.org &gt;nul 2&gt;&amp;1&quot;" Execute="immediate" Return="ignore" /^>
     echo     ^<CustomAction Id="CA_CheckPorts" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;for %%P in (8000 8001 3306 6379 27017 7700) do netstat -ano 2&gt;nul | findstr /R /C:&quot;:%%P .*LISTENING&quot; &gt;nul &amp;&amp; echo [WARN] Port %%P is currently occupied&quot;" Execute="immediate" Return="ignore" /^>
     echo     ^<CustomAction Id="CA_DetectExistingRuntimes" Directory="TARGETDIR" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]\libscript\workloads\apps\openedx\status_runtimes.cmd runtimes/python ^&amp; [INSTALLFOLDER]\libscript\workloads\apps\openedx\status_runtimes.cmd runtimes/nodejs&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
@@ -566,7 +568,11 @@ setlocal DisableDelayedExpansion
     echo     ^<CustomAction Id="CA_AbortNoLicense" Error="Installation aborted: You must accept all bundled software licenses to proceed. Pass AGREE_ALL_LICENSES=1 for unattended installations." /^>
     echo     ^<CustomAction Id="CA_LaunchBrowser" Directory="TARGETDIR" ExeCommand="cmd.exe /c &quot;[LIBSCRIPT_FOLDER]synthesis\msi\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" /^>
     echo     ^<CustomAction Id="CA_LaunchStudio" Directory="TARGETDIR" ExeCommand="cmd.exe /c &quot;[LIBSCRIPT_FOLDER]synthesis\msi\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT]/authoring/home &quot;Open edX Studio&quot;" Return="asyncNoWait" /^>
+) >> "%WXS_FILE%"
+(
     echo     ^<CustomAction Id="InstallOpenEdXService" Directory="TARGETDIR" ExeCommand="cmd.exe /c set &quot;INSTALLFOLDER=[INSTALLFOLDER] &quot;&amp; set &quot;LIBSCRIPT_FOLDER=[LIBSCRIPT_FOLDER] &quot;&amp; set &quot;OPENEDX_INSTALL_DIR=[INSTALLFOLDER] &quot;&amp; set &quot;OPENEDX_DATA_DIR=[DATAFOLDER] &quot;&amp; set &quot;OPENEDX_LOG_DIR=[LOGSFOLDER] &quot;&amp; set &quot;BACKUP_DIR=[BACKUPFOLDER] &quot;&amp; (if exist &quot;[INSTALLFOLDER]\libscript\libscript.cmd&quot; (&quot;[INSTALLFOLDER]\libscript\libscript.cmd&quot; install workloads/apps/openedx --offline=[PROP_OPENEDX_OFFLINE] --install-dir=&quot;[INSTALLFOLDER]&quot; --data-dir=&quot;[DATAFOLDER]&quot; --log-dir=&quot;[LOGSFOLDER]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --use-existing-python=[USE_EXISTING_PYTHON] --use-existing-node=[USE_EXISTING_NODE] --install-mysql=[INSTALL_MYSQL] --install-redis=[INSTALL_REDIS] --install-mongodb=[INSTALL_MONGODB] --install-meilisearch=[INSTALL_MEILISEARCH] --install-lms=[INSTALL_LMS] --install-cms=[INSTALL_CMS] --install-workers=[INSTALL_WORKERS] --import-demo=[IMPORT_DEMO_CONTENT] --enable-mfes=[INSTALL_MFES] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-port=[PROP_MYSQL_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-port=[PROP_MONGODB_PORT] --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --meilisearch-port=[PROP_MEILISEARCH_PORT] --meilisearch-url=&quot;[PROP_MEILISEARCH_CUSTOM_URL]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;) else if exist &quot;[LIBSCRIPT_FOLDER]libscript.cmd&quot; (&quot;[LIBSCRIPT_FOLDER]libscript.cmd&quot; install workloads/apps/openedx --offline=[PROP_OPENEDX_OFFLINE] --install-dir=&quot;[INSTALLFOLDER]&quot; --data-dir=&quot;[DATAFOLDER]&quot; --log-dir=&quot;[LOGSFOLDER]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --use-existing-python=[USE_EXISTING_PYTHON] --use-existing-node=[USE_EXISTING_NODE] --install-mysql=[INSTALL_MYSQL] --install-redis=[INSTALL_REDIS] --install-mongodb=[INSTALL_MONGODB] --install-meilisearch=[INSTALL_MEILISEARCH] --install-lms=[INSTALL_LMS] --install-cms=[INSTALL_CMS] --install-workers=[INSTALL_WORKERS] --import-demo=[IMPORT_DEMO_CONTENT] --enable-mfes=[INSTALL_MFES] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-port=[PROP_MYSQL_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-port=[PROP_MONGODB_PORT] --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --meilisearch-port=[PROP_MEILISEARCH_PORT] --meilisearch-url=&quot;[PROP_MEILISEARCH_CUSTOM_URL]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;) else (&quot;C:\libscript\libscript.cmd&quot; install workloads/apps/openedx --offline=[PROP_OPENEDX_OFFLINE] --install-dir=&quot;[INSTALLFOLDER]&quot; --data-dir=&quot;[DATAFOLDER]&quot; --log-dir=&quot;[LOGSFOLDER]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --use-existing-python=[USE_EXISTING_PYTHON] --use-existing-node=[USE_EXISTING_NODE] --install-mysql=[INSTALL_MYSQL] --install-redis=[INSTALL_REDIS] --install-mongodb=[INSTALL_MONGODB] --install-meilisearch=[INSTALL_MEILISEARCH] --install-lms=[INSTALL_LMS] --install-cms=[INSTALL_CMS] --install-workers=[INSTALL_WORKERS] --import-demo=[IMPORT_DEMO_CONTENT] --enable-mfes=[INSTALL_MFES] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-port=[PROP_MYSQL_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-port=[PROP_MONGODB_PORT] --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --meilisearch-port=[PROP_MEILISEARCH_PORT] --meilisearch-url=&quot;[PROP_MEILISEARCH_CUSTOM_URL]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;)) &gt;&gt; &quot;[LOGSFOLDER]\install_openedx.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
+) >> "%WXS_FILE%"
+(
     echo     ^<CustomAction Id="InstallWorkersService" Directory="TARGETDIR" ExeCommand="cmd.exe /c set &quot;OPENEDX_INSTALL_DIR=[INSTALLFOLDER] &quot;&amp; (if exist &quot;[INSTALLFOLDER]\libscript\workloads\apps\openedx\workers.cmd&quot; (&quot;[INSTALLFOLDER]\libscript\workloads\apps\openedx\workers.cmd&quot; start) else if exist &quot;[LIBSCRIPT_FOLDER]workloads\apps\openedx\workers.cmd&quot; (&quot;[LIBSCRIPT_FOLDER]workloads\apps\openedx\workers.cmd&quot; start) else (&quot;C:\libscript\workloads\apps\openedx\workers.cmd&quot; start)) &gt;&gt; &quot;[LOGSFOLDER]\install_workers.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="StopWorkersService" Directory="TARGETDIR" ExeCommand="cmd.exe /c set &quot;OPENEDX_INSTALL_DIR=[INSTALLFOLDER] &quot;&amp; (if exist &quot;[INSTALLFOLDER]\libscript\workloads\apps\openedx\workers.cmd&quot; (&quot;[INSTALLFOLDER]\libscript\workloads\apps\openedx\workers.cmd&quot; stop) else if exist &quot;[LIBSCRIPT_FOLDER]workloads\apps\openedx\workers.cmd&quot; (&quot;[LIBSCRIPT_FOLDER]workloads\apps\openedx\workers.cmd&quot; stop) else (&quot;C:\libscript\workloads\apps\openedx\workers.cmd&quot; stop))" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="ImportDemoContentAction" Directory="TARGETDIR" ExeCommand="cmd.exe /c set &quot;OPENEDX_INSTALL_DIR=[INSTALLFOLDER] &quot;&amp; set &quot;OPENEDX_DATA_DIR=[DATAFOLDER] &quot;&amp; (if exist &quot;[INSTALLFOLDER]\libscript\workloads\apps\openedx\import_demo.cmd&quot; (&quot;[INSTALLFOLDER]\libscript\workloads\apps\openedx\import_demo.cmd&quot; course &amp;&amp; &quot;[INSTALLFOLDER]\libscript\workloads\apps\openedx\import_demo.cmd&quot; libraries) else if exist &quot;[LIBSCRIPT_FOLDER]workloads\apps\openedx\import_demo.cmd&quot; (&quot;[LIBSCRIPT_FOLDER]workloads\apps\openedx\import_demo.cmd&quot; course &amp;&amp; &quot;[LIBSCRIPT_FOLDER]workloads\apps\openedx\import_demo.cmd&quot; libraries) else (&quot;C:\libscript\workloads\apps\openedx\import_demo.cmd&quot; course &amp;&amp; &quot;C:\libscript\workloads\apps\openedx\import_demo.cmd&quot; libraries)) &gt;&gt; &quot;[LOGSFOLDER]\install_demo.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
@@ -575,7 +581,8 @@ setlocal DisableDelayedExpansion
     echo     ^<CustomAction Id="InstallMySQLService" Directory="TARGETDIR" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]\libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT] &gt;&gt; &quot;[LOGSFOLDER]\install_mysql.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="InstallRedisService" Directory="TARGETDIR" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]\libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT] &gt;&gt; &quot;[LOGSFOLDER]\install_redis.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="UninstallOpenEdXService" Directory="TARGETDIR" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]\libscript\libscript.cmd&quot; uninstall workloads/apps/openedx [PURGE_openedx]" Execute="deferred" Return="ignore" Impersonate="no" /^>
-
+) >> "%WXS_FILE%"
+(
     echo     ^<UI Id="CustomUI"^>
     echo       ^<Property Id="DefaultUIFont" Value="WixUI_Font_Normal" /^>
 
@@ -619,7 +626,8 @@ setlocal DisableDelayedExpansion
     echo         ^</Control^>
     echo       ^</Dialog^>
     if exist "%MULTI_LICENSE_DLGS_FILE%" type "%MULTI_LICENSE_DLGS_FILE%"
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_SetupType" Width="370" Height="270" Title="Choose Installation Mode"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -645,7 +653,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_Features" Width="370" Height="270" Title="Custom Component Selection"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -674,7 +683,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_InstallLocation" Width="370" Height="270" Title="Destination Folders"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -718,7 +728,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_RuntimeSelection" Width="370" Height="270" Title="Runtime Environment Selection"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -751,7 +762,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_OpenEdX_SourceRepo" Width="370" Height="270" Title="Source Repository &amp; Release Selection"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -778,7 +790,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_OpenEdX_Config" Width="370" Height="270" Title="Network and Credentials Configuration"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -813,7 +826,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_OpenEdX_DB" Width="370" Height="270" Title="Relational Database / DBaaS Configuration"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -842,7 +856,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_OpenEdX_CacheSearch" Width="370" Height="270" Title="Cache, Document Store &amp; Search Configuration"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -873,7 +888,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_VerifyReady" Width="370" Height="270" Title="Ready to Install [ProductName]"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
@@ -905,7 +921,8 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
-
+) >> "%WXS_FILE%"
+(
     echo       ^<Dialog Id="Dlg_Exit" Width="370" Height="270" Title="[ProductName] Setup Complete"^>
     if not "%BANNER_SIDE_PATH%"=="" echo         ^<Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" Text="WixUIDialogBmp" /^>
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
@@ -948,7 +965,8 @@ setlocal DisableDelayedExpansion
     echo       ^<Custom Action="StopWorkersService" Before="UninstallOpenEdXService"^>^<![CDATA[REMOVE="ALL"]]^>^</Custom^>
     echo       ^<Custom Action="UninstallOpenEdXService" Before="RemoveFiles"^>REMOVE="ALL"^</Custom^>
     echo     ^</InstallExecuteSequence^>
-
+) >> "%WXS_FILE%"
+(
     echo     ^<Feature Id="ProductFeature" Title="%APP_NAME%" Level="1"^>
     echo       ^<ComponentGroupRef Id="LibscriptHarvestedComponents" /^>
     if /I "%VARIANT%"=="offline" echo       ^<ComponentGroupRef Id="LibscriptOfflineCacheComponents" /^>
@@ -1009,7 +1027,7 @@ setlocal DisableDelayedExpansion
     echo     ^</DirectoryRef^>
     echo   ^</Fragment^>
     echo ^</Wix^>
-) > "%WXS_FILE%"
+) >> "%WXS_FILE%"
 endlocal
 setlocal EnableDelayedExpansion
 

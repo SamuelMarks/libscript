@@ -286,7 +286,7 @@ audit_sh_batch() {
   [ "$#" -gt 0 ] || return 0
   for _asb_f in "$@"; do
     case "$_asb_f" in
-      .githooks/pre-commit|*/.githooks/pre-commit|docker/*|dockerfiles-ssh/*|*.tpl|*Vagrantfile*) ;;
+      .githooks/pre-commit|*/.githooks/pre-commit|dockerfiles-ssh/*|*.tpl|*Vagrantfile*) ;;
       *)
         _asb_cmd="${_asb_f%.sh}.cmd"
         _asb_bat="${_asb_f%.sh}.bat"
@@ -427,7 +427,7 @@ audit_sh_batch() {
       if ($0 ~ /^[[:space:]]*export[[:space:]]+PATH="[^"]+:\$\{?PATH(:-)?\}?"/) {
         unguarded_sh_path = (unguarded_sh_path ? unguarded_sh_path "; " : "") FNR ":" $0
       }
-      if ($0 ~ /(^[[:space:]]*|\$\()(python3?[[:space:]]+-c|node[[:space:]]+-e|perl[[:space:]]+-e|ruby[[:space:]]+-e)[[:space:]]|libscript-allow-interp/) {
+      if ($0 ~ /(^[[:space:]]*|\$\()(python3?[[:space:]]+(-c|-[[:space:]]*<<|<<)|node[[:space:]]+(-e|-[[:space:]]*<<|<<)|perl[[:space:]]+(-e|-[[:space:]]*<<|<<)|ruby[[:space:]]+(-e|-[[:space:]]*<<|<<))|libscript-allow-interp/) {
         interp_hits = (interp_hits ? interp_hits "; " : "") FNR ":" $0
       }
       if ($0 ~ /(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|T1D_|\/mnt\/data\/t1d|\/Volumes\/TOSHIBA_EXT|e4s2024|E4S2024|\/opt\/conda\/envs|\/home\/azureuser|C:\\Users\\vagrant|\.volta\/bin)/) {
@@ -477,7 +477,7 @@ audit_sh_batch() {
       if ($0 !~ /^[[:space:]]*#/ && $0 ~ /(^|[[:space:];|&(])ln[[:space:]]+-s[[:space:]]+[^-\r\n]/) {
         ln_hits = (ln_hits ? ln_hits "; " : "") FNR ":" $0
       }
-      if ($0 ~ /^[[:space:]]*eval([[:space:]]|$)/ || $0 ~ /;[[:space:]]*eval([[:space:]]|$)/) {
+      if ($0 ~ /^[[:space:]]*eval([[:space:]]|$)/ || ($0 !~ /^[[:space:]]*#/ && $0 ~ /(;|\|\||&&|\||\$\()[[:space:]]*eval([[:space:]]|$)/)) {
         eval_hits = (eval_hits ? eval_hits "; " : "") FNR ":" $0
       }
       if ($0 ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
@@ -775,6 +775,7 @@ audit_cmd_batch() {
       dup_label_hits = ""; has_exit_86 = 0; has_setlocal_any = 0; has_endlocal_any = 0;
       unguarded_cmd_path = ""; leak_hits = ""; has_caller_script_dir = 0;
       call_dp0_self_hits = ""; stale_mklink_hits = ""; has_cmd_root = 0; cmd_root_clobber_hits = "";
+      empty_paren_hits = ""; prev_open_paren = 0; prev_open_ln = 0;
       split("", defined_labels); split("", goto_targets); split("", call_targets); split("", chained_if);
     }
     BEGIN {} function emit(f, r, m) { print f "|" r "|" m }
@@ -827,6 +828,7 @@ audit_cmd_batch() {
       if (spliced_guard_hits != "") emit(f, "BATCH_SPLICED_GUARD", "Corrupted if exist guard spliced inside ls-remote block: " spliced_guard_hits)
       if (dup_label_hits != "") emit(f, "BATCH_DUPLICATE_LABEL", "Duplicate label definition(s) in batch script: " dup_label_hits)
       if (missing_lbl_hits != "") emit(f, "BATCH_MISSING_LABEL", "Undefined batch label target: " missing_lbl_hits)
+      if (empty_paren_hits != "") emit(f, "EMPTY_BATCH_BLOCK", "Empty compound parenthesis block `( )` causes fatal cmd.exe syntax error: " empty_paren_hits)
 
       if (f ~ /(^|\/)(mount_target_vfs|umount_target_vfs|runner|provision_disk|format_fs|live_freebsd|live_illumos|live_reactos|live_linux|coinstall_dual_os|install_freebsd|install_illumos|install_reactos|install_linux|multiboot_orchestrator|grub_multiboot|alpine-systemctl|setup_debian|setup_alpine|setup_freebsd|setup_macos|setup_rhel|setup_illumos|setup_linux)\.cmd$/ && !has_exit_86) {
         emit(f, "OPTION_A_PROFORMA", "Option A proforma script must exit with status 86.")
@@ -885,7 +887,7 @@ audit_cmd_batch() {
       }
 
       if (tolower($0) ~ /searchval=;%this_file%;/) has_dup_stack = 1
-      if (tolower($0) ~ /^[[:space:]]*(mkdir|md)[[:space:]]+/ && tolower($0) !~ /if[[:space:]]+not[[:space:]]+exist/) {
+      if (tolower($0) !~ /^[[:space:]]*(::|rem([[:space:]]|$)|echo([[:space:].]|$))/ && (tolower($0) ~ /^[[:space:]]*(mkdir|md)[[:space:]]+/ || tolower($0) ~ /([[:space:]]else|&|&&|\|\|)[[:space:]]+(mkdir|md)[[:space:]]+[^-\r\n]/) && tolower($0) !~ /if[[:space:]]+not[[:space:]]+exist|2>nul/) {
         mkdir_hits = (mkdir_hits ? mkdir_hits "; " : "") FNR ":" $0
       }
       if (tolower($0) ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
@@ -999,6 +1001,15 @@ audit_cmd_batch() {
             }
           }
         }
+      }
+      if (prev_open_paren && $0 ~ /^[[:space:]]*\)[[:space:]]*$/) {
+        empty_paren_hits = (empty_paren_hits ? empty_paren_hits "; " : "") "lines " prev_open_ln "-" FNR
+        prev_open_paren = 0
+      } else if ($0 ~ /\([[:space:]]*$/ && tolower($0) !~ /^[[:space:]]*(::|rem([[:space:]]|$)|echo([[:space:].]|$))/) {
+        prev_open_paren = 1
+        prev_open_ln = FNR
+      } else if ($0 !~ /^[[:space:]]*$/ && tolower($0) !~ /^[[:space:]]*(::|rem([[:space:]]|$))/) {
+        prev_open_paren = 0
       }
       match($0, /^[[:space:]]*/)
       ind = RLENGTH

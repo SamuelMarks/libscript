@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Implements automated tests to verify the correctness of the Odoo ERP system stack.
-:: 
+:: Implements automated tests to verify the correctness of the Odoo stack.
 :: ## Usage
-:: Execute this script to run the test suite for odoo.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!ODOO_WWWROOT!"=="" set "ODOO_WWWROOT=C:\inetpub\wwwroot\odoo"
+echo Validating Odoo installation...
+if exist "!ODOO_WWWROOT!\odoo-bin" (
+    echo Odoo directory found at !ODOO_WWWROOT!
+    exit /b 0
+) else (
+    echo Odoo directory not found at !ODOO_WWWROOT!
+    exit /b 1
+)

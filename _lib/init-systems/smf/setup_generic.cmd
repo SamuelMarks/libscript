@@ -198,7 +198,7 @@ if /i "!URL:~-8!"==".tar.bz2" set "_IS_ARCHIVE=tar"
 if /i "!URL:~-5!"==".tbz2" set "_IS_ARCHIVE=tar"
 if not "!_IS_ARCHIVE!"=="0" (
     if "!_IS_ARCHIVE!"=="zip" (
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!TMP_FILE!' -DestinationPath '!TARGET_DIR!' -Force"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_FILE!" "!TARGET_DIR!"
     ) else (
         tar -xf "!TMP_FILE!" -C "!TARGET_DIR!" --strip-components=1 2>nul || tar -xf "!TMP_FILE!" -C "!TARGET_DIR!"
     )

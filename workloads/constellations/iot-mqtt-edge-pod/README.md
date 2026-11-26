@@ -26,3 +26,13 @@ running the setup script.
 
 <!-- BEGIN_PLATFORMS -->
 <!-- END_PLATFORMS -->
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/message-brokers/mosquitto`
+- `_lib/databases/postgres`
+- `_lib/databases/timescaledb`
+- `_lib/kernel/zephyr`
+- `_lib/kernel/freertos`

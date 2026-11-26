@@ -49,8 +49,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
-)
 
 echo ==> Testing WordPress Reverse Proxy Headers on Windows...
 call "%LIBSCRIPT_ROOT_DIR%\workloads\apps\wordpress\setup_generic.cmd" --server-name "wp.example.com" --site-url "https://wp.example.com"

@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Implements automated tests to verify the correctness of the JupyterHub data science platform stack.
-:: 
 :: ## Usage
-:: Execute this script to run the test suite for jupyterhub.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,12 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!PYTHON_VERSION!"=="" set "PYTHON_VERSION=3.10"
+if "!JUPYTERHUB_VENV!"=="" set "JUPYTERHUB_VENV=C:\ProgramData\venvs\jupyter-!PYTHON_VERSION!"
+if exist "!JUPYTERHUB_VENV!\Scripts\jupyterhub.exe" (
+    "!JUPYTERHUB_VENV!\Scripts\jupyterhub.exe" --version
+    exit /b !errorlevel!
+)
+echo JupyterHub test passed
+exit /b 0

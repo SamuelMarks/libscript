@@ -32,11 +32,13 @@ if [ -f /usr/lib/libdrm.so ] || [ -f /usr/lib/libdrm.so.2 ] || [ -f /usr/lib64/l
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libdrm.so.2" ] || [ -f "${_lib_dir}/libdrm.so" ]; then
     exit 0
   fi
 done
+set -f
 
 if command -v pkg >/dev/null 2>&1 && pkg info -e libdrm >/dev/null 2>&1; then
   exit 0

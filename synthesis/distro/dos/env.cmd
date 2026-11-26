@@ -51,14 +51,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if /I "env"=="setup" (
-    set "STACK="
-    call "!SCRIPT_DIR!\assemble.cmd"
-    exit /b !errorlevel!
-)
-if /I "env"=="setup_generic" (
-    set "STACK="
-    call "!SCRIPT_DIR!\assemble.cmd"
-    exit /b !errorlevel!
-)
+endlocal
 exit /b 0

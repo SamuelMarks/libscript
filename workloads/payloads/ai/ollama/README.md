@@ -32,3 +32,9 @@ Defined in [`payload.json`](./payload.json) and validated against
 .\libscript.cmd payload compile workloads\payloads\ai\ollama\payload.json --scheduler native
 .\libscript.cmd payload submit workloads\payloads\ai\ollama\payload.json --scheduler native
 ```
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `_lib/app-servers/ollama`

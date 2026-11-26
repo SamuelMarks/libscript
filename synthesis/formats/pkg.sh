@@ -185,9 +185,11 @@ EOF_SCRIPT
       done
 
       SYNTH_ARGS=""
+      set +f
       for p in "$PKG_STAGE/packages/"*.pkg; do
         [ -f "$p" ] && SYNTH_ARGS="$SYNTH_ARGS --package $p"
       done
+      set -f
       if command -v productbuild >/dev/null 2>&1 && [ -n "$SYNTH_ARGS" ]; then
         # shellcheck disable=SC2086
         productbuild --synthesize $SYNTH_ARGS "$PKG_STAGE/Distribution.xml"

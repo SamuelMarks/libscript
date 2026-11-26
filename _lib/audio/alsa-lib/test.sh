@@ -32,11 +32,13 @@ if [ -f /usr/lib/libasound.so ] || [ -f /usr/lib/libasound.so.2 ] || [ -f /usr/l
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libasound.so.2" ] || [ -f "${_lib_dir}/libasound.so" ]; then
     exit 0
   fi
 done
+set -f
 
 if command -v apk >/dev/null 2>&1 && apk info -e alsa-lib >/dev/null 2>&1; then
   exit 0

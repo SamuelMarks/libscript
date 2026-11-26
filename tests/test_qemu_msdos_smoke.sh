@@ -51,11 +51,13 @@ TEST_WORK=$(mktemp -d "${TMPDIR:-/tmp}/ls_qemu_dos.XXXXXX")
 # ## cleanup_smoke
 # Terminates any ephemeral QEMU processes spawned during the smoke run and removes TEST_WORK.
 cleanup_smoke() {
+  set +f
   for _pid_file in "${TEST_WORK}"/*.pid; do
     if [ -f "$_pid_file" ]; then
       kill "$(cat "$_pid_file" 2>/dev/null || true)" 2>/dev/null || true
     fi
   done
+  set -f
   rm -rf "${TEST_WORK}" 2>/dev/null || true
 }
 trap 'cleanup_smoke' EXIT INT TERM

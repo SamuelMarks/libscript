@@ -17,6 +17,9 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "${_gca_caller_dir:-}" ] && SCRIPT_DIR="${_gca_caller_dir}"
+    [ -n "${_gca_caller_this:-}" ] && THIS_FILE="${_gca_caller_this}"
+    unset SCRIPT_NAME _gca_caller_this _gca_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac

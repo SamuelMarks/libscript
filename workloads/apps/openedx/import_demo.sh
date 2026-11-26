@@ -95,23 +95,17 @@ course_exists() {
 # Registers course ID in the local catalog.
 record_course() {
   _cid="$1"
-  _py="$(resolve_python)"
   mkdir -p "${DATA_DIR}"
-  if [ -n "${_py}" ]; then
-    "${_py}" - <<EOF
-import json, os
-p = os.path.join("${DATA_DIR}", "courses.json")
-data = []
-if os.path.exists(p):
-    try:
-        data = json.load(open(p))
-    except Exception:
-        data = []
-if "${_cid}" not in data:
-    data.append("${_cid}")
-    with open(p, "w") as f:
-        json.dump(data, f, indent=2)
-EOF
+  if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+  fi
+  if command -v jq >/dev/null 2>&1; then
+    _c_json="${DATA_DIR}/courses.json"
+    if [ ! -s "${_c_json}" ]; then printf '[]\n' > "${_c_json}"; fi
+    jq --arg cid "${_cid}" 'if index($cid) then . else . + [$cid] end' "${_c_json}" > "${_c_json}.tmp" && mv -f "${_c_json}.tmp" "${_c_json}"
   else
     if [ ! -f "${DATA_DIR}/courses.txt" ] || ! grep -qxF "${_cid}" "${DATA_DIR}/courses.txt" 2>/dev/null; then
       printf '%s\n' "${_cid}" >> "${DATA_DIR}/courses.txt"
@@ -172,8 +166,12 @@ import_course() {
   done
 
   if [ "${_extracted}" -eq 0 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v git >/dev/null 2>&1; then
-    rm -rf "${_staging_dir}"
-    git clone --depth 1 "${_repo_url}" "${_staging_dir}" 2>/dev/null || mkdir -p "${_staging_dir}"
+    if [ -d "${_staging_dir}/.git" ]; then
+      (cd "${_staging_dir}" && git pull --ff-only 2>/dev/null) || true
+    else
+      rm -rf "${_staging_dir}"
+      git clone --depth 1 "${_repo_url}" "${_staging_dir}" 2>/dev/null || mkdir -p "${_staging_dir}"
+    fi
   fi
 
   _py="$(resolve_python)"
@@ -258,21 +256,16 @@ except Exception:
 " 2>/dev/null) || true
   fi
 
-  if [ -n "${_py}" ]; then
-    "${_py}" - <<EOF
-import json, os
-p = os.path.join("${DATA_DIR}", "libraries.json")
-data = []
-if os.path.exists(p):
-    try:
-        data = json.load(open(p))
-    except Exception:
-        data = []
-if "${_lib_id}" not in data:
-    data.append("${_lib_id}")
-    with open(p, "w") as f:
-        json.dump(data, f, indent=2)
-EOF
+  if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+  fi
+  if command -v jq >/dev/null 2>&1; then
+    _l_json="${DATA_DIR}/libraries.json"
+    if [ ! -s "${_l_json}" ]; then printf '[]\n' > "${_l_json}"; fi
+    jq --arg lid "${_lib_id}" 'if index($lid) then . else . + [$lid] end' "${_l_json}" > "${_l_json}.tmp" && mv -f "${_l_json}.tmp" "${_l_json}"
   fi
   log_success "Demo library '${_lib_id}' successfully created and assigned to '${_owner}'."
 }
@@ -284,9 +277,9 @@ show_help() {
 Open edX Demo Content Ingestion CLI
 
 Usage:
-  $0 course [--course-id <id>] [--repo <url>]
-  $0 libraries [--owner <username>]
-  $0 help
+  ${THIS_FILE} course [--course-id <id>] [--repo <url>]
+  ${THIS_FILE} libraries [--owner <username>]
+  ${THIS_FILE} help
 
 Commands:
   course      Import official demo course

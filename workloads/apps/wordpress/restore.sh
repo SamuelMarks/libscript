@@ -55,7 +55,7 @@ fi
 if [ -d "${TMP_DIR}/wp-content" ]; then
   printf '[INFO] Restoring wp-content uploads, themes, and plugins...\n'
   mkdir -p "${WWWROOT}/wp-content"
-  cp -r "${TMP_DIR}/wp-content/"* "${WWWROOT}/wp-content/" 2>/dev/null || true
+  (set +f; cp -r "${TMP_DIR}/wp-content/"* "${WWWROOT}/wp-content/" 2>/dev/null || true)
 fi
 
 # 3. Restore wp-config.php

@@ -313,6 +313,8 @@ for /f "usebackq delims=" %%B in ("!_WS_SHARD!") do (
     if "!_WS_CNT!"=="50" (
         wincheck !_WS_BASE! !_WS_BATCH!
         if errorlevel 1 set "_WS_FAIL=1"
+        wincheck --dialect !_AC_DIA! --format tty --include CMD1002 !_WS_BATCH! 2>&1 | findstr /C:"The input line is too long"
+        if not errorlevel 1 set "_WS_FAIL=1"
         set "_WS_BATCH="
         set /a "_WS_CNT=0"
     )
@@ -320,6 +322,8 @@ for /f "usebackq delims=" %%B in ("!_WS_SHARD!") do (
 if not "!_WS_CNT!"=="0" (
     wincheck !_WS_BASE! !_WS_BATCH!
     if errorlevel 1 set "_WS_FAIL=1"
+    wincheck --dialect !_AC_DIA! --format tty --include CMD1002 !_WS_BATCH! 2>&1 | findstr /C:"The input line is too long"
+    if not errorlevel 1 set "_WS_FAIL=1"
 )
 if "!_WS_FAIL!"=="1" exit /b 1
 exit /b 0

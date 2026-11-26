@@ -32,3 +32,10 @@ Defined in [`payload.json`](./payload.json) and validated against
 .\libscript.cmd payload compile workloads\payloads\web\openedx\payload.json --scheduler kubernetes
 .\libscript.cmd payload submit workloads\payloads\web\openedx\payload.json --scheduler kubernetes
 ```
+
+## Orchestrated Components
+
+This stack orchestrates the following LibScript components:
+
+- `workloads/apps/openedx`
+- `_lib/unikernels/nanos`

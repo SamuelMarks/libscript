@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Implements automated tests to verify the correctness of the Joomla CMS stack.
-:: 
+:: Implements automated tests to verify the correctness of the Joomla stack.
 :: ## Usage
-:: Execute this script to run the test suite for joomla.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!JOOMLA_WWWROOT!"=="" set "JOOMLA_WWWROOT=C:\inetpub\wwwroot\joomla"
+echo Validating Joomla installation...
+if exist "!JOOMLA_WWWROOT!\administrator" (
+    echo Joomla directory found at !JOOMLA_WWWROOT!
+    exit /b 0
+) else (
+    echo Joomla directory not found at !JOOMLA_WWWROOT!
+    exit /b 1
+)

@@ -4,7 +4,7 @@
 #
 # ## Usage
 # Source this script to prepend the isolated unikernel_pod bin directory to PATH.
-set -feu
+set -feu; _env_caller_this="${THIS_FILE:-}"; _env_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -19,6 +19,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"; [ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"; unset SCRIPT_NAME _env_caller_this _env_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -43,3 +44,4 @@ fi
 libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/unikernel_pod/${EXACT_VERSION}/bin"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
+[ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"; [ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"; unset SCRIPT_NAME _env_caller_this _env_caller_dir || true

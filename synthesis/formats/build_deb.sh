@@ -56,7 +56,7 @@ rm -rf "$WORK_DIR"
 mkdir -p "$WORK_DIR/data" "$WORK_DIR/control"
 
 if [ -d "$STAGE_DIR" ]; then
-  cp -R "$STAGE_DIR"/* "$WORK_DIR/data/" 2>/dev/null || true
+  (set +f; cp -R "$STAGE_DIR"/* "$WORK_DIR/data/" 2>/dev/null || true)
 else
   mkdir -p "$WORK_DIR/data/usr/bin"
   printf '#!/bin/sh

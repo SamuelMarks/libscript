@@ -46,9 +46,9 @@ if [ -f /etc/alpine-release ]; then
 fi
 
 # Locate libalpm directory if present
-if [ -d "/usr/lib/x86_64-linux-gnu" ] && ls /usr/lib/x86_64-linux-gnu/libalpm.so* >/dev/null 2>&1; then
+if [ -d "/usr/lib/x86_64-linux-gnu" ] && (set +f; set -- /usr/lib/x86_64-linux-gnu/libalpm.so*; [ -e "${1:-}" ]); then
   export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
-elif [ -d "/usr/lib/aarch64-linux-gnu" ] && ls /usr/lib/aarch64-linux-gnu/libalpm.so* >/dev/null 2>&1; then
+elif [ -d "/usr/lib/aarch64-linux-gnu" ] && (set +f; set -- /usr/lib/aarch64-linux-gnu/libalpm.so*; [ -e "${1:-}" ]); then
   export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu:${LD_LIBRARY_PATH:-}"
 fi
 

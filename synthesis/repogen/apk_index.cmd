@@ -48,8 +48,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if not defined LIBSCRIPT_ROOT_DIR (
-)
 
 set "REPO_DIR=%~1"
 if "%REPO_DIR%"=="" set "REPO_DIR=!LIBSCRIPT_ROOT_DIR!\build\packages\apk"

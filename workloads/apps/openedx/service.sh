@@ -80,12 +80,14 @@ start_services() {
 
   _codebase="${OPENEDX_INSTALL_DIR}/codebase"
   if [ ! -f "${_codebase}/manage.py" ]; then
+    set +f
     for _sub in "${OPENEDX_INSTALL_DIR}/codebase"/* "${OPENEDX_INSTALL_DIR}"/*; do
       if [ -d "$_sub" ] && [ -f "$_sub/manage.py" ]; then
         _codebase="$_sub"
         break
       fi
     done
+    set -f
   fi
   if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
     _codebase="${OPENEDX_INSTALL_DIR}"

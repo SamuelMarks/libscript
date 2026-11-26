@@ -37,7 +37,17 @@ function Resolve-CacheDir {
         return $env:LIBSCRIPT_CACHE_DIR
     }
     $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
-    $repoRoot = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+    $repoRoot = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) {
+        (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path
+    } else {
+        $d = $scriptDir
+        while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) {
+            $p = Split-Path -Parent $d
+            if ($p -eq $d) { break }
+            $d = $p
+        }
+        $d
+    }
     return (Join-Path $repoRoot "cache")
 }
 

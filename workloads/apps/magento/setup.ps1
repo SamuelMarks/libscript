@@ -32,8 +32,9 @@ if (Test-Path "$WwwRoot\app") {
 
 Write-Host "Installing dependencies for Magento ($WebServer)..."
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$libDir = Resolve-Path (Join-Path $scriptDir "..\..\..\_lib")
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$rootDir = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path } else { $d = $scriptDir; while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) { $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }; $d }
+$libDir = Join-Path $rootDir "_lib"
 
 if ($WebServer -eq "iis") {
     $iisSetup = Join-Path $libDir "web-servers\iis\setup.ps1"
@@ -52,7 +53,7 @@ if (-not (Test-Path "$WwwRoot\app")) {
     $tmpZip = Join-Path $env:TEMP "magento_$(Get-Random).zip"
     $dlUrl = "https://github.com/magento/magento2/archive/refs/tags/${MagentoVersion}.zip"
 
-    & (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
+    & (Join-Path $rootDir "engine\common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
 
     if (Test-Path $tmpZip) {
         $sevenZip = "C:\Program Files\7-Zip\7z.exe"
@@ -72,7 +73,7 @@ if (-not (Test-Path "$WwwRoot\app")) {
 }
 
 Write-Host "Configuring Database ($DbDriver)..."
-$provSchema = Join-Path $libDir "databases\provision_schema.cmd"
+$provSchema = Join-Path $rootDir "engine\hooks\databases\provision_schema.cmd"
 if ($DbDriver -in @("mariadb", "mysql")) {
     try {
         & $provSchema --engine mysql --host $DbHost --port 3306 --schema $DbName --user $DbUser --password $DbPass

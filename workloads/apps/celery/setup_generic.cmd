@@ -48,8 +48,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if not defined LIBSCRIPT_ROOT_DIR (
-)
 set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\engine\common\log.cmd"
 
 call "!LOG_CMD!" :log_info "Installing Celery on Windows..."

@@ -49,8 +49,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "!LIBSCRIPT_ROOT_DIR!"=="" (
-)
 
 set "CMD=%~1"
 if "%CMD%"=="" goto show_help

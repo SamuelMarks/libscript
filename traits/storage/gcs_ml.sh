@@ -7,7 +7,7 @@
 # ## Usage
 # ./traits/storage/gcs_ml.sh <config.json> --out-dir=<dir> [--zone=<tpu_zone>] [--dry-run]
 
-set -feu
+set -feu; _tr_caller_this="${THIS_FILE:-}"; _tr_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -21,6 +21,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "${_tr_caller_dir:-}" ] && SCRIPT_DIR="${_tr_caller_dir}"; [ -n "${_tr_caller_this:-}" ] && THIS_FILE="${_tr_caller_this}"; unset SCRIPT_NAME _tr_caller_this _tr_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -137,3 +138,9 @@ jq "${DOC_EXPR} | {
 mv "${OUT_DIR}/gke-gcsfuse-csi-patch.json.tmp" "${OUT_DIR}/gke-gcsfuse-csi-patch.json"
 
 printf '[OK] Synthesized 4-role GCS ML storage coordination at %s\n' "$OUT_DIR"
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_tr_caller_dir:-}" ] && SCRIPT_DIR="${_tr_caller_dir}"
+[ -n "${_tr_caller_this:-}" ] && THIS_FILE="${_tr_caller_this}"
+unset SCRIPT_NAME _tr_caller_this _tr_caller_dir || true

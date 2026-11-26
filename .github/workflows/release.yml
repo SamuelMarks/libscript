@@ -281,39 +281,29 @@ jobs:
           path: libscript/cache
 
       - name: Setup msi-rs Toolset
-        shell: pwsh
+        shell: cmd
         run: |
-          Write-Host "Installing msi-rs v0.0.1 via LibScript..."
-          cmd.exe /c "call .\libscript.cmd install msi-rs v0.0.1"
-          $msiRsBin = "$HOME\.libscript\msi-rs\v0.0.1\bin"
-          if (Test-Path "$msiRsBin\candle.exe") {
-            Write-Host "Found msi-rs at $msiRsBin. Adding to GITHUB_PATH."
-            Add-Content -Path $env:GITHUB_PATH -Value $msiRsBin
-          } else {
-            $wixV3 = "C:\Program Files (x86)\WiX Toolset v3.11\bin"
-            if (Test-Path "$wixV3\candle.exe") {
-              Write-Host "Found WiX v3 at $wixV3. Adding to GITHUB_PATH."
-              Add-Content -Path $env:GITHUB_PATH -Value $wixV3
-            } elseif (Get-Command candle.exe -ErrorAction SilentlyContinue) {
-              Write-Host "candle.exe is already available in PATH."
-            } elseif (Get-Command wix.exe -ErrorAction SilentlyContinue) {
-              Write-Host "wix.exe is already available in PATH."
-            } else {
-              Write-Host "WiX Toolset compiler not found in PATH. Installing via LibScript wix component..."
-              cmd.exe /c "call .\libscript.cmd install wix latest"
-              $lsWixDirs = @(
-                "$HOME\.libscript\wix\latest\bin",
-                "$HOME\.libscript\wix\default\bin",
-                "$wixV3"
-              )
-              foreach ($cand in $lsWixDirs) {
-                if ((Test-Path "$cand\candle.exe") -or (Test-Path "$cand\wix.exe")) {
-                  Add-Content -Path $env:GITHUB_PATH -Value $cand
-                  break
-                }
-              }
-            }
-          }
+          echo Installing msi-rs v0.0.1 via LibScript...
+          call .\libscript.cmd install msi-rs v0.0.1
+          if exist "%USERPROFILE%\.libscript\msi-rs\v0.0.1\bin\candle.exe" (
+            echo Found msi-rs at %USERPROFILE%\.libscript\msi-rs\v0.0.1\bin. Adding to GITHUB_PATH.
+            echo %USERPROFILE%\.libscript\msi-rs\v0.0.1\bin>>"%GITHUB_PATH%"
+            exit /b 0
+          )
+          if exist "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" (
+            echo Found WiX v3. Adding to GITHUB_PATH.
+            echo C:\Program Files (x86)\WiX Toolset v3.11\bin>>"%GITHUB_PATH%"
+            exit /b 0
+          )
+          where candle.exe >nul 2>&1 && exit /b 0
+          where wix.exe >nul 2>&1 && exit /b 0
+          echo WiX Toolset compiler not found in PATH. Installing via LibScript wix component...
+          call .\libscript.cmd install wix latest
+          if exist "%USERPROFILE%\.libscript\wix\latest\bin\candle.exe" (
+            echo %USERPROFILE%\.libscript\wix\latest\bin>>"%GITHUB_PATH%"
+          ) else if exist "%USERPROFILE%\.libscript\wix\default\bin\candle.exe" (
+            echo %USERPROFILE%\.libscript\wix\default\bin>>"%GITHUB_PATH%"
+          )
 
       - name: Verify MSI Compiler
         shell: cmd
@@ -322,119 +312,60 @@ jobs:
 
       - name: Determine Package Version and Artifact Name
         id: version
-        shell: pwsh
+        shell: cmd
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag_name }}
+          REF_NAME: ${{ github.ref_name }}
+          PKG_ID: ${{ matrix.package.id }}
+          PKG_TARGET_DIR: ${{ matrix.package.target_dir }}
         run: |
-          # 1. Resolve raw tag/branch from GitHub context
-          $rawRef = ""
-          if ("${{ github.event.inputs.tag_name }}") {
-            $rawRef = "${{ github.event.inputs.tag_name }}".Trim()
-          } elseif ("${{ github.ref_name }}") {
-            $rawRef = "${{ github.ref_name }}".Trim()
-          }
-
-          # 2. Extract package metadata if packaging.json or offline_bundle.json exists
-          $pkgJsonVer = "22.1.0"
-          $pkgDefaultBranch = ""
-          if (Test-Path "${{ matrix.package.target_dir }}\packaging.json") {
-            $json = Get-Content "${{ matrix.package.target_dir }}\packaging.json" | ConvertFrom-Json
-            if ($json.version) { $pkgJsonVer = "$($json.version)".TrimStart("v").Trim() }
-            if ($json.source_repository -and $json.source_repository.default_branch) {
-              $pkgDefaultBranch = "$($json.source_repository.default_branch)".Trim()
-            }
-          } elseif (Test-Path "workloads\apps\openedx\offline_bundle.json") {
-            $bundle = Get-Content -Raw "workloads\apps\openedx\offline_bundle.json" | ConvertFrom-Json
-            $compId = ("${{ matrix.package.id }}" -replace '-offline$', '').Trim()
-            if ($bundle.databases.$compId.version) { $pkgJsonVer = "$($bundle.databases.$compId.version)".TrimStart("v").Trim() }
-            elseif ($bundle.runtimes.$compId.version) { $pkgJsonVer = "$($bundle.runtimes.$compId.version)".TrimStart("v").Trim() }
-            elseif ($bundle.webservers.$compId.version) { $pkgJsonVer = "$($bundle.webservers.$compId.version)".TrimStart("v").Trim() }
-          }
-
-          # 3. Determine target ref for naming (use tag/branch, or package default_branch, or manifest version)
-          # Note: The libscript repository tag (e.g. v0.0.1) is NOT the software version of the third-party stack.
-          $targetRef = ""
-          if ("${{ github.event.inputs.tag_name }}") {
-            $inputTag = "${{ github.event.inputs.tag_name }}".Trim()
-            if ($inputTag -match "${{ matrix.package.id }}" -or $inputTag -match "(open-release|release)/" -or $inputTag -match "verawood" -or -not $pkgDefaultBranch) {
-              $targetRef = $inputTag
-            }
-          }
-          if (-not $targetRef) {
-            if ($pkgDefaultBranch) {
-              $targetRef = $pkgDefaultBranch
-            } elseif ($pkgJsonVer) {
-              $targetRef = $pkgJsonVer
-            } else {
-              $targetRef = $rawRef
-            }
-          }
-
-          # 4. Sanitize version string for filename:
-          # Strips generic prefixes: 'open-release/', 'release/', 'refs/heads/', 'refs/tags/', 'v'
-          $cleanVer = $targetRef -replace '^(refs/(heads|tags)/)?(open-release/|release/)?', ''
-          $cleanVer = $cleanVer -replace '^v(?=\d)', ''
-          # Simplify '<name>.master' release branches to '<name>' (e.g. quince.master -> quince, verawood.master -> verawood)
-          if ($cleanVer -match '^([a-zA-Z0-9_-]+)\.master$') {
-            $cleanVer = $Matches[1]
-          }
-          $cleanVer = $cleanVer -replace '[^a-zA-Z0-9._-]', '-'
-
-          # 5. Determine numeric WiX Product Version (Major.Minor.Build.Revision)
-          # WiX requires 3 or 4 decimal integers (0-255 for major/minor, 0-65535 for build/revision)
-          $namedReleases = @{
-            "aspen" = 1; "birch" = 2; "cypress" = 3; "dogwood" = 4;
-            "eucalyptus" = 5; "ficus" = 6; "ginkgo" = 7; "hawthorn" = 8;
-            "ironwood" = 9; "juniper" = 10; "koa" = 11; "lilac" = 12;
-            "maple" = 13; "nutmeg" = 14; "olive" = 15; "palm" = 16;
-            "quince" = 17; "redwood" = 18; "sumac" = 19; "teak" = 20;
-            "ulmo" = 21; "verawood" = 22; "williamsii" = 23
-          }
-
-          $wixVer = ""
-          if ($cleanVer -match '^([a-zA-Z]+)(?:\.(\d+))?') {
-            $relName = $Matches[1].ToLower()
-            $pointVer = if ($Matches[2]) { [int]$Matches[2] } else { 0 }
-            if ($namedReleases.ContainsKey($relName)) {
-              $majorVer = $namedReleases[$relName]
-              $wixVer = "$majorVer.$pointVer.0.0"
-            }
-          }
-
-          if (-not $wixVer) {
-            $numericCandidate = ""
-            if ($targetRef -match '(\d+(?:\.\d+)+)') {
-              $numericCandidate = $Matches[1]
-            } elseif ($pkgJsonVer -match '(\d+(?:\.\d+)+)') {
-              $numericCandidate = $Matches[1]
-            } else {
-              $numericCandidate = "22.1.0"
-            }
-            $parts = $numericCandidate.Split('.')
-            while ($parts.Length -lt 3) { $parts += "0" }
-            $wixVer = ($parts[0..([Math]::Min($parts.Length - 1, 3))]) -join '.'
-          }
-
-          # 6. Canonical package filename: <package_id>-<version>-<arch>-<variant>
-          $pkgId = "${{ matrix.package.id }}"
-          if ($pkgId -match "-offline") {
-            $baseId = $pkgId -replace "-offline",""
-            $variant = "offline"
-          } else {
-            $baseId = $pkgId
-            $variant = "online"
-          }
-          $arch = "x64"
-          $outName = "$baseId-$cleanVer-$arch-$variant"
-
-          Write-Host "Package: $pkgId"
-          Write-Host "Target Ref: $targetRef"
-          Write-Host "Clean Version: $cleanVer"
-          Write-Host "WiX Product Version: $wixVer"
-          Write-Host "Artifact Base Name: $outName"
-
-          "version=$wixVer" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "clean_version=$cleanVer" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "target_ref=$targetRef" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "out_name=$outName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          setlocal EnableDelayedExpansion
+          where jq.exe >nul 2>&1
+          if errorlevel 1 (
+            call .\libscript.cmd install jq latest
+            call .\_lib\utilities\jq\env.cmd
+          )
+          set "RAW_REF=!INPUT_TAG!"
+          if "!RAW_REF!"=="" set "RAW_REF=!REF_NAME!"
+          set "PKG_JSON_VER=22.1.0"
+          set "PKG_DEF_BRANCH="
+          if exist "!PKG_TARGET_DIR!\packaging.json" (
+            for /f "delims=" %%V in ('jq -r ".version // empty" "!PKG_TARGET_DIR!\packaging.json" 2^>nul') do set "PKG_JSON_VER=%%V"
+            for /f "delims=" %%B in ('jq -r ".source_repository.default_branch // empty" "!PKG_TARGET_DIR!\packaging.json" 2^>nul') do set "PKG_DEF_BRANCH=%%B"
+          ) else if exist "workloads\apps\openedx\offline_bundle.json" (
+            set "COMP_ID=!PKG_ID:-offline=!"
+            for /f "delims=" %%V in ('jq -r --arg c "!COMP_ID!" ".databases[$c].version // .runtimes[$c].version // .webservers[$c].version // empty" "workloads\apps\openedx\offline_bundle.json" 2^>nul') do set "PKG_JSON_VER=%%V"
+          )
+          if /i "!PKG_JSON_VER:~0,1!"=="v" set "PKG_JSON_VER=!PKG_JSON_VER:~1!"
+          set "TARGET_REF="
+          if not "!INPUT_TAG!"=="" (
+            echo "!INPUT_TAG!" | findstr /I /C:"!PKG_ID!" /C:"open-release/" /C:"release/" /C:"verawood" >nul 2>&1
+            if not errorlevel 1 set "TARGET_REF=!INPUT_TAG!"
+            if "!PKG_DEF_BRANCH!"=="" set "TARGET_REF=!INPUT_TAG!"
+          )
+          if "!TARGET_REF!"=="" (
+            if not "!PKG_DEF_BRANCH!"=="" (
+              set "TARGET_REF=!PKG_DEF_BRANCH!"
+            ) else if not "!PKG_JSON_VER!"=="" (
+              set "TARGET_REF=!PKG_JSON_VER!"
+            ) else (
+              set "TARGET_REF=!RAW_REF!"
+            )
+          )
+          for /f "tokens=1,2,3 delims=	" %%A in ('jq -rn --arg tr "!TARGET_REF!" --arg pv "!PKG_JSON_VER!" --arg pid "!PKG_ID!" "def clean($s): ($s | sub(\"^(refs/(heads|tags)/)?(open-release/|release/)?\"; \"\") | sub(\"^v(?=[0-9])\"; \"\") | sub(\"\\\\.master$\"; \"\") | gsub(\"[^a-zA-Z0-9._-]\"; \"-\")); def wix($c; $t; $p): ({\"aspen\":1,\"birch\":2,\"cypress\":3,\"dogwood\":4,\"eucalyptus\":5,\"ficus\":6,\"ginkgo\":7,\"hawthorn\":8,\"ironwood\":9,\"juniper\":10,\"koa\":11,\"lilac\":12,\"maple\":13,\"nutmeg\":14,\"olive\":15,\"palm\":16,\"quince\":17,\"redwood\":18,\"sumac\":19,\"teak\":20,\"ulmo\":21,\"verawood\":22,\"williamsii\":23}) as $m | ($c | capture(\"^(?<n>[a-zA-Z]+)(\\\\.(?<pt>[0-9]+))?\") // null) as $cap | if ($cap != null and ($m[$cap.n | ascii_downcase] != null)) then \"\($m[$cap.n | ascii_downcase]).\($cap.pt // \"0\").0.0\" else (($t | capture(\"(?<v>[0-9]+(\\\\.[0-9]+)+)\").v? // ($p | capture(\"(?<v>[0-9]+(\\\\.[0-9]+)+)\").v?) // \"22.1.0\") | split(\".\") | (. + [\"0\",\"0\",\"0\"])[0:4] | join(\".\")) end; (clean($tr)) as $cv | (wix($cv; $tr; $pv)) as $wv | (if ($pid | endswith(\"-offline\")) then \"\(($pid | sub(\"-offline$\"; \"\")))-\($cv)-x64-offline\" else \"\($pid)-\($cv)-x64-online\" end) as $on | \"\($wv)\t\($cv)\t\($on)\""') do (
+            set "WIX_VER=%%A"
+            set "CLEAN_VER=%%B"
+            set "OUT_NAME=%%C"
+          )
+          echo Package: !PKG_ID!
+          echo Target Ref: !TARGET_REF!
+          echo Clean Version: !CLEAN_VER!
+          echo WiX Product Version: !WIX_VER!
+          echo Artifact Base Name: !OUT_NAME!
+          echo version=!WIX_VER!>>"%GITHUB_OUTPUT%"
+          echo clean_version=!CLEAN_VER!>>"%GITHUB_OUTPUT%"
+          echo target_ref=!TARGET_REF!>>"%GITHUB_OUTPUT%"
+          echo out_name=!OUT_NAME!>>"%GITHUB_OUTPUT%"
 
       - name: Build MSI Package (${{ matrix.package.name }})
         shell: cmd

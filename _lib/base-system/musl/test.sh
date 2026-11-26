@@ -32,11 +32,13 @@ if [ -f /lib/libc.musl-x86_64.so.1 ] || [ -f /lib/libc.musl-aarch64.so.1 ] || [ 
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/*-linux-musl*; do
   if [ -d "$_lib_dir" ]; then
     exit 0
   fi
 done
+set -f
 
 if command -v apk >/dev/null 2>&1 && apk info -e musl >/dev/null 2>&1; then
   exit 0

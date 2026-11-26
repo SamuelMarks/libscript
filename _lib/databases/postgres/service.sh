@@ -66,12 +66,14 @@ configure_postgres_storage() {
   _pg_ver=""
   _pg_conf=""
   _pg_etc_dir="${POSTGRES_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/postgresql}"
+  set +f
   for _pg_cand_conf in "${_pg_etc_dir}"/*/main/postgresql.conf; do
     if [ -f "$_pg_cand_conf" ]; then
       _pg_conf="$_pg_cand_conf"
       _pg_ver=$(printf '%s\n' "$_pg_cand_conf" | awk -F'/' '{print $(NF-2)}')
     fi
   done
+  set -f
 
   _pg_cluster_dir="$_pg_base_dir"
   if [ -n "$_pg_ver" ]; then

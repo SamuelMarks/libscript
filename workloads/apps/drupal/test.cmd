@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Implements automated tests to verify the correctness of the Drupal CMS stack.
-:: 
+:: Implements automated tests to verify the correctness of the Drupal stack.
 :: ## Usage
-:: Execute this script to run the test suite for drupal.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!DRUPAL_WWWROOT!"=="" set "DRUPAL_WWWROOT=C:\inetpub\wwwroot\drupal"
+echo Validating Drupal installation...
+if exist "!DRUPAL_WWWROOT!\core" (
+    echo Drupal directory found at !DRUPAL_WWWROOT!
+    exit /b 0
+) else (
+    echo Drupal directory not found at !DRUPAL_WWWROOT!
+    exit /b 1
+)

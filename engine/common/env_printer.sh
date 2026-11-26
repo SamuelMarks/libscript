@@ -22,7 +22,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_ep_caller_dir:-}" ] && SCRIPT_DIR="${_ep_caller_dir}"; [ -n "${_ep_caller_this:-}" ] && THIS_FILE="${_ep_caller_this}"; unset SCRIPT_NAME _ep_caller_this _ep_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -198,6 +198,7 @@ libscript_ensure_default_env_vars() {
       esac
     fi
   done
+  set +f
   for _ede_node_bin in "${REMOTE_HOME}/.libscript/nodejs/"*/bin "${_ede_root_home}/.libscript/nodejs/"*/bin "${LIBSCRIPT_HOME:-${HOME:-$_ede_root_home}/.libscript}/nodejs/"*/bin; do
     if [ -d "$_ede_node_bin" ]; then
       case ":${PATH:-}:" in
@@ -206,6 +207,7 @@ libscript_ensure_default_env_vars() {
       esac
     fi
   done
+  set -f
 }
 
 # ## libscript_source_env_preserve_existing
@@ -507,28 +509,27 @@ libscript_print_manifest_env() {
 
   case "$_pm_fmt" in
     dotenv|envfile|docker_compose|systemd|json)
-      (
-        libscript_hydrate_manifest_env "$_pm_json"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh" STACK='' /bin/sh -c '
+        . "$SCRIPT_NAME"
+        libscript_hydrate_manifest_env "$1"
         _pm_filter="^(PWD|SHLVL|_|PATH|SERVICE_PATH|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_HOME|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE|_pm_.*|_hm_.*|_ede_.*)="
-        case "$_pm_fmt" in
+        case "$2" in
           json)
-            SERVICE_PATH="${PATH}"
-            export SERVICE_PATH
-            env | grep -vE "^(PWD|SHLVL|_|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE|_pm_.*|_hm_.*|_ede_.*)=" | jq -c -R -s '
+            env SERVICE_PATH="${PATH}" | grep -vE "^(PWD|SHLVL|_|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE|_pm_.*|_hm_.*|_ede_.*)=" | jq -c -R -s '\''
               split("\n") | map(select(length > 0)) |
               map(split("=")) | map({(.[0]): (.[1:] | join("="))}) | add
-            '
+            '\''
             ;;
           *)
-            printf 'PATH="%s"\n' "$PATH"
-            printf 'SERVICE_PATH="%s"\n' "$PATH"
+            printf '\''PATH="%s"\n'\'' "$PATH"
+            printf '\''SERVICE_PATH="%s"\n'\'' "$PATH"
             env | grep -vE "$_pm_filter" | while read -r _pm_line; do
               [ -z "$_pm_line" ] && continue
-              printf '%s="%s"\n' "${_pm_line%%=*}" "${_pm_line#*=}"
+              printf '\''%s="%s"\n'\'' "${_pm_line%%=*}" "${_pm_line#*=}"
             done
             ;;
         esac
-      )
+      ' sh "$_pm_json" "$_pm_fmt"
       return 0
       ;;
   esac
@@ -578,10 +579,11 @@ libscript_print_manifest_env() {
 
   _pm_base_path='/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin'
   _pm_hydrated_path=$(
-    PATH="$_pm_base_path"
-    export PATH
-    libscript_hydrate_manifest_env "$_pm_json" >/dev/null 2>&1 || true
-    printf '%s' "$PATH"
+    PATH="$_pm_base_path" SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh" STACK='' /bin/sh -c '
+      . "$SCRIPT_NAME"
+      libscript_hydrate_manifest_env "$1" >/dev/null 2>&1 || true
+      printf "%s" "$PATH"
+    ' sh "$_pm_json"
   )
   if [ -n "$_pm_hydrated_path" ]; then
     _pm_old_ifs="$IFS"

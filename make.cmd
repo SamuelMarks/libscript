@@ -98,6 +98,8 @@ call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_version_manager.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_schema_vars.cmd" --all
 if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_stacks.cmd" --strict
+if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\doc_coverage.cmd" --strict
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_doc_coverage.cmd"

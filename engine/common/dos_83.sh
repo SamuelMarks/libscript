@@ -5,7 +5,7 @@
 # . "${LIBSCRIPT_ROOT_DIR}/engine/common/dos_83.sh"
 
 set -feu
-_d83_caller_this="${THIS_FILE-}"; _d83_caller_dir="${SCRIPT_DIR-}"
+_d83_caller_this="${THIS_FILE:-}"; _d83_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

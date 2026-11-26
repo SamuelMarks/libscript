@@ -49,8 +49,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "!LIBSCRIPT_ROOT_DIR!"=="" (
-)
 
 if "%OPENEDX_INSTALL_DIR%"=="" (
     if defined LIBSCRIPT_HOME (
@@ -98,6 +96,7 @@ if "%PKG%"=="" (
     echo [ERROR] Package specification required. >&2
     exit /b 1
 )
+call :ensure_jq
 echo [INFO] Installing XBlock '%PKG%'...
 "%PYTHON_BIN%" -m pip install "%PKG%" 2>nul
 if exist "%OPENEDX_INSTALL_DIR%\manage.py" (
@@ -105,7 +104,9 @@ if exist "%OPENEDX_INSTALL_DIR%\manage.py" (
     "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%\manage.py" cms migrate --noinput 2>nul
     "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%\manage.py" lms collectstatic --noinput 2>nul
 )
-"%PYTHON_BIN%" -c "import json, os; p = r'%XBLOCK_REGISTRY%'; d = json.load(open(p)) if os.path.exists(p) else []; d.append('%PKG%') if '%PKG%' not in d else None; json.dump(d, open(p, 'w'), indent=2)"
+for %%D in ("%XBLOCK_REGISTRY%") do if not exist "%%~dpD" mkdir "%%~dpD" >nul 2>&1
+if not exist "%XBLOCK_REGISTRY%" echo []> "%XBLOCK_REGISTRY%"
+jq --arg pkg "%PKG%" "if index($pkg) then . else . + [$pkg] end" "%XBLOCK_REGISTRY%" > "%XBLOCK_REGISTRY%.tmp" 2>nul && move /y "%XBLOCK_REGISTRY%.tmp" "%XBLOCK_REGISTRY%" >nul
 echo [INFO] XBlock '%PKG%' installed.
 exit /b 0
 
@@ -118,20 +119,48 @@ if "%PKG%"=="" (
     echo [ERROR] Package name required. >&2
     exit /b 1
 )
+call :ensure_jq
 echo [INFO] Uninstalling XBlock '%PKG%'...
 "%PYTHON_BIN%" -m pip uninstall -y "%PKG%" 2>nul
-"%PYTHON_BIN%" -c "import json, os; p = r'%XBLOCK_REGISTRY%'; d = json.load(open(p)) if os.path.exists(p) else []; d.remove('%PKG%') if '%PKG%' in d else None; json.dump(d, open(p, 'w'), indent=2)"
+if exist "%XBLOCK_REGISTRY%" (
+    jq --arg pkg "%PKG%" "map(select(. != $pkg))" "%XBLOCK_REGISTRY%" > "%XBLOCK_REGISTRY%.tmp" 2>nul && move /y "%XBLOCK_REGISTRY%.tmp" "%XBLOCK_REGISTRY%" >nul
+)
 echo [INFO] XBlock '%PKG%' uninstalled.
 exit /b 0
 
 :: ## do_list
 :: Lists discovered and registered XBlocks in the Open edX environment.
 :do_list
+call :ensure_jq
 echo ==========================================================================
 echo XBLOCK IDENTIFIER                ENTRY POINT / PACKAGE
 echo --------------------------------------------------------------------------
-"%PYTHON_BIN%" -c "import json, os, importlib.metadata as im; eps = [f'{e.name:<32} {e.value:<40}' for e in im.entry_points().get('xblock.v1', [])] if hasattr(im.entry_points(), 'get') else []; p = r'%XBLOCK_REGISTRY%'; reg = [f'{k:<32} (registered)' for k in json.load(open(p))] if os.path.exists(p) and os.path.getsize(p) > 0 else []; all_items = eps + [r for r in reg if not any(r.startswith(e[:32]) for e in eps)]; [print(x) for x in all_items] if all_items else print('(No XBlocks currently discovered)')"
+set "_XB_COUNT=0"
+if exist "%XBLOCK_REGISTRY%" (
+    for /f "delims=" %%X in ('jq -r ".[]" "%XBLOCK_REGISTRY%" 2^>nul') do (
+        echo %%X                              ^(registered^)
+        set /a "_XB_COUNT+=1"
+    )
+)
+if "!_XB_COUNT!"=="0" echo ^(No XBlocks currently discovered^)
 echo ==========================================================================
+exit /b 0
+
+:: ## ensure_jq
+:: Ensures jq is available on PATH via LibScript's _lib\utilities\jq component.
+:ensure_jq
+where jq >nul 2>&1
+if errorlevel 1 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+)
+where jq >nul 2>&1
+if errorlevel 1 (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install jq latest >nul 2>&1
+    set "STACK="
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+)
 exit /b 0
 
 :: ## show_help

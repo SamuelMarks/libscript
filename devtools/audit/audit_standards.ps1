@@ -259,7 +259,7 @@ function Audit-File {
         }
 
         # 2. Windows batch parity (.cmd or .bat)
-        if ($FilePath -notmatch "(docker/|dockerfiles-ssh/|\.tpl|Vagrantfile)") {
+        if ($FilePath -notmatch "(dockerfiles-ssh/|\.tpl|Vagrantfile)") {
             $cmdFile = [System.IO.Path]::ChangeExtension($FilePath, ".cmd")
             $batFile = [System.IO.Path]::ChangeExtension($FilePath, ".bat")
             if (-not (Test-Path $cmdFile) -and -not (Test-Path $batFile)) {
@@ -392,8 +392,11 @@ function Audit-File {
             }
         }
     } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
-        if ($allContent -match '(?mi)^[ \t]*(mkdir|md)[ \t]+' -and $allContent -notmatch '(?mi)if[ \t]+not[ \t]+exist') {
-            Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' in batch script. Wrap with 'if not exist <dir> mkdir <dir>'."
+        foreach ($cLine in ($allContent -split "`r?`n")) {
+            if ($cLine -notmatch '^(?i)\s*(::|rem(\s|$)|echo([\s.]|$))' -and ($cLine -match '^(?i)\s*(mkdir|md)\s+' -or $cLine -match '(?i)(&|&&|\|\||\selse)\s+(mkdir|md)\s+[^-\r\n]') -and $cLine -notmatch '(?i)(if\s+not\s+exist|2>nul)') {
+                Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' in batch script. Wrap with 'if not exist <dir> mkdir <dir>'."
+                break
+            }
         }
         if ($allContent -match 'SCRIPT_DIR[%!][^\\/"\s\)]') {
             Log-Violation -File $FilePath -Rule "BATCH_SCRIPT_DIR_SEPARATOR" -Details "Missing backslash separator after SCRIPT_DIR."
@@ -406,6 +409,9 @@ function Audit-File {
         }
         if ($allContent -match '(?mi)^[ \t]+endlocal[ \t]*&&?[ \t]*(\(|set[ \t])') {
             Log-Violation -File $FilePath -Rule "BATCH_ENDLOCAL_DELAYED" -Details "Indented endlocal & (...) inside parenthesized block expands %VAR% before block executes."
+        }
+        if ($allContent -match '(?mi)^[ \t]*(if|else|\)\s*else|for)\b[^\r\n]*\([ \t]*\r?\n[ \t]*\)[ \t]*(\r?\n|$)') {
+            Log-Violation -File $FilePath -Rule "EMPTY_BATCH_BLOCK" -Details "Empty compound parenthesis block '( )' causes fatal cmd.exe syntax error."
         }
         $delExpActive = $false
         $chainedIf = @{}
@@ -451,7 +457,7 @@ function Audit-File {
 
     # 4. Ban eval checks
     if ($ext -eq "sh") {
-        if ($allContent -match '(?m)^[ \t]*eval([ \t]|$)|;[ \t]*eval([ \t]|$)') {
+        if ($allContent -match '(?m)^[ \t]*eval([ \t]|$)|(?m)^[^#\r\n]*(;|\|\||&&|\||\$\()[ \t]*eval([ \t]|$)') {
             Log-Violation -File $FilePath -Rule "BAN_EVAL" -Details "Disallowed use of 'eval' found."
         }
     } elseif ($ext -eq "ps1") {
@@ -512,7 +518,7 @@ function Audit-File {
 
     # 8c. Enforce Zero-Dependency Substrate in core orchestration
     if ($normPath -match '^(engine/common|synthesis|infrastructure|cli|_lib/(init-systems|databases))/.*\.sh$') {
-        $interpMatch = Select-String -Path $FilePath -Pattern '(^\s*|\$\()(python3?\s+-c|node\s+-e|perl\s+-e|ruby\s+-e)\s|libscript-allow-interp' -Quiet
+        $interpMatch = Select-String -Path $FilePath -Pattern '(^\s*|\$\()(python3?\s+(-c|-\s*<<|<<)|node\s+(-e|-\s*<<|<<)|perl\s+(-e|-\s*<<|<<)|ruby\s+(-e|-\s*<<|<<))|libscript-allow-interp' -Quiet
         if ($interpMatch) {
             Log-Violation -File $FilePath -Rule "ZERO_DEP_SUBSTRATE" -Details "Core orchestration script invokes external interpreter inline."
         }

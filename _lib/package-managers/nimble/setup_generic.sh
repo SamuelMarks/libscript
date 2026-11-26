@@ -149,7 +149,7 @@ case "$ACTION" in
           fi
         fi
 
-        if [ "$installed" = "0" ] && ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/"*"${VERSION}"* >/dev/null 2>&1; then
+        if [ "$installed" = "0" ] && (set +f; set -- "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/"*"${VERSION}"*; [ -f "${1:-}" ]); then
           log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then

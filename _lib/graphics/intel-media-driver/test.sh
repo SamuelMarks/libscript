@@ -48,12 +48,14 @@ if command -v dpkg-query >/dev/null 2>&1 && (dpkg-query -W -f='${Status}
   exit 0
 fi
 
+set +f
 for _lib_dir in /usr/lib/dri /usr/lib64/dri /usr/local/lib/dri /usr/lib/*-linux-gnu*/dri; do
   if [ -f "${_lib_dir}/iHD_drv_video.so" ]; then
     printf '[PASS] Intel Media Driver binary found: %s/iHD_drv_video.so\n' "$_lib_dir"
     exit 0
   fi
 done
+set -f
 
 printf '[FAIL] Intel Media Driver not found or not staged.\n' >&2
 exit 1

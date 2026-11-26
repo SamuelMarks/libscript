@@ -323,7 +323,6 @@ if not exist "%ProgramData%\OpenEdX" mkdir "%ProgramData%\OpenEdX" 2>nul
 echo.!OPENEDX_INSTALL_DIR!> "%ProgramData%\OpenEdX\install_dir.txt"
 if not "!OPENEDX_DATA_DIR!"=="" if not exist "!OPENEDX_DATA_DIR!" mkdir "!OPENEDX_DATA_DIR!" 2>nul
 if not "!OPENEDX_LOG_DIR!"=="" if not exist "!OPENEDX_LOG_DIR!" mkdir "!OPENEDX_LOG_DIR!" 2>nul
-)
 if not "!MYSQL_URL!"=="" (
 if exist "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\parse_connection_uri.cmd" (
     for /f "usebackq tokens=1,* delims==" %%A in (`call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\parse_connection_uri.cmd" "!MYSQL_URL!" --env 2^>nul`) do (
@@ -336,7 +335,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\parse_connection_uri.cmd" 
 )
 )
 
-if "!ACTION!"=="install" (
+if /i not "!ACTION!"=="install" exit /b 0
 if exist "!OPENEDX_INSTALL_DIR!\codebase\lms\envs\libscript_win.py" (
     echo [INFO] openedx is already installed at !OPENEDX_INSTALL_DIR!.
     exit /b 0
@@ -430,7 +429,7 @@ if exist "!OPENEDX_SCRIPT_DIR!\build-constraints.txt" (
 )
 
 if "!USE_OFFLINE!"=="1" (
-    :: Step 4 (Codebase & MFEs): Extract full openedx-release-verawood.1.zip and mfe-bundle-verawood.1.tar.gz
+    REM Step 4 - Codebase and MFEs: Extract full openedx-release-verawood.1.zip and mfe-bundle-verawood.1.tar.gz
     if exist "!OFFLINE_CACHE_DIR!\codebase" (
         echo [INFO] Extracting codebase and MFE bundles from cache\codebase...
         if not exist "!OPENEDX_INSTALL_DIR!\codebase\manage.py" (
@@ -447,13 +446,13 @@ if "!USE_OFFLINE!"=="1" (
         )
     )
 
-    :: Step 3 (Virtualenv & Pip): Install wheels offline
+    REM Step 3 - Virtualenv and Pip: Install wheels offline
     if exist "!OFFLINE_CACHE_DIR!\wheels" (
         echo [INFO] Installing Python wheels with --no-index from cache\wheels...
         if not exist "!OPENEDX_INSTALL_DIR!\logs" mkdir "!OPENEDX_INSTALL_DIR!\logs"
     )
 
-    :: Step 5 (Demo Content): Ingest demo courseware from cache/codebase
+    REM Step 5 - Demo Content: Ingest demo courseware from cache/codebase
     if "!IMPORT_DEMO!"=="1" if exist "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" (
         echo [INFO] Ingesting demo courseware from cached archive...
         tar -xzf "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" -C "!OPENEDX_INSTALL_DIR!" 2>nul

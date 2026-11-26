@@ -50,8 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if not defined LIBSCRIPT_ROOT_DIR (
-)
 set "json_file=libscript.json"
 set "force_reinstall=0"
 set "force_rebuild=0"

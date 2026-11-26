@@ -107,7 +107,9 @@ jobs:
 
       - name: Install QEMU x86 System Emulator
         shell: sh
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq qemu-system-x86 zip
+        run: |
+          QEMU_INSTALL_METHOD=system QEMU_TARGET_ARCHS=x86_64 QEMU_SETUP_KVM_GROUPS=0 ./libscript.sh install qemu latest
+          SCRIPT_NAME="./engine/common/pkg_mgr.sh" . ./engine/common/pkg_mgr.sh && libscript_depends zip
 
       - name: Run Headless QEMU MS-DOS DOS32A Smoke Suite
         shell: sh

@@ -824,22 +824,22 @@ update_testing_todo_plan() {
 
         _new_line="${_line}"
 
-        if [ "${_r_sunos}" = "✅" ] || [ "${_r_sunos}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".sunos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".sunos*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_sunos}" = "✅" ] || [ "${_r_sunos}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".sunos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".sunos*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] OmniOS/[x] OmniOS/')
         fi
-        if [ "${_r_apk}" = "✅" ] || [ "${_r_apk}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.alpine.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.apk.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*alpine*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_apk}" = "✅" ] || [ "${_r_apk}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".linux.alpine.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.apk.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*alpine*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Alpine/[x] Alpine/')
         fi
-        if [ "${_r_deb}" = "✅" ] || [ "${_r_deb}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.debian.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.debian.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.deb.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*debian*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_deb}" = "✅" ] || [ "${_r_deb}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".linux.debian.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.debian.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.deb.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*debian*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Debian/[x] Debian/')
         fi
-        if [ "${_r_rpm}" = "✅" ] || [ "${_r_rpm}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.rocky*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.rpm.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*rocky*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_rpm}" = "✅" ] || [ "${_r_rpm}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".linux.rocky*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.rpm.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*rocky*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Rocky/[x] Rocky/')
         fi
-        if [ "${_r_freebsd}" = "✅" ] || [ "${_r_freebsd}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.bsd.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_freebsd}" = "✅" ] || [ "${_r_freebsd}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.bsd.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] FreeBSD/[x] FreeBSD/')
         fi
-        if [ "${_r_win}" = "✅" ] || [ "${_r_win}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".windows*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".win*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".windows*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_win}" = "✅" ] || [ "${_r_win}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".windows*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".win*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".windows*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Windows/[x] Windows/')
         fi
         if { [ -d "${_tests_tmp_dir}" ] && [ -f "${_tests_tmp_dir}/${_comp_short}.idempotent.success" ]; } || {
@@ -944,7 +944,7 @@ update_todo_plan() {
         _current_comp="${_comp_name}"
         _has_res=0
         if [ -n "${_comp_name}" ]; then
-          if [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_name}"*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_name}"*.failure >/dev/null 2>&1; }; then
+          if [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_name}"*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_name}"*.failure >/dev/null 2>&1); then
             _has_res=1
           elif [ -f "${_readme_ref}" ] && grep -F "| \`${_comp_name}\`" "${_readme_ref}" 2>/dev/null | grep -q "✅"; then
             _has_res=1
@@ -1116,25 +1116,25 @@ update_retest_plan() {
 
         _new_line="${_line}"
 
-        if [ "${_r_apk}" = "✅" ] || [ "${_r_apk}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.alpine.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.apk.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*alpine*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_apk}" = "✅" ] || [ "${_r_apk}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".linux.alpine.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.apk.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*alpine*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Alpine/[x] Alpine/')
         fi
-        if [ "${_r_deb}" = "✅" ] || [ "${_r_deb}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.debian.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.debian.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.deb.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*debian*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_deb}" = "✅" ] || [ "${_r_deb}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".linux.debian.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.debian.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.deb.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*debian*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Debian/[x] Debian/')
         fi
-        if [ "${_r_rpm}" = "✅" ] || [ "${_r_rpm}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.rocky*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.rpm.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*rocky*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_rpm}" = "✅" ] || [ "${_r_rpm}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".linux.rocky*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.rpm.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*rocky*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Rocky/[x] Rocky/')
         fi
-        if [ "${_r_win}" = "✅" ] || [ "${_r_win}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".windows*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".win*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".windows*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_win}" = "✅" ] || [ "${_r_win}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".windows*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".win*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".windows*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Windows/[x] Windows/')
         fi
-        if [ "${_r_sunos}" = "✅" ] || [ "${_r_sunos}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".sunos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".sunos*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_sunos}" = "✅" ] || [ "${_r_sunos}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".sunos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".sunos*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] OmniOS/[x] OmniOS/')
         fi
-        if [ "${_r_freebsd}" = "✅" ] || [ "${_r_freebsd}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.bsd.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_freebsd}" = "✅" ] || [ "${_r_freebsd}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.bsd.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] FreeBSD/[x] FreeBSD/')
         fi
-        if [ "${_r_macos}" = "✅" ] || [ "${_r_macos}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".darwin*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".macos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".darwin*.skipped >/dev/null 2>&1; }; }; then
+        if [ "${_r_macos}" = "✅" ] || [ "${_r_macos}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && (set +f; ls "${_tests_tmp_dir}/${_comp_short}".darwin*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".macos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".darwin*.skipped >/dev/null 2>&1); }; then
           _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] macOS/[x] macOS/')
         fi
 

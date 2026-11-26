@@ -2,7 +2,7 @@
 # ## Overview
 # Cross-platform POSIX `/bin/sh` Git pre-commit orchestrator executing staged normalization,
 # concurrent static audits (`cspell`, `audit_standards`, `audit_posix`, `audit_tiers`,
-# `audit_version_manager`, `audit_schema_vars`, `shellcheck`, `wincheck`, `doc_coverage`),
+# `audit_version_manager`, `audit_schema_vars`, `audit_stacks`, `shellcheck`, `wincheck`, `doc_coverage`),
 # and parallel schema/README synchronization via `engine/common/parallel.sh`.
 # ## Usage
 # ./.githooks/pre-commit.sh [--all]
@@ -412,6 +412,9 @@ run_wave2_task() {
     audit_schema_vars)
       STACK='' "${HOOK_REPO_ROOT}/devtools/audit/audit_schema_vars.sh" "$AUDIT_MODE"
       ;;
+    audit_stacks)
+      STACK='' "${HOOK_REPO_ROOT}/devtools/audit/audit_stacks.sh" --strict
+      ;;
     shellcheck)
       printf '%s\n' 'Running shellcheck...'
       if [ -s "$SC_LIST" ]; then
@@ -457,6 +460,11 @@ fi
 if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_schema_vars.sh" ]; then
   if [ "$AUDIT_MODE" = '--all' ] || grep -qE '^(_lib/|.*\.schema\.json$)' "$CHECK_LIST" 2>/dev/null; then
     printf '%s\n' 'audit_schema_vars' >> "$WAVE2_FILE"
+  fi
+fi
+if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_stacks.sh" ]; then
+  if [ "$AUDIT_MODE" = '--all' ] || grep -q '^workloads/' "$CHECK_LIST" 2>/dev/null; then
+    printf '%s\n' 'audit_stacks' >> "$WAVE2_FILE"
   fi
 fi
 printf '%s\n' 'shellcheck' >> "$WAVE2_FILE"

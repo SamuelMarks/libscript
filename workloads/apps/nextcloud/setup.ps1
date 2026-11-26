@@ -31,8 +31,9 @@ if ((Test-Path "$WwwRoot\occ") -or (Test-Path "$WwwRoot\version.php")) {
 
 Write-Host "Installing dependencies for Nextcloud ($WebServer)..."
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$libDir = Resolve-Path (Join-Path $scriptDir "..\..\..\_lib")
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$rootDir = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path } else { $d = $scriptDir; while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) { $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }; $d }
+$libDir = Join-Path $rootDir "_lib"
 
 if ($WebServer -eq "iis") {
     $iisSetup = Join-Path $libDir "web-servers\iis\setup.ps1"
@@ -50,7 +51,7 @@ if (-not (Test-Path $WwwRoot)) {
 $tmpZip = Join-Path $env:TEMP "nextcloud_$(Get-Random).zip"
 $dlUrl = if ($NextcloudVersion -eq "latest") { "https://download.nextcloud.com/server/releases/latest.zip" } else { "https://download.nextcloud.com/server/releases/nextcloud-$NextcloudVersion.zip" }
 
-& (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
+& (Join-Path $rootDir "engine\common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
 
 if (Test-Path $tmpZip) {
     $sevenZip = "C:\Program Files\7-Zip\7z.exe"

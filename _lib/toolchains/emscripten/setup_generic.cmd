@@ -163,7 +163,7 @@ if exist "!CACHED_DL!" (
     if errorlevel 1 exit /b 1
 )
 if /i "!URL:~-4!"==".zip" (
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!TMP_FILE!' -DestinationPath '!TARGET_DIR!' -Force"
+    call "%LIBSCRIPT_ROOT_DIR%\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_FILE!" "!TARGET_DIR!"
     if not exist "!TARGET_DIR!\bin\emcc.exe" (
         if exist "!TARGET_DIR!\emcc.exe" (
             move /y "!TARGET_DIR!\emcc.exe" "!TARGET_DIR!\bin\emcc.exe" >nul

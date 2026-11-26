@@ -1,17 +1,16 @@
 # ## Overview
-# PowerShell script for test.ps1.
+# Implements automated tests to verify the correctness of the Nextcloud stack.
 #
 # ## Usage
-# Execute via PowerShell.
-
-<#
-.SYNOPSIS
-Implements automated tests to verify the correctness of the Nextcloud collaboration platform stack.
-
-.DESCRIPTION
-Execute this script to run the test suite for nextcloud.
-#>
+# Execute via PowerShell: .\test.ps1
 
 $ErrorActionPreference = "Stop"
-
-Write-Output "nextcloud test pass"
+$wwwRoot = if ($env:NEXTCLOUD_WWWROOT) { $env:NEXTCLOUD_WWWROOT } else { "C:\inetpub\wwwroot\nextcloud" }
+Write-Host "Validating Nextcloud installation..."
+if (Test-Path (Join-Path $wwwRoot "core")) {
+    Write-Output "Nextcloud directory found at $wwwRoot"
+    exit 0
+} else {
+    Write-Error "Nextcloud directory not found at $wwwRoot"
+    exit 1
+}

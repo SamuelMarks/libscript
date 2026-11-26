@@ -6,7 +6,6 @@
 # ./engine/common/cow_snapshot.sh <create|rollback|send> <dataset_or_subvol> <snapshot_tag>
 
 set -feu; _cow_caller_this="${THIS_FILE:-}"; _cow_caller_dir="${SCRIPT_DIR:-}"
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -17,11 +16,10 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_cow_caller_dir:-}" ] && SCRIPT_DIR="${_cow_caller_dir}"; [ -n "${_cow_caller_this:-}" ] && THIS_FILE="${_cow_caller_this}"; unset SCRIPT_NAME _cow_caller_this _cow_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'

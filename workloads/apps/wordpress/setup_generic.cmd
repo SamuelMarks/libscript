@@ -51,8 +51,6 @@ goto :find_root
 
 
 
-if "!LIBSCRIPT_ROOT_DIR!"=="" (
-)
 
 if "%WORDPRESS_VERSION%"=="" set "WORDPRESS_VERSION=7.1.2"
 if "%WORDPRESS_WEBSERVER%"=="" set "WORDPRESS_WEBSERVER=nginx"

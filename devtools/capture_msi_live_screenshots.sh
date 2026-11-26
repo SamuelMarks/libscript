@@ -74,16 +74,23 @@ fi
 # Discovers the active QEMU monitor UNIX domain socket for the running Vagrant VM.
 find_qemu_monitor() {
   target_os="$1"
+  _found_sock=""
+  set +f
   for _id_file in "${REPO_ROOT}/vagrant/${target_os}/.vagrant/machines"/*/qemu/id; do
     if [ -f "$_id_file" ]; then
       _id=$(cat "$_id_file")
       _sock="${HOME:-/root}/.vagrant.d/tmp/vagrant-qemu/${_id}/qemu_socket"
       if [ -S "$_sock" ]; then
-        printf '%s\n' "$_sock"
-        return 0
+        _found_sock="$_sock"
+        break
       fi
     fi
   done
+  set -f
+  if [ -n "$_found_sock" ]; then
+    printf '%s\n' "$_found_sock"
+    return 0
+  fi
   return 1
 }
 

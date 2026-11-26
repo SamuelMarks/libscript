@@ -1,9 +1,9 @@
 @echo off
-:: # setup.cmd
+:: # setup_generic.cmd
 :: ## Overview
-:: Orchestrates the setup and installation process for the Joomla CMS stack.
+:: Native zero-PowerShell Windows Batch setup for the Joomla CMS stack.
 :: ## Usage
-:: Execute this script to install and configure joomla on the local system.
+:: setup_generic.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,11 +48,42 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where powershell >nul 2>&1
-if "%ERRORLEVEL%" NEQ "0" (
-    echo [ERROR] PowerShell not found. Cannot configure Joomla on Windows.
-    exit /b 1
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!JOOMLA_VERSION!"=="" set "JOOMLA_VERSION=5.0.3"
+if "!JOOMLA_WWWROOT!"=="" set "JOOMLA_WWWROOT=C:\inetpub\wwwroot\joomla"
+if "!JOOMLA_DB_TYPE!"=="" set "JOOMLA_DB_TYPE=mariadb"
+if "!JOOMLA_DB_NAME!"=="" set "JOOMLA_DB_NAME=joomla"
+if "!JOOMLA_DB_USER!"=="" set "JOOMLA_DB_USER=joomla"
+if "!JOOMLA_DB_PASS!"=="" set "JOOMLA_DB_PASS=joomla"
+if "!JOOMLA_SERVER_NAME!"=="" set "JOOMLA_SERVER_NAME=localhost"
+if "!JOOMLA_LISTEN!"=="" set "JOOMLA_LISTEN=80"
+
+if exist "!JOOMLA_WWWROOT!\administrator" (
+    echo [INFO] Joomla is already installed at !JOOMLA_WWWROOT!.
+    exit /b 0
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\setup.ps1"
-if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!
+if not "!LIBSCRIPT_SKIP_SYSTEM_DEPS!"=="1" (
+    where php >nul 2>&1
+    if errorlevel 1 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install php latest
+)
+
+if not exist "!JOOMLA_WWWROOT!" mkdir "!JOOMLA_WWWROOT!"
+set "TMP_ZIP=%TEMP%\joomla_!RANDOM!.zip"
+set "DL_URL=https://github.com/joomla/joomla-cms/releases/download/!JOOMLA_VERSION!/Joomla_!JOOMLA_VERSION!-Stable-Full_Package.zip"
+
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "!TMP_ZIP!"
+if errorlevel 1 exit /b 1
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_ZIP!" "!JOOMLA_WWWROOT!"
+del /f /q "!TMP_ZIP!" 2>nul
+
+if /I "!JOOMLA_DB_TYPE!"=="mariadb" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine mysql --host 127.0.0.1 --port 3306 --schema "!JOOMLA_DB_NAME!" --user "!JOOMLA_DB_USER!" --password "!JOOMLA_DB_PASS!"
+) else if /I "!JOOMLA_DB_TYPE!"=="mysql" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine mysql --host 127.0.0.1 --port 3306 --schema "!JOOMLA_DB_NAME!" --user "!JOOMLA_DB_USER!" --password "!JOOMLA_DB_PASS!"
+) else if /I "!JOOMLA_DB_TYPE!"=="postgres" (
+    call "!LIBSCRIPT_ROOT_DIR!\engine\hooks\databases\provision_schema.cmd" --engine postgres --host 127.0.0.1 --port 5432 --schema "!JOOMLA_DB_NAME!" --user "!JOOMLA_DB_USER!" --password "!JOOMLA_DB_PASS!"
+)
+
+echo [OK] Joomla setup complete on !JOOMLA_SERVER_NAME! ^(Port !JOOMLA_LISTEN!^).
+exit /b 0

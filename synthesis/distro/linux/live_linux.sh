@@ -120,7 +120,7 @@ mkdir -p "$ROOTFS/opt/libscript/msi-rs/bin"
 # Embed msi-rs toolchain
 MSI_PREFIX="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/latest/bin"
 if [ -d "$MSI_PREFIX" ]; then
-  cp -R "$MSI_PREFIX"/* "$ROOTFS/opt/libscript/msi-rs/bin/" 2>/dev/null || true
+  (set +f; cp -R "$MSI_PREFIX"/* "$ROOTFS/opt/libscript/msi-rs/bin/" 2>/dev/null || true)
 fi
 
 # 2. Configure autologin & startup scripts

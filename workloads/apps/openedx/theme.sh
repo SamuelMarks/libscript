@@ -130,16 +130,17 @@ theme_install() {
     fi
   fi
 
-  # Record in registry
-  _py="$(resolve_python)"
-  if [ -n "${_py}" ]; then
-    "${_py}" - <<EOF
-import json, os
-p = "${THEME_REGISTRY}"
-d = json.load(open(p)) if os.path.exists(p) else {}
-d["${_name}"] = {"url": "${_url}", "branch": "${_branch}", "installed": True, "active": False}
-json.dump(d, open(p, "w"), indent=2)
-EOF
+  # Record in registry via jq
+  if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+  fi
+  mkdir -p "$(dirname -- "${THEME_REGISTRY}")"
+  if command -v jq >/dev/null 2>&1; then
+    if [ ! -s "${THEME_REGISTRY}" ]; then printf '{}\n' > "${THEME_REGISTRY}"; fi
+    jq --arg n "${_name}" --arg u "${_url}" --arg b "${_branch}" '.[$n] = {"url": $u, "branch": $b, "installed": true, "active": false}' "${THEME_REGISTRY}" > "${THEME_REGISTRY}.tmp" && mv -f "${THEME_REGISTRY}.tmp" "${THEME_REGISTRY}"
   fi
   log_success "Theme '${_name}' installed successfully."
 }
@@ -247,16 +248,17 @@ except Exception as e:
 EOF
   fi
 
-  # Update registry
-  if [ -n "${_py}" ]; then
-    "${_py}" - <<EOF
-import json, os
-p = "${THEME_REGISTRY}"
-d = json.load(open(p)) if os.path.exists(p) else {}
-for k in d:
-    d[k]["active"] = (k == "${_name}")
-json.dump(d, open(p, "w"), indent=2)
-EOF
+  # Update registry via jq
+  if [ -f "${THEME_REGISTRY}" ]; then
+    if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+    fi
+    if command -v jq >/dev/null 2>&1; then
+      jq --arg n "${_name}" 'with_entries(.value.active = (.key == $n))' "${THEME_REGISTRY}" > "${THEME_REGISTRY}.tmp" && mv -f "${THEME_REGISTRY}.tmp" "${THEME_REGISTRY}"
+    fi
   fi
   log_success "Theme '${_name}' is now active on '${_domain}'."
 }
@@ -265,19 +267,19 @@ EOF
 # Lists all themes.
 theme_list() {
   log_info 'Listing installed Open edX themes...'
-  _py="$(resolve_python)"
-  if [ -n "${_py}" ] && [ -f "${THEME_REGISTRY}" ]; then
-    "${_py}" - <<EOF
-import json
-d = json.load(open("${THEME_REGISTRY}"))
-print(f"{'THEME NAME':<24} {'ACTIVE':<10} {'SOURCE URL':<40}")
-print("-" * 76)
-for k, v in d.items():
-    print(f"{k:<24} {str(v.get('active', False)):<10} {v.get('url', 'local'):<40}")
-EOF
+  if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+  fi
+  printf '%-24s %-10s %-40s\n' "THEME NAME" "ACTIVE" "SOURCE URL"
+  printf '%s\n' '----------------------------------------------------------------------------'
+  if command -v jq >/dev/null 2>&1 && [ -f "${THEME_REGISTRY}" ]; then
+    jq -r 'to_entries[] | "\(.key)\t\(.value.active // false)\t\(.value.url // "local")"' "${THEME_REGISTRY}" | while IFS='	' read -r _tk _ta _tu; do
+      printf '%-24s %-10s %-40s\n' "${_tk}" "${_ta}" "${_tu}"
+    done
   else
-    printf '%-24s %-10s %-40s\n' "THEME NAME" "ACTIVE" "SOURCE URL"
-    printf '%s\n' '----------------------------------------------------------------------------'
     set +f
     for d in "${THEMES_DIR}"/*; do
       if [ -d "$d" ]; then
@@ -304,16 +306,16 @@ theme_remove() {
   log_info "Removing theme '${_name}'..."
   rm -rf "${_dest}"
 
-  _py="$(resolve_python)"
-  if [ -n "${_py}" ] && [ -f "${THEME_REGISTRY}" ]; then
-    "${_py}" - <<EOF
-import json, os
-p = "${THEME_REGISTRY}"
-if os.path.exists(p):
-    d = json.load(open(p))
-    d.pop("${_name}", None)
-    json.dump(d, open(p, "w"), indent=2)
-EOF
+  if [ -f "${THEME_REGISTRY}" ]; then
+    if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+    fi
+    if command -v jq >/dev/null 2>&1; then
+      jq --arg n "${_name}" 'del(.[$n])' "${THEME_REGISTRY}" > "${THEME_REGISTRY}.tmp" && mv -f "${THEME_REGISTRY}.tmp" "${THEME_REGISTRY}"
+    fi
   fi
   log_success "Theme '${_name}' removed."
 }
@@ -325,12 +327,12 @@ show_help() {
 Open edX Theming & Branding CLI
 
 Usage:
-  $0 install <name> <git_url> [--branch <branch>]
-  $0 build <name>
-  $0 apply <name> [--site <domain>]
-  $0 list
-  $0 remove <name>
-  $0 help
+  ${THIS_FILE} install <name> <git_url> [--branch <branch>]
+  ${THIS_FILE} build <name>
+  ${THIS_FILE} apply <name> [--site <domain>]
+  ${THIS_FILE} list
+  ${THIS_FILE} remove <name>
+  ${THIS_FILE} help
 
 Commands:
   install   Download/checkout theme from Git

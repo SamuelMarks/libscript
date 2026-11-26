@@ -60,7 +60,7 @@ STAMPS_DIR="${LIBSCRIPT_ROOT_DIR}/build/stamps"
 case "${LIBSCRIPT_TARGET_OS:-linux}" in
   zephyr|rtos-zephyr)
     if [ "$ACTION" = "clean" ]; then
-      rm -rf "${ROOTFS}/boot/.stamp.zephyr_"*
+      (set +f; rm -rf "${ROOTFS}/boot/.stamp.zephyr_"*)
       exit 0
     elif [ "$ACTION" = "status" ]; then
       ls -l "${ROOTFS}/boot/zephyr.elf" 2>/dev/null || printf '[INFO] Zephyr firmware not yet staged in %s/boot\n' "$ROOTFS"
@@ -71,7 +71,7 @@ case "${LIBSCRIPT_TARGET_OS:-linux}" in
     ;;
   freertos|rtos-freertos)
     if [ "$ACTION" = "clean" ]; then
-      rm -rf "${ROOTFS}/boot/.stamp.freertos_"*
+      (set +f; rm -rf "${ROOTFS}/boot/.stamp.freertos_"*)
       exit 0
     elif [ "$ACTION" = "status" ]; then
       ls -l "${ROOTFS}/boot/freertos.elf" 2>/dev/null || printf '[INFO] FreeRTOS firmware not yet staged in %s/boot\n' "$ROOTFS"
@@ -126,22 +126,35 @@ fi
 # Searches LIBSCRIPT_HOME/linux and target/host boot directories for a real compiled kernel image.
 locate_real_vmlinuz() {
   _lh="${LIBSCRIPT_HOME:-${HOME:-/tmp}/.libscript}/linux"
+  _found_k=""
   if [ -d "$_lh" ]; then
+    set +f
     for _cand in "$_lh"/*/boot/vmlinuz* "$_lh"/*/bzImage "$_lh"/*/Image; do
       if [ -f "$_cand" ] && [ -s "$_cand" ]; then
-        printf '%s\n' "$_cand"
-        return 0
+        _found_k="$_cand"
+        break
       fi
     done
+    set -f
+    if [ -n "$_found_k" ]; then
+      printf '%s\n' "$_found_k"
+      return 0
+    fi
   fi
+  set +f
   for _sys_k in "${ROOTFS}/boot/vmlinuz-"* "/boot/vmlinuz-"* "/boot/vmlinuz-lts" "/boot/vmlinuz-virt" "/boot/vmlinuz"; do
     if [ -f "$_sys_k" ] && [ -s "$_sys_k" ]; then
       if ! grep -q '^LibScript Linux Kernel' "$_sys_k" 2>/dev/null; then
-        printf '%s\n' "$_sys_k"
-        return 0
+        _found_k="$_sys_k"
+        break
       fi
     fi
   done
+  set -f
+  if [ -n "$_found_k" ]; then
+    printf '%s\n' "$_found_k"
+    return 0
+  fi
   return 1
 }
 

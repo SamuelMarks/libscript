@@ -83,6 +83,62 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\preloader\preload_assets
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\preloader\preload_assets.cmd" "!TEST_TMP!\sysroot" jq >nul || exit /b 1
 
+echo ==^> [4/6] Testing audit_stacks.cmd --strict...
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_stacks.cmd" --strict >nul || exit /b 1
+
+echo ==^> [5/6] Testing paths.cmd, context.cmd, conf_no_all.env.cmd endlocal tunneling and environ.cmd 2x idempotency...
+set "STACK="
+set "DOWNLOAD_DIR="
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\paths.cmd" >nul || exit /b 1
+if "!DOWNLOAD_DIR!"=="" (
+    echo [FAIL] paths.cmd failed to tunnel DOWNLOAD_DIR across endlocal >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+set "STACK="
+set "LIBSCRIPT_STAMP_DIR="
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\context.cmd" >nul || exit /b 1
+if "!LIBSCRIPT_STAMP_DIR!"=="" (
+    echo [FAIL] context.cmd failed to tunnel LIBSCRIPT_STAMP_DIR across endlocal >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+set "STACK="
+set "RUST_INSTALL="
+call "!LIBSCRIPT_ROOT_DIR!\docker\conf_no_all.env.cmd" >nul || exit /b 1
+if not "!RUST_INSTALL!"=="0" (
+    echo [FAIL] conf_no_all.env.cmd failed to tunnel RUST_INSTALL=0 across endlocal >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\environ.cmd" :save_environment "!TEST_TMP!\env_snap.txt" || exit /b 1
+for %%Z in ("!TEST_TMP!\env_snap.txt") do set "_SZ1=%%~zZ"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\environ.cmd" :save_environment "!TEST_TMP!\env_snap.txt" || exit /b 1
+for %%Z in ("!TEST_TMP!\env_snap.txt") do set "_SZ2=%%~zZ"
+if not "!_SZ1!"=="!_SZ2!" (
+    echo [FAIL] environ.cmd :save_environment is not 2x idempotent ^(!_SZ1! vs !_SZ2!^) >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+
+echo ==^> [6/6] Testing docker\create_docker_builder.cmd 2x idempotency...
+if not exist "!TEST_TMP!\dk\docker" mkdir "!TEST_TMP!\dk\docker"
+copy /y "!LIBSCRIPT_ROOT_DIR!\docker\base.alpine.Dockerfile" "!TEST_TMP!\dk\docker\base.alpine.Dockerfile" >nul
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\docker\create_docker_builder.cmd" -i "!TEST_TMP!\dk" >nul || exit /b 1
+for %%Z in ("!TEST_TMP!\dk\docker_builder.cmd") do set "_DK1=%%~zZ"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\docker\create_docker_builder.cmd" -i "!TEST_TMP!\dk" >nul || exit /b 1
+for %%Z in ("!TEST_TMP!\dk\docker_builder.cmd") do set "_DK2=%%~zZ"
+if not "!_DK1!"=="!_DK2!" (
+    echo [FAIL] create_docker_builder.cmd is not 2x idempotent >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+
 rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo [PASS] All Windows standards remediation checks passed.
 exit /b 0

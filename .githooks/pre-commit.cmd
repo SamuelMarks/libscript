@@ -197,6 +197,17 @@ if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_schema_vars.cmd" (
         >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\audit_schema_vars.cmd" !AUDIT_MODE!
     )
 )
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_stacks.cmd" (
+    set "_RUN_ST=0"
+    if /I "!AUDIT_MODE!"=="--all" set "_RUN_ST=1"
+    if "!_RUN_ST!"=="0" (
+        findstr /R /C:"^workloads[/\\]" "!_PC_CHECK!" >nul 2>&1
+        if not errorlevel 1 set "_RUN_ST=1"
+    )
+    if "!_RUN_ST!"=="1" (
+        >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\audit_stacks.cmd" --strict
+    )
+)
 
 echo Running shellcheck...
 set "_HAS_SC=0"

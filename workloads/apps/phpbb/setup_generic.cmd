@@ -1,9 +1,9 @@
 @echo off
-:: # setup.cmd
+:: # setup_generic.cmd
 :: ## Overview
-:: Orchestrates the setup and installation process for the phpBB forum software stack.
+:: Native zero-PowerShell Windows Batch setup for the phpBB forum software stack.
 :: ## Usage
-:: Execute this script to install and configure phpbb on the local system.
+:: setup_generic.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,11 +48,44 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where powershell >nul 2>&1
-if "%ERRORLEVEL%" NEQ "0" (
-    echo [ERROR] PowerShell not found. Cannot configure phpBB on Windows.
-    exit /b 1
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!PHPBB_VERSION!"=="" set "PHPBB_VERSION=3.3.11"
+if "!PHPBB_MAJOR_VERSION!"=="" set "PHPBB_MAJOR_VERSION=3.3"
+if "!PHPBB_WWWROOT!"=="" set "PHPBB_WWWROOT=C:\inetpub\wwwroot\phpbb"
+if "!PHPBB_DB_TYPE!"=="" set "PHPBB_DB_TYPE=sqlite"
+if "!PHPBB_SERVER_NAME!"=="" set "PHPBB_SERVER_NAME=localhost"
+if "!PHPBB_LISTEN!"=="" set "PHPBB_LISTEN=80"
+
+if exist "!PHPBB_WWWROOT!\phpbb" (
+    echo [INFO] phpBB is already installed at !PHPBB_WWWROOT!.
+    exit /b 0
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\setup.ps1"
-if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!
+if not "!LIBSCRIPT_SKIP_SYSTEM_DEPS!"=="1" (
+    where php >nul 2>&1
+    if errorlevel 1 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install php latest
+)
+
+if not exist "!PHPBB_WWWROOT!" mkdir "!PHPBB_WWWROOT!"
+set "TMP_ZIP=%TEMP%\phpbb_!RANDOM!.zip"
+set "TMP_EXT=%TEMP%\pb_ext_!RANDOM!"
+set "DL_URL=https://download.phpbb.com/pub/release/!PHPBB_MAJOR_VERSION!/!PHPBB_VERSION!/phpBB-!PHPBB_VERSION!.zip"
+
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "!TMP_ZIP!"
+if errorlevel 1 exit /b 1
+if not exist "!TMP_EXT!" mkdir "!TMP_EXT!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_extract_archive "!TMP_ZIP!" "!TMP_EXT!"
+if exist "!TMP_EXT!\phpBB3" (
+    xcopy /E /I /Y "!TMP_EXT!\phpBB3\*" "!PHPBB_WWWROOT!\" >nul
+) else (
+    xcopy /E /I /Y "!TMP_EXT!\*" "!PHPBB_WWWROOT!\" >nul
+)
+del /f /q "!TMP_ZIP!" 2>nul
+rmdir /s /q "!TMP_EXT!" 2>nul
+
+if /I "!PHPBB_DB_TYPE!"=="sqlite" (
+    if not exist "!PHPBB_WWWROOT!\store" mkdir "!PHPBB_WWWROOT!\store"
+)
+
+echo [OK] phpBB setup complete on !PHPBB_SERVER_NAME! ^(Port !PHPBB_LISTEN!^).
+exit /b 0

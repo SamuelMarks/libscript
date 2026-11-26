@@ -163,7 +163,9 @@ elif [ "$CMD" = "prepare-storage" ]; then
       done
     fi
     if [ -d "${_ps_cert_store}/live" ]; then
+      set +f
       for _ps_dom_dir in "${_ps_cert_store}/live"/*; do
+        set -f
         [ -d "$_ps_dom_dir" ] || continue
         _ps_dom=$(basename "$_ps_dom_dir")
         if [ -s "${_ps_dom_dir}/fullchain.pem" ] && [ -s "${_ps_dom_dir}/privkey.pem" ]; then
@@ -194,6 +196,7 @@ elif [ "$CMD" = "prepare-storage" ]; then
           fi
         fi
       done
+      set -f
     fi
   fi
   exit 0
@@ -211,14 +214,18 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     _pkg="$1"
     _ver="$2"
 
+    set +f
     for _comp_dir in "${LIBSCRIPT_ROOT_DIR:-.}"/_lib/*/"$_pkg"; do
+      set -f
       if [ -f "${_comp_dir}/env.sh" ]; then
         SCRIPT_NAME="${_comp_dir}/env.sh"
+        export SCRIPT_NAME
         # shellcheck disable=SC1090
         . "$SCRIPT_NAME" >/dev/null 2>&1 || true
         unset SCRIPT_NAME || true
       fi
     done
+    set -f
 
     case "$_pkg" in
         postgres|postgresql)
@@ -257,13 +264,16 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
             ;;
         *)
             _hc_handled=0
+            set +f
             for _comp_dir in "${LIBSCRIPT_ROOT_DIR:-.}"/_lib/*/"$_pkg"; do
+              set -f
               if [ -f "${_comp_dir}/test.sh" ]; then
                 sh "${_comp_dir}/test.sh" >/dev/null 2>&1 || true
                 _hc_handled=1
                 break
               fi
             done
+            set -f
             if [ "$_hc_handled" -eq 0 ]; then
               "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
               if command -v "$_pkg" >/dev/null 2>&1; then
@@ -305,6 +315,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
         if [ -n "$_nsd_target" ] && [ -d "$_nsd_target" ]; then
           chown "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || sudo -n chown "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || true
           chmod 0755 "$_nsd_target" 2>/dev/null || sudo -n chmod 0755 "$_nsd_target" 2>/dev/null || true
+          set +f
           for _nsd_sub in "${_nsd_target}"/* "${_nsd_target}"/.[!.]* "${_nsd_target}"/..*; do
             [ -e "$_nsd_sub" ] || continue
             case "${_nsd_sub##*/}" in
@@ -313,6 +324,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
             chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_sub" 2>/dev/null || sudo -n chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_sub" 2>/dev/null || true
             chmod -R u+rwX,go+rX "$_nsd_sub" 2>/dev/null || sudo -n chmod -R u+rwX,go+rX "$_nsd_sub" 2>/dev/null || true
           done
+          set -f
           if id ollama >/dev/null 2>&1 && [ -d "${_nsd_target}/ollama_models" ]; then
             usermod -aG ollama "$_nsd_user" 2>/dev/null || sudo -n usermod -aG ollama "$_nsd_user" 2>/dev/null || true
             usermod -aG "$_nsd_group" ollama 2>/dev/null || sudo -n usermod -aG "$_nsd_group" ollama 2>/dev/null || true

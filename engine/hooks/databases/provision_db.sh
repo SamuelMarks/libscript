@@ -56,9 +56,11 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh" ]; then
   . "${LIBSCRIPT_ROOT_DIR}/engine/common/env_printer.sh"
   unset SCRIPT_NAME || true
   libscript_hydrate_manifest_env "$JSON_FILE" || true
+  set +f
   for _pdb_sub_ef in "${MANIFEST_DIR}"/*/.env; do
     [ -f "$_pdb_sub_ef" ] && libscript_source_env_preserve_existing "$_pdb_sub_ef"
   done
+  set -f
 else
   for _pdb_ef in "${MANIFEST_DIR}/.env" "${MANIFEST_DIR}/.env.secrets" "${MANIFEST_DIR}/.env.libscript"; do
     if [ -f "$_pdb_ef" ]; then
@@ -109,7 +111,9 @@ ensure_manifest_python_venvs() {
     export UV_PYTHON_INSTALL_DIR="${_emp_home}/.local/share/uv/python"
     export UV_CACHE_DIR="${_emp_home}/.cache/uv"
   fi
+  set +f
   for _emp_proj in "$MANIFEST_DIR" "$MANIFEST_DIR"/*; do
+    set -f
     [ -d "$_emp_proj" ] || continue
     if [ -f "${_emp_proj}/pyproject.toml" ] || [ -f "${_emp_proj}/requirements.txt" ]; then
       if [ -L "${_emp_proj}/.venv/bin/python" ] || [ -L "${_emp_proj}/.venv/bin/python3" ]; then
@@ -587,15 +591,20 @@ while IFS= read -r db_entry <&3; do
         if [ -n "$MIGRATION_DIR" ]; then
           RES_MIG_DIR=$(resolve_db_asset_path "$MIGRATION_DIR")
           if [ -d "$RES_MIG_DIR" ]; then
+            set +f
             _mig_hash=$(cksum "$RES_MIG_DIR"/*.sql 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none')
+            set -f
             _mig_stamp="${_db_state_dir}/pg_${DB_NAME}_mig.sha256"
             if [ "${LIBSCRIPT_FORCE_SEED:-0}" != "1" ] && [ -f "$_mig_stamp" ] && [ "$(cat "$_mig_stamp" 2>/dev/null || true)" = "$_mig_hash" ]; then
               log_info "[REUSE] PostgreSQL migrations in '$RES_MIG_DIR' unchanged for '$DB_NAME'; skipping."
             else
+              set +f
               for _mig_sql in "$RES_MIG_DIR"/*.sql; do
+                set -f
                 [ -f "$_mig_sql" ] || continue
                 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$_mig_sql" >/dev/null 2>&1 || true
               done
+              set -f
               printf '%s\n' "$_mig_hash" > "$_mig_stamp" 2>/dev/null || true
             fi
           fi
@@ -736,13 +745,16 @@ while IFS= read -r db_entry <&3; do
         if [ -n "$SEED_DIR" ]; then
           RES_SEED_DIR=$(resolve_db_asset_path "$SEED_DIR")
           if [ -d "$RES_SEED_DIR" ]; then
+            set +f
             for _sd_item in "$RES_SEED_DIR"/*; do
+              set -f
               [ -f "$_sd_item" ] || continue
               case "$_sd_item" in
                 *.sql) exec_duckdb_sql_file "$DB_PATH" "$_sd_item" || true ;;
                 *.csv|*.parquet) import_duckdb_table_file "$DB_PATH" "$_sd_item" || true ;;
               esac
             done
+            set -f
           fi
         fi
         if [ -n "$SEED_CMD" ]; then

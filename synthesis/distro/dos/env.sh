@@ -5,7 +5,7 @@
 # ## Usage
 # ./synthesis/distro/dos/env.sh
 
-set -feu
+set -feu; _env_caller_this="${THIS_FILE:-}"; _env_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,6 +20,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"; [ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"; unset SCRIPT_NAME _env_caller_this _env_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -27,4 +28,6 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-:
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"; [ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"; unset SCRIPT_NAME _env_caller_this _env_caller_dir || true

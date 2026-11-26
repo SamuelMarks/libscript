@@ -807,7 +807,7 @@ case "${ACTION}" in
     ;;
   uninstall)
     resolve_exact_version
-    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EXACT_VERSION}"*
+    (set +f; rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EXACT_VERSION}"*)
     rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${VERSION}"
     rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default"
     ;;

@@ -49,8 +49,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "!LIBSCRIPT_ROOT_DIR!"=="" (
-)
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 )
@@ -189,7 +187,11 @@ if errorlevel 1 (
 if not errorlevel 1 (
     echo Extracting pre-compiled binary release...
     if exist "%TEMP%\msi_rs_extracted" rmdir /s /q "%TEMP%\msi_rs_extracted" >nul 2>&1
-    powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\msi_rs_prebuilt.zip' -DestinationPath '%TEMP%\msi_rs_extracted' -Force"
+    if not exist "%TEMP%\msi_rs_extracted" mkdir "%TEMP%\msi_rs_extracted" >nul 2>&1
+    tar -xf "%TEMP%\msi_rs_prebuilt.zip" -C "%TEMP%\msi_rs_extracted" 2>nul
+    if errorlevel 1 (
+        powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\msi_rs_prebuilt.zip' -DestinationPath '%TEMP%\msi_rs_extracted' -Force"
+    )
     del "%TEMP%\msi_rs_prebuilt.zip" >nul 2>&1
     if exist "%TEMP%\msi_rs_extracted\msi-tools-%EXACT_VERSION%-%WIN_ARCH%-pc-windows-msvc\" (
         xcopy /e /y /q "%TEMP%\msi_rs_extracted\msi-tools-%EXACT_VERSION%-%WIN_ARCH%-pc-windows-msvc\*" "%TARGET_DIR%\bin\" >nul
@@ -203,7 +205,11 @@ if not errorlevel 1 (
         call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :libscript_download "!SDK_URL!" "%TEMP%\msi_rs_sdk.zip" >nul 2>&1
         if not errorlevel 1 if exist "%TEMP%\msi_rs_sdk.zip" (
             if exist "%TEMP%\msi_rs_sdk_ext" rmdir /s /q "%TEMP%\msi_rs_sdk_ext" >nul 2>&1
-            powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\msi_rs_sdk.zip' -DestinationPath '%TEMP%\msi_rs_sdk_ext' -Force" >nul 2>&1
+            if not exist "%TEMP%\msi_rs_sdk_ext" mkdir "%TEMP%\msi_rs_sdk_ext" >nul 2>&1
+            tar -xf "%TEMP%\msi_rs_sdk.zip" -C "%TEMP%\msi_rs_sdk_ext" 2>nul
+            if errorlevel 1 (
+                powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\msi_rs_sdk.zip' -DestinationPath '%TEMP%\msi_rs_sdk_ext' -Force" >nul 2>&1
+            )
             del "%TEMP%\msi_rs_sdk.zip" >nul 2>&1
             if exist "%TEMP%\msi_rs_sdk_ext\msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc\" (
                 xcopy /e /y /q "%TEMP%\msi_rs_sdk_ext\msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc\*" "%TARGET_DIR%\" >nul 2>&1

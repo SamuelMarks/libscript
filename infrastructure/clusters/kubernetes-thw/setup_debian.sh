@@ -39,11 +39,15 @@ for LIB in "engine/common/environ.sh" "engine/common/pkg_mgr.sh"; do
   . "${SCRIPT_NAME}"
 done
 
+_kthw_this="${THIS_FILE}"
+_kthw_dir="${SCRIPT_DIR}"
 SCRIPT_NAME="${DIR}/setup_generic.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
+THIS_FILE="${_kthw_this}"
+SCRIPT_DIR="${_kthw_dir}"
 
 if [ "${VAGRANT_MULTI_NODE:-0}" != "1" ]; then
   exit 0
@@ -80,8 +84,11 @@ if ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@server echo ok >/dev/
       priv chmod 600 /root/.ssh/authorized_keys 2>/dev/null || true
     fi
   fi
-  if ! ssh-keygen -F server >/dev/null 2>&1 && ! ssh-keygen -F 127.0.0.1 >/dev/null 2>&1; then
-    ssh-keyscan 127.0.0.1 server >> ~/.ssh/known_hosts 2>/dev/null || true
+  if ! ssh-keygen -F 127.0.0.1 >/dev/null 2>&1; then
+    ssh-keyscan 127.0.0.1 >> ~/.ssh/known_hosts 2>/dev/null || true
+  fi
+  if ! ssh-keygen -F server >/dev/null 2>&1; then
+    ssh-keyscan server >> ~/.ssh/known_hosts 2>/dev/null || true
   fi
 fi
 
@@ -99,6 +106,8 @@ for LIB in 'ch2_jumpbox_only.sh' 'ch4_jumpbox_to_targets.sh' 'ch5_jumpbox_to_tar
   . "${SCRIPT_NAME}"
 done
 unset SCRIPT_NAME || true
+THIS_FILE="${_kthw_this}"
+SCRIPT_DIR="${_kthw_dir}"
 
 if [ -n "${KUBERNETES_THW_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
   if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${KUBERNETES_THW_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then

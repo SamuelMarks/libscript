@@ -54,6 +54,7 @@ printf '[MATRIX] Checking Unikernel target validation...\n'
 # 5. Verify Windows batch parity scripts existence
 printf '[MATRIX] Checking Windows batch parity across orchestration and packaging tools...\n'
 MISSING_CMD=0
+set +f
 for sh_file in "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/linux"/*.sh "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers"/*.sh "${LIBSCRIPT_ROOT_DIR}/synthesis/repogen"/*.sh "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as"/*.sh; do
   [ -f "$sh_file" ] || continue
   cmd_file="${sh_file%.sh}.cmd"
@@ -62,6 +63,7 @@ for sh_file in "${LIBSCRIPT_ROOT_DIR}/synthesis/distro/linux"/*.sh "${LIBSCRIPT_
     MISSING_CMD=1
   fi
 done
+set -f
 
 if [ "$MISSING_CMD" -ne 0 ]; then
   printf '[ERROR] Windows batch parity verification failed.\n' >&2

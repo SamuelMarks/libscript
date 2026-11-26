@@ -49,11 +49,62 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
+
+echo ==^> [1/3] Testing DBaaS Connection URL Parser on Windows...
+set "TEST_URL=mysql://wp_cloud_user:SecretPass2026@mysql-prod.cluster-123.us-east-1.rds.amazonaws.com:3306/wordpress_prod?ssl-ca=/etc/ssl/certs/rds-ca-2019-root.pem&ssl-mode=VERIFY_IDENTITY"
+set "STACK="
+for /f "tokens=1* delims==" %%A in ('call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_dbaas_url.cmd" "%TEST_URL%" --eval') do (
+    set "%%A=%%B"
 )
 
-echo ==> Testing DBaaS Connection URL Parser on Windows...
-call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_dbaas_url.cmd" "mysql://wpuser:p@ss!@db.example.com:3307/wp_db?ssl-ca=ca.pem" --eval
+if not "!DB_HOST!"=="mysql-prod.cluster-123.us-east-1.rds.amazonaws.com" (
+    echo [ERROR] DB_HOST mismatch: !DB_HOST! >&2
+    exit /b 1
+)
+if not "!DB_PORT!"=="3306" (
+    echo [ERROR] DB_PORT mismatch: !DB_PORT! >&2
+    exit /b 1
+)
+if not "!DB_NAME!"=="wordpress_prod" (
+    echo [ERROR] DB_NAME mismatch: !DB_NAME! >&2
+    exit /b 1
+)
+if not "!DB_USER!"=="wp_cloud_user" (
+    echo [ERROR] DB_USER mismatch: !DB_USER! >&2
+    exit /b 1
+)
+if not "!DB_USE_SSL!"=="1" (
+    echo [ERROR] DB_USE_SSL mismatch: !DB_USE_SSL! >&2
+    exit /b 1
+)
+if not "!DB_SSL_CA!"=="/etc/ssl/certs/rds-ca-2019-root.pem" (
+    echo [ERROR] DB_SSL_CA mismatch: !DB_SSL_CA! >&2
+    exit /b 1
+)
+if not "!DB_SSL_MODE!"=="VERIFY_IDENTITY" (
+    echo [ERROR] DB_SSL_MODE mismatch: !DB_SSL_MODE! >&2
+    exit /b 1
+)
+echo     [OK] Connection URL parsed accurately ^(Host, Port, User, SSL-CA, SSL-Mode^).
 
-echo ==> All hosted DBaaS tests passed successfully on Windows^^!
+echo ==^> [2/3] Testing JSON Mode Output...
+set "STACK="
+set "JSON_OUT="
+for /f "delims=" %%J in ('call "%LIBSCRIPT_ROOT_DIR%\engine\hooks\databases\parse_dbaas_url.cmd" "%TEST_URL%" --json') do set "JSON_OUT=%%J"
+echo "!JSON_OUT!" | findstr /C:"\"use_ssl\":true" >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] JSON output missing use_ssl:true: !JSON_OUT! >&2
+    exit /b 1
+)
+echo     [OK] JSON mode output verified.
+
+echo ==^> [3/3] Verifying WordPress setup_generic.cmd SSL Configuration Support...
+findstr /I /C:"MYSQLI_CLIENT_SSL" "%LIBSCRIPT_ROOT_DIR%\workloads\apps\wordpress\setup_generic.sh" >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] MYSQLI_CLIENT_SSL constant missing from WordPress configuration template. >&2
+    exit /b 1
+)
+echo     [OK] WordPress DBaaS SSL constant verified.
+
+echo ==^> All hosted DBaaS tests passed successfully on Windows^^!
 exit /b 0

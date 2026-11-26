@@ -347,6 +347,7 @@ if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
 if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
 where git >nul 2>&1
 if errorlevel 1 exit /b 1
+if exist "%~1" rmdir /s /q "%~1" >nul 2>&1
 echo [INFO] Source archive download unavailable; cloning tag v!EXACT_VERSION! via git...
 git clone --depth 1 --branch "v!EXACT_VERSION!" "https://github.com/SamuelMarks/win-cmd-rs.git" "%~1"
 exit /b !errorlevel!

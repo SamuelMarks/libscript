@@ -39,14 +39,19 @@ function libscript_depends($packages) {
     # Optional dependency tracking for Windows
 }
 
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$rootDir = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path $env:LIBSCRIPT_ROOT_DIR)) {
+    (Resolve-Path $env:LIBSCRIPT_ROOT_DIR).Path
+} else {
+    $d = $scriptDir
+    while ($d -and -not (Test-Path (Join-Path $d "libscript.cmd"))) { $p = Split-Path -Parent $d; if ($p -eq $d) { break }; $d = $p }
+    $d
+}
+
 # ## libscript_download
-# Downloads file from specified URL to destination path using curl or Invoke-WebRequest.
+# Downloads file from specified URL to destination path via engine\common\pkg_mgr.cmd.
 function libscript_download($url, $dest) {
-    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-        curl.exe -sSL "$url" -o "$dest"
-    } else {
-        libscript_download "$url" "$dest"
-    }
+    & (Join-Path $rootDir "engine\common\pkg_mgr.cmd") :libscript_download "$url" "$dest"
 }
 
 $WordpressVersion = if ($env:WORDPRESS_VERSION) { $env:WORDPRESS_VERSION } else { "latest" }
@@ -67,8 +72,7 @@ if (Test-Path (Join-Path $WwwRoot "wp-config.php")) {
 log_info "Installing dependencies for WordPress ($WebServer)..."
 
 if ($WebServer -eq "iis") {
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-    $libDir = Resolve-Path (Join-Path $scriptDir "..\..\..\_lib")
+    $libDir = Join-Path $rootDir "_lib"
     $iisSetup = Join-Path $libDir "web-servers\iis\setup.ps1"
     if (Test-Path $iisSetup) {
         Write-Host "Running IIS Setup..."

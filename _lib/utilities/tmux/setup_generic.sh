@@ -130,7 +130,7 @@ case "$ACTION" in
 
       mkdir -p "${TARGET_DIR}/bin"
       
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/tmux/"*"${VERSION:-}"* >/dev/null 2>&1; then
+      if (set +f; set -- "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/tmux/"*"${VERSION:-}"*; [ -f "${1:-}" ]); then
         log_info 'Extracting from cache...'
         cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/tmux/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then

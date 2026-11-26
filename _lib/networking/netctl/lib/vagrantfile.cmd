@@ -68,17 +68,30 @@ if not exist "%state_file%" (
 )
 
 where jq >nul 2>&1
-if "%errorlevel%" equ "0" (
-    for /f "tokens=*" %%P in ('jq -r ".listen[]" "%state_file%" 2^>nul') do (
-        set "listen_str=%%P"
-        if not "!listen_str:~0,5!"=="unix:" (
-            for /f "tokens=2 delims=:" %%Q in ("!listen_str!") do set "port=%%Q"
-            if "!port!"=="" set "port=!listen_str!"
-            echo   config.vm.network "forwarded_port", guest: !port!, host: !port!, auto_correct: true
-        )
-    )
-    exit /b 0
+if errorlevel 1 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+)
+where jq >nul 2>&1
+if errorlevel 1 (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install jq latest >nul 2>&1
+    set "STACK="
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
 )
 
-powershell -NoProfile -Command "$json = Get-Content '%state_file%' | ConvertFrom-Json; foreach ($l in $json.listen) { if (!$l.StartsWith('unix:')) { $port = $l.Split(':')[-1]; Write-Output ('  config.vm.network \"forwarded_port\", guest: ' + $port + ', host: ' + $port + ', auto_correct: true') } }"
-exit /b %errorlevel%
+where jq >nul 2>&1
+if errorlevel 1 (
+    echo Error: jq is required to parse '%state_file%'. 1>&2
+    exit /b 1
+)
+
+for /f "tokens=*" %%P in ('jq -r ".listen[]" "%state_file%" 2^>nul') do (
+    set "listen_str=%%P"
+    if not "!listen_str:~0,5!"=="unix:" (
+        for /f "tokens=2 delims=:" %%Q in ("!listen_str!") do set "port=%%Q"
+        if "!port!"=="" set "port=!listen_str!"
+        echo   config.vm.network "forwarded_port", guest: !port!, host: !port!, auto_correct: true
+    )
+)
+exit /b 0

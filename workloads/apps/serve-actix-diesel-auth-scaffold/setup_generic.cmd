@@ -1,9 +1,9 @@
 @echo off
-:: # setup.cmd
+:: # setup_generic.cmd
 :: ## Overview
-:: Orchestrates the setup and installation process for the Actix+Diesel authentication scaffold stack.
+:: Native zero-PowerShell Windows Batch setup for the Actix+Diesel authentication scaffold stack.
 :: ## Usage
-:: Execute this script to install and configure serve-actix-diesel-auth-scaffold on the local system.
+:: setup_generic.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -48,11 +48,33 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where powershell >nul 2>&1
-if "%ERRORLEVEL%" NEQ "0" (
-    echo [ERROR] PowerShell not found. Cannot configure serve-actix-diesel-auth-scaffold on Windows.
-    exit /b 1
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST!"=="" set "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST=%TEMP%\serve-actix-diesel-auth-scaffold"
+if "!SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR!"=="" set "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR=!SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST!"
+
+if exist "!SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST!\Cargo.toml" (
+    echo [INFO] serve-actix-diesel-auth-scaffold is already checked out at !SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST!.
+    exit /b 0
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\setup.ps1"
-if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!
+where git >nul 2>&1
+if errorlevel 1 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install git latest
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\git.cmd" :git_get "https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold" "!SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST!"
+for %%P in ("!SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST!") do set "PARENT_DEST=%%~dpP"
+if "!PARENT_DEST:~-1!"=="\" set "PARENT_DEST=!PARENT_DEST:~0,-1!"
+call "!LIBSCRIPT_ROOT_DIR!\engine\common\git.cmd" :git_get "https://github.com/offscale/rust-actix-diesel-auth-scaffold" "!PARENT_DEST!\rust-actix-diesel-auth-scaffold"
+
+where cargo >nul 2>&1
+if errorlevel 1 (
+    if not "!LIBSCRIPT_SKIP_SYSTEM_DEPS!"=="1" call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install rust latest
+)
+where cargo >nul 2>&1
+if not errorlevel 1 (
+    pushd "!SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST!"
+    set "RUSTC_BOOTSTRAP=1"
+    cargo check 2>nul
+    popd
+)
+
+echo [OK] serve-actix-diesel-auth-scaffold setup complete.
+exit /b 0

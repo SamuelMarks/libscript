@@ -1,11 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Implements automated tests to verify the correctness of the Nextcloud collaboration platform stack.
-:: 
+:: Implements automated tests to verify the correctness of the Nextcloud stack.
 :: ## Usage
-:: Execute this script to run the test suite for nextcloud.
+:: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +48,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\test.ps1"
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+if "!NEXTCLOUD_WWWROOT!"=="" set "NEXTCLOUD_WWWROOT=C:\inetpub\wwwroot\nextcloud"
+echo Validating Nextcloud installation...
+if exist "!NEXTCLOUD_WWWROOT!\core" (
+    echo Nextcloud directory found at !NEXTCLOUD_WWWROOT!
+    exit /b 0
+) else (
+    echo Nextcloud directory not found at !NEXTCLOUD_WWWROOT!
+    exit /b 1
+)

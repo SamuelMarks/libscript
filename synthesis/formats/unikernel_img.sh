@@ -486,7 +486,7 @@ OSV_EOF
     ;;
 esac
 
-cp -f "${WORK_UK}"/* "$(dirname "$OUT_ELF")/" 2>/dev/null || true
+(set +f; cp -f "${WORK_UK}"/* "$(dirname "$OUT_ELF")/" 2>/dev/null || true)
 rm -rf "$WORK_UK"
 
 if [ "$BUILT_NATIVE" -eq 1 ]; then

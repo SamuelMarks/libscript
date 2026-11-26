@@ -150,7 +150,7 @@ case "$ACTION" in
           esac
           _curl_tmp="${TMPDIR:-/tmp}/curl"
           _curl_sys_bin="${LIBSCRIPT_USR_LOCAL_BIN:-/usr/local/bin}"
-          if ls "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/"*"${VERSION:-}"* >/dev/null 2>&1; then
+          if (set +f; set -- "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/"*"${VERSION:-}"*; [ -f "${1:-}" ]); then
             cache_file=$(find "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
             cp "$cache_file" "$_curl_tmp"
           else
@@ -180,7 +180,7 @@ case "$ACTION" in
           esac
           _curl_tmp="${TMPDIR:-/tmp}/curl"
           _curl_sys_bin="${LIBSCRIPT_USR_LOCAL_BIN:-/usr/local/bin}"
-          if ls "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/"*"${VERSION:-}"* >/dev/null 2>&1; then
+          if (set +f; set -- "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/"*"${VERSION:-}"*; [ -f "${1:-}" ]); then
             cache_file=$(find "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
             cp "$cache_file" "$_curl_tmp"
           else
