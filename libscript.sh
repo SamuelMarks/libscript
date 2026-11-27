@@ -252,7 +252,7 @@ case "$CMD" in
 esac
 export STACK
 
-shift || true
+[ "$#" -gt 0 ] && shift
 
 # ## libscript_source_cli_cmd
 # Sources a CLI command handler script while preserving THIS_FILE, SCRIPT_DIR, and SCRIPT_NAME hygiene.

@@ -233,7 +233,7 @@ report_cmd_violation() {
   case "$v_rule" in
     CMD_ROOT_DIR_RESOLUTION)
       case "$file" in
-        /tmp/*|*/tmp/*|*/var/folders/*) ;;
+        /tmp/*|*/tmp/*|*/Temp/*|*/temp/*|*/var/folders/*|*tests_tmp/*) ;;
         *) log_failure "$file" "$v_rule" "$v_msg" ;;
       esac
       ;;
@@ -316,6 +316,7 @@ audit_sh_batch() {
       interp_hits = ""; leak_hits = ""; commented_dep_hits = "";
       has_stack_pop = 0; has_bare_home = 0;
       self_exec_dollar0_hits = ""; unzip_no_o_hits = ""; libscript_home_bare_hits = "";
+      dash_return_probe_hits = "";
     }
     BEGIN {} function emit(f, r, m) {
       print f "|" r "|" m
@@ -340,6 +341,7 @@ audit_sh_batch() {
       if (mkdir_hits != "") emit(f, "IDEMPOTENCY", "Unguarded mkdir found without -p: " mkdir_hits)
       if (ln_hits != "") emit(f, "IDEMPOTENCY", "Unguarded ln -s found without -f: " ln_hits)
       if (eval_hits != "") emit(f, "BAN_EVAL", "Disallowed use of eval found: " eval_hits)
+      if (f !~ /audit_standards\.sh$/ && dash_return_probe_hits != "") emit(f, "DASH_UNSAFE_RETURN_PROBE", "Unsafe negated (return 0) CLI probe found (top-level return 0 succeeds in POSIX dash): " dash_return_probe_hits)
       if (git_push_hits != "") emit(f, "REMOTE_SAFETY", "Strict safety violation: found git push invocation: " git_push_hits)
       if (adhoc_pkg_hits != "") emit(f, "RAW_PACKAGE_MANAGER", "Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends): " adhoc_pkg_hits)
       if (raw_daemon_hits != "") emit(f, "RAW_DAEMON_MANAGER", "Raw init/daemon manager usage found (delegate to engine/common/service.sh or service_install.sh): " raw_daemon_hits)
@@ -479,6 +481,9 @@ audit_sh_batch() {
       }
       if ($0 ~ /^[[:space:]]*eval([[:space:]]|$)/ || ($0 !~ /^[[:space:]]*#/ && $0 ~ /(;|\|\||&&|\||\$\()[[:space:]]*eval([[:space:]]|$)/)) {
         eval_hits = (eval_hits ? eval_hits "; " : "") FNR ":" $0
+      }
+      if ($0 !~ /^[[:space:]]*#/ && $0 ~ /if[[:space:]]+![[:space:]]*\([[:space:]]*return[[:space:]]+0([^0-9]|$)/) {
+        dash_return_probe_hits = (dash_return_probe_hits ? dash_return_probe_hits "; " : "") FNR ":" $0
       }
       if ($0 ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
         git_push_hits = (git_push_hits ? git_push_hits "; " : "") FNR ":" $0

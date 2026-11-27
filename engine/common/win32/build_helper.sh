@@ -5,15 +5,15 @@
 # . "${LIBSCRIPT_ROOT_DIR}/engine/common/win32/build_helper.sh"; libscript_resolve_c_helper ls-pe-arch
 
 set -feu
-_wbh_caller_this="${THIS_FILE:-}"; _wbh_caller_dir="${SCRIPT_DIR:-}"
+_wbh_caller_this="${THIS_FILE:-}"; _wbh_caller_dir="${SCRIPT_DIR:-}"; _wbh_was_sourced=0
 
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _wbh_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _wbh_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _wbh_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -22,7 +22,7 @@ case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     [ "${LIBSCRIPT_DEBUG:-0}" = '1' ] && printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "$_wbh_caller_this" ] && THIS_FILE="$_wbh_caller_this"; [ -n "$_wbh_caller_dir" ] && SCRIPT_DIR="$_wbh_caller_dir"
-    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME _wbh_caller_this _wbh_caller_dir _wbh_was_sourced || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) [ "${LIBSCRIPT_DEBUG:-0}" = '1' ] && printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -72,7 +72,8 @@ libscript_resolve_c_helper() {
   return 1
 }
 
-if ! (return 0 2>/dev/null); then
+if [ "${_wbh_was_sourced}" = '0' ]; then
+  unset _wbh_was_sourced || true
   if [ "${1:-}" = ":resolve_helper" ] || [ "${1:-}" = "resolve_helper" ]; then
     shift
   fi
@@ -86,4 +87,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_wbh_caller_dir:-}" ] && SCRIPT_DIR="$_wbh_caller_dir"
 [ -n "${_wbh_caller_this:-}" ] && THIS_FILE="$_wbh_caller_this"
-unset SCRIPT_NAME _wbh_caller_this _wbh_caller_dir || true
+unset SCRIPT_NAME _wbh_caller_this _wbh_caller_dir _wbh_was_sourced || true

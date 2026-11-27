@@ -64,10 +64,14 @@ if /i "!SUBCMD!"=="distro" goto :do_distro
 if /i "!SUBCMD!"=="repogen" goto :do_repogen
 
 set "PKG_TYPE=!SUBCMD!"
-if /i "!SUBCMD!"=="package-as" (
-    shift
-    set "PKG_TYPE=%~1"
-)
+if /i not "!SUBCMD!"=="package-as" goto :pkg_type_resolved
+shift
+set "PKG_TYPE=%~1"
+goto :pkg_type_resolved
+
+:: ## pkg_type_resolved
+:: Shifts past the resolved package format token and dispatches to the format handler.
+:pkg_type_resolved
 shift
 
 if /i "!PKG_TYPE!"=="docker" goto :fmt_dockerfile

@@ -139,12 +139,26 @@ set "_PC_WC_LIST=!_PC_WORK!\WC.TXT"
 type nul > "!_PC_SC_LIST!"
 type nul > "!_PC_WC_LIST!"
 !GIT_FILE_CMD! -- "*.sh" ".githooks/pre-commit" > "!_PC_WORK!\RAW_SC.TXT" 2>nul
-for /f "usebackq delims=" %%S in ("!_PC_WORK!\RAW_SC.TXT") do (
-    call :maybe_add_sc_file "%%S"
-)
 !GIT_FILE_CMD! -- "*.cmd" "*.bat" > "!_PC_WORK!\RAW_WC.TXT" 2>nul
-for /f "usebackq delims=" %%W in ("!_PC_WORK!\RAW_WC.TXT") do (
-    call :maybe_add_wc_file "%%W"
+
+set "_PC_HAS_DEL=0"
+git ls-files --deleted > "!_PC_WORK!\DEL.TXT" 2>nul
+for %%Z in ("!_PC_WORK!\DEL.TXT") do if not "%%~zZ"=="0" set "_PC_HAS_DEL=1"
+
+set "_PC_FAST_ALL=0"
+if /I "!AUDIT_MODE!"=="--all" (
+    if "!_PC_HAS_DEL!"=="0" set "_PC_FAST_ALL=1"
+)
+if "!_PC_FAST_ALL!"=="1" (
+    findstr /V /I /R /C:"node_modules[/\\]" /C:"\.git[/\\]" /C:"^gen[/\\]" /C:"[/\\]gen[/\\]" "!_PC_WORK!\RAW_SC.TXT" > "!_PC_SC_LIST!" 2>nul
+    findstr /V /I /R /C:"node_modules[/\\]" /C:"\.git[/\\]" /C:"tests_tmp[/\\]" /C:"cache[/\\]" /C:"build[/\\]" /C:"^gen[/\\]" /C:"[/\\]gen[/\\]" "!_PC_WORK!\RAW_WC.TXT" > "!_PC_WC_LIST!" 2>nul
+) else (
+    for /f "usebackq delims=" %%S in ("!_PC_WORK!\RAW_SC.TXT") do (
+        call :maybe_add_sc_file "%%S"
+    )
+    for /f "usebackq delims=" %%W in ("!_PC_WORK!\RAW_WC.TXT") do (
+        call :maybe_add_wc_file "%%W"
+    )
 )
 
 set "_HAS_WC=0"
@@ -213,11 +227,21 @@ echo Running shellcheck...
 set "_HAS_SC=0"
 for %%Z in ("!_PC_SC_LIST!") do if not "%%~zZ"=="0" set "_HAS_SC=1"
 if "!_HAS_SC!"=="1" (
-    >>"!_WAVE2!" echo call "!LIBSCRIPT_ROOT_DIR!\engine\common\parallel.cmd" :run_shards "!_PC_SC_LIST!" "!THIS_FILE! --sc-worker"
+    call :split_list_shards "!_PC_SC_LIST!" "!_PC_WORK!\SC_S" "!LIBSCRIPT_RESOLVED_JOBS!"
+    for /L %%S in (1,1,!LIBSCRIPT_RESOLVED_JOBS!) do (
+        if exist "!_PC_WORK!\SC_S%%S.TXT" (
+            >>"!_WAVE2!" echo call "!THIS_FILE!" --sc-worker "!_PC_WORK!\SC_S%%S.TXT"
+        )
+    )
 )
 if "!_HAS_WC!"=="1" (
     echo Running wincheck...
-    >>"!_WAVE2!" echo call "!LIBSCRIPT_ROOT_DIR!\engine\common\parallel.cmd" :run_shards "!_PC_WC_LIST!" "!THIS_FILE! --wc-worker"
+    call :split_list_shards "!_PC_WC_LIST!" "!_PC_WORK!\WC_S" "!LIBSCRIPT_RESOLVED_JOBS!"
+    for /L %%S in (1,1,!LIBSCRIPT_RESOLVED_JOBS!) do (
+        if exist "!_PC_WORK!\WC_S%%S.TXT" (
+            >>"!_WAVE2!" echo call "!THIS_FILE!" --wc-worker "!_PC_WORK!\WC_S%%S.TXT"
+        )
+    )
 )
 if exist "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" (
     >>"!_WAVE2!" echo call "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" --strict
@@ -479,23 +503,57 @@ if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
 )
 exit /b 0
 
+:: ## split_list_shards
+:: Partitions %~1 round-robin into %~2<1..%~3>.TXT via single-pass gawk or pure Batch fallback.
+:split_list_shards
+set "_SLS_IN=%~1"
+set "_SLS_PFX=%~2"
+set "_SLS_ARG=%~3"
+if "!_SLS_ARG!"=="" set "_SLS_ARG=1"
+set /a "_SLS_N=_SLS_ARG" 2>nul
+REM wincheck disable=CMD2003
+if !_SLS_N! lss 1 set "_SLS_N=1"
+set "_SLS_DONE=0"
+where gawk >nul 2>&1
+if not errorlevel 1 (
+    set "_SLS_AWK_IN=!_SLS_IN:\=/!"
+    set "_SLS_AWK_PFX=!_SLS_PFX:\=/!"
+    for /f "usebackq tokens=1" %%C in (`gawk -v n^="!_SLS_N!" -v pfx^="!_SLS_AWK_PFX!" "NF { c++; m = ((c - 1) %% n) + 1; f = pfx m \".TXT\"; print $0 > f } END { print c + 0 }" "!_SLS_AWK_IN!" 2^>nul`) do (
+        set "_SLS_DONE=1"
+    )
+)
+if "!_SLS_DONE!"=="0" (
+    set /a "_SLS_MOD=0"
+    for /f "usebackq delims=" %%X in ("!_SLS_IN!") do (
+        if not "%%X"=="" (
+            set /a "_SLS_MOD+=1"
+            REM wincheck disable=CMD2003
+            if !_SLS_MOD! gtr !_SLS_N! set "_SLS_MOD=1"
+            >>"!_SLS_PFX!!_SLS_MOD!.TXT" echo.%%X
+        )
+    )
+)
+exit /b 0
+
 :: ## sc_worker_entry
-:: Runs shellcheck in pure Batch batches of 50 across shard file %~2.
+:: Runs shellcheck in pure Batch batches of 100 across shard file %~2.
 :sc_worker_entry
 set "_SCW_SHARD=%~2"
 if "!_SCW_SHARD!"=="" exit /b 0
 if not exist "!_SCW_SHARD!" exit /b 0
 call :load_shellcheck_env
-set "SHELLCHECK_OPT_ARGS="
-shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
-if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
+if not defined SHELLCHECK_OPT_ARGS (
+    set "SHELLCHECK_OPT_ARGS="
+    shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
+    if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
+)
 set "_SCW_B="
 set /a "_SCW_N=0"
 set "_SCW_FAIL=0"
 for /f "usebackq delims=" %%F in ("!_SCW_SHARD!") do (
     set "_SCW_B=!_SCW_B! "%%F""
     set /a "_SCW_N+=1"
-    if "!_SCW_N!"=="50" (
+    if "!_SCW_N!"=="100" (
         shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SCW_B!
         if errorlevel 1 set "_SCW_FAIL=1"
         set "_SCW_B="
@@ -510,7 +568,7 @@ if "!_SCW_FAIL!"=="1" exit /b 1
 exit /b 0
 
 :: ## wc_worker_entry
-:: Runs wincheck in pure Batch batches of 60 across shard file %~2.
+:: Runs wincheck in pure Batch batches of 110 across shard file %~2.
 :wc_worker_entry
 set "_WCW_SHARD=%~2"
 if "!_WCW_SHARD!"=="" exit /b 0
@@ -524,7 +582,7 @@ set "_WCW_FAIL=0"
 for /f "usebackq delims=" %%F in ("!_WCW_SHARD!") do (
     set "_WCW_B=!_WCW_B! "%%F""
     set /a "_WCW_N+=1"
-    if "!_WCW_N!"=="60" (
+    if "!_WCW_N!"=="110" (
         wincheck --exclude "!_WCW_EXCL!" !_WCW_B!
         if errorlevel 1 set "_WCW_FAIL=1"
         set "_WCW_B="

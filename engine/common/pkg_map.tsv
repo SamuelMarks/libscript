@@ -652,6 +652,14 @@ mssql	winget	Microsoft.Sqlcmd
 mssql	choco	sqlserver-cmdlineutils
 mssql	*	mssql-tools18
 multipass	winget	Canonical.Multipass
+musl	apk	musl musl-dev
+musl	apt-get	musl-tools musl-dev
+musl	dnf	musl-libc musl-gcc musl-devel
+musl	yum	musl-libc musl-gcc musl-devel
+musl	zypper	musl-gcc musl-devel
+musl	pacman	musl
+musl	pkg	musl
+musl	brew	FiloSottile/musl-cross/musl-cross
 mysql	apk	mysql mysql-client
 mysql	apt-get	default-mysql-server
 mysql	zypper	mysql-community-server

@@ -5,14 +5,14 @@
 # . "${LIBSCRIPT_ROOT_DIR}/engine/common/dos_83.sh"
 
 set -feu
-_d83_caller_this="${THIS_FILE:-}"; _d83_caller_dir="${SCRIPT_DIR:-}"
+_d83_caller_this="${THIS_FILE:-}"; _d83_caller_dir="${SCRIPT_DIR:-}"; _d83_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _d83_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _d83_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _d83_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -20,7 +20,7 @@ case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     [ "${LIBSCRIPT_DEBUG:-0}" = '1' ] && printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "${_d83_caller_dir:-}" ] && SCRIPT_DIR="$_d83_caller_dir"; [ -n "${_d83_caller_this:-}" ] && THIS_FILE="$_d83_caller_this"
-    unset SCRIPT_NAME _d83_caller_this _d83_caller_dir || true
+    unset SCRIPT_NAME _d83_caller_this _d83_caller_dir _d83_was_sourced || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) [ "${LIBSCRIPT_DEBUG:-0}" = '1' ] && printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -118,18 +118,22 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_d83_caller_dir:-}" ] && SCRIPT_DIR="$_d83_caller_dir"
 [ -n "${_d83_caller_this:-}" ] && THIS_FILE="$_d83_caller_this"
-unset SCRIPT_NAME _d83_caller_this _d83_caller_dir || true
+_d83_run_cli=0
+[ "${_d83_was_sourced}" = '0' ] && _d83_run_cli=1
+unset SCRIPT_NAME _d83_caller_this _d83_caller_dir _d83_was_sourced || true
 
-if ! (return 0 2>/dev/null); then
-    if [ $# -ge 1 ]; then
-      _d83_sub="${1#:}"
-      shift
-      case "${_d83_sub}" in
-        libscript_dos83_home|home) libscript_dos83_home "$@" ;;
-        libscript_dos83_comp|comp) libscript_dos83_comp "$@" ;;
-        libscript_dos83_ver|ver) libscript_dos83_ver "$@" ;;
-        libscript_dos83_enabled|enabled) libscript_dos83_enabled "$@" ;;
-        *) exit 1 ;;
-      esac
-    fi
+if [ "${_d83_run_cli}" = '1' ]; then
+  unset _d83_run_cli || true
+  if [ $# -ge 1 ]; then
+    _d83_sub="${1#:}"
+    shift
+    case "${_d83_sub}" in
+      libscript_dos83_home|home) libscript_dos83_home "$@" ;;
+      libscript_dos83_comp|comp) libscript_dos83_comp "$@" ;;
+      libscript_dos83_ver|ver) libscript_dos83_ver "$@" ;;
+      libscript_dos83_enabled|enabled) libscript_dos83_enabled "$@" ;;
+      *) exit 1 ;;
+    esac
+  fi
 fi
+unset _d83_run_cli || true

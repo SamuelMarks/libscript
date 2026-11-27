@@ -4,15 +4,14 @@
 # ## Usage
 # Source this file and call `libscript_fetch_checksum <url>` or run it directly `./fetch_checksum.sh <url>`. It will print the matched checksum to stdout or return a non-zero exit code if a checksum could not be found.
 set -feu
-_fc_caller_this="${THIS_FILE:-}"
-_fc_caller_dir="${SCRIPT_DIR:-}"
+_fc_caller_this="${THIS_FILE:-}"; _fc_caller_dir="${SCRIPT_DIR:-}"; _fc_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _fc_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _fc_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _fc_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -21,7 +20,7 @@ case "${STACK+x}" in
     if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     [ -n "$_fc_caller_this" ] && THIS_FILE="$_fc_caller_this"
     [ -n "$_fc_caller_dir" ] && SCRIPT_DIR="$_fc_caller_dir"
-    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME _fc_caller_this _fc_caller_dir _fc_was_sourced || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -107,12 +106,16 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_fc_caller_dir:-}" ] && SCRIPT_DIR="$_fc_caller_dir"
 [ -n "${_fc_caller_this:-}" ] && THIS_FILE="$_fc_caller_this"
-unset SCRIPT_NAME _fc_caller_this _fc_caller_dir || true
+_fc_run_cli=0
+[ "${_fc_was_sourced}" = '0' ] && _fc_run_cli=1
+unset SCRIPT_NAME _fc_caller_this _fc_caller_dir _fc_was_sourced || true
 
-if (return 0 2>/dev/null); then
-  if [ $# -gt 0 ]; then
-    libscript_fetch_checksum "$@"
-  fi
+if [ "${_fc_run_cli}" = '0' ]; then
+  unset _fc_run_cli || true
+  case "${1:-}" in
+    http://*|https://*) libscript_fetch_checksum "$@" ;;
+  esac
 else
+  unset _fc_run_cli || true
   libscript_fetch_checksum "$@"
 fi

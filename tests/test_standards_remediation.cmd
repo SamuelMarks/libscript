@@ -114,9 +114,10 @@ if not "!RUST_INSTALL!"=="0" (
 )
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\engine\common\environ.cmd" :save_environment "!TEST_TMP!\env_snap.txt" || exit /b 1
-for %%Z in ("!TEST_TMP!\env_snap.txt") do set "_SZ1=%%~zZ"
+copy /y "!TEST_TMP!\env_snap.txt" "!TEST_TMP!\env_snap_1.txt" >nul
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\engine\common\environ.cmd" :save_environment "!TEST_TMP!\env_snap.txt" || exit /b 1
+for %%Z in ("!TEST_TMP!\env_snap_1.txt") do set "_SZ1=%%~zZ"
 for %%Z in ("!TEST_TMP!\env_snap.txt") do set "_SZ2=%%~zZ"
 if not "!_SZ1!"=="!_SZ2!" (
     echo [FAIL] environ.cmd :save_environment is not 2x idempotent ^(!_SZ1! vs !_SZ2!^) >&2
@@ -124,7 +125,7 @@ if not "!_SZ1!"=="!_SZ2!" (
     exit /b 1
 )
 
-echo ==^> [6/6] Testing docker\create_docker_builder.cmd 2x idempotency...
+echo ==^> [6/7] Testing docker\create_docker_builder.cmd 2x idempotency...
 if not exist "!TEST_TMP!\dk\docker" mkdir "!TEST_TMP!\dk\docker"
 copy /y "!LIBSCRIPT_ROOT_DIR!\docker\base.alpine.Dockerfile" "!TEST_TMP!\dk\docker\base.alpine.Dockerfile" >nul
 set "STACK="
@@ -135,6 +136,14 @@ call "!LIBSCRIPT_ROOT_DIR!\docker\create_docker_builder.cmd" -i "!TEST_TMP!\dk" 
 for %%Z in ("!TEST_TMP!\dk\docker_builder.cmd") do set "_DK2=%%~zZ"
 if not "!_DK1!"=="!_DK2!" (
     echo [FAIL] create_docker_builder.cmd is not 2x idempotent >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+
+echo ==^> [7/7] Testing package-as format shift in synthesis\cli.cmd...
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as linux-distro --help >nul || (
+    echo [FAIL] libscript.cmd package-as linux-distro --help failed >&2
     rmdir /s /q "!TEST_TMP!" >nul 2>&1
     exit /b 1
 )

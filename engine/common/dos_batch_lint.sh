@@ -5,14 +5,14 @@
 # ## Usage
 # ./engine/common/dos_batch_lint.sh [--mode=lint|rewrite] <file.bat> [...]
 set -feu
-_dbl_caller_this="${THIS_FILE:-}"; _dbl_caller_dir="${SCRIPT_DIR:-}"
+_dbl_caller_this="${THIS_FILE:-}"; _dbl_caller_dir="${SCRIPT_DIR:-}"; _dbl_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _dbl_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _dbl_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _dbl_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -21,7 +21,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "$_dbl_caller_this" ] && THIS_FILE="$_dbl_caller_this"
     [ -n "$_dbl_caller_dir" ] && SCRIPT_DIR="$_dbl_caller_dir"
-    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME _dbl_caller_this _dbl_caller_dir _dbl_was_sourced || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -107,12 +107,15 @@ lint_dos622_file() {
   [ "${_ldf_errs}" -eq 0 ]
 }
 
-if (return 0 2>/dev/null) && [ "$#" -eq 0 ]; then
-  [ -n "$_dbl_caller_this" ] && THIS_FILE="$_dbl_caller_this"
-  [ -n "$_dbl_caller_dir" ] && SCRIPT_DIR="$_dbl_caller_dir"
-  unset _dbl_caller_this _dbl_caller_dir SCRIPT_NAME || true
+if [ "${_dbl_was_sourced}" = '1' ]; then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_dbl_caller_dir:-}" ] && SCRIPT_DIR="${_dbl_caller_dir}"
+  [ -n "${_dbl_caller_this:-}" ] && THIS_FILE="${_dbl_caller_this}"
+  unset SCRIPT_NAME _dbl_caller_this _dbl_caller_dir _dbl_was_sourced || true
   return 0
 fi
+unset _dbl_was_sourced _dbl_caller_this _dbl_caller_dir || true
 
 LINT_MODE='lint'
 while [ "$#" -gt 0 ]; do
@@ -138,15 +141,6 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
-
-if (return 0 2>/dev/null); then
-  STACK="${STACK%"${THIS_FILE}":}"
-  export STACK
-  [ -n "${_dbl_caller_dir:-}" ] && SCRIPT_DIR="${_dbl_caller_dir}"
-  [ -n "${_dbl_caller_this:-}" ] && THIS_FILE="${_dbl_caller_this}"
-  unset SCRIPT_NAME _dbl_caller_this _dbl_caller_dir || true
-  return 0
-fi
 
 if [ "$#" -eq 0 ]; then
   show_dos_lint_help >&2

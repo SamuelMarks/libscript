@@ -3,14 +3,14 @@
 # Guest-side native screen, desktop icon, and browser authentication capture agent (`Steps 3-5`).
 # ## Usage
 # ./experiments/_common/guest_capture_agent.sh <screen|desktop|browser> [args...]
-set -feu; _gca_caller_this="${THIS_FILE:-}"; _gca_caller_dir="${SCRIPT_DIR:-}"
+set -feu; _gca_caller_this="${THIS_FILE:-}"; _gca_caller_dir="${SCRIPT_DIR:-}"; _gca_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _gca_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _gca_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _gca_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -19,7 +19,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "${_gca_caller_dir:-}" ] && SCRIPT_DIR="${_gca_caller_dir}"
     [ -n "${_gca_caller_this:-}" ] && THIS_FILE="${_gca_caller_this}"
-    unset SCRIPT_NAME _gca_caller_this _gca_caller_dir || true
+    unset SCRIPT_NAME _gca_caller_this _gca_caller_dir _gca_was_sourced || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -207,8 +207,18 @@ gca_capture_browser() {
   rm -rf "$_gca_prof"
 }
 
+if [ "${_gca_was_sourced}" = '1' ]; then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_gca_caller_dir:-}" ] && SCRIPT_DIR="${_gca_caller_dir}"
+  [ -n "${_gca_caller_this:-}" ] && THIS_FILE="${_gca_caller_this}"
+  unset SCRIPT_NAME _gca_caller_this _gca_caller_dir _gca_was_sourced || true
+  return 0
+fi
+unset _gca_was_sourced _gca_caller_this _gca_caller_dir || true
+
 _gca_act="${1:-}"
-shift 2>/dev/null || true
+[ "$#" -gt 0 ] && shift
 case "$_gca_act" in
   screen) gca_capture_screen "$@" ;;
   desktop) gca_capture_desktop "$@" ;;
@@ -221,12 +231,3 @@ case "$_gca_act" in
     exit 1
     ;;
 esac
-
-if (return 0 2>/dev/null); then
-  STACK="${STACK%"${THIS_FILE}":}"
-  export STACK
-  [ -n "${_gca_caller_dir:-}" ] && SCRIPT_DIR="${_gca_caller_dir}"
-  [ -n "${_gca_caller_this:-}" ] && THIS_FILE="${_gca_caller_this}"
-  unset SCRIPT_NAME _gca_caller_this _gca_caller_dir || true
-  return 0
-fi

@@ -5,14 +5,14 @@
 # . "${LIBSCRIPT_ROOT_DIR}/engine/common/dos32/wattcp_cfg.sh" && libscript_ensure_wattcp_cfg
 
 set -feu
-_wc_caller_this="${THIS_FILE-}"; _wc_caller_dir="${SCRIPT_DIR-}"
+_wc_caller_this="${THIS_FILE-}"; _wc_caller_dir="${SCRIPT_DIR-}"; _wc_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _wc_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _wc_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _wc_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -20,7 +20,7 @@ case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     [ "${LIBSCRIPT_DEBUG:-0}" = '1' ] && printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "${_wc_caller_dir:-}" ] && SCRIPT_DIR="$_wc_caller_dir"; [ -n "${_wc_caller_this:-}" ] && THIS_FILE="$_wc_caller_this"
-    unset SCRIPT_NAME _wc_caller_this _wc_caller_dir || true
+    unset SCRIPT_NAME _wc_caller_this _wc_caller_dir _wc_was_sourced || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) [ "${LIBSCRIPT_DEBUG:-0}" = '1' ] && printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -79,8 +79,12 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_wc_caller_dir:-}" ] && SCRIPT_DIR="$_wc_caller_dir"
 [ -n "${_wc_caller_this:-}" ] && THIS_FILE="$_wc_caller_this"
-unset SCRIPT_NAME _wc_caller_this _wc_caller_dir || true
+_wc_run_cli=0
+[ "${_wc_was_sourced}" = '0' ] && _wc_run_cli=1
+unset SCRIPT_NAME _wc_caller_this _wc_caller_dir _wc_was_sourced || true
 
-if ! (return 0 2>/dev/null); then
+if [ "${_wc_run_cli}" = '1' ]; then
+  unset _wc_run_cli || true
   libscript_ensure_wattcp_cfg "$@"
 fi
+unset _wc_run_cli || true

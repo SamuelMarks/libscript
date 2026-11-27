@@ -5,14 +5,14 @@
 # ./engine/common/dos32/build_dos32.sh <ls-wincmd|ls-dash-dos|ls-watt-curl|ls-mkdos-smoke> [--target=host|dos32] [--out=<path>]
 
 set -feu
-_bd_caller_this="${THIS_FILE-}"; _bd_caller_dir="${SCRIPT_DIR-}"
+_bd_caller_this="${THIS_FILE-}"; _bd_caller_dir="${SCRIPT_DIR-}"; _bd_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _bd_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _bd_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _bd_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -20,7 +20,7 @@ case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     [ "${LIBSCRIPT_DEBUG:-0}" = '1' ] && printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "${_bd_caller_dir:-}" ] && SCRIPT_DIR="$_bd_caller_dir"; [ -n "${_bd_caller_this:-}" ] && THIS_FILE="$_bd_caller_this"
-    unset SCRIPT_NAME _bd_caller_this _bd_caller_dir || true
+    unset SCRIPT_NAME _bd_caller_this _bd_caller_dir _bd_was_sourced || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) [ "${LIBSCRIPT_DEBUG:-0}" = '1' ] && printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -130,8 +130,12 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_bd_caller_dir:-}" ] && SCRIPT_DIR="$_bd_caller_dir"
 [ -n "${_bd_caller_this:-}" ] && THIS_FILE="$_bd_caller_this"
-unset SCRIPT_NAME _bd_caller_this _bd_caller_dir || true
+_bd_run_cli=0
+[ "${_bd_was_sourced}" = '0' ] && _bd_run_cli=1
+unset SCRIPT_NAME _bd_caller_this _bd_caller_dir _bd_was_sourced || true
 
-if ! (return 0 2>/dev/null); then
+if [ "${_bd_run_cli}" = '1' ]; then
+  unset _bd_run_cli || true
   libscript_build_dos32_tool "$@"
 fi
+unset _bd_run_cli || true

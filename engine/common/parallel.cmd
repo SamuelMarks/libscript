@@ -116,10 +116,10 @@ set "_PAR_OK=1"
 exit /b 0
 
 :: ## detect_jobs
-:: Exports LIBSCRIPT_RESOLVED_JOBS and LIBSCRIPT_PARALLEL_SUPPORTED to the caller environment.
+:: Exports LIBSCRIPT_RESOLVED_JOBS, LIBSCRIPT_HW_CORES, and LIBSCRIPT_PARALLEL_SUPPORTED to the caller environment.
 :detect_jobs
 call :resolve_jobs_internal
-endlocal&set "LIBSCRIPT_RESOLVED_JOBS=%_PAR_JOBS%"&set "LIBSCRIPT_PARALLEL_SUPPORTED=%_PAR_OK%"
+endlocal&set "LIBSCRIPT_RESOLVED_JOBS=%_PAR_JOBS%"&set "LIBSCRIPT_HW_CORES=%_PAR_JOBS%"&set "LIBSCRIPT_PARALLEL_SUPPORTED=%_PAR_OK%"
 exit /b 0
 
 :: ## run_tasks
@@ -225,7 +225,8 @@ set "_SOT_RC=!_RT_JOB_DIR!\J!_SOT_ID!.RC"
 >>"!_SOT_CMD!" echo.!_RT_LINE!
 >>"!_SOT_CMD!" echo set "_JRC=%%ERRORLEVEL%%"
 >>"!_SOT_CMD!" echo ^>"!_SOT_TMP!" echo %%_JRC%%
->>"!_SOT_CMD!" echo move /y "!_SOT_TMP!" "!_SOT_RC!" ^>nul 2^>^&1
+>>"!_SOT_CMD!" echo for /L %%%%R in (1,1,10) do if not exist "!_SOT_RC!" ( move /y "!_SOT_TMP!" "!_SOT_RC!" ^>nul 2^>^&1 ^|^| ping -n 1 -w 25 127.0.0.1 ^>nul 2^>^&1 )
+>>"!_SOT_CMD!" echo if not exist "!_SOT_RC!" ^>"!_SOT_RC!" echo %%_JRC%%
 >>"!_SOT_CMD!" echo exit /b %%_JRC%%
 set /a "_RT_RUNNING+=1"
 start "" /b "%ComSpec%" /c call "!_SOT_CMD!" <nul
@@ -239,11 +240,13 @@ if !_RT_TOTAL! leq 0 exit /b 0
 for /L %%I in (1,1,!_RT_TOTAL!) do (
     if not defined _RT_DONE_%%I (
         if exist "!_RT_JOB_DIR!\J%%I.RC" (
-            set "_RT_DONE_%%I=1"
-            set /a "_RT_RUNNING-=1"
-            set "_RT_CODE=0"
+            set "_RT_CODE="
             for /f "usebackq tokens=1" %%C in ("!_RT_JOB_DIR!\J%%I.RC") do set "_RT_CODE=%%C"
-            if not "!_RT_CODE!"=="0" set "_RT_FAILED=1"
+            if not "!_RT_CODE!"=="" (
+                set "_RT_DONE_%%I=1"
+                set /a "_RT_RUNNING-=1"
+                if not "!_RT_CODE!"=="0" set "_RT_FAILED=1"
+            )
         )
     )
 )
@@ -332,15 +335,27 @@ if "!_RS_BASE!"=="" set "_RS_BASE=!LIBSCRIPT_ROOT_DIR!\tests_tmp"
 call :make_unique_dir "!_RS_BASE!" "lsp_s" _RS_DIR
 
 set /a "_RS_CNT=0"
-set /a "_RS_MOD=0"
-for /f "usebackq delims=" %%X in ("!_RS_LIST!") do (
-    set "_RS_ITEM=%%X"
-    if not "!_RS_ITEM!"=="" (
-        set /a "_RS_MOD+=1"
-        REM wincheck disable=CMD2003
-        if !_RS_MOD! gtr !_PAR_JOBS! set "_RS_MOD=1"
-        set /a "_RS_CNT+=1"
-        >>"!_RS_DIR!\S!_RS_MOD!.TXT" echo.!_RS_ITEM!
+set "_RS_USED_AWK=0"
+where gawk >nul 2>&1
+if not errorlevel 1 (
+    set "_RS_AWK_PFX=!_RS_DIR:\=/!/S"
+    set "_RS_AWK_IN=!_RS_LIST:\=/!"
+    for /f "usebackq tokens=1" %%N in (`gawk -v n^="!_PAR_JOBS!" -v pfx^="!_RS_AWK_PFX!" "NF { c++; m = ((c - 1) %% n) + 1; f = pfx m \".TXT\"; print $0 > f } END { print c + 0 }" "!_RS_AWK_IN!" 2^>nul`) do (
+        set /a "_RS_CNT=%%N"
+        set "_RS_USED_AWK=1"
+    )
+)
+if "!_RS_USED_AWK!"=="0" (
+    set /a "_RS_MOD=0"
+    for /f "usebackq delims=" %%X in ("!_RS_LIST!") do (
+        set "_RS_ITEM=%%X"
+        if not "!_RS_ITEM!"=="" (
+            set /a "_RS_MOD+=1"
+            REM wincheck disable=CMD2003
+            if !_RS_MOD! gtr !_PAR_JOBS! set "_RS_MOD=1"
+            set /a "_RS_CNT+=1"
+            >>"!_RS_DIR!\S!_RS_MOD!.TXT" echo.!_RS_ITEM!
+        )
     )
 )
 

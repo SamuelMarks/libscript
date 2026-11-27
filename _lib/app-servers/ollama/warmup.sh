@@ -4,15 +4,14 @@
 # ## Usage
 # ./_lib/app-servers/ollama/warmup.sh [model_tag]
 set -feu
-_owm_caller_this="${THIS_FILE:-}"
-_owm_caller_dir="${SCRIPT_DIR:-}"
+_owm_caller_this="${THIS_FILE:-}"; _owm_caller_dir="${SCRIPT_DIR:-}"; _owm_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _owm_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _owm_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _owm_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -21,7 +20,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "${_owm_caller_this}" ] && THIS_FILE="${_owm_caller_this}"
     [ -n "${_owm_caller_dir}" ] && SCRIPT_DIR="${_owm_caller_dir}"
-    unset SCRIPT_NAME _owm_caller_this _owm_caller_dir || true
+    unset SCRIPT_NAME _owm_caller_this _owm_caller_dir _owm_was_sourced || true
     if (return 0 2>/dev/null); then return 0; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -61,7 +60,8 @@ ollama_warmup_model() {
   return 0
 }
 
-if ! (return 0 2>/dev/null); then
+if [ "${_owm_was_sourced}" = '0' ]; then
+  unset _owm_was_sourced || true
   ollama_warmup_model "$@"
 fi
 
@@ -69,4 +69,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_owm_caller_dir:-}" ] && SCRIPT_DIR="${_owm_caller_dir}"
 [ -n "${_owm_caller_this:-}" ] && THIS_FILE="${_owm_caller_this}"
-unset SCRIPT_NAME _owm_caller_this _owm_caller_dir || true
+unset SCRIPT_NAME _owm_caller_this _owm_caller_dir _owm_was_sourced || true

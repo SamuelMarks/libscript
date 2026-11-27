@@ -481,6 +481,10 @@ libscript_depends() {
     log_info 'Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1'
     return 0
   fi
+  if [ "${LIBSCRIPT_IMAGE_BUILD:-0}" = "1" ] && [ "${LIBSCRIPT_ALLOW_STUB:-0}" = "1" ]; then
+    log_info "[STUB] Skipping system package installation during stub image synthesis: $*"
+    return 0
+  fi
   if [ -n "${LIBSCRIPT_PKG_MGR:-}" ] || [ -z "${PKG_MGR:-}" ] || { [ "${PKG_MGR:-}" != 'libscript' ] && ! libscript_cmd_avail "${PKG_MGR}"; }; then
     detect_pkg_mgr "${1:-}"
   fi
@@ -549,8 +553,23 @@ libscript_depends() {
             if [ -x "${_pm_sysroot}/usr/bin/apt-get" ]; then
               priv chroot "$_pm_sysroot" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -qq 2>/dev/null || true
               priv chroot "$_pm_sysroot" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
-            else
+            elif [ -f "${_pm_sysroot}/usr/share/dpkg/cputable" ] && [ -f "${_pm_sysroot}/var/lib/dpkg/status" ]; then
               priv env DEBIAN_FRONTEND=noninteractive apt-get -o RootDir="$_pm_sysroot" install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
+            else
+              if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+                priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 update -qq 2>/dev/null || true
+              fi
+              (
+                cd "${_pm_sysroot}/var/cache/apt/archives" && apt-get download ${pkgs_to_install}
+              ) || priv env DEBIAN_FRONTEND=noninteractive apt-get -o Dir::Cache::archives="${_pm_sysroot}/var/cache/apt/archives" install -y --download-only --no-install-recommends ${pkgs_to_install} || _install_failed=1
+              if [ "$_install_failed" -eq 0 ]; then
+                set +f
+                for _deb_f in "${_pm_sysroot}/var/cache/apt/archives"/*.deb; do
+                  [ -f "$_deb_f" ] || continue
+                  dpkg-deb -x "$_deb_f" "$_pm_sysroot" || _install_failed=1
+                done
+                set -f
+              fi
             fi
           else
             if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then

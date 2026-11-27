@@ -228,6 +228,49 @@ if STACK='' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_posix.sh" "${_bad_posix}
   exit 1
 fi
 
+_bad_dash_ret="${TEST_TMP}/bad_dash_ret.sh"
+cat <<'EOF_DR' > "${_bad_dash_ret}"
+#!/bin/sh
+# ## Overview
+# Synthetic fixture verifying DASH_UNSAFE_RETURN_PROBE rejection.
+# ## Usage
+# ./bad_dash_ret.sh
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then THIS_FILE="${SCRIPT_NAME}"; elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else THIS_FILE="${0}"; fi
+case "${STACK+x}" in *':'"${THIS_FILE}"':'*) if (return 0 2>/dev/null); then return; else exit 0; fi ;; esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=${SCRIPT_DIR}}"
+if ! (return 0 2>/dev/null); then
+  printf 'cli\n'
+fi
+EOF_DR
+printf '@echo off\r\n' > "${TEST_TMP}/bad_dash_ret.cmd"
+if STACK='' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" "${_bad_dash_ret}" 2>&1 | grep -q 'DASH_UNSAFE_RETURN_PROBE'; then
+  :
+else
+  printf '[FAIL] audit_standards.sh failed to detect DASH_UNSAFE_RETURN_PROBE!\n' >&2
+  exit 1
+fi
+
+_d83_out=$(LIBSCRIPT_DOS_83=1 STACK='' "${LIBSCRIPT_ROOT_DIR}/engine/common/dos_83.sh" comp win-cmd-rs)
+assert_eq 'WINCMDRS' "${_d83_out}" 'dos_83.sh direct CLI execution works under POSIX /bin/sh and dash'
+
+_tier_fix="${TEST_TMP}/tier_root"
+mkdir -p "${_tier_fix}/_lib/languages/foo"
+printf '{\n  "name": "foo",\n  "tier": "T1",\n  "capabilities": ["userland-package"]\n}\n' > "${_tier_fix}/_lib/languages/foo/manifest.json"
+# shellcheck disable=SC2016
+printf '$Bar = Join-Path $Root "_lib\\languages\\bar\\setup.ps1"\n' > "${_tier_fix}/_lib/languages/foo/setup.ps1"
+if STACK='' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_tiers.sh" --root "${_tier_fix}" 2>&1 | grep -q 'LIB_ATOMIC_PURITY'; then
+  :
+else
+  printf '[FAIL] audit_tiers.sh failed to detect lateral _lib reference in .ps1 script!\n' >&2
+  exit 1
+fi
+
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 printf '[PASS] All standards remediation regression checks passed!\n'

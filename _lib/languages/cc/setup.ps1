@@ -19,11 +19,22 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 . (Join-Path $LibscriptRootDir "engine\common\pkg_mgr.ps1")
-$CSetup = Join-Path $LibscriptRootDir "_lib\languages\c\setup.ps1"
-if (Test-Path $CSetup) {
-    & $CSetup
-} else {
-    libscript_depends @("LLVM.LLVM")
+
+if (-not $Action -or $Action -eq "install") {
+    $RootCmd = Join-Path $LibscriptRootDir "libscript.cmd"
+    $RootSh = Join-Path $LibscriptRootDir "libscript.sh"
+    if ($IsWindows -or $env:OS -eq "Windows_NT") {
+        if (Test-Path $RootCmd) {
+            & cmd.exe /c "`"$RootCmd`" install c latest"
+        } else {
+            libscript_depends @("c")
+        }
+    } elseif (Test-Path $RootSh) {
+        & /bin/sh $RootSh install c latest
+    } else {
+        libscript_depends @("c")
+    }
+    exit $LASTEXITCODE
 }
 
 if ($Action -eq "ls") {

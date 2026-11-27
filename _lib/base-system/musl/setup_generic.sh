@@ -56,7 +56,7 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
-if ! command -v "musl" >/dev/null 2>&1; then
+if ! command -v "musl" >/dev/null 2>&1 && ! command -v "musl-gcc" >/dev/null 2>&1; then
   libscript_depends 'musl'
 fi
 

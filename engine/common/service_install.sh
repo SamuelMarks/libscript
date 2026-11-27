@@ -4,14 +4,14 @@
 # ## Usage
 # . "$LIBSCRIPT_ROOT_DIR/engine/common/service_install.sh" libscript_install_service <service_name> <exec_start> [working_dir] [description] [env] [user] [env_files] libscript_uninstall_service <service_name> libscript_service_override_env <service_name> <KEY=VALUE...>
 set -feu
-_si_outer_this="${THIS_FILE:-}"; _si_outer_dir="${SCRIPT_DIR:-}"
+_si_outer_this="${THIS_FILE:-}"; _si_outer_dir="${SCRIPT_DIR:-}"; _si_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _si_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _si_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _si_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -20,7 +20,7 @@ case "${STACK+x}" in
     if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     [ -n "${_si_outer_this:-}" ] && THIS_FILE="${_si_outer_this}"
     [ -n "${_si_outer_dir:-}" ] && SCRIPT_DIR="${_si_outer_dir}"
-    unset SCRIPT_NAME _si_outer_this _si_outer_dir || true
+    unset SCRIPT_NAME _si_outer_this _si_outer_dir _si_was_sourced || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
@@ -1048,7 +1048,8 @@ libscript_uninstall_service() {
   fi
 }
 
-if ! (return 0 2>/dev/null) && [ $# -gt 0 ]; then
+if [ "${_si_was_sourced}" = '0' ] && [ $# -gt 0 ]; then
+  unset _si_was_sourced || true
   _si_cmd="$1"
   shift
   case "$_si_cmd" in
@@ -1063,4 +1064,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_si_outer_dir:-}" ] && SCRIPT_DIR="$_si_outer_dir"
 [ -n "${_si_outer_this:-}" ] && THIS_FILE="$_si_outer_this"
-unset _si_outer_this _si_outer_dir || true
+unset _si_outer_this _si_outer_dir _si_was_sourced || true

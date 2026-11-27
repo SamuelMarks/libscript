@@ -4,15 +4,14 @@
 # ## Usage
 # ./_lib/networking/netctl/lib/ingress_sync.sh [libscript.json] [netctl_args...]
 set -feu
-_nis_caller_this="${THIS_FILE:-}"
-_nis_caller_dir="${SCRIPT_DIR:-}"
+_nis_caller_this="${THIS_FILE:-}"; _nis_caller_dir="${SCRIPT_DIR:-}"; _nis_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _nis_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _nis_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _nis_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -21,7 +20,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "${_nis_caller_this}" ] && THIS_FILE="${_nis_caller_this}"
     [ -n "${_nis_caller_dir}" ] && SCRIPT_DIR="${_nis_caller_dir}"
-    unset SCRIPT_NAME _nis_caller_this _nis_caller_dir || true
+    unset SCRIPT_NAME _nis_caller_this _nis_caller_dir _nis_was_sourced || true
     if (return 0 2>/dev/null); then return 0; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -90,7 +89,8 @@ netctl_synchronize_ingress() {
   )
 }
 
-if ! (return 0 2>/dev/null); then
+if [ "${_nis_was_sourced}" = '0' ]; then
+  unset _nis_was_sourced || true
   netctl_synchronize_ingress "$@"
 fi
 
@@ -98,4 +98,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_nis_caller_dir:-}" ] && SCRIPT_DIR="${_nis_caller_dir}"
 [ -n "${_nis_caller_this:-}" ] && THIS_FILE="${_nis_caller_this}"
-unset SCRIPT_NAME _nis_caller_this _nis_caller_dir || true
+unset SCRIPT_NAME _nis_caller_this _nis_caller_dir _nis_was_sourced || true

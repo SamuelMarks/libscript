@@ -4,14 +4,14 @@
 # ## Usage
 # . "$LIBSCRIPT_ROOT_DIR/engine/common/service.sh" libscript_service [ACTION] [SERVICE_NAME] [OPTIONS] Actions: start, stop, restart, reload, status, health, logs, enable, disable, uninstall
 set -feu
-_svc_caller_this="${THIS_FILE:-}"; _svc_caller_dir="${SCRIPT_DIR:-}"
+_svc_caller_this="${THIS_FILE:-}"; _svc_caller_dir="${SCRIPT_DIR:-}"; _svc_was_sourced=0
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"; _svc_was_sourced=1
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"; [ "${THIS_FILE}" != "${0}" ] && _svc_was_sourced=1
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"; [ "${THIS_FILE}" != "${0}" ] && _svc_was_sourced=1
 else
   THIS_FILE="${0}"
 fi
@@ -20,7 +20,7 @@ case "${STACK+x}" in
     if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     [ -n "$_svc_caller_this" ] && THIS_FILE="$_svc_caller_this"
     [ -n "$_svc_caller_dir" ] && SCRIPT_DIR="$_svc_caller_dir"
-    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME _svc_caller_this _svc_caller_dir _svc_was_sourced || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -514,7 +514,8 @@ libscript_check_health() {
   return 1
 }
 
-if ! (return 0 2>/dev/null) && [ $# -gt 0 ]; then
+if [ "${_svc_was_sourced}" = '0' ] && [ $# -gt 0 ]; then
+  unset _svc_was_sourced || true
   libscript_service "$@"
 fi
 
@@ -522,4 +523,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_svc_caller_dir:-}" ] && SCRIPT_DIR="$_svc_caller_dir"
 [ -n "${_svc_caller_this:-}" ] && THIS_FILE="$_svc_caller_this"
-unset SCRIPT_NAME _svc_caller_this _svc_caller_dir || true
+unset SCRIPT_NAME _svc_caller_this _svc_caller_dir _svc_was_sourced || true

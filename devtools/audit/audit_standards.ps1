@@ -139,6 +139,8 @@ function Audit-File {
         $rawUnameLines = @()
         $unnecessaryDqLines = @()
         $sc2015Lines = @()
+        $evalLines = @()
+        $dashReturnProbeLines = @()
         $allowFetchNext = $false
         $allowPkgNext = $false
         $allowDaemonNext = $false
@@ -219,6 +221,12 @@ function Audit-File {
                 }
                 if ($ln -match '^\s*(\[[^\]]+\](\s*&&\s*\[[^\]]+\])*|command\s+-v\s+[^|;]+)\s*&&\s*[^\[{|;&][^|;&]*(\|\s*[^|;&]+)*\|\|\s*(true|:)([\s;]|$)' -or $ln -match '\$\(\s*cd\s+[^|;&]+&&\s*[^|;&]+(\|\s*[^|;&]+)*\|\|\s*(true|:)\s*\)') {
                     $sc2015Lines += $lineNum
+                }
+                if ($ln -match '^[ \t]*eval([ \t]|$)' -or $ln -match '(;|\|\||&&|\||\$\()[ \t]*eval([ \t]|$)') {
+                    $evalLines += $lineNum
+                }
+                if ($ln -match 'if\s+!\s*\(\s*return\s+0\b') {
+                    $dashReturnProbeLines += $lineNum
                 }
                 $allowFetchNext = $false
                 $allowPkgNext = $false
@@ -455,10 +463,13 @@ function Audit-File {
         }
     }
 
-    # 4. Ban eval checks
+    # 4. Ban eval and dash-unsafe return probe checks
     if ($ext -eq "sh") {
-        if ($allContent -match '(?m)^[ \t]*eval([ \t]|$)|(?m)^[^#\r\n]*(;|\|\||&&|\||\$\()[ \t]*eval([ \t]|$)') {
-            Log-Violation -File $FilePath -Rule "BAN_EVAL" -Details "Disallowed use of 'eval' found."
+        if ($evalLines.Count -gt 0) {
+            Log-Violation -File $FilePath -Rule "BAN_EVAL" -Details "Disallowed use of 'eval' found at lines: $($evalLines -join ', ')."
+        }
+        if ($dashReturnProbeLines.Count -gt 0 -and $normPath -notmatch 'audit_standards\.sh$') {
+            Log-Violation -File $FilePath -Rule "DASH_UNSAFE_RETURN_PROBE" -Details "Unsafe negated (return 0) CLI probe found at lines: $($dashReturnProbeLines -join ', ') (top-level return 0 succeeds in POSIX dash; track SCRIPT_NAME/BASH_SOURCE/ZSH_VERSION instead)."
         }
     } elseif ($ext -eq "ps1") {
         if ($allContent -match '(?mi)^[ \t]*(Invoke-Expression|iex)\b|;[ \t]*(Invoke-Expression|iex)\b') {
