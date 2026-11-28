@@ -379,5 +379,32 @@ grep -q 'make\.cmd' "${LIBSCRIPT_ROOT_DIR}/make.bat" || fail_test 'Expected make
 grep -q 'unzip_no_o_hits' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" || fail_test 'Expected unzip -o idempotency rule in audit_standards.sh'
 grep -q 'stale_mklink_hits' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" || fail_test 'Expected mklink /J idempotency rule in audit_standards.sh'
 
+printf '%s\n' '=== 8. Test Config Forward-Slash Export/Validate, Solver Plan Output & Tier Lateral Purity ==='
+STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --profile=illumos/minimal-server --export="${TEST_TMP}/illumos-os.json" >/dev/null
+[ -f "${TEST_TMP}/illumos-os.json" ] || fail_test 'Expected illumos-os.json from config os --export'
+STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --validate="${TEST_TMP}/illumos-os.json" >/dev/null || fail_test 'Expected config os --validate to accept exported illumos-os.json'
+if STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --profile=illumos/does-not-exist --export="${TEST_TMP}/missing.json" >/dev/null 2>&1; then
+  fail_test 'Expected config os to fail non-zero on nonexistent profile'
+fi
+
+STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" config os --profile=linux/linux-minimal-headless-musl --export="${TEST_TMP}/linux-os.json" >/dev/null
+STACK='' "${LIBSCRIPT_ROOT_DIR}/engine/solver/resolve_stack.sh" "${TEST_TMP}/linux-os.json" "${TEST_TMP}/linux-plan.json" >/dev/null
+[ -f "${TEST_TMP}/linux-plan.json" ] || fail_test 'Expected linux-plan.json from resolve_stack.sh'
+jq -e '.stages | type == "array"' "${TEST_TMP}/linux-plan.json" >/dev/null || fail_test 'Expected valid stages array in linux-plan.json'
+
+TIER_FIX="${TEST_TMP}/tier_fix"
+mkdir -p "${TIER_FIX}/_lib/app-servers/ollama" "${TIER_FIX}/_lib/languages/c" "${TIER_FIX}/_lib/languages/cc"
+printf '%s\n' '{"name":"ollama","tier":"T1"}' > "${TIER_FIX}/_lib/app-servers/ollama/manifest.json"
+printf '. "%s/_lib/app-servers/ollama/env.sh"\n' "${LIBSCRIPT_ROOT_DIR}" > "${TIER_FIX}/_lib/app-servers/ollama/service.sh"
+printf '%s\n' '{"name":"c","tier":"T1"}' > "${TIER_FIX}/_lib/languages/c/manifest.json"
+printf '. "%s/_lib/languages/c/env.sh"\n' "${LIBSCRIPT_ROOT_DIR}" > "${TIER_FIX}/_lib/languages/c/setup.sh"
+printf '%s\n' '{"name":"cc","tier":"T1"}' > "${TIER_FIX}/_lib/languages/cc/manifest.json"
+printf '%s\n' '# ./_lib/languages/c/setup.sh comment only' > "${TIER_FIX}/_lib/languages/cc/setup.sh"
+STACK='' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_tiers.sh" --root "${TIER_FIX}" >/dev/null || fail_test 'Expected audit_tiers.sh to allow self-references and comments'
+printf '"%s/_lib/languages/c/setup.sh"\n' "${LIBSCRIPT_ROOT_DIR}" >> "${TIER_FIX}/_lib/languages/cc/setup.sh"
+if STACK='' "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_tiers.sh" --root "${TIER_FIX}" >/dev/null 2>&1; then
+  fail_test 'Expected audit_tiers.sh to reject lateral cross-component reference'
+fi
+
 printf '%s\n' '[PASS] All standards adherence regression tests succeeded.'
 exit 0

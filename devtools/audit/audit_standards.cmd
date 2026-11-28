@@ -217,15 +217,26 @@ if "!_NB_EXPLICIT!"=="0" (
         set /a _NB_ERR+=1
     )
 )
-findstr /I /R /C:"for[ ][ ]*/r[ ][ ]*.!" /C:"for[ ][ ]*/r[ ][ ]*!" "!_NBF_PATH!" | findstr /V /R /C:"^[ ]*::" /C:"^[ ]*rem " >nul 2>&1
+set "_NB_TMP_BASE=%TEMP%"
+if "!_NB_TMP_BASE!"=="" set "_NB_TMP_BASE=%TMP%"
+if "!_NB_TMP_BASE!"=="" set "_NB_TMP_BASE=!LIBSCRIPT_ROOT_DIR!\build"
+if not exist "!_NB_TMP_BASE!" mkdir "!_NB_TMP_BASE!" >nul 2>&1
+for %%A in ("!_NB_TMP_BASE!") do set "_NB_TMP_BASE=%%~fA"
+set "_NB_TMP1=!_NB_TMP_BASE!\ls_nb_b1_!RANDOM!_!RANDOM!.txt"
+set "_NB_TMP2=!_NB_TMP_BASE!\ls_nb_b2_!RANDOM!_!RANDOM!.txt"
+findstr /I /R /C:"for[ ][ ]*/r[ ][ ]*.!" /C:"for[ ][ ]*/r[ ][ ]*!" "!_NBF_PATH!" > "!_NB_TMP1!" 2>nul
+findstr /V /I /R /C:"^[ ]*::" /C:"^[ ]*rem " "!_NB_TMP1!" >nul 2>&1
 if not errorlevel 1 (
     echo [STANDARDS VIOLATION] [BATCH_FOR_R_DELAYED] !_NBF!: Unexpanded delayed variable in FOR /R root path. >&2
     set /a _NB_ERR+=1
 )
 set "_NB_DC=^^^^"
-findstr /C:"!_NB_DC!^!" "!_NBF_PATH!" | findstr /R /C:"=[ ]*[^ ].*!_NB_DC!^!" /C:"echo[ ].*!_NB_DC!^!" | findstr /V /R /C:"^[ ]*::" /C:"^[ ]*rem " >nul 2>&1
+findstr /C:"!_NB_DC!^!" "!_NBF_PATH!" > "!_NB_TMP1!" 2>nul
+findstr /R /C:"=[ ]*[^ ].*!_NB_DC!^!" /C:"echo[ ].*!_NB_DC!^!" "!_NB_TMP1!" > "!_NB_TMP2!" 2>nul
+findstr /V /I /R /C:"^[ ]*::" /C:"^[ ]*rem " "!_NB_TMP2!" >nul 2>&1
 if not errorlevel 1 (
     echo [STANDARDS VIOLATION] [BATCH_QUOTED_DOUBLE_CARET_BANG] !_NBF!: Double-caret bang inside double quotes under EnableDelayedExpansion. >&2
     set /a _NB_ERR+=1
 )
+del /f /q "!_NB_TMP1!" "!_NB_TMP2!" >nul 2>&1
 exit /b 0

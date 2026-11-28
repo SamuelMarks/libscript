@@ -1,9 +1,9 @@
 @echo off
 :: # benchmark_experiments.cmd
 :: ## Overview
-:: Master idempotent empirical evaluation orchestrator (`benchmark_experiments.cmd`) on Windows for `libtpu-rs` / `libtpu_paper`, routing sub-suites `E0` through `E8`.
+:: Master idempotent empirical evaluation orchestrator (`benchmark_experiments.cmd`) on Windows for `libtpu-rs` / `libtpu_paper`, routing sub-suites `E0` through `E9`.
 :: ## Usage
-:: experiments\libtpu-pjrt\benchmark_experiments.cmd [--subsuites=E0..E8] [--warmup=10] [--trials=200] [--results-dir=...] [--repo-dir=...] [--paper-dir=...]
+:: experiments\libtpu-pjrt\benchmark_experiments.cmd [--subsuites=E0..E9] [--tpu-name=...] [--tfrc-config=...] [--frameworks=...] [--warmup=10] [--trials=200] [--results-dir=...] [--repo-dir=...] [--paper-dir=...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -44,6 +44,8 @@ if "%LIBTPU_RS_REPO_DIR%"=="" set "LIBTPU_RS_REPO_DIR=!LIBSCRIPT_ROOT_DIR!"
 if "%LIBTPU_RS_PAPER_DIR%"=="" set "LIBTPU_RS_PAPER_DIR="
 if "%LIBTPU_RS_HOST_ARCH%"=="" set "LIBTPU_RS_HOST_ARCH=windows_x64"
 if "%LIBTPU_RS_BUILD_PDF%"=="" set "LIBTPU_RS_BUILD_PDF=0"
+if "%LIBTPU_PJRT_FRAMEWORKS%"=="" set "LIBTPU_PJRT_FRAMEWORKS=jax,keras_jax,pytorch_tpu,tensorflow_tpu"
+if "%LIBTPU_PJRT_PROVIDERS%"=="" set "LIBTPU_PJRT_PROVIDERS=og,rs"
 
 for %%A in (%*) do (
     set "_a=%%~A"
@@ -54,9 +56,14 @@ for %%A in (%*) do (
     if "!_a:~0,10!"=="--out-dir=" set "LIBTPU_RS_RESULTS_DIR=!_a:~10!"
     if "!_a:~0,11!"=="--repo-dir=" set "LIBTPU_RS_REPO_DIR=!_a:~11!"
     if "!_a:~0,12!"=="--paper-dir=" set "LIBTPU_RS_PAPER_DIR=!_a:~12!"
+    if "!_a:~0,11!"=="--tpu-name=" set "TPU_NAME=!_a:~11!"
+    if "!_a:~0,14!"=="--tfrc-config=" ( set "TFRC_CONFIG=!_a:~14!" & set "TFRC_STRICT=1" )
+    if "!_a:~0,13!"=="--frameworks=" set "LIBTPU_PJRT_FRAMEWORKS=!_a:~13!"
+    if "!_a:~0,12!"=="--providers=" set "LIBTPU_PJRT_PROVIDERS=!_a:~12!"
     if "!_a:~0,12!"=="--host-arch=" set "LIBTPU_RS_HOST_ARCH=!_a:~12!"
     if /i "!_a!"=="--build-pdf" set "LIBTPU_RS_BUILD_PDF=1"
     if /i "!_a!"=="--synthetic-fixtures" set "LIBTPU_RS_SYNTHETIC_FIXTURES=1"
+    if /i "!_a!"=="--dry-run" set "LIBTPU_RS_DRY_RUN=1"
     if /i "!_a!"=="--allow-dirty" set "LIBTPU_RS_ALLOW_DIRTY=1"
     if /i "!_a!"=="--force" set "FORCE_REBUILD=1"
 )
@@ -72,14 +79,17 @@ for %%S in (!_SLIST!) do (
     if /i "%%S"=="E5" call "!SCRIPT_DIR!\suites\e5_memory_studies.cmd" "!LIBTPU_RS_REPO_DIR!" "!LIBTPU_RS_RESULTS_DIR!" "!LIBTPU_RS_HOST_ARCH!"
     if /i "%%S"=="E6" call "!SCRIPT_DIR!\suites\e6_vliw_ablations.cmd" "!LIBTPU_RS_REPO_DIR!" "!LIBTPU_RS_RESULTS_DIR!" "!LIBTPU_RS_HOST_ARCH!"
     if /i "%%S"=="E7" call "!SCRIPT_DIR!\suites\e7_numerics_sparsecore.cmd" "!LIBTPU_RS_REPO_DIR!" "!LIBTPU_RS_RESULTS_DIR!" "!LIBTPU_RS_HOST_ARCH!"
+    if /i "%%S"=="E9" call "!SCRIPT_DIR!\suites\e9_framework_matrix.cmd" "!LIBTPU_RS_REPO_DIR!" "!LIBTPU_RS_RESULTS_DIR!" "!LIBTPU_RS_HOST_ARCH!" "!LIBTPU_RS_WARMUP!" "!LIBTPU_RS_TRIALS!"
     if /i "%%S"=="E8" call "!SCRIPT_DIR!\suites\e8_latex.cmd" "!LIBTPU_RS_RESULTS_DIR!" "!LIBTPU_RS_PAPER_DIR!" "!LIBTPU_RS_BUILD_PDF!"
-    if errorlevel 1 exit /b 1
+    if errorlevel 1 exit /b !errorlevel!
 )
 (
     echo {
     echo   "schema_version": "1.0.0",
     echo   "suite": "libtpu",
     echo   "subsuites": "!LIBTPU_RS_SUBSUITES!",
+    echo   "frameworks": "!LIBTPU_PJRT_FRAMEWORKS!",
+    echo   "providers": "!LIBTPU_PJRT_PROVIDERS!",
     echo   "host_arch": "!LIBTPU_RS_HOST_ARCH!",
     echo   "status": "PASS"
     echo }

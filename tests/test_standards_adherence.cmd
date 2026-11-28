@@ -201,6 +201,44 @@ if errorlevel 1 ( echo [FAIL] Expected unzip_no_o_hits rule in audit_standards.s
 findstr /C:"stale_mklink_hits" "!LIBSCRIPT_ROOT_DIR!!_BS!devtools!_BS!audit!_BS!audit_standards.sh" >nul 2>&1
 if errorlevel 1 ( echo [FAIL] Expected stale_mklink_hits rule in audit_standards.sh 1>&2 & goto :cleanup_fail )
 
+echo === 8. Test Config Forward-Slash Export/Validate, Solver Plan Output ^& Tier Lateral Purity ===
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!libscript.cmd" config os "--profile=illumos/minimal-server" "--export=!TEST_TMP!!_BS!illumos-os.json" >nul
+if errorlevel 1 ( echo [FAIL] config.cmd failed to export illumos/minimal-server 1>&2 & goto :cleanup_fail )
+if not exist "!TEST_TMP!!_BS!illumos-os.json" ( echo [FAIL] illumos-os.json was not created by config.cmd 1>&2 & goto :cleanup_fail )
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!libscript.cmd" config os "--validate=!TEST_TMP!!_BS!illumos-os.json" >nul
+if errorlevel 1 ( echo [FAIL] config.cmd failed to validate exported illumos-os.json 1>&2 & goto :cleanup_fail )
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!libscript.cmd" config os "--profile=illumos/does-not-exist" "--export=!TEST_TMP!!_BS!missing.json" >nul 2>&1
+if not errorlevel 1 ( echo [FAIL] Expected config.cmd to fail non-zero on missing profile 1>&2 & goto :cleanup_fail )
+
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!libscript.cmd" config os "--profile=linux/linux-minimal-headless-musl" "--export=!TEST_TMP!!_BS!linux-os.json" >nul
+if errorlevel 1 ( echo [FAIL] config.cmd failed to export linux/linux-minimal-headless-musl 1>&2 & goto :cleanup_fail )
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!engine!_BS!solver!_BS!resolve_stack.cmd" "!TEST_TMP!!_BS!linux-os.json" "!TEST_TMP!!_BS!linux-plan.json" >nul
+if errorlevel 1 ( echo [FAIL] resolve_stack.cmd failed to generate explicit output plan 1>&2 & goto :cleanup_fail )
+if not exist "!TEST_TMP!!_BS!linux-plan.json" ( echo [FAIL] linux-plan.json was not created by resolve_stack.cmd 1>&2 & goto :cleanup_fail )
+
+set "TIER_FIX=!TEST_TMP!!_BS!tier_fix"
+if not exist "!TIER_FIX!!_BS!_lib!_BS!app-servers!_BS!ollama" mkdir "!TIER_FIX!!_BS!_lib!_BS!app-servers!_BS!ollama"
+if not exist "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!c" mkdir "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!c"
+if not exist "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!cc" mkdir "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!cc"
+> "!TIER_FIX!!_BS!_lib!_BS!app-servers!_BS!ollama!_BS!manifest.json" echo {"name":"ollama","tier":"T1"}
+> "!TIER_FIX!!_BS!_lib!_BS!app-servers!_BS!ollama!_BS!service.sh" echo . "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/ollama/env.sh"
+> "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!c!_BS!manifest.json" echo {"name":"c","tier":"T1"}
+> "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!c!_BS!setup.sh" echo . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/c/env.sh"
+> "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!cc!_BS!manifest.json" echo {"name":"cc","tier":"T1"}
+> "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!cc!_BS!setup.sh" echo # ./_lib/languages/c/setup.sh comment only
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!devtools!_BS!audit!_BS!audit_tiers.cmd" --root "!TIER_FIX!" >nul
+if errorlevel 1 ( echo [FAIL] Expected audit_tiers.cmd to allow self-references and comments 1>&2 & goto :cleanup_fail )
+>> "!TIER_FIX!!_BS!_lib!_BS!languages!_BS!cc!_BS!setup.sh" echo "${LIBSCRIPT_ROOT_DIR}/_lib/languages/c/setup.sh"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!!_BS!devtools!_BS!audit!_BS!audit_tiers.cmd" --root "!TIER_FIX!" >nul 2>&1
+if not errorlevel 1 ( echo [FAIL] Expected audit_tiers.cmd to reject lateral cross-component reference 1>&2 & goto :cleanup_fail )
+
 if exist "!TEST_TMP!" rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo [PASS] All Windows standards adherence regression tests succeeded.
 exit /b 0

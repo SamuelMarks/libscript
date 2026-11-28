@@ -1,10 +1,10 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: Test suite for the libtpu component on Windows.
+:: Smoke and idempotency test suite for the upstream reference `libtpu` component on Windows.
 ::
 :: ## Usage
-:: Execute this script to perform a component-specific smoke test.
+:: _lib\runtimes\libtpu\test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,5 +50,33 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "_TEST_TMP=%TEMP%\libtpu_test_%RANDOM%"
+if not exist "!_TEST_TMP!" mkdir "!_TEST_TMP!"
+> "!_TEST_TMP!\mock_libtpu.so" echo mock-og-libtpu-elf
+> "!_TEST_TMP!\mock_sdk.so" echo mock-og-sdk-elf
+> "!_TEST_TMP!\libtpu-0.0.52.whl" echo mock-og-wheel
+
+set "LIBSCRIPT_HOME=!_TEST_TMP!\home"
+set "LIBTPU_SO_PATH=!_TEST_TMP!\mock_libtpu.so"
+set "LIBTPU_SDK_SO_PATH=!_TEST_TMP!\mock_sdk.so"
+set "LIBTPU_REFERENCE_WHEEL=!_TEST_TMP!\libtpu-0.0.52.whl"
+set "STACK="
+set "ACTION=install"
+call "!SCRIPT_DIR!\setup_generic.cmd" >nul
+if errorlevel 1 exit /b 1
+set "STACK="
+call "!SCRIPT_DIR!\setup_generic.cmd" >nul
+if errorlevel 1 exit /b 1
+
+set "LIBTPU_SO_PATH="
+set "LIBTPU_SDK_SO_PATH="
+set "LIBTPU_REFERENCE_WHEEL="
+set "LIBTPU_REFERENCE_SO_SHA256="
+set "STACK="
 call "!SCRIPT_DIR!\env.cmd"
-libtpu-info --version
+if errorlevel 1 exit /b 1
+if "!LIBTPU_REFERENCE_SO_SHA256!"=="" exit /b 1
+call libtpu-info --version >nul
+if errorlevel 1 exit /b 1
+rmdir /s /q "!_TEST_TMP!" >nul 2>&1
+exit /b 0

@@ -59,6 +59,7 @@ if "%GEMMA_4_SQL_REQUIRE_HBM%"=="" set "GEMMA_4_SQL_REQUIRE_HBM=1"
 if "%GEMMA_4_SQL_RESUME%"=="" set "GEMMA_4_SQL_RESUME=1"
 if "%GEMMA_4_SQL_LOCAL_EXEC%"=="" set "GEMMA_4_SQL_LOCAL_EXEC=0"
 if "%GEMMA_4_SQL_SHM_ROOT%"=="" set "GEMMA_4_SQL_SHM_ROOT=%TEMP%\libscript-tpu"
+if "%GEMMA_4_SQL_LIBTPU_PROVIDER%"=="" set "GEMMA_4_SQL_LIBTPU_PROVIDER=og"
 if "%GEMMA_4_SQL_RENDER_LATEX%"=="" set "GEMMA_4_SQL_RENDER_LATEX=0"
 if "%GEMMA_4_SQL_BUILD_PDF%"=="" set "GEMMA_4_SQL_BUILD_PDF=0"
 if "%GEMMA_4_SQL_DRY_RUN%"=="" set "GEMMA_4_SQL_DRY_RUN=%DRY_RUN%"
@@ -105,6 +106,8 @@ if /i "!_arg!"=="--db-types" ( set "GEMMA_4_SQL_DB_TYPES=%~2" & shift & shift & 
 if "!_arg:~0,19!"=="--command-template=" ( set "GEMMA_4_SQL_COMMAND_TEMPLATE=!_arg:~19!" & shift & goto :parse_args )
 if /i "!_arg!"=="--command-template" ( set "GEMMA_4_SQL_COMMAND_TEMPLATE=%~2" & shift & shift & goto :parse_args )
 if "!_arg:~0,11!"=="--shm-root=" ( set "GEMMA_4_SQL_SHM_ROOT=!_arg:~11!" & shift & goto :parse_args )
+if "!_arg:~0,18!"=="--libtpu-provider=" ( set "GEMMA_4_SQL_LIBTPU_PROVIDER=!_arg:~18!" & shift & goto :parse_args )
+if /i "!_arg!"=="--libtpu-provider" ( set "GEMMA_4_SQL_LIBTPU_PROVIDER=%~2" & shift & shift & goto :parse_args )
 if /i "!_arg!"=="--fresh-vm-per-backend" ( set "TPU_FRESH_VM_PER_BACKEND=1" & shift & goto :parse_args )
 if /i "!_arg!"=="--resume" ( set "GEMMA_4_SQL_RESUME=1" & shift & goto :parse_args )
 if /i "!_arg!"=="--no-resume" ( set "GEMMA_4_SQL_RESUME=0" & shift & goto :parse_args )
@@ -131,6 +134,7 @@ for %%I in ("!GEMMA_4_SQL_REPO_DIR!") do set "GEMMA_4_SQL_REPO_DIR=%%~fI"
 if not exist "!GEMMA_4_SQL_RESULTS_DIR!\raw" mkdir "!GEMMA_4_SQL_RESULTS_DIR!\raw"
 for %%I in ("!GEMMA_4_SQL_RESULTS_DIR!") do set "GEMMA_4_SQL_RESULTS_DIR=%%~fI"
 set "TPU_SUITE_MANIFEST_PATH=!SCRIPT_DIR!\suite.json"
+set "TPU_LIBTPU_PROVIDER=!GEMMA_4_SQL_LIBTPU_PROVIDER!"
 
 if /i "!GEMMA_4_SQL_DRY_RUN!"=="true" set "GEMMA_4_SQL_DRY_RUN=1"
 if "!GEMMA_4_SQL_DRY_RUN!"=="1" (
@@ -233,7 +237,7 @@ exit /b !errorlevel!
 :: Dispatches E0-E4 remotely across TPU_NAME workers and streams back each JSON artifact atomically.
 :run_remote_matrix
 call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_ensure_host_tools "1"
-set "_rem_env=GEMMA_4_SQL_LOCAL_EXEC=1 GEMMA_4_SQL_MODEL='!GEMMA_4_SQL_MODEL!' GEMMA_4_SQL_BATCH_SIZES='!GEMMA_4_SQL_BATCH_SIZES!' GEMMA_4_SQL_WARMUP='!GEMMA_4_SQL_WARMUP!' GEMMA_4_SQL_TRIALS='!GEMMA_4_SQL_TRIALS!' GEMMA_4_SQL_DATASET='!GEMMA_4_SQL_DATASET!' GEMMA_4_SQL_DB_TYPES='!GEMMA_4_SQL_DB_TYPES!' GEMMA_4_SQL_REQUIRE_HBM='!GEMMA_4_SQL_REQUIRE_HBM!' GEMMA_4_SQL_RESUME='!GEMMA_4_SQL_RESUME!'"
+set "_rem_env=GEMMA_4_SQL_LOCAL_EXEC=1 GEMMA_4_SQL_MODEL='!GEMMA_4_SQL_MODEL!' GEMMA_4_SQL_BATCH_SIZES='!GEMMA_4_SQL_BATCH_SIZES!' GEMMA_4_SQL_WARMUP='!GEMMA_4_SQL_WARMUP!' GEMMA_4_SQL_TRIALS='!GEMMA_4_SQL_TRIALS!' GEMMA_4_SQL_DATASET='!GEMMA_4_SQL_DATASET!' GEMMA_4_SQL_DB_TYPES='!GEMMA_4_SQL_DB_TYPES!' GEMMA_4_SQL_REQUIRE_HBM='!GEMMA_4_SQL_REQUIRE_HBM!' GEMMA_4_SQL_RESUME='!GEMMA_4_SQL_RESUME!' GEMMA_4_SQL_LIBTPU_PROVIDER='!GEMMA_4_SQL_LIBTPU_PROVIDER!' TPU_LIBTPU_PROVIDER='!GEMMA_4_SQL_LIBTPU_PROVIDER!'"
 echo ,!GEMMA_4_SQL_SUBSUITES!, | findstr /I /C:",E0," >nul 2>&1
 if not errorlevel 1 (
     call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_run_lockstep "%TPU_NAME%" "jax_native" "!_rem_env! $HOME/libscript/experiments/gemma-4-sql/suites/e0_tfrc_provenance.sh $HOME/workspace $HOME/results '!GEMMA_4_SQL_BACKENDS!'" "!GEMMA_4_SQL_RESULTS_DIR!\logs\e0"

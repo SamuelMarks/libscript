@@ -49,7 +49,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "SCHEMA_FILE=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/os-config.schema.json"
+set "SCHEMA_FILE=!LIBSCRIPT_ROOT_DIR!\synthesis\schemas\os-config.schema.json"
 set "TARGET_PROFILE="
 set "EXPORT_FILE="
 set "VALIDATE_FILE="
@@ -104,15 +104,19 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if not "!VALIDATE_FILE!"=="" goto :validate_mode
+if not "!VALIDATE_FILE!"=="" (
+    set "VALIDATE_FILE=!VALIDATE_FILE:/=\!"
+    goto :validate_mode
+)
 
 if "!TARGET_PROFILE!"=="" call :select_profile_menu
-set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!TARGET_PROFILE!.json"
-if not exist "!PROFILE_PATH!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!TARGET_PROFILE!"
+set "_TP_REL=!TARGET_PROFILE:/=\!"
+set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!_TP_REL!.json"
+if not exist "!PROFILE_PATH!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\!_TP_REL!"
 if not exist "!PROFILE_PATH!" (
     for %%S in (linux freebsd illumos reactos dos rtos hypervisor unikernel containers cloud lfs) do (
-        if not exist "!PROFILE_PATH!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!.json" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!.json"
-        if not exist "!PROFILE_PATH!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!TARGET_PROFILE!"
+        if not exist "!PROFILE_PATH!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!_TP_REL!.json" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!_TP_REL!.json"
+        if not exist "!PROFILE_PATH!" if exist "!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!_TP_REL!" set "PROFILE_PATH=!LIBSCRIPT_ROOT_DIR!\synthesis\profiles\%%S\!_TP_REL!"
     )
 )
 if not exist "!PROFILE_PATH!" (
@@ -120,7 +124,12 @@ if not exist "!PROFILE_PATH!" (
     exit /b 1
 )
 
-set "_TMP_CFG=%TEMP%\libscript_cfg_!RANDOM!.json"
+set "_CFG_TMP_DIR=%TEMP%"
+if "!_CFG_TMP_DIR!"=="" set "_CFG_TMP_DIR=%TMP%"
+if "!_CFG_TMP_DIR!"=="" set "_CFG_TMP_DIR=!LIBSCRIPT_ROOT_DIR!\build"
+set "_CFG_TMP_DIR=!_CFG_TMP_DIR:/=\!"
+if not exist "!_CFG_TMP_DIR!" mkdir "!_CFG_TMP_DIR!"
+set "_TMP_CFG=!_CFG_TMP_DIR!\libscript_cfg_!RANDOM!.json"
 set "_HAS_OVR=0"
 if not "!OVERRIDE_KERNEL!"=="" set "_HAS_OVR=1"
 if not "!OVERRIDE_BOARD!"=="" set "_HAS_OVR=1"
@@ -129,16 +138,22 @@ if not "!OVERRIDE_HEAP!"=="" set "_HAS_OVR=1"
 if "!OVERRIDE_MCUBOOT!"=="1" set "_HAS_OVR=1"
 
 if "!_HAS_OVR!"=="1" (
-    jq --arg krn "!OVERRIDE_KERNEL!" --arg brd "!OVERRIDE_BOARD!" --arg lbc "!OVERRIDE_LIBC!" --arg hp "!OVERRIDE_HEAP!" --arg mcb "!OVERRIDE_MCUBOOT!" "(if $krn != \"\" then .target.os_family = $krn else . end) | (if $lbc != \"\" then .target.libc = $lbc else . end) | (if $brd != \"\" then .rtos = ((.rtos // {}) | .board = $brd) else . end) | (if $hp != \"\" then .rtos = ((.rtos // {}) | .heap_implementation = $hp) else . end) | (if $mcb == \"1\" then .rtos = ((.rtos // {}) | .mcuboot = ((.mcuboot // {}) | .enabled = true)) else . end)" "!PROFILE_PATH!" > "!_TMP_CFG!"
+    set "_JQ_PROF=!PROFILE_PATH:\=/!"
+    jq --arg krn "!OVERRIDE_KERNEL!" --arg brd "!OVERRIDE_BOARD!" --arg lbc "!OVERRIDE_LIBC!" --arg hp "!OVERRIDE_HEAP!" --arg mcb "!OVERRIDE_MCUBOOT!" "(if ($krn | length) > 0 then .target.os_family = $krn else . end) | (if ($lbc | length) > 0 then .target.libc = $lbc else . end) | (if ($brd | length) > 0 then .rtos = ((.rtos // {}) | .board = $brd) else . end) | (if ($hp | length) > 0 then .rtos = ((.rtos // {}) | .heap_implementation = $hp) else . end) | (if $mcb == \"1\" then .rtos = ((.rtos // {}) | .mcuboot = ((.mcuboot // {}) | .enabled = true)) else . end)" "!_JQ_PROF!" > "!_TMP_CFG!"
     if errorlevel 1 (
         del /f /q "!_TMP_CFG!" 2>nul
         exit /b 1
     )
 ) else (
     copy /y "!PROFILE_PATH!" "!_TMP_CFG!" >nul
+    if errorlevel 1 (
+        echo [ERROR] Failed to stage profile configuration from: !PROFILE_PATH! 1>&2
+        exit /b 1
+    )
 )
 
 if not "!EXPORT_FILE!"=="" (
+    set "EXPORT_FILE=!EXPORT_FILE:/=\!"
     for %%D in ("!EXPORT_FILE!") do (
         set "_EXP_DIR=%%~dpD"
         if not "!_EXP_DIR!"=="" (
@@ -146,7 +161,16 @@ if not "!EXPORT_FILE!"=="" (
         )
     )
     copy /y "!_TMP_CFG!" "!EXPORT_FILE!" >nul
+    if errorlevel 1 (
+        del /f /q "!_TMP_CFG!" 2>nul
+        echo [ERROR] Failed to export configuration to: !EXPORT_FILE! 1>&2
+        exit /b 1
+    )
     del /f /q "!_TMP_CFG!" 2>nul
+    if not exist "!EXPORT_FILE!" (
+        echo [ERROR] Exported configuration file missing at: !EXPORT_FILE! 1>&2
+        exit /b 1
+    )
     echo [INFO] Exported configuration ^(!TARGET_PROFILE!^) to: !EXPORT_FILE!
     exit /b 0
 )
@@ -178,25 +202,27 @@ if not exist "!VALIDATE_FILE!" (
     echo [ERROR] File to validate not found: !VALIDATE_FILE! 1>&2
     exit /b 1
 )
-jq empty "!VALIDATE_FILE!" >nul 2>&1
+set "_JQ_VF=!VALIDATE_FILE:\=/!"
+jq empty "!_JQ_VF!" >nul 2>&1
 if errorlevel 1 (
     echo [VALIDATION ERROR] !VALIDATE_FILE! is not valid JSON. 1>&2
     exit /b 1
 )
 set "ACTIVE_SCHEMA=!SCHEMA_FILE!"
-jq -e ".plan_version != null and (.target.os == \"zephyr\" or .target.os == \"freertos\")" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.rtos.schema.json"
-jq -e ".freebsd_version != null or (.target.os_family == \"freebsd\" and .init_system != null and .kernel == null)" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.freebsd.schema.json"
-jq -e ".illumos_version != null or ((.target.os_family == \"illumos\" or .target.os_family == \"sunos\") and .kernel == null)" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.illumos.schema.json"
-jq -e ".reactos_version != null or (.target.os_family == \"reactos\" and .kernel == null)" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.reactos.schema.json"
-jq -e "has(\"dos_flavor\") or .target.os_family == \"freedos\" or .target.os_family == \"msdos\"" "!VALIDATE_FILE!" >nul 2>&1
-if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis/schemas/execution-plan.dos.schema.json"
+jq -e "((.plan_version == null) | not) and (.target.os == \"zephyr\" or .target.os == \"freertos\")" "!_JQ_VF!" >nul 2>&1
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis\schemas\execution-plan.rtos.schema.json"
+jq -e "((.freebsd_version == null) | not) or (.target.os_family == \"freebsd\" and ((.init_system == null) | not) and .kernel == null)" "!_JQ_VF!" >nul 2>&1
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis\schemas\execution-plan.freebsd.schema.json"
+jq -e "((.illumos_version == null) | not) or ((.target.os_family == \"illumos\" or .target.os_family == \"sunos\") and .kernel == null)" "!_JQ_VF!" >nul 2>&1
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis\schemas\execution-plan.illumos.schema.json"
+jq -e "((.reactos_version == null) | not) or (.target.os_family == \"reactos\" and .kernel == null)" "!_JQ_VF!" >nul 2>&1
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis\schemas\execution-plan.reactos.schema.json"
+jq -e "has(\"dos_flavor\") or .target.os_family == \"freedos\" or .target.os_family == \"msdos\"" "!_JQ_VF!" >nul 2>&1
+if not errorlevel 1 set "ACTIVE_SCHEMA=!LIBSCRIPT_ROOT_DIR!\synthesis\schemas\execution-plan.dos.schema.json"
 
+set "_JQ_AS=!ACTIVE_SCHEMA:\=/!"
 set "_MISSING_FIELDS="
-for /f "usebackq delims=" %%M in (`jq -r --slurpfile schema "!ACTIVE_SCHEMA!" "$schema[0].required - keys | .[]" "!VALIDATE_FILE!" 2^>nul`) do (
+for /f "usebackq delims=" %%M in (`jq -r --slurpfile schema "!_JQ_AS!" "$schema[0].required - keys | .[]" "!_JQ_VF!" 2^>nul`) do (
     if "!_MISSING_FIELDS!"=="" (
         set "_MISSING_FIELDS=%%M"
     ) else (

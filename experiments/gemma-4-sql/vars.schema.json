@@ -110,6 +110,12 @@
     "GEMMA_4_SQL_ENABLED": {
       "type": "string",
       "description": "Flag (0 or 1) indicating whether the gemma-4-sql experiment suite is enabled in an execution plan."
+    },
+    "GEMMA_4_SQL_LIBTPU_PROVIDER": {
+      "type": "string",
+      "description": "Target libtpu runtime provider ('og' for upstream Google libtpu or 'rs' for clean-room libtpu-rs) isolated in dedicated twin virtualenvs.",
+      "enum": ["og", "rs"],
+      "default": "og"
     }
   },
   "x-libscript-var-packs": ["experiment", "tfrc", "tpu"]

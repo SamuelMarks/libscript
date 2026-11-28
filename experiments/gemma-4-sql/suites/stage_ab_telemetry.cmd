@@ -1,7 +1,7 @@
 @echo off
 :: # stage_ab_telemetry.cmd
 :: ## Overview
-:: Windows Batch companion for Stage A TPU device probe, wheel metadata inspection, and Stage B active HBM / CPU-fallback verification (exit 65).
+:: Windows Batch companion for Stage A TPU device probe (with `libtpu_provider` + mapped `libtpu.so` SHA-256 metadata), wheel inspection, and Stage B active HBM / CPU-fallback verification (exit 65).
 :: ## Usage
 :: call stage_ab_telemetry.cmd :gemma_4_sql_stage_a_probe <backend_id> <python_exe>
 
@@ -55,11 +55,16 @@ endlocal & (
 :gemma_4_sql_stage_a_probe
 set "_sab_bid=%~1"
 set "_sab_py=%~2"
+set "_sab_prov=%GEMMA_4_SQL_LIBTPU_PROVIDER%"
+if "!_sab_prov!"=="" set "_sab_prov=%LIBTPU_EXPECTED_PROVIDER%"
+if "!_sab_prov!"=="" set "_sab_prov=og"
 set "_sab_kbe=%KERAS_BACKEND%"
 set "_sab_pjrt=%PJRT_DEVICE%"
 if "%GEMMA_4_SQL_SYNTHETIC_FIXTURES%"=="1" (
-    set "_sab_libtpu_p=/dev/shm/libscript-tpu/venvs/!_sab_bid!/lib/libtpu.so"
-    jq -n --arg b "!_sab_bid!" --arg kbe "!_sab_kbe!" --arg pjrt "!_sab_pjrt!" --arg libtpu_p "!_sab_libtpu_p!" "{backend_id: $b, stage_a_status: \"ok\", device_kind: \"TPU v4\", chip_count: 4, keras_backend_active: $kbe, pjrt_device: $pjrt, libtpu_so_path: $libtpu_p}"
+    set "_sab_libtpu_p=/dev/shm/libscript-tpu/venvs/!_sab_bid!-!_sab_prov!/lib/libtpu.so"
+    set "_sab_sha=synthetic_!_sab_prov!_libtpu_sha256"
+    if not "%LIBTPU_EXPECTED_SHA256%"=="" set "_sab_sha=%LIBTPU_EXPECTED_SHA256%"
+    jq -n --arg b "!_sab_bid!" --arg prov "!_sab_prov!" --arg kbe "!_sab_kbe!" --arg pjrt "!_sab_pjrt!" --arg libtpu_p "!_sab_libtpu_p!" --arg sha "!_sab_sha!" "{backend_id: $b, libtpu_provider: $prov, stage_a_status: \"ok\", device_kind: \"TPU v4\", chip_count: 4, keras_backend_active: $kbe, pjrt_device: $pjrt, libtpu_so_path: $libtpu_p, libtpu_mapped_so_path: $libtpu_p, libtpu_mapped_so_sha256: $sha}"
     exit /b 0
 )
 if not exist "!_sab_py!" (
@@ -67,8 +72,8 @@ if not exist "!_sab_py!" (
     exit /b 1
 )
 set "_sab_py_tmp=%TEMP%\g4s_stage_a_%RANDOM%.py"
-> "!_sab_py_tmp!" echo import json, os, sys
->> "!_sab_py_tmp!" echo bid = sys.argv[1]
+> "!_sab_py_tmp!" echo import hashlib, json, os, sys
+>> "!_sab_py_tmp!" echo bid, prov = sys.argv[1], sys.argv[2]
 >> "!_sab_py_tmp!" echo chips = 0
 >> "!_sab_py_tmp!" echo dk = "CPU_FALLBACK"
 >> "!_sab_py_tmp!" echo ka = os.environ.get("KERAS_BACKEND", "")
@@ -80,10 +85,11 @@ set "_sab_py_tmp=%TEMP%\g4s_stage_a_%RANDOM%.py"
 >> "!_sab_py_tmp!" echo     import torch_xla.core.xla_model as xm; devs = xm.get_xla_supported_devices("TPU"); chips = len(devs) if devs else 0; dk = str(xm.xla_device()) if chips ^> 0 else "CPU_FALLBACK"
 >> "!_sab_py_tmp!" echo elif bid == "keras_tensorflow":
 >> "!_sab_py_tmp!" echo     import tensorflow as tf; tpus = tf.config.list_logical_devices("TPU"); chips = len(tpus); dk = "TPU_LOGICAL" if chips ^> 0 else "CPU_FALLBACK"
+>> "!_sab_py_tmp!" echo sha = hashlib.sha256(open(lp,"rb").read()).hexdigest().lower() if lp and os.path.isfile(lp) else ""
 >> "!_sab_py_tmp!" echo st = "ok" if chips ^> 0 else "failed_cpu_fallback"
->> "!_sab_py_tmp!" echo print(json.dumps({"backend_id": bid, "stage_a_status": st, "device_kind": dk, "chip_count": chips, "keras_backend_active": ka, "pjrt_device": pj, "libtpu_so_path": lp}))
+>> "!_sab_py_tmp!" echo print(json.dumps({"backend_id": bid, "libtpu_provider": prov, "stage_a_status": st, "device_kind": dk, "chip_count": chips, "keras_backend_active": ka, "pjrt_device": pj, "libtpu_so_path": lp, "libtpu_mapped_so_path": lp, "libtpu_mapped_so_sha256": sha}))
 >> "!_sab_py_tmp!" echo sys.exit(0 if chips ^> 0 else 65)
-"!_sab_py!" "!_sab_py_tmp!" "!_sab_bid!"
+"!_sab_py!" "!_sab_py_tmp!" "!_sab_bid!" "!_sab_prov!"
 set "_sab_pa_rc=!errorlevel!"
 del /f /q "!_sab_py_tmp!" >nul 2>&1
 exit /b !_sab_pa_rc!
@@ -93,7 +99,7 @@ exit /b !_sab_pa_rc!
 :gemma_4_sql_collect_wheel_versions
 set "_sab_py=%~1"
 if "%GEMMA_4_SQL_SYNTHETIC_FIXTURES%"=="1" (
-    echo {"gemma-4-sql":"0.1.0","jax":"0.4.35","libtpu":"0.1.dev2026","torch":"2.5.1","torch_xla":"2.5.1","transformers":"4.47.0","tensorflow-tpu":"2.18.0","keras":"3.7.0","maxtext":"0.1.0","duckdb":"1.1.3"}
+    echo {"gemma-4-sql":"0.1.0","jax":"0.4.35","libtpu":"0.0.52","torch":"2.5.1","torch_xla":"2.5.1","transformers":"4.47.0","tensorflow-tpu":"2.18.0","keras":"3.7.0","maxtext":"0.1.0","duckdb":"1.1.3"}
     exit /b 0
 )
 if not exist "!_sab_py!" (
@@ -144,9 +150,13 @@ if "%GEMMA_4_SQL_SYNTHETIC_FIXTURES%"=="1" (
     set "_sab_rss=%TPU_MOCK_STAGE_B_RSS_BYTES%"
     if "!_sab_rss!"=="" set "_sab_rss=2147483648"
 ) else (
-    if not "!_sab_wout!"=="" if exist "!_sab_wout!" (
-        for /f "usebackq delims=" %%M in (`jq -r "if (.peak_memory_mb // 0) > 0 then ((.peak_memory_mb * 1048576) | floor) else 0 end" "!_sab_wout!" 2^>nul`) do set "_sab_hbm=%%M"
-        if not "!_sab_hbm!"=="0" if not "!_sab_hbm!"=="" set "_sab_fd=true"
+    if not "!_sab_wout!"=="" (
+        if exist "!_sab_wout!" (
+            for /f "usebackq delims=" %%M in (`jq -r "if (.peak_memory_mb // 0) > 0 then ((.peak_memory_mb * 1048576) | floor) else 0 end" "!_sab_wout!" 2^>nul`) do set "_sab_hbm=%%M"
+            if not "!_sab_hbm!"=="0" (
+                if not "!_sab_hbm!"=="" set "_sab_fd=true"
+            )
+        )
     )
 )
 

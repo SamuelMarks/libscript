@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Environment configuration script for upstream reference `libtpu`. Exports `LIBTPU_REFERENCE_DIR`, `LIBTPU_REFERENCE_SO`, and `LIBTPU_REFERENCE_SDK_SO` without polluting `TPU_LIBRARY_PATH` unless explicitly requested.
+# Environment configuration script for upstream reference `libtpu`. Exports `LIBTPU_REFERENCE_DIR`, `LIBTPU_REFERENCE_SO`, `LIBTPU_REFERENCE_SDK_SO`, `LIBTPU_REFERENCE_WHEEL`, and `LIBTPU_REFERENCE_SO_SHA256` without polluting `TPU_LIBRARY_PATH` unless explicitly requested.
 #
 # ## Usage
 # Source via `SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/runtimes/libtpu/env.sh"; export SCRIPT_NAME; . "${SCRIPT_NAME}"`.
@@ -19,7 +19,7 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    [ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"; [ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"; unset SCRIPT_NAME _env_caller_this _env_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    if [ -n "${_env_caller_this:-}" ]; then THIS_FILE="${_env_caller_this}"; fi; if [ -n "${_env_caller_dir:-}" ]; then SCRIPT_DIR="${_env_caller_dir}"; fi; unset SCRIPT_NAME _env_caller_this _env_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -36,7 +36,7 @@ done
 unset SCRIPT_NAME _lt_env_lib || true
 
 LIBTPU_VERSION="${LIBTPU_VERSION:-0.0.52}"
-if [ "${LIBTPU_VERSION}" = "latest" ]; then
+if [ "${LIBTPU_VERSION}" = 'latest' ] || [ "${LIBTPU_VERSION}" = 'lts' ]; then
   EXACT_VERSION='0.0.52'
 else
   EXACT_VERSION="${LIBTPU_VERSION}"
@@ -48,16 +48,27 @@ case "${ARCH:-x86_64}" in
   aarch64|arm64) _lt_arch='aarch64' ;;
 esac
 
+_lt_whl="${LIBTPU_REFERENCE_WHEEL:-}"
+if [ -z "${_lt_whl}" ] && [ -f "${_lt_base}/${_lt_arch}/wheel_path.txt" ]; then
+  IFS= read -r _lt_whl < "${_lt_base}/${_lt_arch}/wheel_path.txt" || true
+fi
+_lt_sha="${LIBTPU_REFERENCE_SO_SHA256:-}"
+if [ -z "${_lt_sha}" ] && [ -f "${_lt_base}/${_lt_arch}/libtpu_so_sha256.txt" ]; then
+  IFS= read -r _lt_sha < "${_lt_base}/${_lt_arch}/libtpu_so_sha256.txt" || true
+fi
+
 export LIBTPU_REFERENCE_DIR="${_lt_base}"
 export LIBTPU_REFERENCE_SO="${LIBTPU_SO_PATH:-${_lt_base}/${_lt_arch}/libtpu.so}"
 export LIBTPU_REFERENCE_SDK_SO="${LIBTPU_SDK_SO_PATH:-${_lt_base}/${_lt_arch}/sdk.so}"
-if [ "${LIBTPU_ACTIVATE_TPU_LIBRARY_PATH:-0}" = "1" ]; then
+export LIBTPU_REFERENCE_WHEEL="${_lt_whl}"
+export LIBTPU_REFERENCE_SO_SHA256="${_lt_sha}"
+if [ "${LIBTPU_ACTIVATE_TPU_LIBRARY_PATH:-0}" = '1' ]; then
   export TPU_LIBRARY_PATH="${LIBTPU_REFERENCE_SO}"
 fi
 
 libscript_path_prepend "${_lt_base}/bin"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
-[ -n "${_env_caller_dir:-}" ] && SCRIPT_DIR="${_env_caller_dir}"
-[ -n "${_env_caller_this:-}" ] && THIS_FILE="${_env_caller_this}"
-unset SCRIPT_NAME _env_caller_this _env_caller_dir || true
+if [ -n "${_env_caller_dir:-}" ]; then SCRIPT_DIR="${_env_caller_dir}"; fi
+if [ -n "${_env_caller_this:-}" ]; then THIS_FILE="${_env_caller_this}"; fi
+unset SCRIPT_NAME _env_caller_this _env_caller_dir _lt_base _lt_arch _lt_whl _lt_sha || true

@@ -2,7 +2,7 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Windows environment configuration for upstream reference `libtpu` (`LIBTPU_REFERENCE_DIR`, `LIBTPU_REFERENCE_SO`, `LIBTPU_REFERENCE_SDK_SO`).
+:: Windows environment configuration for upstream reference `libtpu` (`LIBTPU_REFERENCE_DIR`, `LIBTPU_REFERENCE_SO`, `LIBTPU_REFERENCE_SDK_SO`, `LIBTPU_REFERENCE_WHEEL`, `LIBTPU_REFERENCE_SO_SHA256`).
 ::
 :: ## Usage
 :: call _lib\runtimes\libtpu\env.cmd
@@ -57,17 +57,30 @@ if "%LIBSCRIPT_HOME%"=="" (
 if "%LIBTPU_VERSION%"=="" (
     set "LIBTPU_VERSION=0.0.52"
 )
-set "_LT_BASE=%LIBSCRIPT_HOME%\libtpu\%LIBTPU_VERSION%"
+set "_LT_EXACT=%LIBTPU_VERSION%"
+if /i "!_LT_EXACT!"=="latest" set "_LT_EXACT=0.0.52"
+if /i "!_LT_EXACT!"=="lts" set "_LT_EXACT=0.0.52"
+set "_LT_BASE=%LIBSCRIPT_HOME%\libtpu\!_LT_EXACT!"
 set "_LT_SO=%LIBTPU_SO_PATH%"
 if "!_LT_SO!"=="" set "_LT_SO=!_LT_BASE!\x86_64\libtpu.so"
 set "_LT_SDK=%LIBTPU_SDK_SO_PATH%"
 if "!_LT_SDK!"=="" set "_LT_SDK=!_LT_BASE!\x86_64\sdk.so"
+set "_LT_WHL=%LIBTPU_REFERENCE_WHEEL%"
+if "!_LT_WHL!"=="" if exist "!_LT_BASE!\x86_64\wheel_path.txt" (
+    set /p _LT_WHL=<"!_LT_BASE!\x86_64\wheel_path.txt"
+)
+set "_LT_SHA=%LIBTPU_REFERENCE_SO_SHA256%"
+if "!_LT_SHA!"=="" if exist "!_LT_BASE!\x86_64\libtpu_so_sha256.txt" (
+    set /p _LT_SHA=<"!_LT_BASE!\x86_64\libtpu_so_sha256.txt"
+)
+set "_LT_TPU_LP=%TPU_LIBRARY_PATH%"
+if "%LIBTPU_ACTIVATE_TPU_LIBRARY_PATH%"=="1" set "_LT_TPU_LP=!_LT_SO!"
 
 set "_CAND_P=!_LT_BASE!\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "libtpu" "%LIBTPU_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\engine\common\env_base.cmd" "libtpu" "!_LT_EXACT!"
 
 endlocal & (
     set "LIBTPU_VERSION=%LIBTPU_VERSION%"
@@ -75,6 +88,9 @@ endlocal & (
     set "LIBTPU_REFERENCE_DIR=%_LT_BASE%"
     set "LIBTPU_REFERENCE_SO=%_LT_SO%"
     set "LIBTPU_REFERENCE_SDK_SO=%_LT_SDK%"
+    set "LIBTPU_REFERENCE_WHEEL=%_LT_WHL%"
+    set "LIBTPU_REFERENCE_SO_SHA256=%_LT_SHA%"
+    set "TPU_LIBRARY_PATH=%_LT_TPU_LP%"
     set "PATH=%PATH%"
 )
 exit /b 0

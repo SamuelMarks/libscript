@@ -58,6 +58,8 @@ if "%~1"=="" (
 )
 
 set "PLAN_FILE=%~1"
+set "PLAN_FILE=!PLAN_FILE:/=\!"
+set "_JQ_PLAN=!PLAN_FILE:\=/!"
 set "DRY_RUN=0"
 if /I "%~2"=="--dry-run" set "DRY_RUN=1"
 if "%LIBSCRIPT_DRY_RUN%"=="1" set "DRY_RUN=1"
@@ -80,7 +82,7 @@ if "!DRY_RUN!"=="0" (
     if not exist "!STAMPS_DIR!" mkdir "!STAMPS_DIR!"
 )
 
-for /f %%S in ('jq ".stages | length" "!PLAN_FILE!"') do set "TOTAL_STAGES=%%S"
+for /f %%S in ('jq ".stages | length" "!_JQ_PLAN!"') do set "TOTAL_STAGES=%%S"
 set /a LAST_STAGE=!TOTAL_STAGES!-1
 
 REM wincheck disable=CMD2003
@@ -118,10 +120,10 @@ exit /b !ERRORLEVEL!
 :: Executes all tasks within a single execution plan stage index.
 :run_stage
 set "S_IDX=%~1"
-for /f "usebackq delims=" %%A in (`jq -r ".stages[!S_IDX!].stage" "!PLAN_FILE!"`) do set "STAGE_NAME=%%A"
+for /f "usebackq delims=" %%A in (`jq -r ".stages[!S_IDX!].stage" "!_JQ_PLAN!"`) do set "STAGE_NAME=%%A"
 echo.
 echo [STAGE] === !STAGE_NAME! ===
-for /f %%T in ('jq ".stages[!S_IDX!].tasks | length" "!PLAN_FILE!"') do set "TOTAL_TASKS=%%T"
+for /f %%T in ('jq ".stages[!S_IDX!].tasks | length" "!_JQ_PLAN!"') do set "TOTAL_TASKS=%%T"
 set /a LAST_TASK=!TOTAL_TASKS!-1
 REM wincheck disable=CMD2003
 if !LAST_TASK! LSS 0 exit /b 0
@@ -135,10 +137,10 @@ exit /b 0
 :run_task
 set "TS_IDX=%~1"
 set "TT_IDX=%~2"
-for /f "usebackq delims=" %%N in (`jq -r ".stages[!TS_IDX!].tasks[!TT_IDX!].name" "!PLAN_FILE!"`) do set "TASK_NAME=%%N"
-for /f "usebackq delims=" %%C in (`jq -r ".stages[!TS_IDX!].tasks[!TT_IDX!].component" "!PLAN_FILE!"`) do set "TASK_COMP=%%C"
-for /f "usebackq delims=" %%M in (`jq -r ".stages[!TS_IDX!].tasks[!TT_IDX!].action" "!PLAN_FILE!"`) do set "TASK_ACTION=%%M"
-for /f "usebackq delims=" %%P in (`jq -r ".stages[!TS_IDX!].tasks[!TT_IDX!].stamp" "!PLAN_FILE!"`) do set "TASK_STAMP=%%P"
+for /f "usebackq delims=" %%N in (`jq -r ".stages[!TS_IDX!].tasks[!TT_IDX!].name" "!_JQ_PLAN!"`) do set "TASK_NAME=%%N"
+for /f "usebackq delims=" %%C in (`jq -r ".stages[!TS_IDX!].tasks[!TT_IDX!].component" "!_JQ_PLAN!"`) do set "TASK_COMP=%%C"
+for /f "usebackq delims=" %%M in (`jq -r ".stages[!TS_IDX!].tasks[!TT_IDX!].action" "!_JQ_PLAN!"`) do set "TASK_ACTION=%%M"
+for /f "usebackq delims=" %%P in (`jq -r ".stages[!TS_IDX!].tasks[!TT_IDX!].stamp" "!_JQ_PLAN!"`) do set "TASK_STAMP=%%P"
 set "STAMP_FILE=!STAMPS_DIR!\!TASK_STAMP!"
 
 if exist "!STAMP_FILE!" (

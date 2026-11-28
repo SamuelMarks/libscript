@@ -77,6 +77,7 @@ exit /b 0
 :: ## args_done
 :: Runs all four architectural tier verification passes.
 :args_done
+for %%R in ("!TARGET_ROOT!") do set "TARGET_ROOT=%%~fR"
 set "ERRORS=0"
 
 call :check_no_legacy_aliases
@@ -115,6 +116,13 @@ exit /b 0
 :: Verifies _lib\ contains exclusively atomic T1/T2 component directories with zero loose scripts or *-suite folders.
 :check_lib_atomic_purity
 if not exist "!TARGET_ROOT!\_lib\" exit /b 0
+set "_AT_BASE=%TEMP%"
+if "!_AT_BASE!"=="" set "_AT_BASE=%TMP%"
+if "!_AT_BASE!"=="" set "_AT_BASE=!LIBSCRIPT_ROOT_DIR!\build"
+if not exist "!_AT_BASE!" mkdir "!_AT_BASE!" >nul 2>&1
+for %%A in ("!_AT_BASE!") do set "_AT_BASE=%%~fA"
+set "_AT_TMP1=!_AT_BASE!\ls_at_lat1_!RANDOM!_!RANDOM!.txt"
+set "_AT_TMP2=!_AT_BASE!\ls_at_lat2_!RANDOM!_!RANDOM!.txt"
 for /d %%C in ("!TARGET_ROOT!\_lib\*") do (
     set "_CN=%%~nxC"
     if "!_CN:~0,1!"=="_" (
@@ -137,25 +145,54 @@ for /d %%C in ("!TARGET_ROOT!\_lib\*") do (
                 echo [TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib\!_CN!\!_DN!: Missing manifest.json. >&2
                 set /a ERRORS+=1
             ) else (
-                findstr /R /C:"\"tier\"[ ]*:[ ]*\"T[12]\"" "%%D\manifest.json" >nul 2>&1
+                findstr /R /C:".tier.[ ]*:[ ]*.T[12]." "%%D\manifest.json" >nul 2>&1
                 if errorlevel 1 (
                     echo [TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib\!_CN!\!_DN!\manifest.json: Must declare tier T1 or T2. >&2
                     set /a ERRORS+=1
                 )
             )
-            findstr /R /C:"\.\.[/\\]_common[/\\]" /C:"\.\.[/\\]\.\.[/\\]_common[/\\]" /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]setup\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]cli\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]test\." "%%D\*.sh" "%%D\*.cmd" "%%D\*.ps1" >nul 2>&1
-            if not errorlevel 1 (
-                echo [TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib\!_CN!\!_DN!: Lateral cross-component or stale _common reference is forbidden. >&2
-                set /a ERRORS+=1
-            ) else (
-                findstr /R /C:"_lib[/\\][a-z0-9-]*[/\\][a-z0-9-]*[/\\]" "%%D\*.sh" "%%D\*.cmd" "%%D\*.ps1" 2>nul | findstr /V /I /C:"_lib\!_CN!\!_DN!\" /C:"_lib/!_CN!/!_DN!/" | findstr /V /R /C:":#[ ]" /C:":::" /C:":rem " /C:":REM " >nul 2>&1
-                if not errorlevel 1 (
-                    echo [TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib\!_CN!\!_DN!: Lateral cross-component or stale _common reference is forbidden. >&2
-                    set /a ERRORS+=1
-                )
-            )
+            call :check_component_lateral_refs "%%D" "!_CN!" "!_DN!"
         )
     )
+)
+del /f /q "!_AT_TMP1!" "!_AT_TMP2!" >nul 2>&1
+exit /b 0
+
+:: ## check_component_lateral_refs
+:: Audits a single _lib\<category>\<component> directory for lateral cross-component or stale _common references without cmd.exe pipes.
+:check_component_lateral_refs
+set "_CLR_DIR=%~1"
+set "_CLR_CAT=%~2"
+set "_CLR_CMP=%~3"
+pushd "!_CLR_DIR!" >nul 2>&1
+if errorlevel 1 exit /b 0
+findstr /R /C:"\.\.[/\\]_common[/\\]" /C:"\.\.[/\\]\.\.[/\\]_common[/\\]" /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]setup\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]cli\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]env\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]service\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]uninstall\." /C:"\.\.[/\\][a-zA-Z0-9_-]*[/\\]test\." "*.sh" "*.cmd" "*.ps1" > "!_AT_TMP1!" 2>nul
+popd >nul 2>&1
+set "_CLR_HIT=0"
+for %%Z in ("!_AT_TMP1!") do if not "%%~zZ"=="0" set "_CLR_HIT=1"
+if "!_CLR_HIT!"=="1" (
+    findstr /V /I /R /C:":#[ ]" /C:":::" /C:":rem " /C:"^[ 	]*#" /C:"^[ 	]*::" /C:"^[ 	]*rem " "!_AT_TMP1!" >nul 2>&1
+    if not errorlevel 1 (
+        echo [TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib\!_CLR_CAT!\!_CLR_CMP!: Lateral cross-component or stale _common reference is forbidden. >&2
+        set /a ERRORS+=1
+        exit /b 0
+    )
+)
+pushd "!_CLR_DIR!" >nul 2>&1
+if errorlevel 1 exit /b 0
+findstr /N /R /C:"_lib[/\\][a-z0-9-][a-z0-9-]*[/\\][a-z0-9-][a-z0-9-]*[/\\]" "*.sh" "*.cmd" "*.ps1" > "!_AT_TMP1!" 2>nul
+popd >nul 2>&1
+set "_CLR_HIT=0"
+for %%Z in ("!_AT_TMP1!") do if not "%%~zZ"=="0" set "_CLR_HIT=1"
+if "!_CLR_HIT!"=="0" exit /b 0
+findstr /V /I /R /C:"_lib[/\\]!_CLR_CAT![/\\]!_CLR_CMP![/\\]" "!_AT_TMP1!" > "!_AT_TMP2!" 2>nul
+set "_CLR_HIT2=0"
+for %%Y in ("!_AT_TMP2!") do if not "%%~zY"=="0" set "_CLR_HIT2=1"
+if "!_CLR_HIT2!"=="0" exit /b 0
+findstr /V /I /R /C:":[0-9][0-9]*:[ 	]*#" /C:"^[0-9][0-9]*:[ 	]*#" /C:":[0-9][0-9]*:[ 	]*::" /C:"^[0-9][0-9]*:[ 	]*::" /C:":[0-9][0-9]*:[ 	]*rem " /C:"^[0-9][0-9]*:[ 	]*rem " "!_AT_TMP2!" >nul 2>&1
+if not errorlevel 1 (
+    echo [TIER VIOLATION] [LIB_ATOMIC_PURITY] _lib\!_CLR_CAT!\!_CLR_CMP!: Lateral cross-component or stale _common reference is forbidden. >&2
+    set /a ERRORS+=1
 )
 exit /b 0
 

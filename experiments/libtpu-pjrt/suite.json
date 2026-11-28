@@ -1,7 +1,7 @@
 {
   "$schema": "../../experiments/schemas/experiment-suite.schema.json",
   "id": "libtpu-pjrt",
-  "title": "libtpu-rs Empirical Evaluation Protocol (SIGPLAN E0-E8)",
+  "title": "libtpu-rs Empirical Evaluation Protocol (SIGPLAN E0-E9)",
   "protocol_version": "PLDI-2027-v1",
   "manuscript_dir": "../new_research/libtpu_paper",
   "manuscript_tex": "libtpu_paper.tex",
@@ -134,6 +134,23 @@
       "outputs": ["e7_numerics.json", "e7_sparsecore.json"]
     },
     {
+      "id": "E9",
+      "title": "Head-to-Head Multi-Framework Cloud TPU Comparison (JAX, Keras->JAX, PyTorch/TorchTPU, TensorFlow)",
+      "depends_on_suites": ["E0", "E2"],
+      "libscript_deps": ["libtpu", "libtpu-rs", "python", "uv", "jq"],
+      "entrypoint": "suites/e9_framework_matrix",
+      "require_native_isa": true,
+      "outputs": [
+        "e9_jax_vs_og.json",
+        "e9_keras_jax_vs_og.json",
+        "e9_pytorch_tpu_vs_og.json",
+        "e9_tensorflow_tpu_vs_og.json",
+        "e9_framework_comparison.json",
+        "e9_framework_comparison.csv",
+        "e9_framework_comparison.md"
+      ]
+    },
+    {
       "id": "E8",
       "title": "Deterministic LaTeX Macro Emission & Reproducible PDF Audit",
       "depends_on_suites": ["E0", "E1", "E2", "E3", "E4", "E5", "E6", "E7"],
@@ -144,6 +161,6 @@
     }
   ],
   "substrate": "tpu-slice",
-  "required_components": ["libtpu-rs", "rust"],
+  "required_components": ["libtpu", "libtpu-rs", "rust", "python", "uv", "jq", "gcp-cli"],
   "vars_schema_ref": "./vars.schema.json"
 }

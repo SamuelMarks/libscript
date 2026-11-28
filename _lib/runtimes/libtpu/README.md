@@ -55,6 +55,8 @@ running setup.
 | `LIBTPU_REFERENCE_DIR`             | Resolved directory containing extracted upstream libtpu reference wheels and shared objects.                                                    | `none`             |                  |
 | `LIBTPU_REFERENCE_SO`              | Resolved path to the active host-matching upstream libtpu.so artifact.                                                                          | `none`             |                  |
 | `LIBTPU_REFERENCE_SDK_SO`          | Resolved path to the active host-matching upstream sdk.so artifact.                                                                             | `none`             |                  |
+| `LIBTPU_REFERENCE_WHEEL`           | Resolved path to the cached SHA-256 verified upstream PyPI libtpu wheel (.whl) for offline virtualenv installation.                             | `none`             |                  |
+| `LIBTPU_REFERENCE_SO_SHA256`       | Lowercase hexadecimal SHA-256 digest of the extracted upstream reference libtpu.so artifact.                                                    | `none`             |                  |
 | `LIBTPU_ACTIVATE_TPU_LIBRARY_PATH` | Flag (0 or 1) controlling whether env.sh/env.cmd exports TPU_LIBRARY_PATH pointing at upstream libtpu.so.                                       | `0`                |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,

@@ -7,9 +7,9 @@
   "properties": {
     "LIBTPU_RS_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install libtpu-rs. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "description": "How to install libtpu-rs. 'libscript_native' downloads verified GitHub Releases with Cargo fallback, 'system' uses OS package manager, and 'from-source' compiles from Cargo source.",
       "enum": ["libscript_native", "system", "from-source"],
-      "default": "from-source"
+      "default": "libscript_native"
     },
     "LIBTPU_RS_VERSION": {
       "description": "Specific version of libtpu-rs to install.",
@@ -23,7 +23,8 @@
     },
     "LIBTPU_RS_RELEASES_URL": {
       "type": "string",
-      "description": "Override URL for querying libtpu-rs available remote releases."
+      "description": "Override URL for querying libtpu-rs available remote GitHub releases.",
+      "default": "https://api.github.com/repos/SamuelMarks/libtpu-rs/releases"
     },
     "LIBTPU_RS_REPO_DIR": {
       "type": "string",
@@ -31,7 +32,45 @@
     },
     "LIBTPU_RS_GIT_URL": {
       "type": "string",
-      "description": "Optional Git URL cloned when LIBTPU_RS_REPO_DIR is not already present on disk."
+      "description": "Git URL cloned when LIBTPU_RS_REPO_DIR is not already present on disk.",
+      "default": "https://github.com/SamuelMarks/libtpu-rs.git"
+    },
+    "LIBTPU_RS_SO_PATH": {
+      "type": "string",
+      "description": "Explicit override path to a prebuilt libtpu-rs shared library (libtpu.so, libtpu.dylib, or tpu.dll)."
+    },
+    "LIBTPU_RS_SDK_SO_PATH": {
+      "type": "string",
+      "description": "Explicit override path to a prebuilt libtpu-rs Python SDK extension library (sdk.so, sdk.dylib, or sdk.dll)."
+    },
+    "LIBTPU_RS_WHEEL_PATH": {
+      "type": "string",
+      "description": "Explicit override path to a prebuilt drop-in PEP 427 libtpu wheel produced by libtpu-rs."
+    },
+    "LIBTPU_RS_DIR": {
+      "type": "string",
+      "description": "Resolved versioned installation directory containing libtpu-rs shared libraries and wheels."
+    },
+    "LIBTPU_RS_SO": {
+      "type": "string",
+      "description": "Resolved path to the active host-matching libtpu-rs PJRT C-API shared library (libtpu.so, libtpu.dylib, or tpu.dll)."
+    },
+    "LIBTPU_RS_SDK_SO": {
+      "type": "string",
+      "description": "Resolved path to the active host-matching libtpu-rs SDK extension shared library."
+    },
+    "LIBTPU_RS_WHEEL": {
+      "type": "string",
+      "description": "Resolved path to the cached drop-in PEP 427 libtpu wheel (.whl) built or downloaded for libtpu-rs."
+    },
+    "LIBTPU_RS_SO_SHA256": {
+      "type": "string",
+      "description": "Lowercase hexadecimal SHA-256 digest of the installed libtpu-rs PJRT shared library."
+    },
+    "LIBTPU_RS_ACTIVATE_TPU_LIBRARY_PATH": {
+      "type": "string",
+      "description": "Flag (0 or 1) controlling whether env.sh/env.cmd exports TPU_LIBRARY_PATH pointing at LIBTPU_RS_SO.",
+      "default": "0"
     },
     "LIBTPU_RS_PAPER_DIR": {
       "type": "string",
@@ -39,7 +78,7 @@
     },
     "LIBTPU_RS_RESULTS_DIR": {
       "type": "string",
-      "description": "Directory where mechanical E0-E7 JSON artifacts and generated_metrics.tex are emitted."
+      "description": "Directory where mechanical E0-E9 JSON artifacts and generated_metrics.tex are emitted."
     },
     "LIBTPU_RS_CARGO_PROFILE": {
       "type": "string",

@@ -1,7 +1,7 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: Smoke validation test for the `libtpu-pjrt` experiment plugin on Windows.
+:: Smoke and idempotent Suite E9 + E8 synthesis validation test for the `libtpu-pjrt` experiment plugin on Windows.
 :: ## Usage
 :: test.cmd
 
@@ -34,7 +34,22 @@ if "!d!"=="" ( echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2 & exit /b 1 )
 goto :find_root
 
 :: ## root_found
-:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:: Validates manifest and verifies synthetic E0 + E9 + E8 execution idempotently.
 :root_found
 call "!LIBSCRIPT_ROOT_DIR!\experiments\engine.cmd" validate "libtpu-pjrt" >nul
-exit /b !errorlevel!
+if errorlevel 1 exit /b !errorlevel!
+set "_TMP=%TEMP%\libtpu_pjrt_smoke_!RANDOM!"
+if not exist "!_TMP!" mkdir "!_TMP!"
+set "STACK="
+call "!SCRIPT_DIR!\provision.cmd" --dry-run >nul
+if errorlevel 1 exit /b 1
+set "STACK="
+call "!SCRIPT_DIR!\benchmark_experiments.cmd" --synthetic-fixtures --subsuites=E0,E9,E8 "--results-dir=!_TMP!\res" >nul
+if errorlevel 1 exit /b 1
+set "STACK="
+call "!SCRIPT_DIR!\benchmark_experiments.cmd" --synthetic-fixtures --subsuites=E0,E9,E8 "--results-dir=!_TMP!\res" >nul
+if errorlevel 1 exit /b 1
+if not exist "!_TMP!\res\e9_framework_comparison.json" exit /b 1
+if not exist "!_TMP!\res\generated_metrics.tex" exit /b 1
+rmdir /s /q "!_TMP!" >nul 2>&1
+exit /b 0

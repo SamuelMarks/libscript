@@ -4,15 +4,15 @@
   "category": "toolchains",
   "dependencies": {
     "build_deps": ["c"],
-    "host_tools": ["rust", "clang", "llvm", "protobuf", "tokei", "jq", "git"],
+    "host_tools": ["rust", "clang", "llvm", "protobuf", "tokei", "jq", "git", "uv"],
     "runtime_deps": ["python", "libtpu"],
     "tier": "optional"
   },
-  "description": "Clean-room Rust PJRT TPU runtime/compiler version manager, isolated JAX test environment, and SIGPLAN E0-E8 empirical evaluation harness.",
+  "description": "Clean-room Rust PJRT TPU runtime/compiler version manager, drop-in libtpu wheel & shared library cache, and SIGPLAN empirical evaluation harness.",
   "name": "libtpu-rs",
   "os_whitelist": ["all"],
   "provides": ["libtpu-rs"],
-  "repository": "https://github.com/openxla/xla",
+  "repository": "https://github.com/SamuelMarks/libtpu-rs",
   "tier": "T1",
   "title": "libtpu-rs Clean-Room PJRT Driver & Compiler Suite"
 }

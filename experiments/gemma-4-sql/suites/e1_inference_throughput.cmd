@@ -49,6 +49,8 @@ set "TRIAL_RUNS=%GEMMA_4_SQL_TRIALS%"
 if "!TRIAL_RUNS!"=="" set "TRIAL_RUNS=5"
 set "SHM_ROOT=%GEMMA_4_SQL_SHM_ROOT%"
 if "!SHM_ROOT!"=="" set "SHM_ROOT=%TEMP%\libscript-tpu"
+set "LIBTPU_PROVIDER=%GEMMA_4_SQL_LIBTPU_PROVIDER%"
+if "!LIBTPU_PROVIDER!"=="" set "LIBTPU_PROVIDER=og"
 
 for %%I in ("!_e1_repo_arg!") do set "REPO_DIR=%%~fI"
 if not exist "!_e1_res_arg!\raw" mkdir "!_e1_res_arg!\raw"
@@ -59,11 +61,12 @@ call "%LIBSCRIPT_ROOT_DIR%\engine\common\remote_sync.cmd" :libscript_compute_tre
 set "_tree_hash=!LIBSCRIPT_TREE_HASH!"
 
 if not "%GEMMA_4_SQL_RESUME%"=="0" if exist "!OUT_FILE!" (
-    jq -e --arg th "!_tree_hash!" ".status == \"ok\" and .tree_hash == $th" "!OUT_FILE!" >nul 2>&1
+    jq -e --arg th "!_tree_hash!" --arg prov "!LIBTPU_PROVIDER!" --arg prov "!LIBTPU_PROVIDER!" ".status == \"ok\" and .tree_hash == $th and (.libtpu_provider // \"og\") == $prov" "!OUT_FILE!" >nul 2>&1
     if not errorlevel 1 exit /b 0
 )
 
-call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_prepare_backend_venv "!BACKEND_ID!" "!REPO_DIR!" "!SHM_ROOT!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_prepare_backend_venv "!BACKEND_ID!" "!REPO_DIR!" "!SHM_ROOT!" "!LIBTPU_PROVIDER!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_provider_env "!TPU_BACKEND_VENV_DIR!" "!LIBTPU_PROVIDER!" >nul
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_backend_spec "!BACKEND_ID!" "!SHM_ROOT!" >nul
 call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_family_label "!BACKEND_ID!" >nul
@@ -103,7 +106,7 @@ for %%S in (!_bs_list!) do (
     )
 )
 
-jq -n --slurpfile profiles "!_prof_f!" --arg b "!BACKEND_ID!" --arg fam "!TPU_BACKEND_FAMILY!" --arg m "!MODEL_NAME!" --arg th "!_tree_hash!" --argjson pre !_best_pre! --argjson dec !_best_dec! --argjson cold !_cold_ms! --argjson p25 !_p25_ms! --argjson p50 !_p50_ms! --argjson p75 !_p75_ms! --argjson p90 !_p90_ms! --argjson p99 !_p99_ms! --argjson fd !_any_fd! --argjson hbm !_max_hbm! --argjson duty !_max_duty! --argjson rss !_max_rss! "{suite: \"E1\", experiment_id: \"gemma-4-sql\", backend_id: $b, comparison_family: $fam, model: $m, status: \"ok\", tree_hash: $th, prefill_tokens_per_sec: $pre, decode_tokens_per_sec: $dec, cold_compile_ms: $cold, latency_ms: {p25: $p25, p50: $p50, p75: $p75, p90: $p90, p99: $p99, iqr: (($p75 - $p25) * 1000 | round / 1000)}, batch_profiles: $profiles[0], telemetry: {accelerator_fd_opened: $fd, peak_tpu_hbm_bytes: $hbm, tpu_duty_cycle_pct: $duty, peak_host_rss_bytes: $rss}}" > "!OUT_FILE!.tmp"
+jq -n --slurpfile profiles "!_prof_f!" --arg b "!BACKEND_ID!" --arg fam "!TPU_BACKEND_FAMILY!" --arg m "!MODEL_NAME!" --arg th "!_tree_hash!" --argjson pre !_best_pre! --argjson dec !_best_dec! --argjson cold !_cold_ms! --argjson p25 !_p25_ms! --argjson p50 !_p50_ms! --argjson p75 !_p75_ms! --argjson p90 !_p90_ms! --argjson p99 !_p99_ms! --argjson fd !_any_fd! --argjson hbm !_max_hbm! --argjson duty !_max_duty! --argjson rss !_max_rss! "{suite: \"E1\", experiment_id: \"gemma-4-sql\", backend_id: $b, libtpu_provider: $prov, comparison_family: $fam, model: $m, status: \"ok\", tree_hash: $th, prefill_tokens_per_sec: $pre, decode_tokens_per_sec: $dec, cold_compile_ms: $cold, latency_ms: {p25: $p25, p50: $p50, p75: $p75, p90: $p90, p99: $p99, iqr: (($p75 - $p25) * 1000 | round / 1000)}, batch_profiles: $profiles[0], telemetry: {accelerator_fd_opened: $fd, peak_tpu_hbm_bytes: $hbm, tpu_duty_cycle_pct: $duty, peak_host_rss_bytes: $rss}}" > "!OUT_FILE!.tmp"
 del /f /q "!_prof_f!" >nul 2>&1
 jq -e . "!OUT_FILE!.tmp" >nul
 if errorlevel 1 exit /b 1

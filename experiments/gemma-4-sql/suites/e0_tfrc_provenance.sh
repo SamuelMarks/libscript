@@ -43,6 +43,7 @@ REPO_ARG="${1:-$(pwd)}"
 RESULTS_ARG="${2:-${LIBSCRIPT_ROOT_DIR}/build/experiment_results/gemma-4-sql}"
 BACKENDS_CSV="${3:-${GEMMA_4_SQL_BACKENDS:-${TPU_ALL_BACKENDS}}}"
 SHM_ROOT="${GEMMA_4_SQL_SHM_ROOT:-/dev/shm/libscript-tpu}"
+LIBTPU_PROVIDER="${GEMMA_4_SQL_LIBTPU_PROVIDER:-og}"
 
 # ## derive_ici_mesh
 # Infers canonical TPU ICI mesh shape string from accelerator SKU and total chip count.
@@ -115,14 +116,15 @@ run_e0_provenance() {
   for _bid in ${BACKENDS_CSV}; do
     IFS="${_old_ifs}"
     [ -n "${_bid}" ] || continue
-    _vdir=$(libscript_tpu_prepare_backend_venv "${_bid}" "${REPO_DIR}" "${SHM_ROOT}")
+    _vdir=$(libscript_tpu_prepare_backend_venv "${_bid}" "${REPO_DIR}" "${SHM_ROOT}" "${LIBTPU_PROVIDER}")
+    _penv=$(libscript_tpu_provider_env "${_vdir}" "${LIBTPU_PROVIDER}")
     _spec=$(libscript_tpu_backend_spec "${_bid}" "${SHM_ROOT}")
     _vgroup=$(printf '%s' "${_spec}" | cut -d'|' -f1)
     _benv=$(printf '%s' "${_spec}" | cut -d'|' -f7)
     _fam=$(libscript_tpu_family_label "${_bid}")
     _stamp=$(cat "${_vdir}/.libscript_wheels.sha256" 2>/dev/null || printf 'none')
 
-    _probe=$(for _kv in ${_benv}; do export "${_kv?}"; done; gemma_4_sql_stage_a_probe "${_bid}" "${_vdir}/bin/python")
+    _probe=$(for _kv in ${_benv} ${_penv}; do export "${_kv?}"; done; GEMMA_4_SQL_LIBTPU_PROVIDER="${LIBTPU_PROVIDER}" gemma_4_sql_stage_a_probe "${_bid}" "${_vdir}/bin/python")
     _wheel_vers=$(gemma_4_sql_collect_wheel_versions "${_vdir}/bin/python")
 
     _probes_json=$(printf '%s' "${_probes_json}" | jq \
@@ -143,6 +145,7 @@ run_e0_provenance() {
 
   jq -n \
     --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+    --arg prov "${LIBTPU_PROVIDER}" \
     --arg sha "${_git_sha}" \
     --arg dirty "${_dirty_hash}" \
     --arg th "${_tree_hash}" \
@@ -158,6 +161,7 @@ run_e0_provenance() {
     '{
       suite: "E0",
       experiment_id: "gemma-4-sql",
+      libtpu_provider: $prov,
       study_title: "gemma-4-sql: TPU performance comparisons betwixt JAX, Keras, and PyTorch on Google'\''s Gemma 4",
       status: "ok",
       timestamp_utc: $ts,

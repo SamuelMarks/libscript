@@ -45,6 +45,7 @@ BACKEND_ID="$3"
 MODEL_NAME="${GEMMA_4_SQL_MODEL:-google/gemma-4-E4B}"
 DATASET_ID="${GEMMA_4_SQL_DATASET:-gemma-4-sql-bench}"
 SHM_ROOT="${GEMMA_4_SQL_SHM_ROOT:-/dev/shm/libscript-tpu}"
+LIBTPU_PROVIDER="${GEMMA_4_SQL_LIBTPU_PROVIDER:-og}"
 
 # ## prepare_train_dataset_fixture
 # Idempotently writes deterministic SFT/PEFT and DPO JSONL training fixtures under RESULTS_DIR/fixtures when default dataset ID is selected.
@@ -91,13 +92,14 @@ run_e3_backend() {
 
   _tree_hash=$(libscript_compute_tree_hash "${REPO_DIR}")
   if [ "${GEMMA_4_SQL_RESUME:-1}" = '1' ] && [ -f "${OUT_FILE}" ]; then
-    if jq -e --arg th "${_tree_hash}" '.status == "ok" and .tree_hash == $th' "${OUT_FILE}" >/dev/null 2>&1; then
+    if jq -e --arg th "${_tree_hash}" --arg prov "${LIBTPU_PROVIDER}" '.status == "ok" and .tree_hash == $th and (.libtpu_provider // "og") == $prov' "${OUT_FILE}" >/dev/null 2>&1; then
       log_info "[RESUME] Skipping completed E3 cell for ${BACKEND_ID} (tree_hash=${_tree_hash})."
       return 0
     fi
   fi
 
-  _vdir=$(libscript_tpu_prepare_backend_venv "${BACKEND_ID}" "${REPO_DIR}" "${SHM_ROOT}")
+  _vdir=$(libscript_tpu_prepare_backend_venv "${BACKEND_ID}" "${REPO_DIR}" "${SHM_ROOT}" "${LIBTPU_PROVIDER}")
+  _penv=$(libscript_tpu_provider_env "${_vdir}" "${LIBTPU_PROVIDER}")
   _spec=$(libscript_tpu_backend_spec "${BACKEND_ID}" "${SHM_ROOT}")
   _cli_be=$(printf '%s' "${_spec}" | cut -d'|' -f2)
   _benv=$(printf '%s' "${_spec}" | cut -d'|' -f7)
@@ -122,7 +124,7 @@ run_e3_backend() {
   _raw_dpo="${RESULTS_DIR}/raw/.w_e3_dpo_${BACKEND_ID}.json"
   rm -f "${_raw_sft}" "${_raw_peft}" "${_raw_dpo}"
 
-  _wcmd="export ${_benv}; PATH='${_vdir}/bin':\"\$PATH\"; cd '${REPO_DIR}' && gemma-4-sql sft --model '${MODEL_NAME}' --dataset '${_sft_ds}' --hardware tpu ${_strict_flag} --dtype bfloat16 --backend '${_cli_be}' --output-json '${_raw_sft}' && gemma-4-sql peft --model '${MODEL_NAME}' --dataset '${_sft_ds}' --hardware tpu ${_strict_flag} --dtype bfloat16 --backend '${_cli_be}' --output-json '${_raw_peft}' && gemma-4-sql dpo --model '${MODEL_NAME}' --dataset '${_dpo_ds}' --hardware tpu ${_strict_flag} --dtype bfloat16 --backend '${_cli_be}' --output-json '${_raw_dpo}'"
+  _wcmd="export ${_benv} ${_penv}; PATH='${_vdir}/bin':\"\$PATH\"; cd '${REPO_DIR}' && gemma-4-sql sft --model '${MODEL_NAME}' --dataset '${_sft_ds}' --hardware tpu ${_strict_flag} --dtype bfloat16 --backend '${_cli_be}' --output-json '${_raw_sft}' && gemma-4-sql peft --model '${MODEL_NAME}' --dataset '${_sft_ds}' --hardware tpu ${_strict_flag} --dtype bfloat16 --backend '${_cli_be}' --output-json '${_raw_peft}' && gemma-4-sql dpo --model '${MODEL_NAME}' --dataset '${_dpo_ds}' --hardware tpu ${_strict_flag} --dtype bfloat16 --backend '${_cli_be}' --output-json '${_raw_dpo}'"
 
   gemma_4_sql_exec_with_stage_b "${BACKEND_ID}" "${_wcmd}" "${OUT_FILE}" "${GEMMA_4_SQL_REQUIRE_HBM:-1}" "${_raw_peft}"
 
@@ -139,6 +141,7 @@ run_e3_backend() {
     --arg fam "${_fam}" \
     --arg m "${MODEL_NAME}" \
     --arg th "${_tree_hash}" \
+    --arg prov "${LIBTPU_PROVIDER}" \
     --argjson sft_tps "${_sft_tpsc}" \
     --argjson peft_tps "${_peft_tpsc}" \
     --argjson dpo_tps "${_dpo_tpsc}" \
@@ -151,6 +154,7 @@ run_e3_backend() {
       suite: "E3",
       experiment_id: "gemma-4-sql",
       backend_id: $b,
+      libtpu_provider: $prov,
       comparison_family: $fam,
       model: $m,
       status: "ok",

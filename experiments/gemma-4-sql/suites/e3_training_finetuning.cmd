@@ -45,6 +45,8 @@ set "DATASET_ID=%GEMMA_4_SQL_DATASET%"
 if "!DATASET_ID!"=="" set "DATASET_ID=gemma-4-sql-bench"
 set "SHM_ROOT=%GEMMA_4_SQL_SHM_ROOT%"
 if "!SHM_ROOT!"=="" set "SHM_ROOT=%TEMP%\libscript-tpu"
+set "LIBTPU_PROVIDER=%GEMMA_4_SQL_LIBTPU_PROVIDER%"
+if "!LIBTPU_PROVIDER!"=="" set "LIBTPU_PROVIDER=og"
 
 for %%I in ("!_e3_repo_arg!") do set "REPO_DIR=%%~fI"
 if not exist "!_e3_res_arg!\raw" mkdir "!_e3_res_arg!\raw"
@@ -55,11 +57,12 @@ call "%LIBSCRIPT_ROOT_DIR%\engine\common\remote_sync.cmd" :libscript_compute_tre
 set "_tree_hash=!LIBSCRIPT_TREE_HASH!"
 
 if not "%GEMMA_4_SQL_RESUME%"=="0" if exist "!OUT_FILE!" (
-    jq -e --arg th "!_tree_hash!" ".status == \"ok\" and .tree_hash == $th" "!OUT_FILE!" >nul 2>&1
+    jq -e --arg th "!_tree_hash!" --arg prov "!LIBTPU_PROVIDER!" --arg prov "!LIBTPU_PROVIDER!" ".status == \"ok\" and .tree_hash == $th and (.libtpu_provider // \"og\") == $prov" "!OUT_FILE!" >nul 2>&1
     if not errorlevel 1 exit /b 0
 )
 
-call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_prepare_backend_venv "!BACKEND_ID!" "!REPO_DIR!" "!SHM_ROOT!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_prepare_backend_venv "!BACKEND_ID!" "!REPO_DIR!" "!SHM_ROOT!" "!LIBTPU_PROVIDER!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_provider_env "!TPU_BACKEND_VENV_DIR!" "!LIBTPU_PROVIDER!" >nul
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_backend_spec "!BACKEND_ID!" "!SHM_ROOT!" >nul
 call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_family_label "!BACKEND_ID!" >nul
@@ -124,7 +127,7 @@ if "!_step_ms!"=="" exit /b 1
 if "!_loss_init!"=="" exit /b 1
 if "!_loss_fin!"=="" exit /b 1
 
-jq -n --arg b "!BACKEND_ID!" --arg fam "!TPU_BACKEND_FAMILY!" --arg m "!MODEL_NAME!" --arg th "!_tree_hash!" --argjson sft_tps !_sft_tpsc! --argjson peft_tps !_peft_tpsc! --argjson dpo_tps !_dpo_tpsc! --argjson step_ms !_step_ms! --argjson loss_init !_loss_init! --argjson loss_fin !_loss_fin! --argjson fd !STAGE_B_ACCEL_FD! --argjson hbm !STAGE_B_PEAK_HBM! "{suite: \"E3\", experiment_id: \"gemma-4-sql\", backend_id: $b, comparison_family: $fam, model: $m, status: \"ok\", tree_hash: $th, sft_tokens_per_sec_per_chip: $sft_tps, peft_tokens_per_sec_per_chip: $peft_tps, dpo_tokens_per_sec_per_chip: $dpo_tps, step_time_ms: $step_ms, loss_trajectory: {initial_loss: $loss_init, final_loss: $loss_fin, loss_decreased: ($loss_fin < $loss_init)}, telemetry: {accelerator_fd_opened: $fd, peak_tpu_hbm_bytes: $hbm}}" > "!OUT_FILE!.tmp"
+jq -n --arg b "!BACKEND_ID!" --arg fam "!TPU_BACKEND_FAMILY!" --arg m "!MODEL_NAME!" --arg th "!_tree_hash!" --argjson sft_tps !_sft_tpsc! --argjson peft_tps !_peft_tpsc! --argjson dpo_tps !_dpo_tpsc! --argjson step_ms !_step_ms! --argjson loss_init !_loss_init! --argjson loss_fin !_loss_fin! --argjson fd !STAGE_B_ACCEL_FD! --argjson hbm !STAGE_B_PEAK_HBM! "{suite: \"E3\", experiment_id: \"gemma-4-sql\", backend_id: $b, libtpu_provider: $prov, comparison_family: $fam, model: $m, status: \"ok\", tree_hash: $th, sft_tokens_per_sec_per_chip: $sft_tps, peft_tokens_per_sec_per_chip: $peft_tps, dpo_tokens_per_sec_per_chip: $dpo_tps, step_time_ms: $step_ms, loss_trajectory: {initial_loss: $loss_init, final_loss: $loss_fin, loss_decreased: ($loss_fin < $loss_init)}, telemetry: {accelerator_fd_opened: $fd, peak_tpu_hbm_bytes: $hbm}}" > "!OUT_FILE!.tmp"
 jq -e . "!OUT_FILE!.tmp" >nul
 if errorlevel 1 exit /b 1
 move /y "!OUT_FILE!.tmp" "!OUT_FILE!" >nul

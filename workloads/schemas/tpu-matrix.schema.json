@@ -19,6 +19,34 @@
       "default": true,
       "description": "Fail-fast assertion requiring observed /dev/accel* or /dev/vfio/* activity and non-zero TPU HBM allocation."
     },
+    "libtpu_providers": {
+      "type": "array",
+      "default": ["og"],
+      "description": "Ordered list of libtpu C-API/PJRT providers ('og' for upstream Google libtpu, 'rs' for clean-room libtpu-rs) provisioned into dedicated twin virtualenvs.",
+      "items": {
+        "type": "string",
+        "enum": ["og", "rs"],
+        "description": "Canonical libtpu runtime provider identifier."
+      }
+    },
+    "wheel_find_links_overrides": {
+      "type": "object",
+      "description": "Optional custom wheel index (--find-links) URLs for JAX, PyTorch/torch_xla, and TensorFlow TPU distributions.",
+      "properties": {
+        "jax_find_links": {
+          "type": "string",
+          "description": "Override wheel index URL for jax[tpu] and libtpu wheel releases."
+        },
+        "torch_xla_find_links": {
+          "type": "string",
+          "description": "Override wheel index URL for torch_xla[tpu] wheel releases."
+        },
+        "tf_find_links": {
+          "type": "string",
+          "description": "Override wheel index URL for tensorflow-tpu or PJRT C-API plugin wheel releases."
+        }
+      }
+    },
     "backends": {
       "type": "array",
       "description": "Isolated ML framework/backend runtime specifications evaluated across the TPU matrix.",

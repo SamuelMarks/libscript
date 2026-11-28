@@ -1,10 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Stage A framework TPU pre-flight probe and Stage B 50ms active /dev/accel* + HBM + descendant process-tree RSS telemetry sampler enforcing fail-fast exit 65 on silent CPU fallback.
+# Stage A framework TPU pre-flight probe (with `/proc/self/maps` `libtpu.so` SHA-256 attestation) and Stage B 50ms active `/dev/accel*` + HBM + descendant process-tree RSS telemetry sampler enforcing fail-fast exit 65 on silent CPU fallback or library mismatch.
 #
 # ## Usage
 # SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/experiments/gemma-4-sql/suites/stage_ab_telemetry.sh"; export SCRIPT_NAME; . "${SCRIPT_NAME}"
-
 set -feu
 _sab_caller_this="${THIS_FILE:-}"; _sab_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -28,41 +27,62 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/python_env.sh"; export SCRIPT_NAME
+
+_sab_self_this="${THIS_FILE}"
+_sab_self_dir="${SCRIPT_DIR}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/engine/common/python_env.sh"
+export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
+THIS_FILE="${_sab_self_this}"
+SCRIPT_DIR="${_sab_self_dir}"
+unset _sab_self_this _sab_self_dir || true
 
 # ## gemma_4_sql_stage_a_probe
-# Runs an in-venv Python TPU device discovery probe for backend_id and prints structured Stage A JSON.
+# Runs an in-venv Python TPU device discovery probe, inspects `/proc/self/maps` for mapped `libtpu.so` SHA-256, and prints structured Stage A JSON (exiting 65 on CPU fallback or SHA-256 mismatch).
 gemma_4_sql_stage_a_probe() {
   _sab_bid="$1"
   _sab_py="$2"
+  _sab_prov="${GEMMA_4_SQL_LIBTPU_PROVIDER:-${LIBTPU_EXPECTED_PROVIDER:-og}}"
+  _sab_exp_sha="${LIBTPU_EXPECTED_SHA256:-}"
 
   if [ "${GEMMA_4_SQL_SYNTHETIC_FIXTURES:-0}" = '1' ]; then
+    _syn_sha="synthetic_${_sab_prov}_libtpu_sha256"
+    if [ -n "${_sab_exp_sha}" ]; then
+      _syn_sha="${_sab_exp_sha}"
+    fi
     jq -n \
       --arg b "${_sab_bid}" \
+      --arg prov "${_sab_prov}" \
       --arg keras_be "${KERAS_BACKEND:-}" \
       --arg pjrt "${PJRT_DEVICE:-}" \
-      --arg libtpu_p "${GEMMA_4_SQL_SHM_ROOT:-/dev/shm/libscript-tpu}/venvs/${_sab_bid}/lib/libtpu.so" \
+      --arg libtpu_p "${GEMMA_4_SQL_SHM_ROOT:-/dev/shm/libscript-tpu}/venvs/${_sab_bid}-${_sab_prov}/lib/libtpu.so" \
+      --arg sha "${_syn_sha}" \
       '{
         backend_id: $b,
+        libtpu_provider: $prov,
         stage_a_status: "ok",
         device_kind: "TPU v4",
         chip_count: 4,
         keras_backend_active: $keras_be,
         pjrt_device: $pjrt,
-        libtpu_so_path: $libtpu_p
+        libtpu_so_path: $libtpu_p,
+        libtpu_mapped_so_path: $libtpu_p,
+        libtpu_mapped_so_sha256: $sha
       }'
     return 0
   fi
 
-  "${_sab_py}" - "${_sab_bid}" <<'PY_EOF'
+  "${_sab_py}" - "${_sab_bid}" "${_sab_prov}" "${_sab_exp_sha}" <<'PY_EOF'
+import hashlib
 import json
 import os
 import sys
 
 bid = sys.argv[1]
+prov = sys.argv[2]
+exp_sha = sys.argv[3].strip().lower()
 dev_kind = "unknown"
 chips = 0
 keras_active = os.environ.get("KERAS_BACKEND", "")
@@ -104,17 +124,41 @@ elif bid == "keras_tensorflow":
     chips = len(tpus)
     dev_kind = "TPU_LOGICAL" if chips > 0 else "CPU_FALLBACK"
 
-status = "ok" if chips > 0 else "failed_cpu_fallback"
+mapped_so = ""
+mapped_sha = ""
+if os.path.exists("/proc/self/maps"):
+    with open("/proc/self/maps", "r", encoding="utf-8", errors="ignore") as mf:
+        for line in mf:
+            parts = line.strip().split(None, 5)
+            if len(parts) >= 6 and parts[5].endswith("libtpu.so") and os.path.isfile(parts[5]):
+                mapped_so = os.path.realpath(parts[5])
+                break
+if not mapped_so:
+    cand = os.environ.get("TPU_LIBRARY_PATH", "")
+    if cand and os.path.isfile(cand):
+        mapped_so = os.path.realpath(cand)
+if mapped_so and os.path.isfile(mapped_so):
+    h = hashlib.sha256()
+    with open(mapped_so, "rb") as sf:
+        for chunk in iter(lambda: sf.read(1048576), b""):
+            h.update(chunk)
+    mapped_sha = h.hexdigest().lower()
+
+sha_ok = (not exp_sha) or (mapped_sha == exp_sha)
+status = "ok" if (chips > 0 and sha_ok) else ("failed_libtpu_mismatch" if chips > 0 else "failed_cpu_fallback")
 print(json.dumps({
     "backend_id": bid,
+    "libtpu_provider": prov,
     "stage_a_status": status,
     "device_kind": dev_kind,
     "chip_count": chips,
     "keras_backend_active": keras_active,
     "pjrt_device": pjrt_dev,
     "libtpu_so_path": libtpu_p,
+    "libtpu_mapped_so_path": mapped_so,
+    "libtpu_mapped_so_sha256": mapped_sha,
 }))
-sys.exit(0 if chips > 0 else 65)
+sys.exit(0 if status == "ok" else 65)
 PY_EOF
 }
 
@@ -123,7 +167,7 @@ PY_EOF
 gemma_4_sql_collect_wheel_versions() {
   _sab_py="$1"
   if [ "${GEMMA_4_SQL_SYNTHETIC_FIXTURES:-0}" = '1' ]; then
-    printf '{"gemma-4-sql":"0.1.0","jax":"0.4.35","libtpu":"0.1.dev2026","torch":"2.5.1","torch_xla":"2.5.1","transformers":"4.47.0","tensorflow-tpu":"2.18.0","keras":"3.7.0","maxtext":"0.1.0","duckdb":"1.1.3"}\n'
+    printf '{"gemma-4-sql":"0.1.0","jax":"0.4.35","libtpu":"0.0.52","torch":"2.5.1","torch_xla":"2.5.1","transformers":"4.47.0","tensorflow-tpu":"2.18.0","keras":"3.7.0","maxtext":"0.1.0","duckdb":"1.1.3"}\n'
     return 0
   fi
   "${_sab_py}" - <<'PY_VER'
@@ -339,6 +383,32 @@ gemma_4_sql_exec_with_stage_b() {
     fi
   fi
   return 0
+}
+
+# ## gemma_4_sql_stage_b_run
+# Executes an argv command under Stage B 50ms telemetry and writes a standalone Stage B JSON telemetry artifact.
+gemma_4_sql_stage_b_run() {
+  _sbr_json="$1"
+  _sbr_log="$2"
+  shift 2
+  _sbr_qcmd=''
+  for _sbr_arg in "$@"; do
+    _sbr_esc=$(printf '%s' "${_sbr_arg}" | awk '{gsub(/\x27/, "\x27\\\x27\x27"); printf "%s", $0}')
+    _sbr_qcmd="${_sbr_qcmd} '${_sbr_esc}'"
+  done
+  gemma_4_sql_exec_with_stage_b 'stage_b_cell' "${_sbr_qcmd} > '${_sbr_log}' 2>&1" "${_sbr_json}" "${GEMMA_4_SQL_REQUIRE_HBM:-1}" ''
+  jq -n \
+    --argjson fd "${STAGE_B_ACCEL_FD}" \
+    --argjson hbm "${STAGE_B_PEAK_HBM}" \
+    --argjson duty "${STAGE_B_DUTY_PCT}" \
+    --argjson rss "${STAGE_B_PEAK_HOST_RSS_BYTES}" \
+    '{
+      accelerator_fd_opened: $fd,
+      peak_tpu_hbm_bytes: $hbm,
+      tpu_duty_cycle_pct: $duty,
+      peak_host_rss_bytes: $rss
+    }' > "${_sbr_json}.tmp"
+  mv -f "${_sbr_json}.tmp" "${_sbr_json}"
 }
 
 STACK="${STACK%"${THIS_FILE}":}"

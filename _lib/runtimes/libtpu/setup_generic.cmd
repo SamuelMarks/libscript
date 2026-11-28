@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Generic Windows setup script for upstream reference `libtpu` wheels (`0.0.52`), extracting `libtpu.so` and `sdk.so` into isolated cache directories.
+:: Generic Windows setup script for upstream reference `libtpu` wheels (`0.0.52`), extracting `libtpu.so` and `sdk.so` and recording SHA-256 digests into isolated cache directories.
 :: ## Usage
 :: Called internally by `_lib\runtimes\libtpu\setup.cmd`.
 
@@ -54,6 +54,7 @@ if "%ACTION%"=="" set "ACTION=install"
 if "%LIBTPU_VERSION%"=="" set "LIBTPU_VERSION=0.0.52"
 set "EXACT_VERSION=%LIBTPU_VERSION%"
 if /i "!EXACT_VERSION!"=="latest" set "EXACT_VERSION=0.0.52"
+if /i "!EXACT_VERSION!"=="lts" set "EXACT_VERSION=0.0.52"
 
 if /i "%ACTION%"=="ls" (
     if exist "%LIBSCRIPT_HOME%\libtpu" dir /b "%LIBSCRIPT_HOME%\libtpu"
@@ -73,13 +74,32 @@ if /i "%ACTION%"=="download" goto :do_install
 if /i "%ACTION%"=="install" goto :do_install
 exit /b 0
 
+:: ## compute_sha256
+:: Computes SHA-256 of a file using certutil and writes it atomically to an output path.
+:compute_sha256
+set "_CS_IN=%~1"
+set "_CS_OUT=%~2"
+set "_CS_VAL="
+if exist "!_CS_IN!" (
+    for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!_CS_IN!" SHA256 2^>nul') do (
+        if "!_CS_VAL!"=="" set "_CS_VAL=%%H"
+    )
+)
+if not "!_CS_VAL!"=="" (
+    > "!_CS_OUT!.tmp" echo.!_CS_VAL!
+    move /y "!_CS_OUT!.tmp" "!_CS_OUT!" >nul
+)
+exit /b 0
+
 :: ## do_install
-:: Idempotently populates the isolated upstream libtpu reference directory and helper wrapper on Windows.
+:: Idempotently populates the isolated upstream libtpu reference directory, SHA-256 metadata, and helper wrapper on Windows.
 :do_install
 set "TARGET_DIR=%LIBSCRIPT_HOME%\libtpu\!EXACT_VERSION!"
 if exist "!TARGET_DIR!\bin\libtpu-info.cmd" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] libtpu !EXACT_VERSION! is already installed at !TARGET_DIR!.
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu" "%LIBTPU_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\versioning.cmd" :libscript_symlink_alias "libtpu" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
@@ -87,10 +107,19 @@ if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 if not exist "!TARGET_DIR!\x86_64" mkdir "!TARGET_DIR!\x86_64"
 if not exist "!TARGET_DIR!\aarch64" mkdir "!TARGET_DIR!\aarch64"
 if not "%LIBTPU_SO_PATH%"=="" (
-    if exist "%LIBTPU_SO_PATH%" copy /y "%LIBTPU_SO_PATH%" "!TARGET_DIR!\x86_64\libtpu.so" >nul
+    if exist "%LIBTPU_SO_PATH%" (
+        copy /y "%LIBTPU_SO_PATH%" "!TARGET_DIR!\x86_64\libtpu.so" >nul
+        call :compute_sha256 "!TARGET_DIR!\x86_64\libtpu.so" "!TARGET_DIR!\x86_64\libtpu_so_sha256.txt"
+    )
 )
 if not "%LIBTPU_SDK_SO_PATH%"=="" (
     if exist "%LIBTPU_SDK_SO_PATH%" copy /y "%LIBTPU_SDK_SO_PATH%" "!TARGET_DIR!\x86_64\sdk.so" >nul
+)
+if not "%LIBTPU_REFERENCE_WHEEL%"=="" (
+    if exist "%LIBTPU_REFERENCE_WHEEL%" (
+        > "!TARGET_DIR!\x86_64\wheel_path.txt.tmp" echo.%LIBTPU_REFERENCE_WHEEL%
+        move /y "!TARGET_DIR!\x86_64\wheel_path.txt.tmp" "!TARGET_DIR!\x86_64\wheel_path.txt" >nul
+    )
 )
 (
     echo @echo off

@@ -1,0 +1,31 @@
+{
+  "$schema": "../../engine/schemas/tfrc-policy.schema.json",
+  "schema_version": "1.0",
+  "gcp_project_id": "replace-with-tfrc-project-id",
+  "strict_zero_cost": true,
+  "forbid_gke": true,
+  "forbid_persistent_disks": true,
+  "forbid_external_static_ip": true,
+  "forbid_artifact_registry": true,
+  "storage_mode": "ssh",
+  "max_ttl_minutes": 180,
+  "shm_min_free_gb": 32,
+  "grants": [
+    {
+      "zone": "us-central2-b",
+      "accelerator_types": ["v4-8"],
+      "scheduling_tiers": ["spot", "on-demand"],
+      "max_chips": 4,
+      "max_hosts": 1,
+      "max_concurrent_nodes": 1
+    },
+    {
+      "zone": "us-central1-a",
+      "accelerator_types": ["v5litepod-8", "v6e-8"],
+      "scheduling_tiers": ["spot"],
+      "max_chips": 8,
+      "max_hosts": 1,
+      "max_concurrent_nodes": 1
+    }
+  ]
+}

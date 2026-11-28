@@ -307,13 +307,20 @@ if not "!_AC_INCL!"=="" set "_WS_BASE=!_WS_BASE! --include !_AC_INCL!"
 set "_WS_BATCH="
 set /a "_WS_CNT=0"
 set "_WS_FAIL=0"
+set "_WS_TMP_BASE=%TEMP%"
+if "!_WS_TMP_BASE!"=="" set "_WS_TMP_BASE=%TMP%"
+if "!_WS_TMP_BASE!"=="" set "_WS_TMP_BASE=!LIBSCRIPT_ROOT_DIR!\build"
+if not exist "!_WS_TMP_BASE!" mkdir "!_WS_TMP_BASE!" >nul 2>&1
+for %%A in ("!_WS_TMP_BASE!") do set "_WS_TMP_BASE=%%~fA"
+set "_WS_CMD1002_TMP=!_WS_TMP_BASE!\ls_wc_1002_!RANDOM!_!RANDOM!.txt"
 for /f "usebackq delims=" %%B in ("!_WS_SHARD!") do (
     set "_WS_BATCH=!_WS_BATCH! "%%B""
     set /a "_WS_CNT+=1"
     if "!_WS_CNT!"=="50" (
         wincheck !_WS_BASE! !_WS_BATCH!
         if errorlevel 1 set "_WS_FAIL=1"
-        wincheck --dialect !_AC_DIA! --format tty --include CMD1002 !_WS_BATCH! 2>&1 | findstr /C:"The input line is too long"
+        wincheck --dialect !_AC_DIA! --format tty --include CMD1002 !_WS_BATCH! > "!_WS_CMD1002_TMP!" 2>&1
+        findstr /C:"The input line is too long" "!_WS_CMD1002_TMP!"
         if not errorlevel 1 set "_WS_FAIL=1"
         set "_WS_BATCH="
         set /a "_WS_CNT=0"
@@ -322,8 +329,10 @@ for /f "usebackq delims=" %%B in ("!_WS_SHARD!") do (
 if not "!_WS_CNT!"=="0" (
     wincheck !_WS_BASE! !_WS_BATCH!
     if errorlevel 1 set "_WS_FAIL=1"
-    wincheck --dialect !_AC_DIA! --format tty --include CMD1002 !_WS_BATCH! 2>&1 | findstr /C:"The input line is too long"
+    wincheck --dialect !_AC_DIA! --format tty --include CMD1002 !_WS_BATCH! > "!_WS_CMD1002_TMP!" 2>&1
+    findstr /C:"The input line is too long" "!_WS_CMD1002_TMP!"
     if not errorlevel 1 set "_WS_FAIL=1"
 )
+del /f /q "!_WS_CMD1002_TMP!" >nul 2>&1
 if "!_WS_FAIL!"=="1" exit /b 1
 exit /b 0

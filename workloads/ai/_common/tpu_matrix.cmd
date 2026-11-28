@@ -2,7 +2,7 @@
 :: # tpu_matrix.cmd
 ::
 :: ## Overview
-:: Orchestrates isolated 7-backend Google Cloud TPU /dev/shm uv virtualenvs, watermark eviction, --fresh-vm-per-backend cycling, SKU runtime resolution, and multi-host lockstep environment synthesis on Windows.
+:: Orchestrates isolated Google Cloud TPU twin virtualenvs (<group>-og vs <group>-rs), /proc/self/maps attestation metadata, watermark eviction, --fresh-vm-per-backend cycling, SKU runtime resolution, and multi-host lockstep environment synthesis on Windows.
 ::
 :: ## Usage
 :: call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_backend_spec <backend_id>
@@ -51,8 +51,12 @@ goto :find_root
 :: Dispatches requested subroutine and exports resulting state to parent environment.
 :root_found
 set "TPU_ALL_BACKENDS=hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native"
+set "TPU_PJRT_FRAMEWORKS=pjrt_jax,pjrt_keras_jax,pjrt_pytorch_tpu,pjrt_tensorflow_tpu"
 if not "%~1"=="" goto :dispatch_tm_sub
-endlocal & set "TPU_ALL_BACKENDS=%TPU_ALL_BACKENDS%"
+endlocal & (
+    set "TPU_ALL_BACKENDS=%TPU_ALL_BACKENDS%"
+    set "TPU_PJRT_FRAMEWORKS=%TPU_PJRT_FRAMEWORKS%"
+)
 exit /b 0
 
 :: ## dispatch_tm_sub
@@ -64,9 +68,11 @@ call !_tm_sub! "%~1" "%~2" "%~3" "%~4" "%~5"
 set "_tm_rc=!errorlevel!"
 endlocal & (
     set "TPU_ALL_BACKENDS=%TPU_ALL_BACKENDS%"
+    set "TPU_PJRT_FRAMEWORKS=%TPU_PJRT_FRAMEWORKS%"
     set "TPU_BACKEND_SPEC=%TPU_BACKEND_SPEC%"
     set "TPU_BACKEND_FAMILY=%TPU_BACKEND_FAMILY%"
     set "TPU_BACKEND_VENV_DIR=%TPU_BACKEND_VENV_DIR%"
+    set "TPU_PROVIDER_ENV=%TPU_PROVIDER_ENV%"
     set "TPU_MULTIHOST_ENV=%TPU_MULTIHOST_ENV%"
     set "TPU_VERSION=%TPU_VERSION%"
     exit /b %_tm_rc%
@@ -80,9 +86,11 @@ set "_tm_sku=%~1"
 if "!_tm_sku!"=="" set "_tm_sku=%TPU_ACCELERATOR_TYPE%"
 if "!_tm_sku!"=="" set "_tm_sku=v4-8"
 set "_tm_ver=%~2"
-if not "!_tm_ver!"=="" if /i not "!_tm_ver!"=="auto" (
-    set "TPU_VERSION=!_tm_ver!"
-    exit /b 0
+if not "!_tm_ver!"=="" (
+    if /i not "!_tm_ver!"=="auto" (
+        set "TPU_VERSION=!_tm_ver!"
+        exit /b 0
+    )
 )
 set "TPU_VERSION=tpu-ubuntu2204-base"
 if /i "!_tm_sku:~0,9!"=="v5litepod" set "TPU_VERSION=v2-alpha-tpuv5-lite"
@@ -92,17 +100,21 @@ if /i "!_tm_sku:~0,4!"=="v6e-" set "TPU_VERSION=v2-alpha-tpuv6e"
 exit /b 0
 
 :: ## libscript_tpu_family_label
-:: Emits the canonical 5-family study comparison group label for one of the 7 Gemma 4 TPU backend cells.
+:: Emits the canonical comparison group label for Gemma 4 or standalone PJRT framework cells.
 :libscript_tpu_family_label
 set "_tm_fb=%~1"
 set "TPU_BACKEND_FAMILY=Custom"
 if /i "!_tm_fb!"=="hf_transformers" set "TPU_BACKEND_FAMILY=Hugging Face Transformers [which wraps PyTorch]"
 if /i "!_tm_fb!"=="pytorch_native" set "TPU_BACKEND_FAMILY=PyTorch [native]"
+if /i "!_tm_fb!"=="pjrt_pytorch_tpu" set "TPU_BACKEND_FAMILY=PyTorch [native]"
 if /i "!_tm_fb!"=="keras_jax" set "TPU_BACKEND_FAMILY=Keras [and its JAX, TensorFlow, and PyTorch backends]"
+if /i "!_tm_fb!"=="pjrt_keras_jax" set "TPU_BACKEND_FAMILY=Keras [and its JAX, TensorFlow, and PyTorch backends]"
 if /i "!_tm_fb!"=="keras_tensorflow" set "TPU_BACKEND_FAMILY=Keras [and its JAX, TensorFlow, and PyTorch backends]"
 if /i "!_tm_fb!"=="keras_pytorch" set "TPU_BACKEND_FAMILY=Keras [and its JAX, TensorFlow, and PyTorch backends]"
 if /i "!_tm_fb!"=="maxtext" set "TPU_BACKEND_FAMILY=MaxText [which wraps JAX]"
 if /i "!_tm_fb!"=="jax_native" set "TPU_BACKEND_FAMILY=JAX [native]"
+if /i "!_tm_fb!"=="pjrt_jax" set "TPU_BACKEND_FAMILY=JAX [native]"
+if /i "!_tm_fb!"=="pjrt_tensorflow_tpu" set "TPU_BACKEND_FAMILY=TensorFlow [TPU PJRT]"
 echo.!TPU_BACKEND_FAMILY!
 exit /b 0
 
@@ -113,9 +125,15 @@ set "_tm_need_gc=%~1"
 for %%C in (jq uv python sqlite duckdb huggingface-cli) do (
     where %%C >nul 2>&1
     if errorlevel 1 (
-        if not "%GEMMA_4_SQL_SYNTHETIC_FIXTURES%"=="1" if not "%GEMMA_4_SQL_DRY_RUN%"=="1" (
-            set "STACK="
-            call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install %%C latest >nul 2>&1 || rem
+        if not "%GEMMA_4_SQL_SYNTHETIC_FIXTURES%"=="1" (
+            if not "%GEMMA_4_SQL_DRY_RUN%"=="1" (
+                if not "%LIBTPU_RS_SYNTHETIC_FIXTURES%"=="1" (
+                    if not "%LIBTPU_RS_DRY_RUN%"=="1" (
+                        set "STACK="
+                        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install %%C latest >nul 2>&1 || rem
+                    )
+                )
+            )
         )
     )
 )
@@ -129,7 +147,7 @@ if "!_tm_need_gc!"=="1" (
 exit /b 0
 
 :: ## libscript_tpu_backend_spec
-:: Resolves pipe-delimited virtualenv, wheel index, package, and env specification for one of the 7 Gemma 4 TPU backends.
+:: Resolves pipe-delimited virtualenv, wheel index, package, and env specification for Gemma 4 or standalone 4-framework PJRT cells.
 :libscript_tpu_backend_spec
 set "_tm_bid=%~1"
 set "_tm_shm=%~2"
@@ -145,14 +163,28 @@ if exist "!_tm_suite_json!" (
 )
 call :libscript_tpu_resolve_runtime_version "%TPU_ACCELERATOR_TYPE%" "!_tm_rt_cfg!"
 set "_tm_rt=!TPU_VERSION!"
+set "_tm_jax_fl=%TPU_JAX_FIND_LINKS%"
+if "!_tm_jax_fl!"=="" set "_tm_jax_fl=https://storage.googleapis.com/jax-releases/libtpu_releases.html"
+set "_tm_torch_fl=%TPU_TORCH_XLA_FIND_LINKS%"
+if "!_tm_torch_fl!"=="" set "_tm_torch_fl=https://storage.googleapis.com/libtpu-releases/index.html"
+set "_tm_tf_fl=none"
+if not "%TPU_TF_FIND_LINKS%"=="" set "_tm_tf_fl=-f %TPU_TF_FIND_LINKS%"
+
 set "TPU_BACKEND_SPEC="
-if /i "!_tm_bid!"=="hf_transformers" set "TPU_BACKEND_SPEC=pytorch-xla|hf_transformers|none|!_tm_rt!|-f https://storage.googleapis.com/libtpu-releases/index.html|torch torch_xla[tpu] transformers accelerate peft safetensors datasets duckdb|PJRT_DEVICE=TPU XLA_USE_BF16=1 HF_HOME=!_tm_shm!/cache/hf"
-if /i "!_tm_bid!"=="pytorch_native" set "TPU_BACKEND_SPEC=pytorch-xla|pytorch_native|none|!_tm_rt!|-f https://storage.googleapis.com/libtpu-releases/index.html|torch torch_xla[tpu] transformers accelerate peft safetensors datasets duckdb|PJRT_DEVICE=TPU XLA_USE_BF16=1 HF_HOME=!_tm_shm!/cache/hf"
-if /i "!_tm_bid!"=="keras_jax" set "TPU_BACKEND_SPEC=keras-jax|keras_jax|jax|!_tm_rt!|-f https://storage.googleapis.com/jax-releases/libtpu_releases.html|jax[tpu] keras>=3 keras-hub tensorflow-cpu duckdb|KERAS_BACKEND=jax JAX_PLATFORMS=tpu KERAS_HOME=!_tm_shm!/cache/keras"
-if /i "!_tm_bid!"=="keras_tensorflow" set "TPU_BACKEND_SPEC=keras-tf|keras_tensorflow|tensorflow|!_tm_rt!|none|tensorflow-tpu keras>=3 keras-hub duckdb|KERAS_BACKEND=tensorflow KERAS_HOME=!_tm_shm!/cache/keras"
-if /i "!_tm_bid!"=="keras_pytorch" set "TPU_BACKEND_SPEC=keras-torch|keras_pytorch|torch|!_tm_rt!|-f https://storage.googleapis.com/libtpu-releases/index.html|torch torch_xla[tpu] keras>=3 keras-hub tensorflow-cpu duckdb|KERAS_BACKEND=torch PJRT_DEVICE=TPU XLA_USE_BF16=1 KERAS_HOME=!_tm_shm!/cache/keras"
-if /i "!_tm_bid!"=="maxtext" set "TPU_BACKEND_SPEC=maxtext|maxtext|none|!_tm_rt!|-f https://storage.googleapis.com/jax-releases/libtpu_releases.html|jax[tpu] flax optax orbax-checkpoint omegaconf einops grain aqt maxtext duckdb|JAX_PLATFORMS=tpu HF_HOME=!_tm_shm!/cache/hf"
-if /i "!_tm_bid!"=="jax_native" set "TPU_BACKEND_SPEC=jax-native|jax_native|none|!_tm_rt!|-f https://storage.googleapis.com/jax-releases/libtpu_releases.html|jax[tpu] flax optax orbax-checkpoint grain datasets duckdb|JAX_PLATFORMS=tpu HF_HOME=!_tm_shm!/cache/hf"
+if /i "!_tm_bid!"=="hf_transformers" set "TPU_BACKEND_SPEC=pytorch-xla|hf_transformers|none|!_tm_rt!|-f !_tm_torch_fl!|torch torch_xla[tpu] transformers accelerate peft safetensors datasets duckdb|PJRT_DEVICE=TPU XLA_USE_BF16=1 HF_HOME=!_tm_shm!/cache/hf"
+if /i "!_tm_bid!"=="pytorch_native" set "TPU_BACKEND_SPEC=pytorch-xla|pytorch_native|none|!_tm_rt!|-f !_tm_torch_fl!|torch torch_xla[tpu] transformers accelerate peft safetensors datasets duckdb|PJRT_DEVICE=TPU XLA_USE_BF16=1 HF_HOME=!_tm_shm!/cache/hf"
+if /i "!_tm_bid!"=="keras_jax" set "TPU_BACKEND_SPEC=keras-jax|keras_jax|jax|!_tm_rt!|-f !_tm_jax_fl!|jax[tpu] keras>=3 keras-hub tensorflow-cpu duckdb|KERAS_BACKEND=jax JAX_PLATFORMS=tpu KERAS_HOME=!_tm_shm!/cache/keras"
+if /i "!_tm_bid!"=="keras_tensorflow" set "TPU_BACKEND_SPEC=keras-tf|keras_tensorflow|tensorflow|!_tm_rt!|!_tm_tf_fl!|tensorflow-tpu keras>=3 keras-hub duckdb|KERAS_BACKEND=tensorflow KERAS_HOME=!_tm_shm!/cache/keras"
+if /i "!_tm_bid!"=="keras_pytorch" set "TPU_BACKEND_SPEC=keras-torch|keras_pytorch|torch|!_tm_rt!|-f !_tm_torch_fl!|torch torch_xla[tpu] keras>=3 keras-hub tensorflow-cpu duckdb|KERAS_BACKEND=torch PJRT_DEVICE=TPU XLA_USE_BF16=1 KERAS_HOME=!_tm_shm!/cache/keras"
+if /i "!_tm_bid!"=="maxtext" set "TPU_BACKEND_SPEC=maxtext|maxtext|none|!_tm_rt!|-f !_tm_jax_fl!|jax[tpu] flax optax orbax-checkpoint omegaconf einops grain aqt maxtext duckdb|JAX_PLATFORMS=tpu HF_HOME=!_tm_shm!/cache/hf"
+if /i "!_tm_bid!"=="jax_native" set "TPU_BACKEND_SPEC=jax-native|jax_native|none|!_tm_rt!|-f !_tm_jax_fl!|jax[tpu] flax optax orbax-checkpoint grain datasets duckdb|JAX_PLATFORMS=tpu HF_HOME=!_tm_shm!/cache/hf"
+if /i "!_tm_bid!"=="pjrt_jax" set "TPU_BACKEND_SPEC=pjrt-jax|pjrt_jax|none|!_tm_rt!|-f !_tm_jax_fl!|jax[tpu] numpy|JAX_PLATFORMS=tpu"
+if /i "!_tm_bid!"=="jax" set "TPU_BACKEND_SPEC=pjrt-jax|pjrt_jax|none|!_tm_rt!|-f !_tm_jax_fl!|jax[tpu] numpy|JAX_PLATFORMS=tpu"
+if /i "!_tm_bid!"=="pjrt_keras_jax" set "TPU_BACKEND_SPEC=pjrt-keras-jax|pjrt_keras_jax|jax|!_tm_rt!|-f !_tm_jax_fl!|jax[tpu] keras>=3 numpy|KERAS_BACKEND=jax JAX_PLATFORMS=tpu KERAS_HOME=!_tm_shm!/cache/keras"
+if /i "!_tm_bid!"=="pjrt_pytorch_tpu" set "TPU_BACKEND_SPEC=pjrt-pytorch-tpu|pjrt_pytorch_tpu|none|!_tm_rt!|-f !_tm_torch_fl!|torch torch_xla[tpu] numpy|PJRT_DEVICE=TPU XLA_USE_BF16=1"
+if /i "!_tm_bid!"=="pytorch_tpu" set "TPU_BACKEND_SPEC=pjrt-pytorch-tpu|pjrt_pytorch_tpu|none|!_tm_rt!|-f !_tm_torch_fl!|torch torch_xla[tpu] numpy|PJRT_DEVICE=TPU XLA_USE_BF16=1"
+if /i "!_tm_bid!"=="pjrt_tensorflow_tpu" set "TPU_BACKEND_SPEC=pjrt-tensorflow-tpu|pjrt_tensorflow_tpu|tensorflow|!_tm_rt!|!_tm_tf_fl!|tensorflow-tpu numpy|NEXT_PLUGGABLE_DEVICE_USE_C_API=true"
+if /i "!_tm_bid!"=="tensorflow_tpu" set "TPU_BACKEND_SPEC=pjrt-tensorflow-tpu|pjrt_tensorflow_tpu|tensorflow|!_tm_rt!|!_tm_tf_fl!|tensorflow-tpu numpy|NEXT_PLUGGABLE_DEVICE_USE_C_API=true"
 if "!TPU_BACKEND_SPEC!"=="" (
     echo [ERROR] Unsupported TPU matrix backend identifier: !_tm_bid! 1>&2
     exit /b 1
@@ -203,25 +235,38 @@ if !_tm_free_kb! geq !_tm_min_kb! exit /b 0
 echo [TPU-MATRIX] Free space !_tm_free_kb! KiB ^< watermark !_tm_min_kb! KiB; evicting completed venvs ^(preserving cache/{hf,keras}^)... 1>&2
 for /d %%D in ("!_tm_shm_root!\venvs\*") do (
     set "_tm_dn=%%~nxD"
-    if /i not "!_tm_dn!"=="!_tm_keep!" if /i not "!_tm_dn!"=="tpu-telemetry" (
-        rmdir /s /q "%%~fD" >nul 2>&1
-        echo [TPU-MATRIX] Evicted completed venv group: !_tm_dn! 1>&2
+    if /i not "!_tm_dn!"=="!_tm_keep!" (
+        if /i not "!_tm_dn!"=="tpu-telemetry" (
+            rmdir /s /q "%%~fD" >nul 2>&1
+            echo [TPU-MATRIX] Evicted completed venv group: !_tm_dn! 1>&2
+        )
     )
 )
 exit /b 0
 
 :: ## libscript_tpu_prepare_backend_venv
-:: Idempotently builds a stamp-guarded uv virtualenv and installs workspace requirements + TPU wheels + --no-deps -e workspace.
+:: Idempotently builds a stamp-guarded dedicated twin virtualenv (<venv_group>-og or <venv_group>-rs) without mutating sibling venvs.
 :libscript_tpu_prepare_backend_venv
 set "_tm_bid=%~1"
 set "_tm_ws=%~2"
 set "_tm_shm_root=%~3"
 if "!_tm_shm_root!"=="" set "_tm_shm_root=%TEMP%\libscript-tpu"
+set "_tm_provider=%~4"
+if "!_tm_provider!"=="" set "_tm_provider=%TPU_LIBTPU_PROVIDER%"
+if "!_tm_provider!"=="" set "_tm_provider=og"
 
 where uv >nul 2>&1
 if errorlevel 1 (
     set "STACK="
     call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install uv latest >nul 2>&1 || rem
+)
+
+if /i "!_tm_provider!"=="rs" (
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\libtpu-rs\env.cmd"
+) else (
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\runtimes\libtpu\env.cmd"
 )
 
 call :libscript_tpu_backend_spec "!_tm_bid!" "!_tm_shm_root!" >nul
@@ -233,11 +278,12 @@ for /f "tokens=1,5,6 delims=|" %%A in ("!TPU_BACKEND_SPEC!") do (
 )
 if /i "!_tm_flinks!"=="none" set "_tm_flinks="
 
-set "_tm_vdir=!_tm_shm_root!\venvs\!_tm_vgroup!"
+set "_tm_vgroup_full=!_tm_vgroup!-!_tm_provider!"
+set "_tm_vdir=!_tm_shm_root!\venvs\!_tm_vgroup_full!"
 set "_tm_stamp_f=!_tm_vdir!\.libscript_wheels.sha256"
 
 set "_tm_sig_tmp=%TEMP%\tpu_sig_!RANDOM!.txt"
-> "!_tm_sig_tmp!" echo.!_tm_vgroup!^|!_tm_flinks!^|!_tm_pkgs!
+> "!_tm_sig_tmp!" echo.!_tm_vgroup_full!^|!_tm_flinks!^|!_tm_pkgs!^|!LIBTPU_RS_SO_SHA256!^|!LIBTPU_REFERENCE_SO_SHA256!
 for %%R in (pyproject.toml requirements.txt requirements-duckdb.txt requirements-pytorch.txt requirements-jax.txt requirements-keras.txt requirements-maxtext.txt) do (
     if exist "!_tm_ws!\%%R" type "!_tm_ws!\%%R" >> "!_tm_sig_tmp!" 2>nul
 )
@@ -245,24 +291,28 @@ set "_tm_stamp=0"
 for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!_tm_sig_tmp!" SHA256 2^>nul') do (
     if "!_tm_stamp!"=="0" set "_tm_stamp=%%H"
 )
-if "!_tm_stamp!"=="0" set "_tm_stamp=!_tm_vgroup!-default-stamp"
+if "!_tm_stamp!"=="0" set "_tm_stamp=!_tm_vgroup_full!-default-stamp"
 del /f /q "!_tm_sig_tmp!" >nul 2>&1
 
 set "_tm_py_exe=!_tm_vdir!\Scripts\python.exe"
-if not exist "!_tm_py_exe!" if exist "!_tm_vdir!\bin\python" set "_tm_py_exe=!_tm_vdir!\bin\python"
+if not exist "!_tm_py_exe!" (
+    if exist "!_tm_vdir!\bin\python" set "_tm_py_exe=!_tm_vdir!\bin\python"
+)
 
-if exist "!_tm_stamp_f!" if exist "!_tm_py_exe!" (
-    set "_tm_prev="
-    set /p _tm_prev=<"!_tm_stamp_f!"
-    if "!_tm_prev!"=="!_tm_stamp!" (
-        echo [TPU-MATRIX] Reusing isolated venv !_tm_vdir! for backend !_tm_bid! ^(stamp=!_tm_stamp!^). 1>&2
-        set "TPU_BACKEND_VENV_DIR=!_tm_vdir!"
-        echo.!_tm_vdir!
-        exit /b 0
+if exist "!_tm_stamp_f!" (
+    if exist "!_tm_py_exe!" (
+        set "_tm_prev="
+        set /p _tm_prev=<"!_tm_stamp_f!"
+        if "!_tm_prev!"=="!_tm_stamp!" (
+            echo [TPU-MATRIX] Reusing isolated !_tm_provider! venv !_tm_vdir! for backend !_tm_bid! ^(stamp=!_tm_stamp!^). 1>&2
+            set "TPU_BACKEND_VENV_DIR=!_tm_vdir!"
+            echo.!_tm_vdir!
+            exit /b 0
+        )
     )
 )
 
-call :libscript_tpu_evict_shm_if_needed "!_tm_vgroup!" "!_tm_shm_root!" "%TFRC_SHM_MIN_FREE_GB%"
+call :libscript_tpu_evict_shm_if_needed "!_tm_vgroup_full!" "!_tm_shm_root!" "%TFRC_SHM_MIN_FREE_GB%"
 
 set "LIBSCRIPT_PYTHON_VENV_BACKEND=uv"
 set "_tm_pyver=%TPU_PYTHON_VERSION%"
@@ -271,33 +321,86 @@ call "%LIBSCRIPT_ROOT_DIR%\engine\common\python_env.cmd" libscript_python_venv "
 if errorlevel 1 exit /b 1
 
 set "_tm_py_exe=!_tm_vdir!\Scripts\python.exe"
-if not exist "!_tm_py_exe!" if exist "!_tm_vdir!\bin\python" set "_tm_py_exe=!_tm_vdir!\bin\python"
-
-if exist "!_tm_ws!\requirements.txt" (
-    call uv pip install --python "!_tm_py_exe!" -r "!_tm_ws!\requirements.txt" 1>&2
-    if errorlevel 1 exit /b 1
-)
-if exist "!_tm_ws!\requirements-duckdb.txt" (
-    call uv pip install --python "!_tm_py_exe!" -r "!_tm_ws!\requirements-duckdb.txt" 1>&2
-    if errorlevel 1 exit /b 1
+if not exist "!_tm_py_exe!" (
+    if exist "!_tm_vdir!\bin\python" set "_tm_py_exe=!_tm_vdir!\bin\python"
 )
 
-set "_tm_app_deps=duckdb aiosqlite asyncpg fastapi uvicorn datasets sqlglot"
-call uv pip install --python "!_tm_py_exe!" !_tm_flinks! !_tm_app_deps! !_tm_pkgs! 1>&2
-if errorlevel 1 exit /b 1
+set "_tm_standalone=0"
+if /i "!_tm_bid:~0,5!"=="pjrt_" set "_tm_standalone=1"
+if /i "!_tm_bid!"=="jax" set "_tm_standalone=1"
+if /i "!_tm_bid!"=="pytorch_tpu" set "_tm_standalone=1"
+if /i "!_tm_bid!"=="tensorflow_tpu" set "_tm_standalone=1"
 
-if exist "!_tm_ws!\pyproject.toml" (
-    call uv pip install --python "!_tm_py_exe!" --no-deps -e "!_tm_ws!" 1>&2
+if "!_tm_standalone!"=="0" (
+    if exist "!_tm_ws!\requirements.txt" (
+        call uv pip install --python "!_tm_py_exe!" -r "!_tm_ws!\requirements.txt" 1>&2
+        if errorlevel 1 exit /b 1
+    )
+    if exist "!_tm_ws!\requirements-duckdb.txt" (
+        call uv pip install --python "!_tm_py_exe!" -r "!_tm_ws!\requirements-duckdb.txt" 1>&2
+        if errorlevel 1 exit /b 1
+    )
+    set "_tm_app_deps=duckdb aiosqlite asyncpg fastapi uvicorn datasets sqlglot"
+    call uv pip install --python "!_tm_py_exe!" !_tm_flinks! !_tm_app_deps! !_tm_pkgs! 1>&2
     if errorlevel 1 exit /b 1
-) else if exist "!_tm_ws!\setup.py" (
-    call uv pip install --python "!_tm_py_exe!" --no-deps -e "!_tm_ws!" 1>&2
+    if exist "!_tm_ws!\pyproject.toml" (
+        call uv pip install --python "!_tm_py_exe!" --no-deps -e "!_tm_ws!" 1>&2
+        if errorlevel 1 exit /b 1
+    ) else if exist "!_tm_ws!\setup.py" (
+        call uv pip install --python "!_tm_py_exe!" --no-deps -e "!_tm_ws!" 1>&2
+        if errorlevel 1 exit /b 1
+    )
+) else (
+    call uv pip install --python "!_tm_py_exe!" !_tm_flinks! !_tm_pkgs! 1>&2
     if errorlevel 1 exit /b 1
+)
+
+if /i "!_tm_provider!"=="rs" (
+    if not "!LIBTPU_RS_WHEEL!"=="" (
+        if exist "!LIBTPU_RS_WHEEL!" (
+            call uv pip install --python "!_tm_py_exe!" --reinstall --no-deps "!LIBTPU_RS_WHEEL!" 1>&2
+            if errorlevel 1 exit /b 1
+        )
+    )
+) else (
+    if not "!LIBTPU_REFERENCE_WHEEL!"=="" (
+        if exist "!LIBTPU_REFERENCE_WHEEL!" (
+            call uv pip install --python "!_tm_py_exe!" --reinstall --no-deps "!LIBTPU_REFERENCE_WHEEL!" 1>&2
+            if errorlevel 1 exit /b 1
+        )
+    )
 )
 
 > "!_tm_stamp_f!.tmp" echo.!_tm_stamp!
 move /y "!_tm_stamp_f!.tmp" "!_tm_stamp_f!" >nul
 set "TPU_BACKEND_VENV_DIR=!_tm_vdir!"
 echo.!_tm_vdir!
+exit /b 0
+
+:: ## libscript_tpu_provider_env
+:: Emits KEY=VALUE runtime bindings pinning TPU_LIBRARY_PATH and expected SHA-256 to a dedicated provider venv.
+:libscript_tpu_provider_env
+set "_tpe_vdir=%~1"
+set "_tpe_prov=%~2"
+if "!_tpe_prov!"=="" set "_tpe_prov=%TPU_LIBTPU_PROVIDER%"
+if "!_tpe_prov!"=="" set "_tpe_prov=og"
+set "_tpe_so=!_tpe_vdir!\Lib\site-packages\libtpu\tpu.dll"
+set "_tpe_sha="
+if exist "!_tpe_vdir!\.libscript_libtpu_so.path" set /p _tpe_so=<"!_tpe_vdir!\.libscript_libtpu_so.path"
+if exist "!_tpe_vdir!\.libscript_libtpu_so.sha256" set /p _tpe_sha=<"!_tpe_vdir!\.libscript_libtpu_so.sha256"
+set "TPU_PROVIDER_ENV=TPU_LIBRARY_PATH=!_tpe_so! PJRT_PLUGIN_LIBRARY_PATH=!_tpe_so! LIBTPU_EXPECTED_PROVIDER=!_tpe_prov! LIBTPU_EXPECTED_SHA256=!_tpe_sha!"
+echo.!TPU_PROVIDER_ENV!
+exit /b 0
+
+:: ## libscript_tpu_verify_loaded_so
+:: Windows Option A guard: Cloud TPU /proc/self/maps verification executes on Linux Cloud TPU VM workers (exits 86 locally on Windows).
+:libscript_tpu_verify_loaded_so
+echo [ERROR] Local Cloud TPU /dev/accel* runtime verification requires a Linux Cloud TPU VM worker ^(Option A exit 86^). 1>&2
+exit /b 86
+
+:: ## libscript_tpu_release_local_locks
+:: No-op local lock barrier on Windows orchestrator hosts (remote TPU VM locks are released via gcp-tpu-vm release-locks).
+:libscript_tpu_release_local_locks
 exit /b 0
 
 :: ## libscript_tpu_multihost_env
@@ -324,10 +427,10 @@ if exist "!_tm_topo_file!" (
 
 set "TPU_MULTIHOST_ENV=!_tm_base_env! TPU_WORKER_ID=!_tm_widx! TPU_NUM_WORKERS=!_tm_wcnt! TPU_WORKER_HOSTNAMES=!_tm_ips!"
 if "!_tm_wcnt!" gtr "1" (
-    for %%J in (jax_native maxtext keras_jax) do (
+    for %%J in (jax_native maxtext keras_jax pjrt_jax pjrt_keras_jax jax) do (
         if /i "!_tm_bid!"=="%%J" set "TPU_MULTIHOST_ENV=!TPU_MULTIHOST_ENV! JAX_COORDINATOR_ADDRESS=!_tm_ip0!:8476 MEGASCALE_COORDINATOR_ADDRESS=!_tm_ip0!:8476 PROCESS_ID=!_tm_widx! NUM_PROCESSES=!_tm_wcnt!"
     )
-    for %%P in (hf_transformers pytorch_native keras_pytorch) do (
+    for %%P in (hf_transformers pytorch_native keras_pytorch pjrt_pytorch_tpu pytorch_tpu) do (
         if /i "!_tm_bid!"=="%%P" set "TPU_MULTIHOST_ENV=!TPU_MULTIHOST_ENV! PJRT_DEVICE=TPU MASTER_ADDR=!_tm_ip0! MASTER_PORT=8477 PT_XLA_PJRT_DIST_SERVICE_ADDR=!_tm_ip0!:8477"
     )
 )
@@ -346,18 +449,29 @@ if not "%KAGGLE_KEY%"=="" set "_tm_sec_out=!_tm_sec_out!export KAGGLE_KEY='%KAGG
 exit /b 0
 
 :: ## libscript_tpu_bootstrap_remote
-:: Syncs LibScript and target workspace to all TPU VM workers and bootstraps Python 3.12, uv, jq, sqlite, duckdb, and huggingface-cli idempotently.
+:: Syncs LibScript, optional libtpu-rs checkout, and target workspace to all TPU VM workers and bootstraps tools idempotently.
 :libscript_tpu_bootstrap_remote
 set "_tm_tpu=%~1"
 set "_tm_repo=%~2"
 set "_tm_tpu_cli=%LIBSCRIPT_ROOT_DIR%\infrastructure\providers\gcp-tpu-vm\cli.cmd"
 call "!_tm_tpu_cli!" sync-repo "!_tm_tpu!" "%LIBSCRIPT_ROOT_DIR%" "libscript" --all-workers
 if errorlevel 1 exit /b !errorlevel!
-if not "!_tm_repo!"=="" if exist "!_tm_repo!" (
-    call "!_tm_tpu_cli!" sync-repo "!_tm_tpu!" "!_tm_repo!" "workspace" --all-workers
-    if errorlevel 1 exit /b !errorlevel!
+if not "!_tm_repo!"=="" (
+    if exist "!_tm_repo!" (
+        call "!_tm_tpu_cli!" sync-repo "!_tm_tpu!" "!_tm_repo!" "workspace" --all-workers
+        if errorlevel 1 exit /b !errorlevel!
+    )
 )
-call "!_tm_tpu_cli!" ssh "!_tm_tpu!" --all-workers "--command=mkdir -p /dev/shm/libscript-tpu/venvs /dev/shm/libscript-tpu/cache/hf /dev/shm/libscript-tpu/cache/keras $HOME/results/raw && $HOME/libscript/libscript.sh install python 3.12 && $HOME/libscript/libscript.sh install uv latest && $HOME/libscript/libscript.sh install jq latest && $HOME/libscript/libscript.sh install sqlite latest && $HOME/libscript/libscript.sh install duckdb latest && $HOME/libscript/libscript.sh install huggingface-cli latest"
+if not "%LIBTPU_RS_REPO_DIR%"=="" (
+    if exist "%LIBTPU_RS_REPO_DIR%" (
+        call "!_tm_tpu_cli!" sync-repo "!_tm_tpu!" "%LIBTPU_RS_REPO_DIR%" "libtpu-rs" --all-workers
+        if errorlevel 1 exit /b !errorlevel!
+    )
+)
+set "_tm_rs_cmd="
+if "%TPU_BOOTSTRAP_LIBTPU_RS%"=="1" set "_tm_rs_cmd= && $HOME/libscript/libscript.sh install libtpu latest && LIBTPU_RS_REPO_DIR=$HOME/libtpu-rs $HOME/libscript/libscript.sh install libtpu-rs latest"
+if /i "%TPU_LIBTPU_PROVIDER%"=="rs" set "_tm_rs_cmd= && $HOME/libscript/libscript.sh install libtpu latest && LIBTPU_RS_REPO_DIR=$HOME/libtpu-rs $HOME/libscript/libscript.sh install libtpu-rs latest"
+call "!_tm_tpu_cli!" ssh "!_tm_tpu!" --all-workers "--command=mkdir -p /dev/shm/libscript-tpu/venvs /dev/shm/libscript-tpu/cache/hf /dev/shm/libscript-tpu/cache/keras $HOME/results/raw && $HOME/libscript/libscript.sh install python 3.12 && $HOME/libscript/libscript.sh install uv latest && $HOME/libscript/libscript.sh install jq latest && $HOME/libscript/libscript.sh install sqlite latest && $HOME/libscript/libscript.sh install duckdb latest && $HOME/libscript/libscript.sh install huggingface-cli latest!_tm_rs_cmd!"
 exit /b !errorlevel!
 
 :: ## libscript_tpu_cycle_vm_for_backend
@@ -372,18 +486,24 @@ set "_tm_tpu_cli=%LIBSCRIPT_ROOT_DIR%\infrastructure\providers\gcp-tpu-vm\cli.cm
 call :libscript_tpu_backend_spec "!_tm_bid!" >nul
 for /f "tokens=4 delims=|" %%R in ("!TPU_BACKEND_SPEC!") do set "_tm_req_rt=%%R"
 
-if "!_tm_cur_rt!"=="" if not "!_tm_req_rt!"=="" (
-    set "_tm_ct_tmp=%TEMP%\tpu_cur_topo_!RANDOM!.json"
-    call "!_tm_tpu_cli!" topology-info "!_tm_tpu!" > "!_tm_ct_tmp!" 2>nul
-    if not errorlevel 1 (
-        for /f "usebackq delims=" %%V in (`jq -r ".runtime_version // \"\"" "!_tm_ct_tmp!" 2^>nul`) do set "_tm_cur_rt=%%V"
+if "!_tm_cur_rt!"=="" (
+    if not "!_tm_req_rt!"=="" (
+        set "_tm_ct_tmp=%TEMP%\tpu_cur_topo_!RANDOM!.json"
+        call "!_tm_tpu_cli!" topology-info "!_tm_tpu!" > "!_tm_ct_tmp!" 2>nul
+        if not errorlevel 1 (
+            for /f "usebackq delims=" %%V in (`jq -r ".runtime_version // \"\"" "!_tm_ct_tmp!" 2^>nul`) do set "_tm_cur_rt=%%V"
+        )
+        del /f /q "!_tm_ct_tmp!" >nul 2>&1
     )
-    del /f /q "!_tm_ct_tmp!" >nul 2>&1
 )
 
 if "!TPU_FRESH_VM_PER_BACKEND!"=="1" goto :do_cycle_vm
 if /i "!TPU_FRESH_VM_PER_BACKEND!"=="true" goto :do_cycle_vm
-if not "!_tm_req_rt!"=="" if not "!_tm_cur_rt!"=="" if /i not "!_tm_req_rt!"=="!_tm_cur_rt!" goto :do_cycle_vm
+if not "!_tm_req_rt!"=="" (
+    if not "!_tm_cur_rt!"=="" (
+        if /i not "!_tm_req_rt!"=="!_tm_cur_rt!" goto :do_cycle_vm
+    )
+)
 
 call "!_tm_tpu_cli!" release-locks "!_tm_tpu!"
 exit /b !errorlevel!
@@ -395,9 +515,11 @@ echo [TPU-MATRIX] Cycling fresh Cloud TPU VM !_tm_tpu! for backend !_tm_bid! ^(r
 call "!_tm_tpu_cli!" delete "!_tm_tpu!"
 if errorlevel 1 exit /b !errorlevel!
 call "%LIBSCRIPT_ROOT_DIR%\engine\common\tfrc_guard.cmd" :libscript_tfrc_is_enabled
-if not errorlevel 1 if not "%TPU_ZONE%"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\engine\common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "%GCP_PROJECT_ID%" "%TPU_ZONE%" "!_tm_tpu!"
-    if errorlevel 1 exit /b !errorlevel!
+if not errorlevel 1 (
+    if not "%TPU_ZONE%"=="" (
+        call "%LIBSCRIPT_ROOT_DIR%\engine\common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "%GCP_PROJECT_ID%" "%TPU_ZONE%" "!_tm_tpu!"
+        if errorlevel 1 exit /b !errorlevel!
+    )
 )
 set "TPU_VERSION=!_tm_req_rt!"
 call "!_tm_tpu_cli!" create "!_tm_tpu!"
@@ -446,10 +568,10 @@ if "!_tm_wcnt!" leq "1" (
 call :libscript_tpu_backend_spec "!_tm_bid!" >nul
 for /f "tokens=7 delims=|" %%E in ("!TPU_BACKEND_SPEC!") do set "_tm_benv=%%E"
 set "_tm_dist_extra="
-for %%J in (jax_native maxtext keras_jax) do (
+for %%J in (jax_native maxtext keras_jax pjrt_jax pjrt_keras_jax jax) do (
     if /i "!_tm_bid!"=="%%J" set "_tm_dist_extra=JAX_COORDINATOR_ADDRESS=!_tm_ip0!:8476 MEGASCALE_COORDINATOR_ADDRESS=!_tm_ip0!:8476"
 )
-for %%P in (hf_transformers pytorch_native keras_pytorch) do (
+for %%P in (hf_transformers pytorch_native keras_pytorch pjrt_pytorch_tpu pytorch_tpu) do (
     if /i "!_tm_bid!"=="%%P" set "_tm_dist_extra=PJRT_DEVICE=TPU MASTER_ADDR=!_tm_ip0! MASTER_PORT=8477 PT_XLA_PJRT_DIST_SERVICE_ADDR=!_tm_ip0!:8477"
 )
 call "!_tm_tpu_cli!" ssh "!_tm_tpu!" --all-workers "--command=!_tm_sec_out!_wid=${TPU_WORKER_ID:-0}; export !_tm_benv! TPU_NUM_WORKERS=!_tm_wcnt! TPU_WORKER_HOSTNAMES=!_tm_ips! PROCESS_ID=${_wid} NUM_PROCESSES=!_tm_wcnt! !_tm_dist_extra!; !_tm_cmd!" > "!_tm_log_dir!\workers_all.log" 2>&1

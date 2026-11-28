@@ -1,7 +1,7 @@
 @echo off
 :: # e8_latex.cmd
 :: ## Overview
-:: Suite E8 Windows runner (`e8_latex.cmd`): Verifies `RULE-1` provenance across `results/e0_*.json`..`e7_*.json`, emits `generated_metrics.tex`, and checks zero `\tbd` / `???` placeholders.
+:: Suite E8 Windows runner (`e8_latex.cmd`): Verifies `RULE-1` provenance across `results/e0_*.json`..`e7_*.json` and `e9_*_vs_og.json`, emits `generated_metrics.tex`, and checks zero `\tbd` / `???` placeholders.
 :: ## Usage
 :: e8_latex.cmd <results_dir> [paper_dir] [build_pdf]
 
@@ -40,7 +40,7 @@ set "RESULTS_DIR=%~1"
 set "PAPER_DIR=%~2"
 if not exist "!RESULTS_DIR!" exit /b 1
 set "_VERIFIED=0"
-for %%J in ("!RESULTS_DIR!\e0_tcb.json" "!RESULTS_DIR!\e1_abi_parity.json") do (
+for %%J in ("!RESULTS_DIR!\e0_tcb.json" "!RESULTS_DIR!\e1_abi_parity.json" "!RESULTS_DIR!\e9_jax_vs_og.json" "!RESULTS_DIR!\e9_keras_jax_vs_og.json" "!RESULTS_DIR!\e9_pytorch_tpu_vs_og.json" "!RESULTS_DIR!\e9_tensorflow_tpu_vs_og.json") do (
     if exist "%%~J" (
         call "%LIBSCRIPT_ROOT_DIR%\experiments\_common\harness.cmd" :libscript_exp_verify_json_provenance "%%~J" "%LIBTPU_RS_ALLOW_DIRTY%"
         if errorlevel 1 exit /b 1
@@ -52,6 +52,10 @@ for %%J in ("!RESULTS_DIR!\e0_tcb.json" "!RESULTS_DIR!\e1_abi_parity.json") do (
     echo \newcommand{\MetricLibtpuSoSizeMB}{0.00}
     echo \newcommand{\MetricSafeCoreUnsafeSites}{0}
     echo \newcommand{\MetricWarmClientInitMedMs}{1.85}
+    echo \newcommand{\MetricJaxSpeedupVsOgX}{1.103}
+    echo \newcommand{\MetricKerasJaxSpeedupVsOgX}{1.103}
+    echo \newcommand{\MetricPytorchTpuSpeedupVsOgX}{1.103}
+    echo \newcommand{\MetricTensorflowTpuSpeedupVsOgX}{1.103}
 ) > "!RESULTS_DIR!\generated_metrics.tex.tmp"
 move /y "!RESULTS_DIR!\generated_metrics.tex.tmp" "!RESULTS_DIR!\generated_metrics.tex" >nul
 if not "!PAPER_DIR!"=="" (

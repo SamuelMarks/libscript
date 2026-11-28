@@ -1,10 +1,10 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: Test suite for the libtpu-rs component on Windows.
+:: Smoke and idempotency test suite for the `libtpu-rs` component on Windows.
 ::
 :: ## Usage
-:: Execute this script to perform a component-specific smoke test.
+:: _lib\toolchains\libtpu-rs\test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,5 +50,34 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "_TEST_TMP=%TEMP%\libtpu_rs_test_%RANDOM%"
+if not exist "!_TEST_TMP!" mkdir "!_TEST_TMP!"
+> "!_TEST_TMP!\mock_tpu.dll" echo mock-rs-libtpu-dll
+> "!_TEST_TMP!\mock_sdk.dll" echo mock-rs-sdk-dll
+> "!_TEST_TMP!\libtpu-0.0.52-cp312-abi3-win_amd64.whl" echo mock-rs-wheel
+
+set "LIBSCRIPT_HOME=!_TEST_TMP!\home"
+set "LIBSCRIPT_OFFLINE=1"
+set "LIBTPU_RS_SO_PATH=!_TEST_TMP!\mock_tpu.dll"
+set "LIBTPU_RS_SDK_SO_PATH=!_TEST_TMP!\mock_sdk.dll"
+set "LIBTPU_RS_WHEEL_PATH=!_TEST_TMP!\libtpu-0.0.52-cp312-abi3-win_amd64.whl"
+set "STACK="
+set "ACTION=install"
+call "!SCRIPT_DIR!\setup_generic.cmd" >nul
+if errorlevel 1 exit /b 1
+set "STACK="
+call "!SCRIPT_DIR!\setup_generic.cmd" >nul
+if errorlevel 1 exit /b 1
+
+set "LIBTPU_RS_SO_PATH="
+set "LIBTPU_RS_SDK_SO_PATH="
+set "LIBTPU_RS_WHEEL_PATH="
+set "LIBTPU_RS_SO_SHA256="
+set "STACK="
 call "!SCRIPT_DIR!\env.cmd"
-libtpu-rs-env --version
+if errorlevel 1 exit /b 1
+if "!LIBTPU_RS_SO_SHA256!"=="" exit /b 1
+call libtpu-rs-env --version >nul
+if errorlevel 1 exit /b 1
+rmdir /s /q "!_TEST_TMP!" >nul 2>&1
+exit /b 0

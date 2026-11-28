@@ -1,8 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Master idempotent empirical evaluation orchestrator (`benchmark_experiments.sh`) for `libtpu-rs` / `libtpu_paper`, routing sub-suites `E0` through `E8` while enforcing SIGPLAN `RULE-1`–`RULE-7`.
+# Master idempotent empirical evaluation orchestrator (`benchmark_experiments.sh`) for `libtpu-rs` / `libtpu_paper`, routing sub-suites `E0` through `E9` locally or across Cloud TPU VMs while enforcing SIGPLAN `RULE-1`–`RULE-7`.
 # ## Usage
-# ./experiments/libtpu-pjrt/benchmark_experiments.sh [--subsuites=E0,E1,E2,E3,E4,E5,E6,E7,E8] [--warmup=10] [--trials=200] [--results-dir=...] [--repo-dir=...] [--paper-dir=...] [--build-pdf]
+# ./experiments/libtpu-pjrt/benchmark_experiments.sh [--subsuites=E0,E1,E2,E3,E4,E5,E6,E7,E9,E8] [--tpu-name=...] [--tfrc-config=...] [--frameworks=...] [--warmup=10] [--trials=200] [--results-dir=...] [--repo-dir=...] [--paper-dir=...] [--build-pdf]
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -25,16 +25,20 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+_be_this="${THIS_FILE}"
+_be_dir="${SCRIPT_DIR}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/experiments/_common/harness.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
+THIS_FILE="${_be_this}"
+SCRIPT_DIR="${_be_dir}"
 
 _def_arch='linux_x64'
-if [ "${UNAME:-}" = "Darwin" ]; then
+if [ "${UNAME:-}" = 'Darwin' ]; then
   _def_arch='macos_arm64'
-elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then
+elif [ "${ARCH:-}" = 'aarch64' ] || [ "${ARCH:-}" = 'arm64' ]; then
   _def_arch='linux_arm64'
 fi
 
@@ -44,6 +48,10 @@ LIBTPU_RS_TRIALS="${LIBTPU_RS_TRIALS:-${LIBSCRIPT_EXPERIMENT_TRIALS:-200}}"
 LIBTPU_RS_RESULTS_DIR="${LIBTPU_RS_RESULTS_DIR:-${LIBSCRIPT_EXPERIMENT_OUT_DIR:-${LIBSCRIPT_ROOT_DIR}/build/libtpu_results}}"
 LIBTPU_RS_SYNTHETIC_FIXTURES="${LIBTPU_RS_SYNTHETIC_FIXTURES:-0}"
 LIBTPU_RS_DRY_RUN="${LIBTPU_RS_DRY_RUN:-0}"
+LIBTPU_PJRT_FRAMEWORKS="${LIBTPU_PJRT_FRAMEWORKS:-jax,keras_jax,pytorch_tpu,tensorflow_tpu}"
+LIBTPU_PJRT_PROVIDERS="${LIBTPU_PJRT_PROVIDERS:-og,rs}"
+LIBTPU_PJRT_LOCAL_EXEC="${LIBTPU_PJRT_LOCAL_EXEC:-0}"
+
 _EXPLICIT_REPO_DIR=0
 if [ -n "${LIBTPU_RS_REPO_DIR:-}" ]; then
   _EXPLICIT_REPO_DIR=1
@@ -72,6 +80,15 @@ while [ $# -gt 0 ]; do
     --repo-dir) LIBTPU_RS_REPO_DIR="${2:-}"; _EXPLICIT_REPO_DIR=1; shift 2 ;;
     --paper-dir=*) LIBTPU_RS_PAPER_DIR="${1#*=}"; _EXPLICIT_PAPER_DIR=1; shift ;;
     --paper-dir) LIBTPU_RS_PAPER_DIR="${2:-}"; _EXPLICIT_PAPER_DIR=1; shift 2 ;;
+    --tpu-name=*) TPU_NAME="${1#*=}"; export TPU_NAME; shift ;;
+    --tpu-name) TPU_NAME="${2:-}"; export TPU_NAME; shift 2 ;;
+    --tfrc-config=*) TFRC_CONFIG="${1#*=}"; TFRC_STRICT='1'; export TFRC_CONFIG TFRC_STRICT; shift ;;
+    --tfrc-config) TFRC_CONFIG="${2:-}"; TFRC_STRICT='1'; export TFRC_CONFIG TFRC_STRICT; shift 2 ;;
+    --frameworks=*) LIBTPU_PJRT_FRAMEWORKS="${1#*=}"; shift ;;
+    --frameworks) LIBTPU_PJRT_FRAMEWORKS="${2:-}"; shift 2 ;;
+    --providers=*) LIBTPU_PJRT_PROVIDERS="${1#*=}"; shift ;;
+    --providers) LIBTPU_PJRT_PROVIDERS="${2:-}"; shift 2 ;;
+    --local-exec) LIBTPU_PJRT_LOCAL_EXEC='1'; shift ;;
     --cargo-profile=*) LIBTPU_RS_CARGO_PROFILE="${1#*=}"; shift ;;
     --host-arch=*) LIBTPU_RS_HOST_ARCH="${1#*=}"; shift ;;
     --build-pdf) LIBTPU_RS_BUILD_PDF='1'; shift ;;
@@ -80,7 +97,7 @@ while [ $# -gt 0 ]; do
     --dry-run|-n) LIBTPU_RS_DRY_RUN='1'; shift ;;
     --force) export FORCE_REBUILD='1'; shift ;;
     --help|-h)
-      printf '%s\n' 'Usage: benchmark_experiments.sh [--subsuites=E0..E8] [--warmup=10] [--trials=200] [--results-dir=...] [--repo-dir=...] [--paper-dir=...] [--build-pdf] [--force]'
+      printf '%s\n' 'Usage: benchmark_experiments.sh [--subsuites=E0..E9] [--tpu-name=...] [--tfrc-config=...] [--frameworks=jax,keras_jax,pytorch_tpu,tensorflow_tpu] [--warmup=10] [--trials=200] [--results-dir=...] [--repo-dir=...] [--paper-dir=...] [--build-pdf] [--force]'
       exit 0
       ;;
     *) shift ;;
@@ -88,15 +105,16 @@ while [ $# -gt 0 ]; do
 done
 
 export LIBTPU_RS_SYNTHETIC_FIXTURES LIBTPU_RS_DRY_RUN LIBTPU_RS_BUILD_PDF LIBTPU_RS_CARGO_PROFILE
+export LIBTPU_PJRT_FRAMEWORKS LIBTPU_PJRT_PROVIDERS LIBTPU_PJRT_LOCAL_EXEC
 
 # ## prepare_synthetic_fixture_repo
 # Creates an isolated, clean git repository fixture with zero-unsafe safe-core Rust code when `LIBTPU_RS_SYNTHETIC_FIXTURES=1` and `LIBTPU_RS_REPO_DIR` does not exist.
 prepare_synthetic_fixture_repo() {
-  if [ "${LIBTPU_RS_SYNTHETIC_FIXTURES}" = "1" ]; then
-    if [ "${_EXPLICIT_PAPER_DIR}" = "0" ]; then
+  if [ "${LIBTPU_RS_SYNTHETIC_FIXTURES}" = '1' ]; then
+    if [ "${_EXPLICIT_PAPER_DIR}" = '0' ]; then
       LIBTPU_RS_PAPER_DIR=''
     fi
-    if [ "${_EXPLICIT_REPO_DIR}" = "0" ] || [ ! -d "${LIBTPU_RS_REPO_DIR}/.git" ]; then
+    if [ "${_EXPLICIT_REPO_DIR}" = '0' ] || [ ! -d "${LIBTPU_RS_REPO_DIR}/.git" ]; then
       _fx_repo="${LIBTPU_RS_RESULTS_DIR}/.synthetic_repo"
       if [ ! -d "${_fx_repo}/.git" ]; then
         mkdir -p "${_fx_repo}/crates/libtpu-core/src/hal" "${_fx_repo}/crates/libtpu-core/src/compiler" "${_fx_repo}/scripts"
@@ -120,7 +138,7 @@ prepare_synthetic_fixture_repo() {
 }
 
 # ## run_selected_subsuites
-# Dispatches each requested sub-suite (`E0`..`E8`) in topological order and emits a master campaign summary JSON.
+# Dispatches each requested sub-suite (`E0`..`E9`) in order and emits a master campaign summary JSON.
 run_selected_subsuites() {
   mkdir -p "${LIBTPU_RS_RESULTS_DIR}"
   prepare_synthetic_fixture_repo
@@ -137,26 +155,29 @@ run_selected_subsuites() {
       E5|e5) "${SCRIPT_DIR}/suites/e5_memory_studies.sh" "${LIBTPU_RS_REPO_DIR}" "${LIBTPU_RS_RESULTS_DIR}" "${LIBTPU_RS_HOST_ARCH}" ;;
       E6|e6) "${SCRIPT_DIR}/suites/e6_vliw_ablations.sh" "${LIBTPU_RS_REPO_DIR}" "${LIBTPU_RS_RESULTS_DIR}" "${LIBTPU_RS_HOST_ARCH}" ;;
       E7|e7) "${SCRIPT_DIR}/suites/e7_numerics_sparsecore.sh" "${LIBTPU_RS_REPO_DIR}" "${LIBTPU_RS_RESULTS_DIR}" "${LIBTPU_RS_HOST_ARCH}" ;;
+      E9|e9) "${SCRIPT_DIR}/suites/e9_framework_matrix.sh" "${LIBTPU_RS_REPO_DIR}" "${LIBTPU_RS_RESULTS_DIR}" "${LIBTPU_RS_HOST_ARCH}" "${LIBTPU_RS_WARMUP}" "${LIBTPU_RS_TRIALS}" ;;
       E8|e8) "${SCRIPT_DIR}/suites/e8_latex.sh" "${LIBTPU_RS_RESULTS_DIR}" "${LIBTPU_RS_PAPER_DIR}" "${LIBTPU_RS_BUILD_PDF}" ;;
       *)
-        log_error "Unknown libtpu empirical sub-suite: '${_s}' (expected E0..E8)"
+        log_error "Unknown libtpu empirical sub-suite: '${_s}' (expected E0..E9)"
         return 1
         ;;
     esac
   done
 
-  cat <<EOF > "${LIBTPU_RS_RESULTS_DIR}/campaign_summary.json.tmp"
+  cat <<INNER_EOF > "${LIBTPU_RS_RESULTS_DIR}/campaign_summary.json.tmp"
 {
   "schema_version": "1.0.0",
   "suite": "libtpu",
   "subsuites": "${LIBTPU_RS_SUBSUITES}",
+  "frameworks": "${LIBTPU_PJRT_FRAMEWORKS}",
+  "providers": "${LIBTPU_PJRT_PROVIDERS}",
   "host_arch": "${LIBTPU_RS_HOST_ARCH}",
   "warmup": ${LIBTPU_RS_WARMUP},
   "trials": ${LIBTPU_RS_TRIALS},
   "cargo_profile": "${LIBTPU_RS_CARGO_PROFILE}",
   "status": "PASS"
 }
-EOF
+INNER_EOF
   mv -f "${LIBTPU_RS_RESULTS_DIR}/campaign_summary.json.tmp" "${LIBTPU_RS_RESULTS_DIR}/campaign_summary.json"
   log_info "Completed libtpu empirical suites (${LIBTPU_RS_SUBSUITES}) -> ${LIBTPU_RS_RESULTS_DIR}/campaign_summary.json"
 }

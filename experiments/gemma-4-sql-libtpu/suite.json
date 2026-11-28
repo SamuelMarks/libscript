@@ -1,0 +1,64 @@
+{
+  "$schema": "../../experiments/schemas/experiment-suite.schema.json",
+  "id": "gemma-4-sql-libtpu",
+  "title": "gemma-4-sql: Head-to-Head Cloud TPU Evaluation Comparing Google libtpu vs. libtpu-rs",
+  "description": "Dedicated A/B empirical Cloud TPU evaluation running all 7 Gemma 4 TPU backends (Hugging Face Transformers, PyTorch native, Keras JAX/TensorFlow/PyTorch, MaxText, JAX native) across both upstream Google libtpu ('og') and clean-room Rust libtpu-rs ('rs') in isolated twin /dev/shm virtualenvs with /proc/self/maps SHA-256 attestation.",
+  "protocol_version": "TFRC-GEMMA4-AB-1.0",
+  "target_repo_dir": ".",
+  "results_dir": "results",
+  "generated_tex_path": "results/generated_metrics.tex",
+  "trial_policy": {
+    "warmup_runs": 2,
+    "measured_trials": 5,
+    "quantiles": [0.25, 0.5, 0.75, 0.99],
+    "dispersion_metric": "iqr_and_p99",
+    "prng_seed": 42
+  },
+  "subsuites": [
+    {
+      "id": "AB_OG",
+      "title": "Upstream Google libtpu ('og') 7-Backend Gemma 4 Baseline (E0-E4)",
+      "libscript_deps": ["libtpu", "python", "uv", "jq", "sqlite", "duckdb"],
+      "entrypoint": "benchmark_experiments",
+      "require_native_isa": false,
+      "outputs": ["og/comparison_summary.json", "og/raw/e0_provenance.json"]
+    },
+    {
+      "id": "AB_RS",
+      "title": "Clean-Room Rust libtpu-rs ('rs') 7-Backend Gemma 4 Evaluation (E0-E4)",
+      "depends_on_suites": ["AB_OG"],
+      "libscript_deps": ["libtpu-rs", "rust", "python", "uv", "jq", "sqlite", "duckdb"],
+      "entrypoint": "benchmark_experiments",
+      "require_native_isa": false,
+      "outputs": ["rs/comparison_summary.json", "rs/raw/e0_provenance.json"]
+    },
+    {
+      "id": "AB_SYNTH",
+      "title": "Differential libtpu vs. libtpu-rs Provenance Verification & LaTeX Synthesis",
+      "depends_on_suites": ["AB_OG", "AB_RS"],
+      "libscript_deps": ["jq"],
+      "entrypoint": "suites/synthesize_ab",
+      "require_native_isa": false,
+      "outputs": [
+        "ab_comparison_summary.json",
+        "ab_comparison_summary.csv",
+        "ab_comparison_summary.md",
+        "generated_metrics.tex"
+      ]
+    }
+  ],
+  "substrate": "tpu-slice",
+  "required_components": [
+    "libtpu",
+    "libtpu-rs",
+    "rust",
+    "python",
+    "uv",
+    "jq",
+    "gcp-cli",
+    "duckdb",
+    "sqlite",
+    "huggingface-cli"
+  ],
+  "vars_schema_ref": "./vars.schema.json"
+}

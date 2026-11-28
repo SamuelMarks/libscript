@@ -85,13 +85,15 @@ if not "%LIBSCRIPT_TARGET_OS%"=="" (
     if /I "!TARGET_OS!"=="dos" set "TARGET_OS=msdos"
 )
 
-jq -e "." "!CONFIG_FILE!" >nul 2>nul
+set "_JQ_CFG=!CONFIG_FILE:\=/!"
+jq -e "." "!_JQ_CFG!" >nul 2>nul
 if errorlevel 1 (
     if "!OUTPUT_FILE!"=="" (
         echo {"selected": [], "conflicts": [], "provided": [], "ports": []}
     ) else (
+        set "OUTPUT_FILE=!OUTPUT_FILE:/=\!"
         for %%P in ("!OUTPUT_FILE!") do set "OUT_DIR=%%~dpP"
-        if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
+        if not "!OUT_DIR!"=="" if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
         echo {"selected": [], "conflicts": [], "provided": [], "ports": []}> "!OUTPUT_FILE!"
     )
     exit /b 0
@@ -137,12 +139,34 @@ if "!_USE_CACHE!"=="1" (
     )
 )
 
+set "_RS_TMP_DIR=%TEMP%"
+if "!_RS_TMP_DIR!"=="" set "_RS_TMP_DIR=%TMP%"
+if "!_RS_TMP_DIR!"=="" set "_RS_TMP_DIR=!CACHE_DIR!"
+set "_RS_ENV_TMP=!_RS_TMP_DIR!\libscript_rs_env_!RANDOM!_!RANDOM!.json"
+set "_JQ_MAN=!TMP_ARR:\=/!"
+set "_JQ_ENV=!_RS_ENV_TMP:\=/!"
+set "_JQ_L1=!REPO_ROOT:\=/!/engine/common"
+set "_JQ_L2=!SCRIPT_DIR:\=/!"
+set "_JQ_F=!SCRIPT_DIR:\=/!/resolve_stack.jq"
+jq --arg target_os "!TARGET_OS!" --slurpfile manifests "!_JQ_MAN!" -n "{config: input, manifests: ($manifests[0] // [])}" "!_JQ_CFG!" > "!_RS_ENV_TMP!"
+if errorlevel 1 (
+    del /f /q "!_RS_ENV_TMP!" >nul 2>&1
+    exit /b 1
+)
+
 if "!OUTPUT_FILE!"=="" (
-    jq --arg target_os "!TARGET_OS!" --slurpfile manifests "!TMP_ARR!" -n "{config: input, manifests: ($manifests[0] // [])}" "!CONFIG_FILE!" | jq -L "!REPO_ROOT!\engine\common" -L "!SCRIPT_DIR!" --arg target_os "!TARGET_OS!" -r -f "!SCRIPT_DIR!\resolve_stack.jq"
+    jq -L "!_JQ_L1!" -L "!_JQ_L2!" --arg target_os "!TARGET_OS!" -r -f "!_JQ_F!" "!_JQ_ENV!"
+    set "_RS_RC=!ERRORLEVEL!"
+    del /f /q "!_RS_ENV_TMP!" >nul 2>&1
+    exit /b !_RS_RC!
 ) else (
+    set "OUTPUT_FILE=!OUTPUT_FILE:/=\!"
     for %%P in ("!OUTPUT_FILE!") do set "OUT_DIR=%%~dpP"
-    if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
-    jq --arg target_os "!TARGET_OS!" --slurpfile manifests "!TMP_ARR!" -n "{config: input, manifests: ($manifests[0] // [])}" "!CONFIG_FILE!" | jq -L "!REPO_ROOT!\engine\common" -L "!SCRIPT_DIR!" --arg target_os "!TARGET_OS!" -r -f "!SCRIPT_DIR!\resolve_stack.jq" > "!OUTPUT_FILE!"
+    if not "!OUT_DIR!"=="" if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
+    jq -L "!_JQ_L1!" -L "!_JQ_L2!" --arg target_os "!TARGET_OS!" -r -f "!_JQ_F!" "!_JQ_ENV!" > "!OUTPUT_FILE!"
+    set "_RS_RC=!ERRORLEVEL!"
+    del /f /q "!_RS_ENV_TMP!" >nul 2>&1
+    if not "!_RS_RC!"=="0" exit /b !_RS_RC!
     echo [INFO] Execution plan generated at !OUTPUT_FILE!
 )
 exit /b 0

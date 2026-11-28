@@ -68,16 +68,23 @@ if not exist "%state_file%" (
 )
 
 where jq >nul 2>&1
-if errorlevel 1 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
+if errorlevel 1 (
+    set "_NC_HOME=%LIBSCRIPT_HOME%"
+    if "!_NC_HOME!"=="" set "_NC_HOME=%USERPROFILE%\.libscript"
+    if exist "!_NC_HOME!\bin" set "PATH=!_NC_HOME!\bin;!PATH!"
+)
+where jq >nul 2>&1
+if errorlevel 1 if exist "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" (
     set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\engine\common\pkg_mgr.cmd" :depends jq >nul 2>&1
 )
 where jq >nul 2>&1
 if errorlevel 1 (
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install jq latest >nul 2>&1
-    set "STACK="
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+    set "_NC_HOME=%LIBSCRIPT_HOME%"
+    if "!_NC_HOME!"=="" set "_NC_HOME=%USERPROFILE%\.libscript"
+    if exist "!_NC_HOME!\bin" set "PATH=!_NC_HOME!\bin;!PATH!"
 )
 
 where jq >nul 2>&1

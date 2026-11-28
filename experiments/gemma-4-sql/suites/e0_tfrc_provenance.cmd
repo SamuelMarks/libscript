@@ -45,6 +45,8 @@ if "!BACKENDS_CSV!"=="" set "BACKENDS_CSV=%GEMMA_4_SQL_BACKENDS%"
 if "!BACKENDS_CSV!"=="" set "BACKENDS_CSV=hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native"
 set "SHM_ROOT=%GEMMA_4_SQL_SHM_ROOT%"
 if "!SHM_ROOT!"=="" set "SHM_ROOT=%TEMP%\libscript-tpu"
+set "LIBTPU_PROVIDER=%GEMMA_4_SQL_LIBTPU_PROVIDER%"
+if "!LIBTPU_PROVIDER!"=="" set "LIBTPU_PROVIDER=og"
 
 for %%I in ("!_e0_repo_arg!") do set "REPO_DIR=%%~fI"
 if not exist "!_e0_res_arg!\raw" mkdir "!_e0_res_arg!\raw"
@@ -110,7 +112,7 @@ if not "%TFRC_CONFIG%"=="" if exist "%TFRC_CONFIG%" (
     for /f "usebackq delims=" %%P in (`jq -r ".gcp_project_id // \"none\"" "%TFRC_CONFIG%"`) do set "_tfrc_proj=%%P"
 )
 
-jq -n --slurpfile probes "!_probes_f!" --arg sha "!_git_sha!" --arg th "!_tree_hash!" --arg proj "!_tfrc_proj!" --arg sku "!_sku!" --arg zone "!_zone!" --arg tier "!_tier!" --arg ici "!_ici!" --argjson hosts "!_hosts!" --argjson cph "!_cph!" --argjson total_c "!_tot_chips!" "{suite: \"E0\", experiment_id: \"gemma-4-sql\", study_title: \"gemma-4-sql: TPU performance comparisons betwixt JAX, Keras, and PyTorch on Google's Gemma 4\", status: \"ok\", git_sha: $sha, dirty_diff_hash: \"clean\", tree_hash: $th, tfrc_project_id: $proj, topology: {accelerator_type: $sku, zone: $zone, scheduling_tier: $tier, host_count: $hosts, chips_per_host: $cph, total_chips: $total_c, ici_mesh: $ici}, stage_a_probes: $probes[0]}" > "!OUT_FILE!.tmp"
+jq -n --slurpfile probes "!_probes_f!" --arg prov "!LIBTPU_PROVIDER!" --arg sha "!_git_sha!" --arg th "!_tree_hash!" --arg proj "!_tfrc_proj!" --arg sku "!_sku!" --arg zone "!_zone!" --arg tier "!_tier!" --arg ici "!_ici!" --argjson hosts "!_hosts!" --argjson cph "!_cph!" --argjson total_c "!_tot_chips!" "{suite: \"E0\", experiment_id: \"gemma-4-sql\", libtpu_provider: $prov, study_title: \"gemma-4-sql: TPU performance comparisons betwixt JAX, Keras, and PyTorch on Google's Gemma 4\", status: \"ok\", git_sha: $sha, dirty_diff_hash: \"clean\", tree_hash: $th, tfrc_project_id: $proj, topology: {accelerator_type: $sku, zone: $zone, scheduling_tier: $tier, host_count: $hosts, chips_per_host: $cph, total_chips: $total_c, ici_mesh: $ici}, stage_a_probes: $probes[0]}" > "!OUT_FILE!.tmp"
 del /f /q "!_probes_f!" >nul 2>&1
 jq -e . "!OUT_FILE!.tmp" >nul
 if errorlevel 1 exit /b 1
@@ -121,7 +123,7 @@ exit /b 0
 :: Prepares isolated backend venv and appends Stage A probe + wheel metadata to _probes_f.
 :probe_single_backend
 set "_probe_id=%~1"
-call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_prepare_backend_venv "!_probe_id!" "!REPO_DIR!" "!SHM_ROOT!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_prepare_backend_venv "!_probe_id!" "!REPO_DIR!" "!SHM_ROOT!" "!LIBTPU_PROVIDER!" >nul
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_backend_spec "!_probe_id!" "!SHM_ROOT!" >nul
 call "%LIBSCRIPT_ROOT_DIR%\workloads\ai\_common\tpu_matrix.cmd" :libscript_tpu_family_label "!_probe_id!" >nul

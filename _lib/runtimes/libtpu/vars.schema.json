@@ -50,6 +50,14 @@
       "type": "string",
       "description": "Resolved path to the active host-matching upstream sdk.so artifact."
     },
+    "LIBTPU_REFERENCE_WHEEL": {
+      "type": "string",
+      "description": "Resolved path to the cached SHA-256 verified upstream PyPI libtpu wheel (.whl) for offline virtualenv installation."
+    },
+    "LIBTPU_REFERENCE_SO_SHA256": {
+      "type": "string",
+      "description": "Lowercase hexadecimal SHA-256 digest of the extracted upstream reference libtpu.so artifact."
+    },
     "LIBTPU_ACTIVATE_TPU_LIBRARY_PATH": {
       "type": "string",
       "description": "Flag (0 or 1) controlling whether env.sh/env.cmd exports TPU_LIBRARY_PATH pointing at upstream libtpu.so.",

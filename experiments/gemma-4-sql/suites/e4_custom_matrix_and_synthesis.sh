@@ -117,7 +117,8 @@ run_e4_custom_and_synthesize() {
           IFS=','
           continue
         fi
-        _vdir=$(libscript_tpu_prepare_backend_venv "${_bid}" "${REPO_DIR}" "${SHM_ROOT}")
+        _vdir=$(libscript_tpu_prepare_backend_venv "${_bid}" "${REPO_DIR}" "${SHM_ROOT}" "${GEMMA_4_SQL_LIBTPU_PROVIDER:-og}")
+        _penv=$(libscript_tpu_provider_env "${_vdir}" "${GEMMA_4_SQL_LIBTPU_PROVIDER:-og}")
         _spec=$(libscript_tpu_backend_spec "${_bid}" "${SHM_ROOT}")
         _cbe=$(printf '%s' "${_spec}" | cut -d'|' -f2)
         _kbe=$(printf '%s' "${_spec}" | cut -d'|' -f3)
@@ -125,7 +126,7 @@ run_e4_custom_and_synthesize() {
         _raw_w="${RESULTS_DIR}/raw/.w_e4_${_t_idx}_${_bid}.json"
         rm -f "${_raw_w}"
         _exp_cmd=$(expand_workload_template "${_tpl}" "${_bid}" "${_cbe}" "${_kbe}" "${_raw_w}")
-        _full_cmd="export ${_benv}; PATH='${_vdir}/bin':\"\$PATH\"; cd '${REPO_DIR}' && ${_exp_cmd}"
+        _full_cmd="export ${_benv} ${_penv}; PATH='${_vdir}/bin':\"\$PATH\"; cd '${REPO_DIR}' && ${_exp_cmd}"
         gemma_4_sql_exec_with_stage_b "${_bid}" "${_full_cmd}" "${_cout}" "${GEMMA_4_SQL_REQUIRE_HBM:-1}" "${_raw_w}"
         _payload='{}'
         if [ -f "${_raw_w}" ]; then

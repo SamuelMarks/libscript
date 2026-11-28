@@ -1,9 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Test suite for the libtpu-rs component.
+# Smoke and idempotency test suite for the `libtpu-rs` component.
 #
 # ## Usage
-# Execute this script to perform a component-specific smoke test.
+# ./_lib/toolchains/libtpu-rs/test.sh
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -27,9 +27,45 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-SCRIPT_NAME="${SCRIPT_DIR}/env.sh"
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
+# ## run_libtpu_rs_component_smoke
+# Verifies idempotent repeated installation, compatibility symlinks (`libtpu_c_api.*`), wheel/SHA-256 stamps, and isolated environment exports.
+run_libtpu_rs_component_smoke() {
+  _t_dir=$(mktemp -d)
+  printf 'mock-rs-libtpu-cdylib\n' > "${_t_dir}/mock_libtpu.so"
+  printf 'mock-rs-sdk-cdylib\n' > "${_t_dir}/mock_sdk.so"
+  printf 'mock-rs-wheel\n' > "${_t_dir}/libtpu-0.0.52-cp312-abi3-manylinux_2_31_x86_64.whl"
 
-libtpu-rs-env --version
+  STACK='' LIBSCRIPT_HOME="${_t_dir}/home" \
+    LIBSCRIPT_OFFLINE='1' \
+    LIBTPU_RS_SO_PATH="${_t_dir}/mock_libtpu.so" \
+    LIBTPU_RS_SDK_SO_PATH="${_t_dir}/mock_sdk.so" \
+    LIBTPU_RS_WHEEL_PATH="${_t_dir}/libtpu-0.0.52-cp312-abi3-manylinux_2_31_x86_64.whl" \
+    ACTION='install' "${SCRIPT_DIR}/setup_generic.sh" >/dev/null
+
+  STACK='' LIBSCRIPT_HOME="${_t_dir}/home" \
+    LIBSCRIPT_OFFLINE='1' \
+    LIBTPU_RS_SO_PATH="${_t_dir}/mock_libtpu.so" \
+    LIBTPU_RS_SDK_SO_PATH="${_t_dir}/mock_sdk.so" \
+    LIBTPU_RS_WHEEL_PATH="${_t_dir}/libtpu-0.0.52-cp312-abi3-manylinux_2_31_x86_64.whl" \
+    ACTION='install' "${SCRIPT_DIR}/setup_generic.sh" >/dev/null
+
+  (
+    export LIBSCRIPT_HOME="${_t_dir}/home"
+    unset LIBTPU_RS_SO_PATH LIBTPU_RS_SDK_SO_PATH LIBTPU_RS_WHEEL_PATH LIBTPU_RS_SO_SHA256 TPU_LIBRARY_PATH || true
+    SCRIPT_NAME="${SCRIPT_DIR}/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    [ -n "${LIBTPU_RS_DIR}" ]
+    [ -f "${LIBTPU_RS_SO}" ]
+    [ -f "${LIBTPU_RS_SDK_SO}" ]
+    [ -f "${LIBTPU_RS_WHEEL}" ]
+    [ -n "${LIBTPU_RS_SO_SHA256}" ]
+    [ -z "${TPU_LIBRARY_PATH:-}" ]
+    libtpu-rs-env --version >/dev/null
+  )
+
+  rm -rf "${_t_dir}"
+}
+
+run_libtpu_rs_component_smoke

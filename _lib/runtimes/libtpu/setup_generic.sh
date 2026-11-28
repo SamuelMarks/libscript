@@ -27,13 +27,17 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for _lt_lib in 'engine/common/pkg_mgr.sh' 'engine/common/versioning.sh' '_lib/toolchains/_common/experiment_harness.sh'; do
+_lt_sg_this="${THIS_FILE}"
+_lt_sg_dir="${SCRIPT_DIR}"
+for _lt_lib in 'engine/common/log.sh' 'engine/common/pkg_mgr.sh' 'engine/common/versioning.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_lt_lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 unset SCRIPT_NAME _lt_lib || true
+THIS_FILE="${_lt_sg_this}"
+SCRIPT_DIR="${_lt_sg_dir}"
 
 LIBTPU_INSTALL_METHOD="${LIBTPU_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-libscript_native}}"
 ACTION="${ACTION:-install}"
@@ -43,10 +47,25 @@ LIBTPU_WHEEL_ARCH="${LIBTPU_WHEEL_ARCH:-both}"
 # ## resolve_exact_version
 # Resolves latest/lts aliases into the pinned reference PyPI release version (`0.0.52` fallback).
 resolve_exact_version() {
-  if [ "${VERSION}" = "latest" ] || [ "${VERSION}" = "lts" ]; then
+  if [ "${VERSION}" = 'latest' ] || [ "${VERSION}" = 'lts' ]; then
     EXACT_VERSION='0.0.52'
   else
     EXACT_VERSION="${VERSION}"
+  fi
+}
+
+# ## compute_file_sha256
+# Computes the lowercase hexadecimal SHA-256 digest of a file using standard host utilities.
+compute_file_sha256() {
+  _cfs_file="${1}"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${_cfs_file}" | awk '{print tolower($1)}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "${_cfs_file}" | awk '{print tolower($1)}'
+  elif command -v sha256 >/dev/null 2>&1; then
+    sha256 -q "${_cfs_file}" 2>/dev/null || sha256 "${_cfs_file}" | awk '{print tolower($NF)}'
+  else
+    openssl dgst -sha256 "${_cfs_file}" | awk '{print tolower($NF)}'
   fi
 }
 
@@ -59,9 +78,18 @@ fetch_and_extract_wheel_arch() {
   mkdir -p "${_fwa_dest}"
 
   if [ -n "${LIBTPU_SO_PATH:-}" ] && [ -f "${LIBTPU_SO_PATH}" ]; then
-    cp -f "${LIBTPU_SO_PATH}" "${_fwa_dest}/libtpu.so"
+    cp -f "${LIBTPU_SO_PATH}" "${_fwa_dest}/libtpu.so.tmp"
+    mv -f "${_fwa_dest}/libtpu.so.tmp" "${_fwa_dest}/libtpu.so"
+    _so_sha=$(compute_file_sha256 "${_fwa_dest}/libtpu.so")
+    printf '%s\n' "${_so_sha}" > "${_fwa_dest}/libtpu_so_sha256.txt.tmp"
+    mv -f "${_fwa_dest}/libtpu_so_sha256.txt.tmp" "${_fwa_dest}/libtpu_so_sha256.txt"
     if [ -n "${LIBTPU_SDK_SO_PATH:-}" ] && [ -f "${LIBTPU_SDK_SO_PATH}" ]; then
-      cp -f "${LIBTPU_SDK_SO_PATH}" "${_fwa_dest}/sdk.so"
+      cp -f "${LIBTPU_SDK_SO_PATH}" "${_fwa_dest}/sdk.so.tmp"
+      mv -f "${_fwa_dest}/sdk.so.tmp" "${_fwa_dest}/sdk.so"
+    fi
+    if [ -n "${LIBTPU_REFERENCE_WHEEL:-}" ] && [ -f "${LIBTPU_REFERENCE_WHEEL}" ]; then
+      printf '%s\n' "${LIBTPU_REFERENCE_WHEEL}" > "${_fwa_dest}/wheel_path.txt.tmp"
+      mv -f "${_fwa_dest}/wheel_path.txt.tmp" "${_fwa_dest}/wheel_path.txt"
     fi
     return 0
   fi
@@ -106,17 +134,23 @@ fetch_and_extract_wheel_arch() {
   if ! command -v unzip >/dev/null 2>&1; then
     libscript_depends 'unzip'
   fi
-  unzip -Z1 "${_whl_path}" > "${_fwa_dest}/archive_members.txt"
+  unzip -Z1 "${_whl_path}" > "${_fwa_dest}/archive_members.txt.tmp"
+  mv -f "${_fwa_dest}/archive_members.txt.tmp" "${_fwa_dest}/archive_members.txt"
   unzip -q -o "${_whl_path}" -d "${_fwa_dest}/extracted"
   if [ -f "${_fwa_dest}/extracted/libtpu/libtpu.so" ]; then
     ln -sf 'extracted/libtpu/libtpu.so' "${_fwa_dest}/libtpu.so"
+    _so_sha=$(compute_file_sha256 "${_fwa_dest}/extracted/libtpu/libtpu.so")
+    printf '%s\n' "${_so_sha}" > "${_fwa_dest}/libtpu_so_sha256.txt.tmp"
+    mv -f "${_fwa_dest}/libtpu_so_sha256.txt.tmp" "${_fwa_dest}/libtpu_so_sha256.txt"
   fi
   _sdk_cand=$(find "${_fwa_dest}/extracted/libtpu" -maxdepth 1 -type f -name 'sdk*.so' 2>/dev/null | head -n 1 || true)
   if [ -n "${_sdk_cand}" ] && [ -f "${_sdk_cand}" ]; then
     ln -sf "extracted/libtpu/$(basename -- "${_sdk_cand}")" "${_fwa_dest}/sdk.so"
   fi
-  printf '%s\n' "${_whl_path}" > "${_fwa_dest}/wheel_path.txt"
-  printf '%s\n' "${_whl_sha}" > "${_fwa_dest}/wheel_sha256.txt"
+  printf '%s\n' "${_whl_path}" > "${_fwa_dest}/wheel_path.txt.tmp"
+  mv -f "${_fwa_dest}/wheel_path.txt.tmp" "${_fwa_dest}/wheel_path.txt"
+  printf '%s\n' "${_whl_sha}" > "${_fwa_dest}/wheel_sha256.txt.tmp"
+  mv -f "${_fwa_dest}/wheel_sha256.txt.tmp" "${_fwa_dest}/wheel_sha256.txt"
 }
 
 case "$ACTION" in
@@ -141,7 +175,7 @@ case "$ACTION" in
   download|install)
     resolve_exact_version
     TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/libtpu/${EXACT_VERSION}"
-    if [ "${ACTION}" = "install" ] && [ -x "${TARGET_DIR}/bin/libtpu-info" ] && [ "${FORCE_REINSTALL:-0}" != "1" ]; then
+    if [ "${ACTION}" = 'install' ] && [ -x "${TARGET_DIR}/bin/libtpu-info" ] && [ "${FORCE_REINSTALL:-0}" != '1' ]; then
       printf '[INFO] libtpu %s is already installed at %s.\n' "${EXACT_VERSION}" "${TARGET_DIR}"
       libscript_symlink_alias 'libtpu' "${VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias 'libtpu' 'default' "${EXACT_VERSION}"
@@ -164,16 +198,16 @@ case "$ACTION" in
         fetch_and_extract_wheel_arch 'aarch64' "${_meta_json}" "${TARGET_DIR}"
         ;;
     esac
-    cat <<EOF > "${TARGET_DIR}/bin/libtpu-info.tmp"
+    cat <<INNER_EOF > "${TARGET_DIR}/bin/libtpu-info.tmp"
 #!/bin/sh
 printf 'libtpu-reference %s (%s)\n' '${EXACT_VERSION}' '${TARGET_DIR}'
-EOF
+INNER_EOF
     mv -f "${TARGET_DIR}/bin/libtpu-info.tmp" "${TARGET_DIR}/bin/libtpu-info"
     chmod +x "${TARGET_DIR}/bin/libtpu-info"
     libscript_symlink_alias 'libtpu' "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias 'libtpu' 'default' "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
-    libscript_handle_generic_action 'libtpu' "$ACTION" "$VERSION" "${LIBTPU_INSTALL_METHOD}" "" "" "" "$@"
+    libscript_handle_generic_action 'libtpu' "$ACTION" "$VERSION" "${LIBTPU_INSTALL_METHOD}" '' '' '' "$@"
     ;;
 esac

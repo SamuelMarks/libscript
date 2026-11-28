@@ -61,8 +61,12 @@ if /I "%~1"=="-h" (
     exit /b 0
 )
 
-set "TEST_WORK=%TEMP%\libscript_pkg_kernels_%RANDOM%"
+set "_TPK_BASE=%TEMP%"
+if "!_TPK_BASE!"=="" set "_TPK_BASE=%TMP%"
+if "!_TPK_BASE!"=="" set "_TPK_BASE=!LIBSCRIPT_ROOT_DIR!\build"
+set "TEST_WORK=!_TPK_BASE!\libscript_pkg_kernels_%RANDOM%"
 if not exist "!TEST_WORK!" mkdir "!TEST_WORK!"
+set "LIBSCRIPT_BUILD_DIR=!TEST_WORK!"
 
 for %%T in (linux-distro linux-kernel freebsd-distro illumos-distro reactos-distro unikernel unikernel-distro rtos-distro firmware-bin direct-kernel qcow2) do (
     echo [TEST]     Help check: package-as %%T...
@@ -90,8 +94,10 @@ set "STACK=" & call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as rtos-distro 
 set "STACK=" & call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as qcow2 --profile "!TEST_WORK!\linux-os.json" --dry-run >nul || goto :fail
 
 set "UK_OUT=!TEST_WORK!\out-osv.unikernel.elf"
+set "UK_IDEM_LOG=!TEST_WORK!\uk-idem.log"
 set "STACK=" & call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as unikernel-distro --profile "!TEST_WORK!\unikernel-os.json" --format elf --output "!UK_OUT!" --allow-stub >nul || goto :fail
-set "STACK=" & call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as unikernel-distro --profile "!TEST_WORK!\unikernel-os.json" --format elf --output "!UK_OUT!" --allow-stub | findstr /C:"[SKIP]" >nul || goto :fail
+set "STACK=" & call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as unikernel-distro --profile "!TEST_WORK!\unikernel-os.json" --format elf --output "!UK_OUT!" --allow-stub > "!UK_IDEM_LOG!" || goto :fail
+findstr /C:"[SKIP]" "!UK_IDEM_LOG!" >nul || goto :fail
 
 rmdir /s /q "!TEST_WORK!" >nul 2>&1
 echo [PASS] All unified kernel package-as syntax and 2x idempotency tests succeeded.
